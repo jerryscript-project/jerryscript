@@ -301,9 +301,9 @@ register_js_function (const char *name_p, /**< name of the function */
  */
 #ifdef CONFIG_BUILD_KERNEL
 int main (int argc, FAR char *argv[])
-#else
+#else /* !defined(CONFIG_BUILD_KERNEL) */
 int jerry_main (int argc, char *argv[])
-#endif
+#endif /* defined(CONFIG_BUILD_KERNEL) */
 {
   if (argc > JERRY_MAX_COMMAND_LINE_ARGS)
   {

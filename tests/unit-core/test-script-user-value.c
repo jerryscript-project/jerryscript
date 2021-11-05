@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include "jerryscript.h"
 
+#include "config.h"
 #include "test-common.h"
 
 static jerry_value_t user_values[4];
@@ -31,9 +31,7 @@ test_parse (const char *source_p, /**< source code */
   {
     options_p->user_value = user_values[i];
 
-    jerry_value_t result = jerry_parse ((const jerry_char_t *) source_p,
-                                        strlen (source_p),
-                                        options_p);
+    jerry_value_t result = jerry_parse ((const jerry_char_t *) source_p, strlen (source_p), options_p);
     TEST_ASSERT (!jerry_value_is_error (result));
 
     if (run_code)
@@ -45,9 +43,7 @@ test_parse (const char *source_p, /**< source code */
     }
 
     jerry_value_t user_value = jerry_get_user_value (result);
-    jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
-                                                          user_value,
-                                                          user_values[i]);
+    jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, user_value, user_values[i]);
 
     TEST_ASSERT (jerry_value_is_true (compare_value));
 
@@ -69,9 +65,7 @@ test_parse_function (const char *source_p, /**< source code */
   {
     options_p->user_value = user_values[i];
 
-    jerry_value_t result = jerry_parse ((const jerry_char_t *) source_p,
-                                        strlen (source_p),
-                                        options_p);
+    jerry_value_t result = jerry_parse ((const jerry_char_t *) source_p, strlen (source_p), options_p);
     TEST_ASSERT (!jerry_value_is_error (result));
 
     if (run_code)
@@ -85,9 +79,7 @@ test_parse_function (const char *source_p, /**< source code */
     }
 
     jerry_value_t user_value = jerry_get_user_value (result);
-    jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
-                                                          user_value,
-                                                          user_values[i]);
+    jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, user_value, user_values[i]);
 
     TEST_ASSERT (jerry_value_is_true (compare_value));
 

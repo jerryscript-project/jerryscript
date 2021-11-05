@@ -14,14 +14,13 @@
  */
 
 #include "jerryscript.h"
+
 #include "test-common.h"
 
 static bool
 test_syntax_error (char *script_p) /**< script */
 {
-  jerry_value_t parse_result = jerry_parse ((const jerry_char_t *) script_p,
-                                            strlen (script_p),
-                                            NULL);
+  jerry_value_t parse_result = jerry_parse ((const jerry_char_t *) script_p, strlen (script_p), NULL);
 
   bool result = false;
 

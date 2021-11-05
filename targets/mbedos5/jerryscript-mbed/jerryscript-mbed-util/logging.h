@@ -19,9 +19,9 @@
 
 #ifdef DEBUG_WRAPPER
 #define LOG_PRINT(...) printf(__VA_ARGS__)
-#else
+#else /* !defined(DEBUG_WRAPPER) */
 #define LOG_PRINT(...) while(0) { }
-#endif
+#endif /* defined(DEBUG_WRAPPER) */
 
 #define LOG_PRINT_ALWAYS(...) printf(__VA_ARGS__)
 

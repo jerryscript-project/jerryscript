@@ -20,8 +20,8 @@
 
 #if JERRY_ESNEXT
 
-#include "ecma-helpers.h"
 #include "ecma-builtins.h"
+#include "ecma-helpers.h"
 #include "ecma-promise-object.h"
 #include "ecma-proxy-object.h"
 
@@ -46,10 +46,8 @@ typedef enum
  */
 #define ECMA_NATIVE_HANDLER_COMMON_FLAGS_SHIFT 2
 
-ecma_builtin_handler_t
-ecma_builtin_handler_get (ecma_native_handler_id_t id);
-uint8_t
-ecma_builtin_handler_get_length (ecma_native_handler_id_t id);
+ecma_builtin_handler_t ecma_builtin_handler_get (ecma_native_handler_id_t id);
+uint8_t ecma_builtin_handler_get_length (ecma_native_handler_id_t id);
 
 #endif /* JERRY_ESNEXT */
 

@@ -19,17 +19,12 @@
 #define JERRY_STANDALONE_EXIT_CODE_OK   (0)
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
+#include "jerryscript.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+JERRY_C_API_BEGIN
 
 void js_register_functions (void);
 
+JERRY_C_API_END
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif /* __JERRY_EXTAPI_H__ */

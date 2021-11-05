@@ -14,6 +14,7 @@
  */
 
 #include "jerryscript.h"
+
 #include "test-common.h"
 
 int
@@ -21,10 +22,8 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_MAP)
-      || !jerry_is_feature_enabled (JERRY_FEATURE_SET)
-      || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKMAP)
-      || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKSET))
+  if (!jerry_is_feature_enabled (JERRY_FEATURE_MAP) || !jerry_is_feature_enabled (JERRY_FEATURE_SET)
+      || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKMAP) || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKSET))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Containers are disabled!\n");
     jerry_cleanup ();
@@ -37,7 +36,7 @@ main (void)
 
   jerry_value_t key_str = jerry_create_string ((jerry_char_t *) "number");
   jerry_value_t number = jerry_create_number (10);
-  jerry_value_t args[2] = {key_str, number};
+  jerry_value_t args[2] = { key_str, number };
   jerry_value_t result = jerry_container_operation (JERRY_CONTAINER_OP_SET, map, args, 2);
   TEST_ASSERT (!jerry_value_is_error (result));
   jerry_release_value (result);
@@ -56,7 +55,7 @@ main (void)
 
   key_str = jerry_create_string ((jerry_char_t *) "number2");
   number = jerry_create_number (11);
-  jerry_value_t args2[2] = {key_str, number};
+  jerry_value_t args2[2] = { key_str, number };
   result = jerry_container_operation (JERRY_CONTAINER_OP_SET, map, args2, 2);
   jerry_release_value (result);
 
@@ -128,7 +127,7 @@ main (void)
 
   jerry_value_t obj = jerry_create_object ();
   number = jerry_create_number (10);
-  jerry_value_t args4[2] = {obj, number};
+  jerry_value_t args4[2] = { obj, number };
   result = jerry_container_operation (JERRY_CONTAINER_OP_SET, weak_map, args4, 2);
   TEST_ASSERT (!jerry_value_is_error (result));
   jerry_release_value (result);
@@ -165,7 +164,7 @@ main (void)
   jerry_release_value (result);
 
   // arguments is a error
-  const char * const error_message_p = "Random error.";
+  const char *const error_message_p = "Random error.";
   jerry_value_t error_val = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
   jerry_value_t args3[2] = { error_val, error_val };
   result = jerry_container_operation (JERRY_CONTAINER_OP_SET, map, args3, 2);

@@ -18,19 +18,15 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "jerryscript.h"
 
+JERRY_C_API_BEGIN
 
 void js_entry (void);
 int js_eval (const char *source_p, const size_t source_size);
 int js_loop (uint32_t ticknow);
 void js_exit (void);
 
+JERRY_C_API_END
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif /* __JERRY_RUN_H__ */

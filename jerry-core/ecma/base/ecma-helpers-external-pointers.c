@@ -16,9 +16,9 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-globals.h"
-#include "ecma-objects.h"
-#include "ecma-objects-general.h"
 #include "ecma-helpers.h"
+#include "ecma-objects-general.h"
+#include "ecma-objects.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -185,8 +185,7 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
 
   if (JERRY_LIKELY (*property_p & ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL))
   {
-    ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
-                                                                               value_p->value);
+    ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
 
     if (native_pointer_p->native_info_p == native_info_p)
     {
@@ -215,8 +214,7 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
     }
 
     item_p = item_p->next_p;
-  }
-  while (item_p != NULL);
+  } while (item_p != NULL);
 
   return NULL;
 } /* ecma_get_native_pointer_value */
@@ -259,8 +257,7 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
 
   if (JERRY_LIKELY (*property_p & ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL))
   {
-    ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
-                                                                               value_p->value);
+    ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
 
     if (native_pointer_p->native_info_p != native_info_p)
     {
@@ -326,8 +323,7 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
 
     prev_p = item_p;
     item_p = item_p->next_p;
-  }
-  while (item_p != NULL);
+  } while (item_p != NULL);
 
   return false;
 } /* ecma_delete_native_pointer_property */

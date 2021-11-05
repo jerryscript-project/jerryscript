@@ -17,6 +17,7 @@
 #define ECMA_REFERENCE_H
 
 #include "ecma-globals.h"
+
 #include "jrt.h"
 
 /** \addtogroup ecma ECMA

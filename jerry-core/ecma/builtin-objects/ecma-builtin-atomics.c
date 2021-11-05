@@ -17,6 +17,7 @@
 #include "ecma-builtins.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+
 #include "jrt.h"
 
 #if JERRY_BUILTIN_ATOMICS
@@ -51,7 +52,7 @@ enum
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-atomics.inc.h"
-#define BUILTIN_UNDERSCORED_ID atomics
+#define BUILTIN_UNDERSCORED_ID  atomics
 
 #include "ecma-builtin-internal-routines-template.inc.h"
 
@@ -76,7 +77,7 @@ enum
 static ecma_value_t
 ecma_builtin_atomics_compare_exchange (ecma_value_t typedarray, /**< typedArray argument */
                                        ecma_value_t index, /**< index argument */
-                                       ecma_value_t expected_value,  /**< expectedValue argument */
+                                       ecma_value_t expected_value, /**< expectedValue argument */
                                        ecma_value_t replacement_value) /**< replacementValue argument*/
 {
   JERRY_UNUSED (typedarray);

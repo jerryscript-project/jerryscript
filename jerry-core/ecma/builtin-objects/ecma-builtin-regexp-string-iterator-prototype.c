@@ -26,7 +26,7 @@
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-regexp-string-iterator-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID regexp_string_iterator_prototype
+#define BUILTIN_UNDERSCORED_ID  regexp_string_iterator_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -144,9 +144,8 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
       }
 
       uint8_t flags = regexp_string_iterator_obj->header.u.cls.u1.regexp_string_iterator_flags;
-      ecma_length_t next_index = ecma_op_advance_string_index (matcher_str_p,
-                                                               this_index,
-                                                               (flags & RE_FLAG_UNICODE) != 0);
+      ecma_length_t next_index =
+        ecma_op_advance_string_index (matcher_str_p, this_index, (flags & RE_FLAG_UNICODE) != 0);
 
       ecma_value_t next_index_value = ecma_make_length_value (next_index);
       ecma_value_t set = ecma_op_object_put (regexp_obj_p,

@@ -14,8 +14,8 @@
  */
 
 #include "ecma-arraybuffer-object.h"
-#include "ecma-exceptions.h"
 #include "ecma-dataview-object.h"
+#include "ecma-exceptions.h"
 #include "ecma-gc.h"
 
 #if JERRY_BUILTIN_DATAVIEW
@@ -74,7 +74,7 @@ enum
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-dataview-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID dataview_prototype
+#define BUILTIN_UNDERSCORED_ID  dataview_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -179,7 +179,8 @@ ecma_builtin_dataview_prototype_dispatch_routine (uint8_t builtin_routine_id, /*
       return ecma_op_dataview_get_set_view_value (this_arg,
                                                   arguments_list_p[0],
                                                   arguments_list_p[1],
-                                                  ECMA_VALUE_EMPTY, id);
+                                                  ECMA_VALUE_EMPTY,
+                                                  id);
     }
     case ECMA_DATAVIEW_PROTOTYPE_SET_FLOAT32:
 #if JERRY_NUMBER_TYPE_FLOAT64

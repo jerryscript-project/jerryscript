@@ -15,8 +15,9 @@
 #ifndef VM_DEFINES_H
 #define VM_DEFINES_H
 
-#include "byte-code.h"
 #include "ecma-globals.h"
+
+#include "byte-code.h"
 
 /** \addtogroup vm Virtual machine
  * @{
@@ -40,16 +41,16 @@
  */
 typedef enum
 {
-  VM_FRAME_CTX_SHARED_HAS_ARG_LIST = (1 << 0),        /**< has argument list */
-  VM_FRAME_CTX_SHARED_DIRECT_EVAL = (1 << 1),         /**< direct eval call */
-  VM_FRAME_CTX_SHARED_FREE_THIS = (1 << 2),           /**< free this binding */
-  VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV = (1 << 3),      /**< free local environment */
+  VM_FRAME_CTX_SHARED_HAS_ARG_LIST = (1 << 0), /**< has argument list */
+  VM_FRAME_CTX_SHARED_DIRECT_EVAL = (1 << 1), /**< direct eval call */
+  VM_FRAME_CTX_SHARED_FREE_THIS = (1 << 2), /**< free this binding */
+  VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV = (1 << 3), /**< free local environment */
 #if JERRY_ESNEXT
-  VM_FRAME_CTX_SHARED_NON_ARROW_FUNC = (1 << 4),      /**< non-arrow function */
-  VM_FRAME_CTX_SHARED_HERITAGE_PRESENT = (1 << 5),    /**< class heritage present */
-  VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS = (1 << 6),    /**< has class fields */
-  VM_FRAME_CTX_SHARED_EXECUTABLE = (1 << 7),          /**< frame is an executable object constructed
-                                                       *   with opfunc_create_executable_object */
+  VM_FRAME_CTX_SHARED_NON_ARROW_FUNC = (1 << 4), /**< non-arrow function */
+  VM_FRAME_CTX_SHARED_HERITAGE_PRESENT = (1 << 5), /**< class heritage present */
+  VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS = (1 << 6), /**< has class fields */
+  VM_FRAME_CTX_SHARED_EXECUTABLE = (1 << 7), /**< frame is an executable object constructed
+                                              *   with opfunc_create_executable_object */
 #endif /* JERRY_ESNEXT */
 } vm_frame_ctx_shared_flags_t;
 
@@ -58,9 +59,9 @@ typedef enum
  */
 typedef struct
 {
-  const ecma_compiled_code_t *bytecode_header_p;      /**< currently executed byte-code data */
-  ecma_object_t *function_object_p;                   /**< function obj */
-  uint32_t status_flags;                              /**< combination of vm_frame_ctx_shared_flags_t bits */
+  const ecma_compiled_code_t *bytecode_header_p; /**< currently executed byte-code data */
+  ecma_object_t *function_object_p; /**< function obj */
+  uint32_t status_flags; /**< combination of vm_frame_ctx_shared_flags_t bits */
 } vm_frame_ctx_shared_t;
 
 /**
@@ -68,9 +69,9 @@ typedef struct
  */
 typedef struct
 {
-  vm_frame_ctx_shared_t header;                       /**< shared data header */
-  const ecma_value_t *arg_list_p;                     /**< arguments list */
-  uint32_t arg_list_len;                              /**< arguments list length */
+  vm_frame_ctx_shared_t header; /**< shared data header */
+  const ecma_value_t *arg_list_p; /**< arguments list */
+  uint32_t arg_list_len; /**< arguments list length */
 } vm_frame_ctx_shared_args_t;
 
 #if JERRY_ESNEXT
@@ -80,8 +81,8 @@ typedef struct
  */
 typedef struct
 {
-  vm_frame_ctx_shared_t header;                       /**< shared data header */
-  ecma_value_t *computed_class_fields_p;              /**< names of the computed class fields */
+  vm_frame_ctx_shared_t header; /**< shared data header */
+  ecma_value_t *computed_class_fields_p; /**< names of the computed class fields */
 } vm_frame_ctx_shared_class_fields_t;
 
 /**
@@ -97,8 +98,8 @@ typedef struct
  */
 typedef enum
 {
-  VM_FRAME_CTX_DIRECT_EVAL = (1 << 1),                /**< direct eval call */
-  VM_FRAME_CTX_IS_STRICT = (1 << 2),                  /**< strict mode */
+  VM_FRAME_CTX_DIRECT_EVAL = (1 << 1), /**< direct eval call */
+  VM_FRAME_CTX_IS_STRICT = (1 << 2), /**< strict mode */
 } vm_frame_ctx_flags_t;
 
 /**
@@ -106,17 +107,17 @@ typedef enum
  */
 typedef struct vm_frame_ctx_t
 {
-  vm_frame_ctx_shared_t *shared_p;                    /**< shared information */
-  const uint8_t *byte_code_p;                         /**< current byte code pointer */
-  const uint8_t *byte_code_start_p;                   /**< byte code start pointer */
-  ecma_value_t *stack_top_p;                          /**< stack top pointer */
-  ecma_value_t *literal_start_p;                      /**< literal list start pointer */
-  ecma_object_t *lex_env_p;                           /**< current lexical environment */
-  struct vm_frame_ctx_t *prev_context_p;              /**< previous context */
-  ecma_value_t this_binding;                          /**< this binding */
-  uint16_t context_depth;                             /**< current context depth */
-  uint8_t status_flags;                               /**< combination of vm_frame_ctx_flags_t bits */
-  uint8_t call_operation;                             /**< perform a call or construct operation */
+  vm_frame_ctx_shared_t *shared_p; /**< shared information */
+  const uint8_t *byte_code_p; /**< current byte code pointer */
+  const uint8_t *byte_code_start_p; /**< byte code start pointer */
+  ecma_value_t *stack_top_p; /**< stack top pointer */
+  ecma_value_t *literal_start_p; /**< literal list start pointer */
+  ecma_object_t *lex_env_p; /**< current lexical environment */
+  struct vm_frame_ctx_t *prev_context_p; /**< previous context */
+  ecma_value_t this_binding; /**< this binding */
+  uint16_t context_depth; /**< current context depth */
+  uint8_t status_flags; /**< combination of vm_frame_ctx_flags_t bits */
+  uint8_t call_operation; /**< perform a call or construct operation */
   /* Registers start immediately after the frame context. */
 } vm_frame_ctx_t;
 
@@ -139,10 +140,9 @@ typedef struct vm_frame_ctx_t
 /**
  * Calculate the shared_part from a vm_executable_object frame context.
  */
-#define VM_GET_EXECUTABLE_ITERATOR(frame_ctx_p) \
-  ((ecma_value_t *) ((uintptr_t) (frame_ctx_p) \
-                                  - (uintptr_t) offsetof (vm_executable_object_t, frame_ctx) \
-                                  + (uintptr_t) offsetof (vm_executable_object_t, iterator)))
+#define VM_GET_EXECUTABLE_ITERATOR(frame_ctx_p)                                                           \
+  ((ecma_value_t *) ((uintptr_t) (frame_ctx_p) - (uintptr_t) offsetof (vm_executable_object_t, frame_ctx) \
+                     + (uintptr_t) offsetof (vm_executable_object_t, iterator)))
 
 /**
  * Generator frame context.

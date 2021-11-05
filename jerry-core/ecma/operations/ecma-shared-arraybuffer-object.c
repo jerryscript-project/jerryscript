@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "ecma-shared-arraybuffer-object.h"
+
 #include "ecma-arraybuffer-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
@@ -21,8 +23,8 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
-#include "ecma-shared-arraybuffer-object.h"
 #include "ecma-typedarray-object.h"
+
 #include "jcontext.h"
 
 /** \addtogroup ecma ECMA
@@ -60,7 +62,7 @@ ecma_shared_arraybuffer_new_object (uint32_t length) /**< length of the SharedAr
  */
 ecma_value_t
 ecma_op_create_shared_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
-                                                                          *   are passed to String constructor */
+                                                                                 *   are passed to String constructor */
                                           uint32_t arguments_list_len) /**< length of the arguments' list */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);

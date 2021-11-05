@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 
+#include "main-utils.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "jerryscript-port-default.h"
+#include "jerryscript-port.h"
 #include "jerryscript.h"
+
 #include "jerryscript-ext/debugger.h"
 #include "jerryscript-ext/handler.h"
-#include "jerryscript-port.h"
-#include "jerryscript-port-default.h"
-
-#include "main-utils.h"
 #include "main-options.h"
 
 /**
@@ -142,8 +143,7 @@ test262_eval_script (const jerry_call_info_t *call_info_p, /**< call information
   return ret_value;
 } /* test262_eval_script */
 
-static jerry_value_t
-create_test262 (jerry_value_t global_obj);
+static jerry_value_t create_test262 (jerry_value_t global_obj);
 
 /**
  * $262.createRealm
@@ -385,13 +385,13 @@ main_print_unhandled_exception (jerry_value_t error_value) /**< error value */
           }
 
           /* Print character if:
-          * - The max line length is not reached.
-          * - The current position is valid (it is not the end of the source).
-          * - The current character is not a newline.
-          **/
+           * - The max line length is not reached.
+           * - The current position is valid (it is not the end of the source).
+           * - The current character is not a newline.
+           **/
           for (uint32_t char_count = 0;
-              (char_count < SYNTAX_ERROR_MAX_LINE_LENGTH) && (pos < source_size) && (source_p[pos] != '\n');
-              char_count++, pos++)
+               (char_count < SYNTAX_ERROR_MAX_LINE_LENGTH) && (pos < source_size) && (source_p[pos] != '\n');
+               char_count++, pos++)
           {
             jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", source_p[pos]);
           }
@@ -479,9 +479,7 @@ main_wait_for_source_callback (const jerry_char_t *resource_name_p, /**< resourc
   parse_options.options = JERRY_PARSE_HAS_RESOURCE;
   parse_options.resource_name = jerry_create_string_sz (resource_name_p, (jerry_size_t) resource_name_size);
 
-  jerry_value_t ret_val = jerry_parse (source_p,
-                                       source_size,
-                                       &parse_options);
+  jerry_value_t ret_val = jerry_parse (source_p, source_size, &parse_options);
 
   jerry_release_value (parse_options.resource_name);
 

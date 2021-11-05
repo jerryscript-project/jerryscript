@@ -22,10 +22,7 @@
 
 #include "jerryscript-types.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
+JERRY_C_API_BEGIN
 
 /** \addtogroup jerry_port Jerry engine port
  * @{
@@ -77,10 +74,10 @@ void JERRY_ATTR_NORETURN jerry_port_fatal (jerry_fatal_code_t code);
  */
 typedef enum
 {
-  JERRY_LOG_LEVEL_ERROR,    /**< the engine will terminate after the message is printed */
-  JERRY_LOG_LEVEL_WARNING,  /**< a request is aborted, but the engine continues its operation */
-  JERRY_LOG_LEVEL_DEBUG,    /**< debug messages from the engine, low volume */
-  JERRY_LOG_LEVEL_TRACE     /**< detailed info about engine internals, potentially high volume */
+  JERRY_LOG_LEVEL_ERROR, /**< the engine will terminate after the message is printed */
+  JERRY_LOG_LEVEL_WARNING, /**< a request is aborted, but the engine continues its operation */
+  JERRY_LOG_LEVEL_DEBUG, /**< debug messages from the engine, low volume */
+  JERRY_LOG_LEVEL_TRACE /**< detailed info about engine internals, potentially high volume */
 } jerry_log_level_t;
 
 /**
@@ -228,10 +225,7 @@ void jerry_port_release_source (uint8_t *buffer_p);
  *
  * @return A module object if resolving is successful, an error otherwise.
  */
-jerry_value_t
-jerry_port_module_resolve (const jerry_value_t specifier,
-                           const jerry_value_t referrer,
-                           void *user_p);
+jerry_value_t jerry_port_module_resolve (const jerry_value_t specifier, const jerry_value_t referrer, void *user_p);
 
 /**
  * Release known modules.
@@ -249,7 +243,6 @@ void jerry_port_module_release (const jerry_value_t realm);
  * @}
  */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+JERRY_C_API_END
+
 #endif /* !JERRYSCRIPT_PORT_H */

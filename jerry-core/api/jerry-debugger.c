@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+#include "jerryscript.h"
+
 #include "debugger.h"
 #include "jcontext.h"
-#include "jerryscript.h"
 
 /**
  * Checks whether the debugger is connected.

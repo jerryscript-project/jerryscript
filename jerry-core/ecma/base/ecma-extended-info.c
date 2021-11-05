@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
-#include "byte-code.h"
-#include "ecma-helpers.h"
 #include "ecma-extended-info.h"
+
+#include "ecma-helpers.h"
+
+#include "byte-code.h"
 
 #if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
 
@@ -41,8 +43,7 @@ ecma_extended_info_decode_vlq (uint8_t **buffer_p) /**< [in/out] target buffer *
   {
     source_p--;
     value = (value << ECMA_EXTENDED_INFO_VLQ_SHIFT) | (*source_p & ECMA_EXTENDED_INFO_VLQ_MASK);
-  }
-  while (*source_p & ECMA_EXTENDED_INFO_VLQ_CONTINUE);
+  } while (*source_p & ECMA_EXTENDED_INFO_VLQ_CONTINUE);
 
   *buffer_p = source_p;
   return value;
@@ -71,8 +72,7 @@ ecma_extended_info_encode_vlq (uint8_t **buffer_p, /**< target buffer */
   {
     current_value >>= ECMA_EXTENDED_INFO_VLQ_SHIFT;
     length++;
-  }
-  while (current_value > 0);
+  } while (current_value > 0);
 
   destination_p -= length;
   *buffer_p = destination_p;
@@ -81,8 +81,7 @@ ecma_extended_info_encode_vlq (uint8_t **buffer_p, /**< target buffer */
   {
     *destination_p++ = (uint8_t) (value | ECMA_EXTENDED_INFO_VLQ_CONTINUE);
     value >>= ECMA_EXTENDED_INFO_VLQ_SHIFT;
-  }
-  while (value > 0);
+  } while (value > 0);
 
   **buffer_p &= ECMA_EXTENDED_INFO_VLQ_MASK;
 } /* ecma_extended_info_encode_vlq */
@@ -101,8 +100,7 @@ ecma_extended_info_get_encoded_length (uint32_t value) /**< encoded value */
   {
     value >>= ECMA_EXTENDED_INFO_VLQ_SHIFT;
     length++;
-  }
-  while (value > 0);
+  } while (value > 0);
 
   return length;
 } /* ecma_extended_info_get_encoded_length */

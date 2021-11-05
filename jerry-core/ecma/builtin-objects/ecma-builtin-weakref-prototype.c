@@ -39,7 +39,7 @@ enum
  * This object has a custom dispatch function.
  */
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-weakref-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID weakref_prototype
+#define BUILTIN_UNDERSCORED_ID  weakref_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -52,12 +52,12 @@ enum
  * @{
  */
 
- /**
-  * Deref checks weakRef target
-  *
-  * @return weakRef target
-  *         error - otherwise
-  */
+/**
+ * Deref checks weakRef target
+ *
+ * @return weakRef target
+ *         error - otherwise
+ */
 static ecma_value_t
 ecma_builtin_weakref_prototype_object_deref (ecma_value_t this_arg) /**< this argument */
 {

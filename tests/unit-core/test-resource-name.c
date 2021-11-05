@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include "jerryscript.h"
+
+#include "config.h"
 #include "test-common.h"
 
 static jerry_value_t
@@ -71,9 +72,7 @@ main (void)
 
   parse_options.resource_name = jerry_create_string ((jerry_char_t *) "demo1.js");
 
-  jerry_value_t program = jerry_parse ((const jerry_char_t *) source_1,
-                                       strlen (source_1),
-                                       &parse_options);
+  jerry_value_t program = jerry_parse ((const jerry_char_t *) source_1, strlen (source_1), &parse_options);
   TEST_ASSERT (!jerry_value_is_error (program));
 
   jerry_value_t run_result = jerry_run (program);
@@ -81,9 +80,8 @@ main (void)
   TEST_ASSERT (jerry_value_is_object (run_result));
 
   jerry_value_t resource_value = jerry_get_resource_name (run_result);
-  jerry_value_t compare_result = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
-                                                         resource_value,
-                                                         parse_options.resource_name);
+  jerry_value_t compare_result =
+    jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.resource_name);
   TEST_ASSERT (jerry_value_is_true (compare_result));
 
   jerry_release_value (compare_result);
@@ -105,9 +103,7 @@ main (void)
 
   parse_options.resource_name = jerry_create_string ((const jerry_char_t *) "demo2.js");
 
-  program = jerry_parse ((const jerry_char_t *) source_2,
-                         strlen (source_2),
-                         &parse_options);
+  program = jerry_parse ((const jerry_char_t *) source_2, strlen (source_2), &parse_options);
   TEST_ASSERT (!jerry_value_is_error (program));
 
   run_result = jerry_run (program);
@@ -132,9 +128,7 @@ main (void)
     parse_options.options = JERRY_PARSE_MODULE | JERRY_PARSE_HAS_RESOURCE;
     parse_options.resource_name = jerry_create_string ((const jerry_char_t *) "demo3.js");
 
-    program = jerry_parse ((const jerry_char_t *) source_3,
-                           strlen (source_3),
-                           &parse_options);
+    program = jerry_parse ((const jerry_char_t *) source_3, strlen (source_3), &parse_options);
     TEST_ASSERT (!jerry_value_is_error (program));
 
     resource_value = jerry_get_resource_name (program);
@@ -174,9 +168,7 @@ main (void)
   parse_options.options = JERRY_PARSE_HAS_RESOURCE;
   parse_options.resource_name = jerry_create_string ((jerry_char_t *) "demo4.js");
 
-  program = jerry_parse ((const jerry_char_t *) source_4,
-                         strlen (source_4),
-                         &parse_options);
+  program = jerry_parse ((const jerry_char_t *) source_4, strlen (source_4), &parse_options);
   TEST_ASSERT (!jerry_value_is_error (program));
 
   run_result = jerry_run (program);
@@ -199,9 +191,7 @@ main (void)
   parse_options.user_value = jerry_create_object ();
   parse_options.resource_name = jerry_create_string ((jerry_char_t *) "demo5.js");
 
-  program = jerry_parse ((const jerry_char_t *) source_5,
-                         strlen (source_5),
-                         &parse_options);
+  program = jerry_parse ((const jerry_char_t *) source_5, strlen (source_5), &parse_options);
   TEST_ASSERT (!jerry_value_is_error (program));
 
   resource_value = jerry_get_resource_name (program);
@@ -219,9 +209,7 @@ main (void)
   parse_options.options = JERRY_PARSE_HAS_RESOURCE;
   parse_options.resource_name = jerry_create_string ((jerry_char_t *) "demo6.js");
 
-  program = jerry_parse ((const jerry_char_t *) source_6,
-                         strlen (source_6),
-                         &parse_options);
+  program = jerry_parse ((const jerry_char_t *) source_6, strlen (source_6), &parse_options);
   if (!jerry_value_is_error (program))
   {
     resource_value = jerry_get_resource_name (program);

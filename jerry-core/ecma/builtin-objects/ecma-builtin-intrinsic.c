@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
-#include "ecma-builtins.h"
-#include "ecma-builtin-helpers.h"
-#include "ecma-container-object.h"
 #include "ecma-array-object.h"
 #include "ecma-arraybuffer-object.h"
-#include "ecma-typedarray-object.h"
-#include "ecma-string-object.h"
+#include "ecma-builtin-helpers.h"
+#include "ecma-builtins.h"
+#include "ecma-container-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "ecma-string-object.h"
+#include "ecma-typedarray-object.h"
+
 #include "lit-char-helpers.h"
 
 #if JERRY_ESNEXT
@@ -53,7 +54,7 @@ enum
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-intrinsic.inc.h"
-#define BUILTIN_UNDERSCORED_ID intrinsic
+#define BUILTIN_UNDERSCORED_ID  intrinsic
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -214,8 +215,8 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
       ecma_number_t *date_value_p = &((ecma_date_object_t *) ecma_get_object_from_value (this_arg))->date_value;
 #else /* !JERRY_ESNEXT */
       ecma_extended_object_t *arg_ext_object_p = (ecma_extended_object_t *) ecma_get_object_from_value (argument);
-      ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                     arg_ext_object_p->u.class_prop.u.date);
+      ecma_number_t *date_value_p =
+        ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, arg_ext_object_p->u.class_prop.u.date);
 #endif /* JERRY_ESNEXT */
 
       if (ecma_number_is_nan (*date_value_p))
@@ -263,12 +264,10 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
       ecma_value_t result = ecma_make_string_value (ret_str_p);
       ecma_deref_ecma_string (to_str_p);
       return result;
-
     }
     default:
     {
-      JERRY_ASSERT (builtin_routine_id == ECMA_INTRINSIC_PARSE_INT
-                    || builtin_routine_id == ECMA_INTRINSIC_PARSE_FLOAT);
+      JERRY_ASSERT (builtin_routine_id == ECMA_INTRINSIC_PARSE_INT || builtin_routine_id == ECMA_INTRINSIC_PARSE_FLOAT);
 
       ecma_string_t *str_p = ecma_op_to_string (arguments_list_p[0]);
 
@@ -282,15 +281,12 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
 
       if (builtin_routine_id == ECMA_INTRINSIC_PARSE_INT)
       {
-        result = ecma_number_parse_int (string_buff,
-                                        string_buff_size,
-                                        arguments_list_p[1]);
+        result = ecma_number_parse_int (string_buff, string_buff_size, arguments_list_p[1]);
       }
       else
       {
         JERRY_ASSERT (builtin_routine_id == ECMA_INTRINSIC_PARSE_FLOAT);
-        result = ecma_number_parse_float (string_buff,
-                                          string_buff_size);
+        result = ecma_number_parse_float (string_buff, string_buff_size);
       }
 
       ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);

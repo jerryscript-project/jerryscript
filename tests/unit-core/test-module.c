@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "jerryscript.h"
+
 #include "test-common.h"
 
 static void
@@ -212,11 +213,8 @@ resolve_callback4 (const jerry_value_t specifier, /**< module specifier */
 
   ++counter;
 
-  jerry_value_t exports[2] =
-  {
-    jerry_create_string ((const jerry_char_t *) "exp"),
-    jerry_create_string ((const jerry_char_t *) "other_exp")
-  };
+  jerry_value_t exports[2] = { jerry_create_string ((const jerry_char_t *) "exp"),
+                               jerry_create_string ((const jerry_char_t *) "other_exp") };
 
   jerry_value_t native_module = jerry_native_module_create (native_module_evaluate, exports, 2);
   TEST_ASSERT (!jerry_value_is_error (native_module));
@@ -356,12 +354,10 @@ main (void)
   jerry_parse_options_t module_parse_options;
   module_parse_options.options = JERRY_PARSE_MODULE;
 
-  jerry_char_t source1[] = TEST_STRING_LITERAL (
-    "import a from '16_module.mjs'\n"
-    "export * from '07_module.mjs'\n"
-    "export * from '44_module.mjs'\n"
-    "import * as b from '36_module.mjs'\n"
-  );
+  jerry_char_t source1[] = TEST_STRING_LITERAL ("import a from '16_module.mjs'\n"
+                                                "export * from '07_module.mjs'\n"
+                                                "export * from '44_module.mjs'\n"
+                                                "import * as b from '36_module.mjs'\n");
   module = jerry_parse (source1, sizeof (source1) - 1, &module_parse_options);
   TEST_ASSERT (!jerry_value_is_error (module));
   TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
@@ -399,10 +395,8 @@ main (void)
   TEST_ASSERT (jerry_value_is_error (result));
   jerry_release_value (result);
 
-  jerry_char_t source2[] = TEST_STRING_LITERAL (
-    "export let a = 6\n"
-    "export let b = 8.5\n"
-  );
+  jerry_char_t source2[] = TEST_STRING_LITERAL ("export let a = 6\n"
+                                                "export let b = 8.5\n");
   module = jerry_parse (source2, sizeof (source2) - 1, &module_parse_options);
   TEST_ASSERT (!jerry_value_is_error (module));
   TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
@@ -484,8 +478,7 @@ main (void)
       "import {exp, other_exp as other} from 'native.js'\n"
       "import * as namespace from 'native.js'\n"
       "if (exp !== 3.5 || other !== 'str') { throw 'Assertion failed!' }\n"
-      "if (namespace.exp !== 3.5 || namespace.other_exp !== 'str') { throw 'Assertion failed!' }\n"
-    );
+      "if (namespace.exp !== 3.5 || namespace.other_exp !== 'str') { throw 'Assertion failed!' }\n");
     module = jerry_parse (source3, sizeof (source3) - 1, &module_parse_options);
     TEST_ASSERT (!jerry_value_is_error (module));
     TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
@@ -528,9 +521,7 @@ main (void)
   counter = 0;
   jerry_module_set_state_changed_callback (module_state_changed, (void *) &counter);
 
-  jerry_char_t source4[] = TEST_STRING_LITERAL (
-    "33.5\n"
-  );
+  jerry_char_t source4[] = TEST_STRING_LITERAL ("33.5\n");
   module = jerry_parse (source4, sizeof (source4) - 1, &module_parse_options);
 
   result = jerry_module_link (module, NULL, NULL);
@@ -543,9 +534,7 @@ main (void)
 
   jerry_release_value (module);
 
-  jerry_char_t source5[] = TEST_STRING_LITERAL (
-    "throw -5.5\n"
-  );
+  jerry_char_t source5[] = TEST_STRING_LITERAL ("throw -5.5\n");
   module = jerry_parse (source5, sizeof (source5) - 1, &module_parse_options);
 
   result = jerry_module_link (module, NULL, NULL);
@@ -562,14 +551,11 @@ main (void)
 
   TEST_ASSERT (counter == 4);
 
-  jerry_char_t source6[] = TEST_STRING_LITERAL (
-    "import a from 'self'\n"
-  );
+  jerry_char_t source6[] = TEST_STRING_LITERAL ("import a from 'self'\n");
   module = jerry_parse (source6, sizeof (source6) - 1, &module_parse_options);
 
   result = jerry_module_link (module, resolve_callback5, NULL);
-  TEST_ASSERT (jerry_value_is_error (result)
-               && jerry_get_error_type (result) == JERRY_ERROR_SYNTAX);
+  TEST_ASSERT (jerry_value_is_error (result) && jerry_get_error_type (result) == JERRY_ERROR_SYNTAX);
   jerry_release_value (result);
 
   jerry_cleanup ();

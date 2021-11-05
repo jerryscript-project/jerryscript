@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
+#include "jerryscript.h"
+
+#include "ecma-conversion.h"
+#include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-conversion.h"
 #include "ecma-init-finalize.h"
-#include "ecma-exceptions.h"
-#include "jerryscript.h"
-#include "jcontext.h"
 
+#include "jcontext.h"
 #include "test-common.h"
 
 /**
@@ -66,7 +67,7 @@ main (void)
   TEST_ASSERT (num == 0);
 
   /* 4 */
-    /* -0 */
+  /* -0 */
   ecma_value_t negative_zero = ecma_make_number_value (-0.0f);
 
   result = ecma_op_to_integer (negative_zero, &num);
@@ -76,7 +77,7 @@ main (void)
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
   TEST_ASSERT (1.0f / num == ecma_number_make_infinity (true));
 
-    /* +0 */
+  /* +0 */
   ecma_value_t positive_zero = ecma_make_number_value (+0.0f);
 
   result = ecma_op_to_integer (positive_zero, &num);
@@ -86,7 +87,7 @@ main (void)
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
   TEST_ASSERT (1.0f / num == ecma_number_make_infinity (false));
 
-    /* -infinity */
+  /* -infinity */
   ecma_value_t negative_infinity = ecma_make_number_value (ecma_number_make_infinity (true));
 
   result = ecma_op_to_integer (negative_infinity, &num);
@@ -96,7 +97,7 @@ main (void)
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
   TEST_ASSERT (num == ecma_number_make_infinity (true));
 
-    /* +infinity */
+  /* +infinity */
   ecma_value_t positive_infinity = ecma_make_number_value (ecma_number_make_infinity (false));
 
   result = ecma_op_to_integer (positive_infinity, &num);

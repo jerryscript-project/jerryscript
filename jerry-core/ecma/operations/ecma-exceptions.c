@@ -13,17 +13,20 @@
  * limitations under the License.
  */
 
+#include "ecma-exceptions.h"
+
 #include <stdarg.h>
+
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
-#include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-iterator-object.h"
 #include "ecma-objects.h"
 #include "ecma-symbol-object.h"
-#include "ecma-iterator-object.h"
-#include "ecma-array-object.h"
+
 #include "jcontext.h"
 #include "jrt.h"
 
@@ -111,16 +114,15 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
       break;
     }
   }
-#else
+#else /* !JERRY_BUILTIN_ERRORS */
   JERRY_UNUSED (error_type);
   ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID_ERROR_PROTOTYPE;
 #endif /* JERRY_BUILTIN_ERRORS */
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
 
-  ecma_object_t *error_object_p = ecma_create_object (prototype_obj_p,
-                                                      sizeof (ecma_extended_object_t),
-                                                      ECMA_OBJECT_TYPE_CLASS);
+  ecma_object_t *error_object_p =
+    ecma_create_object (prototype_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) error_object_p;
   extended_object_p->u.cls.type = ECMA_OBJECT_CLASS_ERROR;
@@ -143,8 +145,8 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
       && !(JERRY_CONTEXT (status_flags) & ECMA_STATUS_ERROR_UPDATE))
   {
     JERRY_CONTEXT (status_flags) |= ECMA_STATUS_ERROR_UPDATE;
-    JERRY_CONTEXT (error_object_created_callback_p) (ecma_make_object_value (error_object_p),
-                                                     JERRY_CONTEXT (error_object_created_callback_user_p));
+    JERRY_CONTEXT (error_object_created_callback_p)
+    (ecma_make_object_value (error_object_p), JERRY_CONTEXT (error_object_created_callback_user_p));
     JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_ERROR_UPDATE;
   }
   else
@@ -153,10 +155,8 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
     /* Default decorator when line info is enabled. */
     ecma_string_t *stack_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_STACK);
 
-    ecma_property_value_t *prop_value_p = ecma_create_named_data_property (error_object_p,
-                                                                           stack_str_p,
-                                                                           ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                                           NULL);
+    ecma_property_value_t *prop_value_p =
+      ecma_create_named_data_property (error_object_p, stack_str_p, ECMA_PROPERTY_CONFIGURABLE_WRITABLE, NULL);
     ecma_deref_ecma_string (stack_str_p);
 
     ecma_value_t backtrace_value = vm_get_backtrace (0);
@@ -306,8 +306,7 @@ ecma_raise_standard_error (jerry_error_t error_type, /**< error type */
 
   if (msg_p != NULL)
   {
-    ecma_string_t *error_msg_p = ecma_new_ecma_string_from_utf8 (msg_p,
-                                                                 lit_zt_utf8_string_size (msg_p));
+    ecma_string_t *error_msg_p = ecma_new_ecma_string_from_utf8 (msg_p, lit_zt_utf8_string_size (msg_p));
     error_obj_p = ecma_new_standard_error (error_type, error_msg_p);
     ecma_deref_ecma_string (error_msg_p);
   }
@@ -465,7 +464,7 @@ ecma_raise_syntax_error (const char *msg_p) /**< error message */
 /**
  * Raise a TypeError with the given message.
  *
-* See also: ECMA-262 v5, 15.11.6.5
+ * See also: ECMA-262 v5, 15.11.6.5
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
@@ -479,7 +478,7 @@ ecma_raise_type_error (const char *msg_p) /**< error message */
 /**
  * Raise a URIError with the given message.
  *
-* See also: ECMA-262 v5, 15.11.6.6
+ * See also: ECMA-262 v5, 15.11.6.6
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value

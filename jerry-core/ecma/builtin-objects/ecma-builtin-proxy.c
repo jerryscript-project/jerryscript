@@ -19,6 +19,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-proxy-object.h"
+
 #include "jrt.h"
 
 #if JERRY_BUILTIN_PROXY
@@ -41,7 +42,7 @@ enum
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-proxy.inc.h"
-#define BUILTIN_UNDERSCORED_ID proxy
+#define BUILTIN_UNDERSCORED_ID  proxy
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA

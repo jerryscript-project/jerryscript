@@ -132,7 +132,7 @@ set(SOURCE_CORE_FILES
   api/jerry-debugger-transport.c
   api/jerry-debugger.c
   api/jerry-snapshot.c
-  api/jerry.c
+  api/jerryscript.c
   debugger/debugger.c
   ecma/base/ecma-alloc.c
   ecma/base/ecma-gc.c

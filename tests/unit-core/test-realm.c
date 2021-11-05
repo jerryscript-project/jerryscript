@@ -235,9 +235,7 @@ main (void)
   TEST_ASSERT (!jerry_value_is_error (result_value));
 
   const char *script_p = "global2 = global1 - 1; Object.getPrototypeOf([])";
-  jerry_value_t script_value = jerry_parse ((const jerry_char_t *) script_p,
-                                            strlen (script_p),
-                                            NULL);
+  jerry_value_t script_value = jerry_parse ((const jerry_char_t *) script_p, strlen (script_p), NULL);
 
   TEST_ASSERT (!jerry_value_is_error (script_value));
   jerry_set_realm (result_value);

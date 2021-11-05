@@ -21,4 +21,4 @@
 #define JERRY_STACK_SIZE 2000
 
 
-#endif
+#endif /* __USER_CONFIG_H__ */

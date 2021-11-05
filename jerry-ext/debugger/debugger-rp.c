@@ -16,7 +16,7 @@
 #include "jerryscript-ext/debugger.h"
 #include "jext-common.h"
 
-#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
+#if defined(JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
 
 /* A simplified transmission layer. */
 

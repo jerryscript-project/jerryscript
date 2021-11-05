@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
+#include "opcodes.h"
+
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
-#include "ecma-builtins.h"
 #include "ecma-builtin-helpers.h"
+#include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -28,8 +30,8 @@
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
 #include "ecma-proxy-object.h"
+
 #include "jcontext.h"
-#include "opcodes.h"
 #include "vm-defines.h"
 #include "vm-stack.h"
 
@@ -69,10 +71,8 @@ opfunc_set_data_property (ecma_object_t *object_p, /**< object */
 
   if (property_p == NULL)
   {
-    prop_value_p = ecma_create_named_data_property (object_p,
-                                                    prop_name_p,
-                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                    NULL);
+    prop_value_p =
+      ecma_create_named_data_property (object_p, prop_name_p, ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE, NULL);
   }
   else
   {
@@ -284,8 +284,7 @@ opfunc_for_in (ecma_value_t iterable_value, /**< ideally an iterable value */
                ecma_value_t *result_obj_p) /**< expression object */
 {
   /* 3. */
-  if (ecma_is_value_undefined (iterable_value)
-      || ecma_is_value_null (iterable_value))
+  if (ecma_is_value_undefined (iterable_value) || ecma_is_value_null (iterable_value))
   {
     return NULL;
   }
@@ -621,13 +620,10 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
     }
 
     JERRY_ASSERT (frame_ctx_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_NON_ARROW_FUNC);
-    proto_p = ecma_op_get_prototype_from_constructor (frame_ctx_p->shared_p->function_object_p,
-                                                      default_proto_id);
+    proto_p = ecma_op_get_prototype_from_constructor (frame_ctx_p->shared_p->function_object_p, default_proto_id);
   }
 
-  ecma_object_t *object_p = ecma_create_object (proto_p,
-                                                total_size,
-                                                ECMA_OBJECT_TYPE_CLASS);
+  ecma_object_t *object_p = ecma_create_object (proto_p, total_size, ECMA_OBJECT_TYPE_CLASS);
 
   vm_executable_object_t *executable_object_p = (vm_executable_object_t *) object_p;
 
@@ -677,10 +673,7 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
       ecma_deref_if_object (*new_registers_p++);
     }
 
-    vm_ref_lex_env_chain (frame_ctx_p->lex_env_p,
-                          frame_ctx_p->context_depth,
-                          new_registers_p,
-                          false);
+    vm_ref_lex_env_chain (frame_ctx_p->lex_env_p, frame_ctx_p->context_depth, new_registers_p, false);
 
     new_registers_p += frame_ctx_p->context_depth;
 
@@ -704,18 +697,12 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
 /**
  * Byte code which resumes an executable object with throw
  */
-const uint8_t opfunc_resume_executable_object_with_throw[1] =
-{
-  CBC_THROW
-};
+const uint8_t opfunc_resume_executable_object_with_throw[1] = { CBC_THROW };
 
 /**
  * Byte code which resumes an executable object with return
  */
-const uint8_t opfunc_resume_executable_object_with_return[2] =
-{
-  CBC_EXT_OPCODE, CBC_EXT_RETURN
-};
+const uint8_t opfunc_resume_executable_object_with_return[2] = { CBC_EXT_OPCODE, CBC_EXT_RETURN };
 
 /**
  * Resume the execution of an inactive executable object
@@ -843,8 +830,7 @@ opfunc_async_generator_yield (ecma_extended_object_t *async_generator_object_p, 
                               ecma_value_t value) /**< value (takes the reference) */
 {
   ecma_async_generator_task_t *task_p;
-  task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t,
-                                            async_generator_object_p->u.cls.u3.head);
+  task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t, async_generator_object_p->u.cls.u3.head);
 
   ecma_value_t iter_result = ecma_create_iter_result_object (value, ECMA_VALUE_FALSE);
   ecma_fulfill_promise (task_p->promise, iter_result);
@@ -878,9 +864,9 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
                                ecma_value_t value, /**< awaited value (takes reference) */
                                uint16_t extra_flags) /**< extra flags */
 {
-  JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC
-                || (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags)
-                    == CBC_FUNCTION_ASYNC_ARROW));
+  JERRY_ASSERT (
+    CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC
+    || (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC_ARROW));
 
   ecma_object_t *promise_p = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
   ecma_value_t result = ecma_promise_reject_or_resolve (ecma_make_object_value (promise_p), value, true);
@@ -949,8 +935,8 @@ opfunc_init_class_fields (ecma_object_t *class_object_p, /**< the function itsel
   shared_class_fields.header.bytecode_header_p = ecma_op_function_get_compiled_code (ext_function_p);
   shared_class_fields.header.function_object_p = &ext_function_p->object;
 
-  ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
-                                                                       ext_function_p->u.function.scope_cp);
+  ecma_object_t *scope_p =
+    ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, ext_function_p->u.function.scope_cp);
 
   ecma_value_t result = vm_run (&shared_class_fields.header, this_val, scope_p);
 
@@ -989,8 +975,8 @@ opfunc_init_static_class_fields (ecma_value_t function_object, /**< the function
   ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) function_object_p;
   shared_class_fields.header.bytecode_header_p = ecma_op_function_get_compiled_code (ext_function_p);
 
-  ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
-                                                                       ext_function_p->u.function.scope_cp);
+  ecma_object_t *scope_p =
+    ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, ext_function_p->u.function.scope_cp);
 
   ecma_value_t result = vm_run (&shared_class_fields.header, this_val, scope_p);
 
@@ -1297,8 +1283,7 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
 
       if (property & ECMA_PROPERTY_FLAG_DATA)
       {
-        if (ecma_is_value_object (property_pair_p->values[index].value)
-            && ecma_is_property_enumerable (property))
+        if (ecma_is_value_object (property_pair_p->values[index].value) && ecma_is_property_enumerable (property))
         {
           property_pair_p->header.types[index] = (uint8_t) (property & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
           opfunc_set_home_object (ecma_get_object_from_value (property_pair_p->values[index].value), parent_env_p);
@@ -1497,11 +1482,8 @@ opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, /**< vm stack top 
 
   bool is_strict = (frame_ctx_p->status_flags & VM_FRAME_CTX_IS_STRICT) != 0;
 
-  ecma_value_t result = ecma_op_object_put_with_receiver (base_obj_p,
-                                                          prop_name_p,
-                                                          stack_top_p[-1],
-                                                          frame_ctx_p->this_binding,
-                                                          is_strict);
+  ecma_value_t result =
+    ecma_op_object_put_with_receiver (base_obj_p, prop_name_p, stack_top_p[-1], frame_ctx_p->this_binding, is_strict);
 
   ecma_deref_ecma_string (prop_name_p);
   ecma_deref_object (base_obj_p);
@@ -1604,8 +1586,7 @@ opfunc_copy_data_properties (ecma_value_t target_object, /**< target object */
         {
           break;
         }
-      }
-      while (++filter_p < filter_end_p);
+      } while (++filter_p < filter_end_p);
 
       if (filter_p != filter_end_p)
       {
@@ -1721,13 +1702,9 @@ opfunc_lexical_scope_has_restricted_binding (vm_frame_ctx_t *frame_ctx_p, /**< f
   }
 #endif /* JERRY_BUILTIN_PROXY */
 
-  ecma_property_t property = ecma_op_object_get_own_property (global_obj_p,
-                                                              name_p,
-                                                              NULL,
-                                                              ECMA_PROPERTY_GET_NO_OPTIONS);
+  ecma_property_t property = ecma_op_object_get_own_property (global_obj_p, name_p, NULL, ECMA_PROPERTY_GET_NO_OPTIONS);
 
-  JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_NOT_FOUND
-                || ECMA_PROPERTY_IS_FOUND (property));
+  JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_NOT_FOUND || ECMA_PROPERTY_IS_FOUND (property));
 
   return ecma_make_boolean_value (property != ECMA_PROPERTY_TYPE_NOT_FOUND
                                   && !ecma_is_property_configurable (property));

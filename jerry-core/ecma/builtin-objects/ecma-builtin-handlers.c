@@ -18,18 +18,16 @@
 #if JERRY_ESNEXT
 
 #include "ecma-builtin-handlers.h"
-#include "ecma-promise-object.h"
 #include "ecma-iterator-object.h"
+#include "ecma-promise-object.h"
 
-static const ecma_builtin_handler_t ecma_native_handlers[] =
-{
+static const ecma_builtin_handler_t ecma_native_handlers[] = {
 #define ECMA_NATIVE_HANDLER(id, handler, length) handler,
 #include "ecma-builtin-handlers.inc.h"
 #undef ECMA_NATIVE_HANDLER
 };
 
-static const uint8_t ecma_native_handler_lengths[] =
-{
+static const uint8_t ecma_native_handler_lengths[] = {
 #define ECMA_NATIVE_HANDLER(id, handler, length) length,
 #include "ecma-builtin-handlers.inc.h"
 #undef ECMA_NATIVE_HANDLER

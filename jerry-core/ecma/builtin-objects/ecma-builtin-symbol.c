@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 
- #include "ecma-alloc.h"
- #include "ecma-builtins.h"
- #include "ecma-conversion.h"
- #include "ecma-exceptions.h"
- #include "ecma-gc.h"
- #include "ecma-globals.h"
- #include "ecma-helpers.h"
- #include "ecma-objects.h"
- #include "ecma-symbol-object.h"
- #include "ecma-literal-storage.h"
- #include "jcontext.h"
- #include "jrt.h"
+#include "ecma-alloc.h"
+#include "ecma-builtins.h"
+#include "ecma-conversion.h"
+#include "ecma-exceptions.h"
+#include "ecma-gc.h"
+#include "ecma-globals.h"
+#include "ecma-helpers.h"
+#include "ecma-literal-storage.h"
+#include "ecma-objects.h"
+#include "ecma-symbol-object.h"
+
+#include "jcontext.h"
+#include "jrt.h"
 
 #if JERRY_ESNEXT
 
@@ -32,7 +33,7 @@
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-symbol.inc.h"
-#define BUILTIN_UNDERSCORED_ID symbol
+#define BUILTIN_UNDERSCORED_ID  symbol
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -106,15 +107,13 @@ ecma_builtin_symbol_for_helper (ecma_value_t value_to_find) /**< symbol or ecma-
 
   while (symbol_list_cp != JMEM_CP_NULL)
   {
-    ecma_lit_storage_item_t *symbol_list_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_lit_storage_item_t,
-                                                                           symbol_list_cp);
+    ecma_lit_storage_item_t *symbol_list_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_lit_storage_item_t, symbol_list_cp);
 
     for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
     {
       if (symbol_list_p->values[i] != JMEM_CP_NULL)
       {
-        ecma_string_t *value_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                               symbol_list_p->values[i]);
+        ecma_string_t *value_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, symbol_list_p->values[i]);
 
         if (is_for)
         {

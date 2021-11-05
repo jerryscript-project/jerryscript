@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include "jerryscript.h"
+
+#include "config.h"
 #include "test-common.h"
 
 static jerry_value_t
@@ -257,9 +258,7 @@ run (const char *resource_name_p, /**< resource name */
   parse_options.options = JERRY_PARSE_HAS_RESOURCE;
   parse_options.resource_name = jerry_create_string ((const jerry_char_t *) resource_name_p);
 
-  jerry_value_t code = jerry_parse ((const jerry_char_t *) source_p,
-                                    strlen (source_p),
-                                    &parse_options);
+  jerry_value_t code = jerry_parse ((const jerry_char_t *) source_p, strlen (source_p), &parse_options);
   jerry_release_value (parse_options.resource_name);
   TEST_ASSERT (!jerry_value_is_error (code));
 
@@ -282,8 +281,7 @@ compare (jerry_value_t array, /**< array */
 
   jerry_value_t value = jerry_get_property_by_index (array, index);
 
-  TEST_ASSERT (!jerry_value_is_error (value)
-               && jerry_value_is_string (value));
+  TEST_ASSERT (!jerry_value_is_error (value) && jerry_value_is_string (value));
 
   TEST_ASSERT (jerry_get_string_size (value) == len);
 
@@ -319,8 +317,7 @@ test_get_backtrace_api_call (void)
 
   jerry_value_t backtrace = run ("something.js", source_p);
 
-  TEST_ASSERT (!jerry_value_is_error (backtrace)
-               && jerry_value_is_array (backtrace));
+  TEST_ASSERT (!jerry_value_is_error (backtrace) && jerry_value_is_array (backtrace));
 
   TEST_ASSERT (jerry_get_array_length (backtrace) == 4);
 
@@ -349,8 +346,7 @@ test_get_backtrace_api_call (void)
 
   backtrace = run ("something_else.js", source_p);
 
-  TEST_ASSERT (!jerry_value_is_error (backtrace)
-               && jerry_value_is_array (backtrace));
+  TEST_ASSERT (!jerry_value_is_error (backtrace) && jerry_value_is_array (backtrace));
 
   TEST_ASSERT (jerry_get_array_length (backtrace) == 2);
 
@@ -501,8 +497,7 @@ test_exception_backtrace (void)
   jerry_release_value (name);
   jerry_release_value (error);
 
-  TEST_ASSERT (!jerry_value_is_error (backtrace)
-               && jerry_value_is_array (backtrace));
+  TEST_ASSERT (!jerry_value_is_error (backtrace) && jerry_value_is_array (backtrace));
 
   TEST_ASSERT (jerry_get_array_length (backtrace) == 3);
 
@@ -548,8 +543,7 @@ test_large_line_count (void)
   jerry_release_value (name);
   jerry_release_value (error);
 
-  TEST_ASSERT (!jerry_value_is_error (backtrace)
-               && jerry_value_is_array (backtrace));
+  TEST_ASSERT (!jerry_value_is_error (backtrace) && jerry_value_is_array (backtrace));
 
   TEST_ASSERT (jerry_get_array_length (backtrace) == 1);
 

@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
+#include "ecma-regexp-object.h"
+
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-objects.h"
-#include "ecma-function-object.h"
-#include "ecma-regexp-object.h"
+
 #include "jcontext.h"
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
@@ -220,8 +222,7 @@ ecma_op_regexp_alloc (ecma_object_t *ctr_obj_p) /**< constructor object pointer 
     ctr_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP);
   }
 
-  ecma_object_t *proto_obj_p = ecma_op_get_prototype_from_constructor (ctr_obj_p,
-                                                                       ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
+  ecma_object_t *proto_obj_p = ecma_op_get_prototype_from_constructor (ctr_obj_p, ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 
   if (JERRY_UNLIKELY (proto_obj_p == NULL))
   {
@@ -233,9 +234,8 @@ ecma_op_regexp_alloc (ecma_object_t *ctr_obj_p) /**< constructor object pointer 
   ecma_object_t *proto_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 #endif /* JERRY_ESNEXT */
 
-  ecma_object_t *new_object_p = ecma_create_object (proto_obj_p,
-                                                    sizeof (ecma_extended_object_t),
-                                                    ECMA_OBJECT_TYPE_CLASS);
+  ecma_object_t *new_object_p =
+    ecma_create_object (proto_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
 #if JERRY_ESNEXT
   ecma_deref_object (proto_obj_p);
@@ -437,9 +437,7 @@ ecma_regexp_canonicalize_char (lit_code_point_t ch, /**< character */
   JERRY_UNUSED (unicode);
   lit_code_point_t cu = lit_char_to_upper_case (ch, NULL);
 
-  if (ch <= LIT_UTF8_1_BYTE_CODE_POINT_MAX
-      || (cu > LIT_UTF8_1_BYTE_CODE_POINT_MAX
-          && cu != LIT_MULTIPLE_CU))
+  if (ch <= LIT_UTF8_1_BYTE_CODE_POINT_MAX || (cu > LIT_UTF8_1_BYTE_CODE_POINT_MAX && cu != LIT_MULTIPLE_CU))
   {
     return cu;
   }
@@ -523,8 +521,7 @@ ecma_regexp_advance (ecma_regexp_ctx_t *re_ctx_p, /**< regexp context */
   lit_code_point_t cp = lit_cesu8_read_next (str_p);
 
 #if JERRY_ESNEXT
-  if (JERRY_UNLIKELY (re_ctx_p->flags & RE_FLAG_UNICODE)
-      && lit_is_code_point_utf16_high_surrogate ((ecma_char_t) cp)
+  if (JERRY_UNLIKELY (re_ctx_p->flags & RE_FLAG_UNICODE) && lit_is_code_point_utf16_high_surrogate ((ecma_char_t) cp)
       && *str_p < re_ctx_p->input_end_p)
   {
     const ecma_char_t next_ch = lit_cesu8_peek_next (*str_p);
@@ -553,8 +550,7 @@ ecma_regexp_unicode_advance (const lit_utf8_byte_t **str_p, /**< reference to st
   const lit_utf8_byte_t *current_p = *str_p;
 
   lit_code_point_t ch = lit_cesu8_read_next (&current_p);
-  if (lit_is_code_point_utf16_high_surrogate ((ecma_char_t) ch)
-      && current_p < end_p)
+  if (lit_is_code_point_utf16_high_surrogate ((ecma_char_t) ch) && current_p < end_p)
   {
     const ecma_char_t next_ch = lit_cesu8_peek_next (current_p);
     if (lit_is_code_point_utf16_low_surrogate (next_ch))
@@ -581,8 +577,7 @@ ecma_regexp_step_back (ecma_regexp_ctx_t *re_ctx_p, /**< regexp context */
   JERRY_ASSERT (str_p != NULL);
 #if JERRY_ESNEXT
   lit_code_point_t ch = lit_cesu8_read_prev (&str_p);
-  if (JERRY_UNLIKELY (re_ctx_p->flags & RE_FLAG_UNICODE)
-      && lit_is_code_point_utf16_low_surrogate (ch)
+  if (JERRY_UNLIKELY (re_ctx_p->flags & RE_FLAG_UNICODE) && lit_is_code_point_utf16_low_surrogate (ch)
       && lit_is_code_point_utf16_high_surrogate (lit_cesu8_peek_prev (str_p)))
   {
     str_p -= LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
@@ -1270,8 +1265,7 @@ ecma_regexp_run (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         const lit_utf8_size_t capture_size = (lit_utf8_size_t) (capture_p->end_p - capture_p->begin_p);
 
-        if (str_curr_p + capture_size > re_ctx_p->input_end_p
-            || memcmp (str_curr_p, capture_p->begin_p, capture_size))
+        if (str_curr_p + capture_size > re_ctx_p->input_end_p || memcmp (str_curr_p, capture_p->begin_p, capture_size))
         {
           goto fail;
         }
@@ -1489,7 +1483,7 @@ ecma_regexp_run (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         goto fail;
 
-class_found:
+      class_found:
         if (flags & RE_CLASS_INVERT)
         {
           goto fail;
@@ -1511,8 +1505,7 @@ class_found:
         const lit_code_point_t cp = ecma_regexp_unicode_advance (&str_curr_p, re_ctx_p->input_end_p);
 
         if (!(re_ctx_p->flags & RE_FLAG_DOTALL)
-            && JERRY_UNLIKELY (cp <= LIT_UTF16_CODE_UNIT_MAX
-                               && lit_char_is_line_terminator ((ecma_char_t) cp)))
+            && JERRY_UNLIKELY (cp <= LIT_UTF16_CODE_UNIT_MAX && lit_char_is_line_terminator ((ecma_char_t) cp)))
         {
           goto fail;
         }
@@ -1562,8 +1555,7 @@ class_found:
       {
         JERRY_ASSERT (op == RE_OP_BYTE);
 
-        if (str_curr_p >= re_ctx_p->input_end_p
-            || *bc_p++ != *str_curr_p++)
+        if (str_curr_p >= re_ctx_p->input_end_p || *bc_p++ != *str_curr_p++)
         {
           goto fail;
         }
@@ -1573,7 +1565,7 @@ class_found:
     }
 
     JERRY_UNREACHABLE ();
-fail:
+  fail:
     bc_p = next_alternative_p;
 
     if (bc_p == NULL || *bc_p++ != RE_OP_ALTERNATIVE_NEXT)
@@ -1645,10 +1637,7 @@ ecma_regexp_create_result_object (ecma_regexp_ctx_t *re_ctx_p, /**< regexp conte
   for (uint32_t i = 0; i < re_ctx_p->captures_count; i++)
   {
     ecma_value_t capture_value = ecma_regexp_get_capture_value (re_ctx_p->captures_p + i);
-    ecma_builtin_helper_def_prop_by_index (result_p,
-                                           i,
-                                           capture_value,
-                                           ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+    ecma_builtin_helper_def_prop_by_index (result_p, i, capture_value, ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
     ecma_free_value (capture_value);
   }
 
@@ -1742,20 +1731,14 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
   lit_utf8_size_t input_size;
   lit_utf8_size_t input_length;
   uint8_t input_flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *input_buffer_p = ecma_string_get_chars (input_string_p,
-                                                                 &input_size,
-                                                                 &input_length,
-                                                                 NULL,
-                                                                 &input_flags);
+  const lit_utf8_byte_t *input_buffer_p =
+    ecma_string_get_chars (input_string_p, &input_size, &input_length, NULL, &input_flags);
 
   const lit_utf8_byte_t *input_curr_p = input_buffer_p;
   const lit_utf8_byte_t *input_end_p = input_buffer_p + input_size;
 
   ecma_regexp_ctx_t re_ctx;
-  ecma_regexp_initialize_context (&re_ctx,
-                                  bc_p,
-                                  input_buffer_p,
-                                  input_end_p);
+  ecma_regexp_initialize_context (&re_ctx, bc_p, input_buffer_p, input_end_p);
 
   /* 4. */
   ecma_length_t index = 0;
@@ -1920,8 +1903,7 @@ match_found:
     }
     else
     {
-      match_length = lit_utf8_string_length (match_begin_p,
-                                             (lit_utf8_size_t) (match_end_p - match_begin_p));
+      match_length = lit_utf8_string_length (match_begin_p, (lit_utf8_size_t) (match_end_p - match_begin_p));
     }
 
     ret_value = ecma_op_object_put (regexp_object_p,
@@ -2016,10 +1998,8 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
   /* 5. */
   if (prev_last_index != ecma_make_uint32_value (0))
   {
-    const ecma_value_t status = ecma_op_object_put (regexp_object_p,
-                                                    last_index_str_p,
-                                                    ecma_make_uint32_value (0),
-                                                    true);
+    const ecma_value_t status =
+      ecma_op_object_put (regexp_object_p, last_index_str_p, ecma_make_uint32_value (0), true);
 
     if (ECMA_IS_VALUE_ERROR (status))
     {
@@ -2140,11 +2120,8 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
 
   lit_utf8_size_t flags_size;
   uint8_t flags_str_flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *flags_buffer_p = ecma_string_get_chars (flags_str_p,
-                                                                 &flags_size,
-                                                                 NULL,
-                                                                 NULL,
-                                                                 &flags_str_flags);
+  const lit_utf8_byte_t *flags_buffer_p =
+    ecma_string_get_chars (flags_str_p, &flags_size, NULL, NULL, &flags_str_flags);
 
   bool unicode = false;
   bool sticky = false;
@@ -2260,10 +2237,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
   {
     /* 24.a-b. */
     ecma_value_t index_value = ecma_make_length_value (current_index);
-    result = ecma_op_object_put (splitter_obj_p,
-                                 lastindex_str_p,
-                                 index_value,
-                                 true);
+    result = ecma_op_object_put (splitter_obj_p, lastindex_str_p, index_value, true);
 
     ecma_free_value (index_value);
 
@@ -2325,9 +2299,8 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
 
     /* 24.f.iv.1-4. */
     JERRY_ASSERT (previous_index <= string_length && current_index <= string_length);
-    ecma_string_t *const split_str_p = ecma_string_substr (string_p,
-                                                           (lit_utf8_size_t) previous_index,
-                                                           (lit_utf8_size_t) current_index);
+    ecma_string_t *const split_str_p =
+      ecma_string_substr (string_p, (lit_utf8_size_t) previous_index, (lit_utf8_size_t) current_index);
 
     result = ecma_builtin_helper_def_prop_by_index (array_p,
                                                     array_length++,
@@ -2456,21 +2429,15 @@ cleanup_string:
   lit_utf8_size_t string_size;
   lit_utf8_size_t string_length;
   uint8_t string_flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *string_buffer_p = ecma_string_get_chars (string_p,
-                                                                  &string_size,
-                                                                  &string_length,
-                                                                  NULL,
-                                                                  &string_flags);
+  const lit_utf8_byte_t *string_buffer_p =
+    ecma_string_get_chars (string_p, &string_size, &string_length, NULL, &string_flags);
 
   const lit_utf8_byte_t *current_str_p = string_buffer_p;
   const lit_utf8_byte_t *previous_str_p = string_buffer_p;
   const lit_utf8_byte_t *const string_end_p = string_buffer_p + string_size;
 
   ecma_regexp_ctx_t re_ctx;
-  ecma_regexp_initialize_context (&re_ctx,
-                                  bc_p,
-                                  string_buffer_p,
-                                  string_buffer_p + string_size);
+  ecma_regexp_initialize_context (&re_ctx, bc_p, string_buffer_p, string_buffer_p + string_size);
 
   uint8_t *const bc_start_p = (uint8_t *) (bc_p + 1);
 
@@ -2516,8 +2483,8 @@ cleanup_string:
     }
 
     /* 13.c.iii.1. */
-    ecma_string_t *const str_p = ecma_new_ecma_string_from_utf8 (previous_str_p,
-                                                                 (lit_utf8_size_t) (current_str_p - previous_str_p));
+    ecma_string_t *const str_p =
+      ecma_new_ecma_string_from_utf8 (previous_str_p, (lit_utf8_size_t) (current_str_p - previous_str_p));
 
     result = ecma_builtin_helper_def_prop_by_index (array_p,
                                                     array_length++,
@@ -2559,8 +2526,8 @@ cleanup_string:
     current_str_p = matched_p;
   }
 
-  ecma_string_t *const str_p = ecma_new_ecma_string_from_utf8 (previous_str_p,
-                                                               (lit_utf8_size_t) (string_end_p - previous_str_p));
+  ecma_string_t *const str_p =
+    ecma_new_ecma_string_from_utf8 (previous_str_p, (lit_utf8_size_t) (string_end_p - previous_str_p));
 
   result = ecma_builtin_helper_def_prop_by_index (array_p,
                                                   array_length++,
@@ -2616,11 +2583,7 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
 
   uint8_t string_flags = ECMA_STRING_FLAG_IS_ASCII;
   lit_utf8_size_t string_length;
-  ctx_p->string_p = ecma_string_get_chars (string_p,
-                                           &(ctx_p->string_size),
-                                           &string_length,
-                                           NULL,
-                                           &string_flags);
+  ctx_p->string_p = ecma_string_get_chars (string_p, &(ctx_p->string_size), &string_length, NULL, &string_flags);
 
   const lit_utf8_byte_t *const string_end_p = ctx_p->string_p + ctx_p->string_size;
   const uint8_t *const bc_start_p = (const uint8_t *) (bc_p + 1);
@@ -2630,14 +2593,11 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
   ecma_length_t index;
 
   ecma_regexp_ctx_t re_ctx;
-  ecma_regexp_initialize_context (&re_ctx,
-                                  bc_p,
-                                  ctx_p->string_p,
-                                  string_end_p);
+  ecma_regexp_initialize_context (&re_ctx, bc_p, ctx_p->string_p, string_end_p);
 
   /* lastIndex must be accessed to remain consistent with the standard, even though we may not need the value. */
-  ecma_value_t lastindex_value = ecma_op_object_get_by_magic_id ((ecma_object_t *) re_obj_p,
-                                                                 LIT_MAGIC_STRING_LASTINDEX_UL);
+  ecma_value_t lastindex_value =
+    ecma_op_object_get_by_magic_id ((ecma_object_t *) re_obj_p, LIT_MAGIC_STRING_LASTINDEX_UL);
   ecma_value_t result = ecma_op_to_length (lastindex_value, &index);
   ecma_free_value (lastindex_value);
 
@@ -2729,10 +2689,8 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
         ecma_collection_push_back (arguments_p, ecma_make_string_value (string_p));
         ecma_object_t *function_p = ecma_get_object_from_value (replace_arg);
 
-        result = ecma_op_function_call (function_p,
-                                        ECMA_VALUE_UNDEFINED,
-                                        arguments_p->buffer_p,
-                                        arguments_p->item_count);
+        result =
+          ecma_op_function_call (function_p, ECMA_VALUE_UNDEFINED, arguments_p->buffer_p, arguments_p->item_count);
 
         ecma_collection_free (arguments_p);
 
@@ -2818,8 +2776,7 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
     if ((ctx_p->flags & RE_FLAG_UNICODE) != 0)
     {
       index++;
-      const lit_code_point_t cp = ecma_regexp_unicode_advance (&current_p,
-                                                               string_end_p);
+      const lit_code_point_t cp = ecma_regexp_unicode_advance (&current_p, string_end_p);
 
       if (cp > LIT_UTF16_CODE_UNIT_MAX)
       {
@@ -2951,10 +2908,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
   }
 
 #if !JERRY_ESNEXT
-  result = ecma_regexp_replace_helper_fast (&replace_ctx,
-                                            (ecma_extended_object_t *) this_obj_p,
-                                            string_p,
-                                            replace_arg);
+  result = ecma_regexp_replace_helper_fast (&replace_ctx, (ecma_extended_object_t *) this_obj_p, string_p, replace_arg);
 
   goto cleanup_replace;
 #else /* JERRY_ESNEXT */
@@ -2969,15 +2923,12 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
   if (ecma_op_is_callable (result))
   {
     ecma_extended_object_t *function_p = (ecma_extended_object_t *) ecma_get_object_from_value (result);
-    if (ecma_object_class_is (this_obj_p, ECMA_OBJECT_CLASS_REGEXP)
-        && ecma_builtin_is_regexp_exec (function_p))
+    if (ecma_object_class_is (this_obj_p, ECMA_OBJECT_CLASS_REGEXP) && ecma_builtin_is_regexp_exec (function_p))
     {
       ecma_deref_object ((ecma_object_t *) function_p);
 
-      result = ecma_regexp_replace_helper_fast (&replace_ctx,
-                                                (ecma_extended_object_t *) this_obj_p,
-                                                string_p,
-                                                replace_arg);
+      result =
+        ecma_regexp_replace_helper_fast (&replace_ctx, (ecma_extended_object_t *) this_obj_p, string_p, replace_arg);
 
       goto cleanup_replace;
     }
@@ -3079,10 +3030,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
       last_index = ecma_make_length_value (index);
 
       /* 10.d.iii.3.c */
-      result = ecma_op_object_put (this_obj_p,
-                                   ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                   last_index,
-                                   true);
+      result = ecma_op_object_put (this_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL), last_index, true);
 
       ecma_free_value (last_index);
 
@@ -3103,11 +3051,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
   }
 
   uint8_t string_flags = ECMA_STRING_FLAG_IS_ASCII;
-  replace_ctx.string_p = ecma_string_get_chars (string_p,
-                                                &(replace_ctx.string_size),
-                                                NULL,
-                                                NULL,
-                                                &string_flags);
+  replace_ctx.string_p = ecma_string_get_chars (string_p, &(replace_ctx.string_size), NULL, NULL, &string_flags);
 
   /* 14. */
   replace_ctx.builder = ecma_stringbuilder_create ();
@@ -3120,8 +3064,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
   const lit_utf8_byte_t *const string_end_p = replace_ctx.string_p + replace_ctx.string_size;
 
   /* 16. */
-  for (ecma_value_t *current_p = results_p->buffer_p;
-       current_p < results_p->buffer_p + results_p->item_count;
+  for (ecma_value_t *current_p = results_p->buffer_p; current_p < results_p->buffer_p + results_p->item_count;
        current_p++)
   {
     /* 16.a */
@@ -3236,8 +3179,8 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
       }
 
       ecma_stringbuilder_append_raw (&replace_ctx.builder,
-                                    source_position_p,
-                                    (lit_utf8_size_t) (match_position_p - source_position_p));
+                                     source_position_p,
+                                     (lit_utf8_size_t) (match_position_p - source_position_p));
       replace_ctx.match_byte_pos = (lit_utf8_size_t) (match_position_p - replace_ctx.string_p);
 
       if ((string_flags & ECMA_STRING_FLAG_IS_ASCII) && matched_str_size == matched_str_length)
@@ -3407,10 +3350,8 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
   ecma_free_value (full_unicode_value);
 #endif /* JERRY_ESNEXT */
 
-  ecma_value_t set_status = ecma_op_object_put (obj_p,
-                                                ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                ecma_make_uint32_value (0),
-                                                true);
+  ecma_value_t set_status =
+    ecma_op_object_put (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL), ecma_make_uint32_value (0), true);
 
   if (ECMA_IS_VALUE_ERROR (set_status))
   {
@@ -3494,19 +3435,15 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
       index = ecma_op_advance_string_index (str_p, index, full_unicode);
 
       last_index = ecma_make_length_value (index);
-      ecma_value_t next_set_status = ecma_op_object_put (obj_p,
-                                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                         last_index,
-                                                         true);
+      ecma_value_t next_set_status =
+        ecma_op_object_put (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL), last_index, true);
 #else /* !JERRY_ESNEXT */
       ecma_number_t index = ecma_get_number_from_value (last_index);
       ecma_free_value (last_index);
 
       last_index = ecma_make_number_value (index + 1);
-      ecma_value_t next_set_status = ecma_op_object_put (obj_p,
-                                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                         last_index,
-                                                         true);
+      ecma_value_t next_set_status =
+        ecma_op_object_put (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL), last_index, true);
 
 #endif /* JERRY_ESNEXT */
       ecma_free_value (last_index);

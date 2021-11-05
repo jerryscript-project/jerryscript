@@ -18,7 +18,7 @@ brew update
 
 PKGS="
     cmake
-    cppcheck vera++
+    cppcheck clang-format-10
     "
 
 for pkg in $PKGS

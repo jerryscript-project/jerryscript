@@ -14,19 +14,21 @@
  */
 
 #include "ecma-atomics-object.h"
+
 #include "ecma-arraybuffer-object.h"
-#include "ecma-shared-arraybuffer-object.h"
 #include "ecma-bigint.h"
-#include "ecma-typedarray-object.h"
-#include "ecma-objects.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "jmem.h"
+#include "ecma-objects.h"
+#include "ecma-shared-arraybuffer-object.h"
+#include "ecma-typedarray-object.h"
+
 #include "jcontext.h"
-#include "ecma-function-object.h"
+#include "jmem.h"
 
 #if JERRY_BUILTIN_ATOMICS
 
@@ -56,7 +58,7 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
 
   /* 3-4. */
   ecma_object_t *typedarray_p = ecma_get_object_from_value (typedarray);
-  ecma_typedarray_info_t target_info =  ecma_typedarray_get_info (typedarray_p);
+  ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
 
   /* 5-6. */
   if (waitable)
@@ -68,7 +70,7 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
   }
   else
   {
-    if (target_info.id  == ECMA_UINT8_CLAMPED_ARRAY || target_info.id == ECMA_FLOAT32_ARRAY
+    if (target_info.id == ECMA_UINT8_CLAMPED_ARRAY || target_info.id == ECMA_FLOAT32_ARRAY
         || target_info.id == ECMA_FLOAT64_ARRAY)
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not supported"));
@@ -159,7 +161,7 @@ ecma_atomic_read_modify_write (ecma_value_t typedarray, /**< typedArray argument
 
   /* 3. */
   ecma_object_t *typedarray_p = ecma_get_object_from_value (typedarray);
-  ecma_typedarray_info_t target_info =  ecma_typedarray_get_info (typedarray_p);
+  ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
 
   /* 4-5. */
   ecma_value_t val = ECMA_VALUE_ERROR;

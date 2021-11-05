@@ -22,6 +22,7 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
+
 #include "jrt.h"
 
 #if JERRY_BUILTIN_ERRORS
@@ -30,7 +31,7 @@
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-urierror-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID uri_error_prototype
+#define BUILTIN_UNDERSCORED_ID  uri_error_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 #endif /* JERRY_BUILTIN_ERRORS */

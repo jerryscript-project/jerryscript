@@ -22,10 +22,7 @@
 
 #include "jerryscript-compiler.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
+JERRY_C_API_BEGIN
 
 /** \addtogroup jerry Jerry engine interface
  * @{
@@ -51,12 +48,12 @@ extern "C"
  */
 typedef enum
 {
-  JERRY_INIT_EMPTY               = (0u),      /**< empty flag set */
-  JERRY_INIT_SHOW_OPCODES        = (1u << 0), /**< dump byte-code to log after parse */
+  JERRY_INIT_EMPTY = (0u), /**< empty flag set */
+  JERRY_INIT_SHOW_OPCODES = (1u << 0), /**< dump byte-code to log after parse */
   JERRY_INIT_SHOW_REGEXP_OPCODES = (1u << 1), /**< dump regexp byte-code to log after compilation */
-  JERRY_INIT_MEM_STATS           = (1u << 2), /**< dump memory statistics */
-  JERRY_INIT_MEM_STATS_SEPARATE  = (1u << 3), /**< deprecated, an unused placeholder now */
-  JERRY_INIT_DEBUGGER            = (1u << 4), /**< deprecated, an unused placeholder now */
+  JERRY_INIT_MEM_STATS = (1u << 2), /**< dump memory statistics */
+  JERRY_INIT_MEM_STATS_SEPARATE = (1u << 3), /**< deprecated, an unused placeholder now */
+  JERRY_INIT_DEBUGGER = (1u << 4), /**< deprecated, an unused placeholder now */
 } jerry_init_flag_t;
 
 /**
@@ -64,16 +61,16 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_ERROR_NONE = 0,  /**< No Error */
+  JERRY_ERROR_NONE = 0, /**< No Error */
 
-  JERRY_ERROR_COMMON,    /**< Error */
-  JERRY_ERROR_EVAL,      /**< EvalError */
-  JERRY_ERROR_RANGE,     /**< RangeError */
+  JERRY_ERROR_COMMON, /**< Error */
+  JERRY_ERROR_EVAL, /**< EvalError */
+  JERRY_ERROR_RANGE, /**< RangeError */
   JERRY_ERROR_REFERENCE, /**< ReferenceError */
-  JERRY_ERROR_SYNTAX,    /**< SyntaxError */
-  JERRY_ERROR_TYPE,      /**< TypeError */
-  JERRY_ERROR_URI,       /**< URIError */
-  JERRY_ERROR_AGGREGATE  /**< AggregateError */
+  JERRY_ERROR_SYNTAX, /**< SyntaxError */
+  JERRY_ERROR_TYPE, /**< TypeError */
+  JERRY_ERROR_URI, /**< URIError */
+  JERRY_ERROR_AGGREGATE /**< AggregateError */
 } jerry_error_t;
 
 /**
@@ -132,12 +129,12 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_REGEXP_FLAG_GLOBAL = (1u << 1),      /**< Globally scan string */
+  JERRY_REGEXP_FLAG_GLOBAL = (1u << 1), /**< Globally scan string */
   JERRY_REGEXP_FLAG_IGNORE_CASE = (1u << 2), /**< Ignore case */
-  JERRY_REGEXP_FLAG_MULTILINE = (1u << 3),   /**< Multiline string scan */
-  JERRY_REGEXP_FLAG_STICKY = (1u << 4),      /**< ECMAScript v11, 21.2.5.14 */
-  JERRY_REGEXP_FLAG_UNICODE = (1u << 5),     /**< ECMAScript v11, 21.2.5.17 */
-  JERRY_REGEXP_FLAG_DOTALL = (1u << 6)       /**< ECMAScript v11, 21.2.5.3 */
+  JERRY_REGEXP_FLAG_MULTILINE = (1u << 3), /**< Multiline string scan */
+  JERRY_REGEXP_FLAG_STICKY = (1u << 4), /**< ECMAScript v11, 21.2.5.14 */
+  JERRY_REGEXP_FLAG_UNICODE = (1u << 5), /**< ECMAScript v11, 21.2.5.17 */
+  JERRY_REGEXP_FLAG_DOTALL = (1u << 6) /**< ECMAScript v11, 21.2.5.3 */
 } jerry_regexp_flags_t;
 
 /**
@@ -229,23 +226,23 @@ typedef struct
  */
 typedef enum
 {
-  JERRY_PROPERTY_FILTER_ALL = 0,                               /**< List all property keys independently
-                                                                *   from key type or property value attributes
-                                                                *   (equivalent to Reflect.ownKeys call)  */
-  JERRY_PROPERTY_FILTER_TRAVERSE_PROTOTYPE_CHAIN = (1 << 0),   /**< Include keys from the objects's
-                                                                *   prototype chain as well */
-  JERRY_PROPERTY_FILTER_EXCLUDE_NON_CONFIGURABLE = (1 << 1),   /**< Exclude property key if
-                                                                *   the property is non-configurable */
-  JERRY_PROPERTY_FILTER_EXCLUDE_NON_ENUMERABLE = (1 << 2),     /**< Exclude property key if
-                                                                *   the property is non-enumerable */
-  JERRY_PROPERTY_FILTER_EXCLUDE_NON_WRITABLE = (1 << 3),       /**< Exclude property key if
-                                                                *   the property is non-writable */
-  JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS = (1 << 4),            /**< Exclude property key if it is a string */
-  JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS = (1 << 5),            /**< Exclude property key if it is a symbol */
-  JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES = (1 << 6),    /**< Exclude property key if it is an integer index */
-  JERRY_PROPERTY_FILTER_INTEGER_INDICES_AS_NUMBER = (1 << 7),  /**< By default integer index property keys are
-                                                                *   converted to string. Enabling this flags keeps
-                                                                *   integer index property keys as numbers. */
+  JERRY_PROPERTY_FILTER_ALL = 0, /**< List all property keys independently
+                                  *   from key type or property value attributes
+                                  *   (equivalent to Reflect.ownKeys call)  */
+  JERRY_PROPERTY_FILTER_TRAVERSE_PROTOTYPE_CHAIN = (1 << 0), /**< Include keys from the objects's
+                                                              *   prototype chain as well */
+  JERRY_PROPERTY_FILTER_EXCLUDE_NON_CONFIGURABLE = (1 << 1), /**< Exclude property key if
+                                                              *   the property is non-configurable */
+  JERRY_PROPERTY_FILTER_EXCLUDE_NON_ENUMERABLE = (1 << 2), /**< Exclude property key if
+                                                            *   the property is non-enumerable */
+  JERRY_PROPERTY_FILTER_EXCLUDE_NON_WRITABLE = (1 << 3), /**< Exclude property key if
+                                                          *   the property is non-writable */
+  JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS = (1 << 4), /**< Exclude property key if it is a string */
+  JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS = (1 << 5), /**< Exclude property key if it is a symbol */
+  JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES = (1 << 6), /**< Exclude property key if it is an integer index */
+  JERRY_PROPERTY_FILTER_INTEGER_INDICES_AS_NUMBER = (1 << 7), /**< By default integer index property keys are
+                                                               *   converted to string. Enabling this flags keeps
+                                                               *   integer index property keys as numbers. */
 } jerry_property_filter_t;
 
 /**
@@ -296,8 +293,7 @@ typedef void (*jerry_object_native_free_callback_t) (void *native_p, struct jerr
 /**
  * Free callback for external strings.
  */
-typedef void (*jerry_external_string_free_callback_t) (jerry_char_t *string_p, jerry_size_t string_size,
-                                                       void *user_p);
+typedef void (*jerry_external_string_free_callback_t) (jerry_char_t *string_p, jerry_size_t string_size, void *user_p);
 
 /**
  * Decorator callback for Error objects. The decorator can create
@@ -337,8 +333,7 @@ typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_na
 /**
  * Function type applied for each object in the engine.
  */
-typedef bool (*jerry_objects_foreach_t) (const jerry_value_t object,
-                                         void *user_data_p);
+typedef bool (*jerry_objects_foreach_t) (const jerry_value_t object, void *user_data_p);
 
 /**
  * Function type applied for each matching object in the engine.
@@ -418,18 +413,18 @@ typedef struct jerry_context_t jerry_context_t;
  */
 typedef enum
 {
-  JERRY_BIN_OP_EQUAL = 0u,    /**< equal comparison (==) */
-  JERRY_BIN_OP_STRICT_EQUAL,  /**< strict equal comparison (===) */
-  JERRY_BIN_OP_LESS,          /**< less relation (<) */
-  JERRY_BIN_OP_LESS_EQUAL,    /**< less or equal relation (<=) */
-  JERRY_BIN_OP_GREATER,       /**< greater relation (>) */
+  JERRY_BIN_OP_EQUAL = 0u, /**< equal comparison (==) */
+  JERRY_BIN_OP_STRICT_EQUAL, /**< strict equal comparison (===) */
+  JERRY_BIN_OP_LESS, /**< less relation (<) */
+  JERRY_BIN_OP_LESS_EQUAL, /**< less or equal relation (<=) */
+  JERRY_BIN_OP_GREATER, /**< greater relation (>) */
   JERRY_BIN_OP_GREATER_EQUAL, /**< greater or equal relation (>=)*/
-  JERRY_BIN_OP_INSTANCEOF,    /**< instanceof operation */
-  JERRY_BIN_OP_ADD,           /**< addition operator (+) */
-  JERRY_BIN_OP_SUB,           /**< subtraction operator (-) */
-  JERRY_BIN_OP_MUL,           /**< multiplication operator (*) */
-  JERRY_BIN_OP_DIV,           /**< division operator (/) */
-  JERRY_BIN_OP_REM,           /**< remainder operator (%) */
+  JERRY_BIN_OP_INSTANCEOF, /**< instanceof operation */
+  JERRY_BIN_OP_ADD, /**< addition operator (+) */
+  JERRY_BIN_OP_SUB, /**< subtraction operator (-) */
+  JERRY_BIN_OP_MUL, /**< multiplication operator (*) */
+  JERRY_BIN_OP_DIV, /**< division operator (/) */
+  JERRY_BIN_OP_REM, /**< remainder operator (%) */
 } jerry_binary_operation_t;
 
 /**
@@ -480,15 +475,15 @@ typedef enum
 {
   JERRY_TYPE_NONE = 0u, /**< no type information */
   JERRY_TYPE_UNDEFINED, /**< undefined type */
-  JERRY_TYPE_NULL,      /**< null type */
-  JERRY_TYPE_BOOLEAN,   /**< boolean type */
-  JERRY_TYPE_NUMBER,    /**< number type */
-  JERRY_TYPE_STRING,    /**< string type */
-  JERRY_TYPE_OBJECT,    /**< object type */
-  JERRY_TYPE_FUNCTION,  /**< function type */
-  JERRY_TYPE_ERROR,     /**< error/abort type */
-  JERRY_TYPE_SYMBOL,    /**< symbol type */
-  JERRY_TYPE_BIGINT,    /**< bigint type */
+  JERRY_TYPE_NULL, /**< null type */
+  JERRY_TYPE_BOOLEAN, /**< boolean type */
+  JERRY_TYPE_NUMBER, /**< number type */
+  JERRY_TYPE_STRING, /**< string type */
+  JERRY_TYPE_OBJECT, /**< object type */
+  JERRY_TYPE_FUNCTION, /**< function type */
+  JERRY_TYPE_ERROR, /**< error/abort type */
+  JERRY_TYPE_SYMBOL, /**< symbol type */
+  JERRY_TYPE_BIGINT, /**< bigint type */
 } jerry_type_t;
 
 /**
@@ -496,33 +491,33 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_OBJECT_TYPE_NONE = 0u,           /**< Non object type */
-  JERRY_OBJECT_TYPE_GENERIC,             /**< Generic JavaScript object without any internal property */
-  JERRY_OBJECT_TYPE_MODULE_NAMESPACE,    /**< Namespace object */
-  JERRY_OBJECT_TYPE_ARRAY,               /**< Array object */
-  JERRY_OBJECT_TYPE_PROXY,               /**< Proxy object */
-  JERRY_OBJECT_TYPE_SCRIPT,              /**< Script object (see jerry_parse) */
-  JERRY_OBJECT_TYPE_MODULE,              /**< Module object (see jerry_parse) */
-  JERRY_OBJECT_TYPE_PROMISE,             /**< Promise object */
-  JERRY_OBJECT_TYPE_DATAVIEW,            /**< Dataview object */
-  JERRY_OBJECT_TYPE_FUNCTION,            /**< Function object (see jerry_function_get_type) */
-  JERRY_OBJECT_TYPE_TYPEDARRAY,          /**< %TypedArray% object (see jerry_get_typedarray_type) */
-  JERRY_OBJECT_TYPE_ITERATOR,            /**< Iterator object (see jerry_iterator_get_type) */
-  JERRY_OBJECT_TYPE_CONTAINER,           /**< Container object (see jerry_container_get_type) */
-  JERRY_OBJECT_TYPE_ERROR,               /**< Error object */
-  JERRY_OBJECT_TYPE_ARRAYBUFFER,         /**< Array buffer object */
+  JERRY_OBJECT_TYPE_NONE = 0u, /**< Non object type */
+  JERRY_OBJECT_TYPE_GENERIC, /**< Generic JavaScript object without any internal property */
+  JERRY_OBJECT_TYPE_MODULE_NAMESPACE, /**< Namespace object */
+  JERRY_OBJECT_TYPE_ARRAY, /**< Array object */
+  JERRY_OBJECT_TYPE_PROXY, /**< Proxy object */
+  JERRY_OBJECT_TYPE_SCRIPT, /**< Script object (see jerry_parse) */
+  JERRY_OBJECT_TYPE_MODULE, /**< Module object (see jerry_parse) */
+  JERRY_OBJECT_TYPE_PROMISE, /**< Promise object */
+  JERRY_OBJECT_TYPE_DATAVIEW, /**< Dataview object */
+  JERRY_OBJECT_TYPE_FUNCTION, /**< Function object (see jerry_function_get_type) */
+  JERRY_OBJECT_TYPE_TYPEDARRAY, /**< %TypedArray% object (see jerry_get_typedarray_type) */
+  JERRY_OBJECT_TYPE_ITERATOR, /**< Iterator object (see jerry_iterator_get_type) */
+  JERRY_OBJECT_TYPE_CONTAINER, /**< Container object (see jerry_container_get_type) */
+  JERRY_OBJECT_TYPE_ERROR, /**< Error object */
+  JERRY_OBJECT_TYPE_ARRAYBUFFER, /**< Array buffer object */
   JERRY_OBJECT_TYPE_SHARED_ARRAY_BUFFER, /**< Shared Array Buffer object */
 
-  JERRY_OBJECT_TYPE_ARGUMENTS,           /**< Arguments object */
-  JERRY_OBJECT_TYPE_BOOLEAN,             /**< Boolean object */
-  JERRY_OBJECT_TYPE_DATE,                /**< Date object */
-  JERRY_OBJECT_TYPE_NUMBER,              /**< Number object */
-  JERRY_OBJECT_TYPE_REGEXP,              /**< RegExp object */
-  JERRY_OBJECT_TYPE_STRING,              /**< String object */
-  JERRY_OBJECT_TYPE_SYMBOL,              /**< Symbol object */
-  JERRY_OBJECT_TYPE_GENERATOR,           /**< Generator object */
-  JERRY_OBJECT_TYPE_BIGINT,              /**< BigInt object */
-  JERRY_OBJECT_TYPE_WEAKREF,             /**< WeakRef object */
+  JERRY_OBJECT_TYPE_ARGUMENTS, /**< Arguments object */
+  JERRY_OBJECT_TYPE_BOOLEAN, /**< Boolean object */
+  JERRY_OBJECT_TYPE_DATE, /**< Date object */
+  JERRY_OBJECT_TYPE_NUMBER, /**< Number object */
+  JERRY_OBJECT_TYPE_REGEXP, /**< RegExp object */
+  JERRY_OBJECT_TYPE_STRING, /**< String object */
+  JERRY_OBJECT_TYPE_SYMBOL, /**< Symbol object */
+  JERRY_OBJECT_TYPE_GENERATOR, /**< Generator object */
+  JERRY_OBJECT_TYPE_BIGINT, /**< BigInt object */
+  JERRY_OBJECT_TYPE_WEAKREF, /**< WeakRef object */
 } jerry_object_type_t;
 
 /**
@@ -530,12 +525,12 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_FUNCTION_TYPE_NONE = 0u,    /**< Non function type */
-  JERRY_FUNCTION_TYPE_GENERIC,      /**< Generic JavaScript function */
-  JERRY_FUNCTION_TYPE_ACCESSOR,     /**< Accessor function */
-  JERRY_FUNCTION_TYPE_BOUND,        /**< Bound function */
-  JERRY_FUNCTION_TYPE_ARROW,        /**< Arrow function */
-  JERRY_FUNCTION_TYPE_GENERATOR,    /**< Generator function */
+  JERRY_FUNCTION_TYPE_NONE = 0u, /**< Non function type */
+  JERRY_FUNCTION_TYPE_GENERIC, /**< Generic JavaScript function */
+  JERRY_FUNCTION_TYPE_ACCESSOR, /**< Accessor function */
+  JERRY_FUNCTION_TYPE_BOUND, /**< Bound function */
+  JERRY_FUNCTION_TYPE_ARROW, /**< Arrow function */
+  JERRY_FUNCTION_TYPE_GENERATOR, /**< Generator function */
 } jerry_function_type_t;
 
 /**
@@ -543,11 +538,11 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_ITERATOR_TYPE_NONE = 0u,    /**< Non iterator type */
-  JERRY_ITERATOR_TYPE_ARRAY,        /**< Array iterator */
-  JERRY_ITERATOR_TYPE_STRING,       /**< String iterator */
-  JERRY_ITERATOR_TYPE_MAP,          /**< Map iterator */
-  JERRY_ITERATOR_TYPE_SET,          /**< Set iterator */
+  JERRY_ITERATOR_TYPE_NONE = 0u, /**< Non iterator type */
+  JERRY_ITERATOR_TYPE_ARRAY, /**< Array iterator */
+  JERRY_ITERATOR_TYPE_STRING, /**< String iterator */
+  JERRY_ITERATOR_TYPE_MAP, /**< Map iterator */
+  JERRY_ITERATOR_TYPE_SET, /**< Set iterator */
 } jerry_iterator_type_t;
 
 /**
@@ -559,7 +554,7 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_MODULE_STATE_INVALID = 0,  /**< return value for jerry_module_get_state when its argument is not a module */
+  JERRY_MODULE_STATE_INVALID = 0, /**< return value for jerry_module_get_state when its argument is not a module */
   JERRY_MODULE_STATE_UNLINKED = 1, /**< module is currently unlinked */
   JERRY_MODULE_STATE_LINKING = 2, /**< module is currently being linked */
   JERRY_MODULE_STATE_LINKED = 3, /**< module has been linked (its dependencies has been resolved) */
@@ -585,14 +580,17 @@ typedef jerry_value_t (*jerry_module_import_callback_t) (const jerry_value_t spe
 /**
  * Callback which is called after the module enters into linked, evaluated or error state.
  */
-typedef void (*jerry_module_state_changed_callback_t) (jerry_module_state_t new_state, const jerry_value_t module,
-                                                       const jerry_value_t value, void *user_p);
+typedef void (*jerry_module_state_changed_callback_t) (jerry_module_state_t new_state,
+                                                       const jerry_value_t module,
+                                                       const jerry_value_t value,
+                                                       void *user_p);
 
 /**
  * Callback which is called when an import.meta expression of a module is evaluated the first time.
  */
 typedef void (*jerry_module_import_meta_callback_t) (const jerry_value_t module,
-                                                     const jerry_value_t meta_object, void *user_p);
+                                                     const jerry_value_t meta_object,
+                                                     void *user_p);
 
 /**
  * Callback which is called by jerry_module_evaluate to evaluate the native module.
@@ -625,9 +623,9 @@ typedef enum
 typedef enum
 {
   JERRY_PROMISE_STATE_NONE = 0u, /**< Invalid/Unknown state (possibly called on a non-promise object). */
-  JERRY_PROMISE_STATE_PENDING,   /**< Promise is in "Pending" state. */
+  JERRY_PROMISE_STATE_PENDING, /**< Promise is in "Pending" state. */
   JERRY_PROMISE_STATE_FULFILLED, /**< Promise is in "Fulfilled" state. */
-  JERRY_PROMISE_STATE_REJECTED,  /**< Promise is in "Rejected" state. */
+  JERRY_PROMISE_STATE_REJECTED, /**< Promise is in "Rejected" state. */
 } jerry_promise_state_t;
 
 /**
@@ -649,8 +647,8 @@ typedef enum
                                           *   object: the Promise object
                                           *   value: value for resolving */
   JERRY_PROMISE_EVENT_REJECT_FULFILLED, /**< called when a reject is called on a fulfilled Promise
-                                          *  object: the Promise object
-                                          *  value: value for rejecting */
+                                         *  object: the Promise object
+                                         *  value: value for rejecting */
   JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER, /**< called when a Promise is rejected without a handler
                                                *   object: the Promise object
                                                *   value: value for rejecting */
@@ -715,7 +713,8 @@ typedef enum
  * Notification callback for tracking Promise and async function operations.
  */
 typedef void (*jerry_promise_callback_t) (jerry_promise_event_type_t event_type,
-                                          const jerry_value_t object, const jerry_value_t value,
+                                          const jerry_value_t object,
+                                          const jerry_value_t value,
                                           void *user_p);
 
 /**
@@ -727,19 +726,19 @@ typedef void (*jerry_promise_callback_t) (jerry_promise_event_type_t event_type,
  */
 typedef enum
 {
-  JERRY_SYMBOL_ASYNC_ITERATOR,       /**< @@asyncIterator well-known symbol */
-  JERRY_SYMBOL_HAS_INSTANCE,         /**< @@hasInstance well-known symbol */
+  JERRY_SYMBOL_ASYNC_ITERATOR, /**< @@asyncIterator well-known symbol */
+  JERRY_SYMBOL_HAS_INSTANCE, /**< @@hasInstance well-known symbol */
   JERRY_SYMBOL_IS_CONCAT_SPREADABLE, /**< @@isConcatSpreadable well-known symbol */
-  JERRY_SYMBOL_ITERATOR,             /**< @@iterator well-known symbol */
-  JERRY_SYMBOL_MATCH,                /**< @@match well-known symbol */
-  JERRY_SYMBOL_REPLACE,              /**< @@replace well-known symbol */
-  JERRY_SYMBOL_SEARCH,               /**< @@search well-known symbol */
-  JERRY_SYMBOL_SPECIES,              /**< @@species well-known symbol */
-  JERRY_SYMBOL_SPLIT,                /**< @@split well-known symbol */
-  JERRY_SYMBOL_TO_PRIMITIVE,         /**< @@toPrimitive well-known symbol */
-  JERRY_SYMBOL_TO_STRING_TAG,        /**< @@toStringTag well-known symbol */
-  JERRY_SYMBOL_UNSCOPABLES,          /**< @@unscopables well-known symbol */
-  JERRY_SYMBOL_MATCH_ALL,            /**< @@matchAll well-known symbol */
+  JERRY_SYMBOL_ITERATOR, /**< @@iterator well-known symbol */
+  JERRY_SYMBOL_MATCH, /**< @@match well-known symbol */
+  JERRY_SYMBOL_REPLACE, /**< @@replace well-known symbol */
+  JERRY_SYMBOL_SEARCH, /**< @@search well-known symbol */
+  JERRY_SYMBOL_SPECIES, /**< @@species well-known symbol */
+  JERRY_SYMBOL_SPLIT, /**< @@split well-known symbol */
+  JERRY_SYMBOL_TO_PRIMITIVE, /**< @@toPrimitive well-known symbol */
+  JERRY_SYMBOL_TO_STRING_TAG, /**< @@toStringTag well-known symbol */
+  JERRY_SYMBOL_UNSCOPABLES, /**< @@unscopables well-known symbol */
+  JERRY_SYMBOL_MATCH_ALL, /**< @@matchAll well-known symbol */
 } jerry_well_known_symbol_t;
 
 /**
@@ -834,20 +833,24 @@ typedef enum
 /**
  * Callback for allocating the backing store of array buffer or shared array buffer objects.
  */
-typedef uint8_t *(*jerry_arraybuffer_allocate_t) (jerry_arraybuffer_type_t buffer_type, uint32_t buffer_size,
-                                                  void **arraybuffer_user_p, void *user_p);
+typedef uint8_t *(*jerry_arraybuffer_allocate_t) (jerry_arraybuffer_type_t buffer_type,
+                                                  uint32_t buffer_size,
+                                                  void **arraybuffer_user_p,
+                                                  void *user_p);
 
 /**
  * Callback for freeing the backing store of array buffer or shared array buffer objects.
  */
-typedef void (*jerry_arraybuffer_free_t) (jerry_arraybuffer_type_t buffer_type, uint8_t *buffer_p,
-                                          uint32_t buffer_size, void *arraybuffer_user_p, void *user_p);
+typedef void (*jerry_arraybuffer_free_t) (jerry_arraybuffer_type_t buffer_type,
+                                          uint8_t *buffer_p,
+                                          uint32_t buffer_size,
+                                          void *arraybuffer_user_p,
+                                          void *user_p);
 
 /**
  * @}
  */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+JERRY_C_API_END
+
 #endif /* !JERRYSCRIPT_TYPES_H */

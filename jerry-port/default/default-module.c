@@ -17,14 +17,15 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "jerryscript-port-default.h"
+#include "jerryscript-port.h"
+
 #include <sys/stat.h>
 
-#include "jerryscript-port.h"
-#include "jerryscript-port-default.h"
-
 #ifndef S_ISDIR
-#define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
-#endif
+#define S_ISDIR(mode) (((mode) &S_IFMT) == S_IFDIR)
+#endif /* !defined(S_ISDIR) */
 
 /**
  * Determines the size of the given file.
@@ -112,7 +113,7 @@ jerry_port_get_directory_end (const jerry_char_t *path_p) /**< path */
 
   while (end_p > path_p)
   {
-#if defined (_WIN32)
+#if defined(_WIN32)
     if (end_p[-1] == '/' || end_p[-1] == '\\')
     {
       return (size_t) (end_p - path_p);
@@ -170,7 +171,7 @@ jerry_port_normalize_path (const jerry_char_t *in_path_p, /**< path to the refer
     path_p[in_path_length] = '\0';
   }
 
-#if defined (_WIN32)
+#if defined(_WIN32)
   char full_path[_MAX_PATH];
 
   if (_fullpath (full_path, path_p, _MAX_PATH) != NULL)
@@ -188,7 +189,7 @@ jerry_port_normalize_path (const jerry_char_t *in_path_p, /**< path to the refer
 
     memcpy (path_p, full_path, full_path_len + 1);
   }
-#elif defined (__unix__) || defined (__APPLE__)
+#elif defined(__unix__) || defined(__APPLE__)
   char *norm_p = realpath (path_p, NULL);
 
   if (norm_p != NULL)
@@ -216,8 +217,7 @@ typedef struct jerry_port_module_t
 /**
  * Native info descriptor for modules.
  */
-static const jerry_object_native_info_t jerry_port_module_native_info =
-{
+static const jerry_object_native_info_t jerry_port_module_native_info = {
   .free_cb = NULL,
 };
 
@@ -296,12 +296,10 @@ jerry_port_module_manager_deinit (void *user_data_p) /**< context pointer to dei
 /**
  * Declare the context data manager for modules.
  */
-static const jerry_context_data_manager_t jerry_port_module_manager =
-{
-  .init_cb = jerry_port_module_manager_init,
-  .deinit_cb = jerry_port_module_manager_deinit,
-  .bytes_needed = sizeof (jerry_port_module_manager_t)
-};
+static const jerry_context_data_manager_t jerry_port_module_manager = { .init_cb = jerry_port_module_manager_init,
+                                                                        .deinit_cb = jerry_port_module_manager_deinit,
+                                                                        .bytes_needed =
+                                                                          sizeof (jerry_port_module_manager_t) };
 
 /**
  * Default module resolver.
@@ -346,8 +344,7 @@ jerry_port_module_resolve (const jerry_value_t specifier, /**< module specifier 
 
   while (module_p != NULL)
   {
-    if (module_p->realm == realm
-        && strcmp ((const char *) module_p->path_p, (const char *) path_p) == 0)
+    if (module_p->realm == realm && strcmp ((const char *) module_p->path_p, (const char *) path_p) == 0)
     {
       free (path_p);
       free (in_path_p);
@@ -375,9 +372,7 @@ jerry_port_module_resolve (const jerry_value_t specifier, /**< module specifier 
   parse_options.options = JERRY_PARSE_MODULE | JERRY_PARSE_HAS_RESOURCE;
   parse_options.resource_name = jerry_create_string_sz ((const jerry_char_t *) in_path_p, in_path_length);
 
-  jerry_value_t ret_value = jerry_parse (source_p,
-                                         source_size,
-                                         &parse_options);
+  jerry_value_t ret_value = jerry_parse (source_p, source_size, &parse_options);
   jerry_release_value (parse_options.resource_name);
 
   jerry_port_release_source (source_p);
@@ -411,6 +406,5 @@ void
 jerry_port_module_release (const jerry_value_t realm) /**< if this argument is object, release only those modules,
                                                        *   which realm value is equal to this argument. */
 {
-  jerry_port_module_free ((jerry_port_module_manager_t *) jerry_get_context_data (&jerry_port_module_manager),
-                          realm);
+  jerry_port_module_free ((jerry_port_module_manager_t *) jerry_get_context_data (&jerry_port_module_manager), realm);
 } /* jerry_port_module_release */

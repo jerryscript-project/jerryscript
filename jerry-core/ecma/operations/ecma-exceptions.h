@@ -17,6 +17,7 @@
 #define ECMA_EXCEPTIONS_H
 
 #include "ecma-globals.h"
+
 #include "jrt.h"
 
 /** \addtogroup ecma ECMA

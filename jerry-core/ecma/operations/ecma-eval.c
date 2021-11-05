@@ -13,16 +13,18 @@
  * limitations under the License.
  */
 
+#include "ecma-eval.h"
+
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
-#include "ecma-eval.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
+
+#include "jcontext.h"
 #include "js-parser.h"
 #include "vm.h"
-#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -51,8 +53,7 @@ ecma_op_eval (ecma_value_t source_code, /**< source code */
     return ECMA_VALUE_UNDEFINED;
   }
 
-  return ecma_op_eval_chars_buffer ((void *) &source_code,
-                                    parse_opts | ECMA_PARSE_HAS_SOURCE_VALUE);
+  return ecma_op_eval_chars_buffer ((void *) &source_code, parse_opts | ECMA_PARSE_HAS_SOURCE_VALUE);
 } /* ecma_op_eval */
 
 /**

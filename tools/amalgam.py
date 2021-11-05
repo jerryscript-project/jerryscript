@@ -250,7 +250,7 @@ def amalgamate_jerry_core(output_dir):
     amalgamate(
         base_dir=JERRY_CORE,
         input_files=[
-            os.path.join(JERRY_CORE, 'api', 'jerry.c'),
+            os.path.join(JERRY_CORE, 'api', 'jerryscript.c'),
             # Add the global built-in by default to include some common items
             # to avoid problems with common built-in headers
             os.path.join(JERRY_CORE, 'ecma', 'builtin-objects', 'ecma-builtins.c'),

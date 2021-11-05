@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#if !defined (_XOPEN_SOURCE) || _XOPEN_SOURCE < 500
+#if !defined(_XOPEN_SOURCE) || _XOPEN_SOURCE < 500
 #undef _XOPEN_SOURCE
 /* Required macro for sleep functions (nanosleep or usleep) */
 #define _XOPEN_SOURCE 500
-#endif
+#endif /* !(defined(_XOPEN_SOURCE) || _XOPEN_SOURCE < 500) */
 
 #ifdef _WIN32
 #include <windows.h>
@@ -25,14 +25,15 @@
 #include <unistd.h>
 #endif /* _WIN32 */
 
-#include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
+#include "jerryscript-port.h"
 
 /**
  * Default implementation of jerry_port_sleep. Uses 'usleep' if available on the
  * system, does nothing otherwise.
  */
-void jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
+void
+jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
 {
 #ifdef _WIN32
   Sleep (sleep_time);

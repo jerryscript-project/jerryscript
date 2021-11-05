@@ -14,6 +14,7 @@
  */
 
 #include "jerryscript.h"
+
 #include "test-common.h"
 
 int
@@ -23,20 +24,12 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_error_t errors[] =
-  {
-    JERRY_ERROR_COMMON,
-    JERRY_ERROR_EVAL,
-    JERRY_ERROR_RANGE,
-    JERRY_ERROR_REFERENCE,
-    JERRY_ERROR_SYNTAX,
-    JERRY_ERROR_TYPE,
-    JERRY_ERROR_URI
-  };
+  jerry_error_t errors[] = { JERRY_ERROR_COMMON, JERRY_ERROR_EVAL, JERRY_ERROR_RANGE, JERRY_ERROR_REFERENCE,
+                             JERRY_ERROR_SYNTAX, JERRY_ERROR_TYPE, JERRY_ERROR_URI };
 
   for (size_t idx = 0; idx < sizeof (errors) / sizeof (errors[0]); idx++)
   {
-    jerry_value_t error_obj = jerry_create_error (errors[idx], (const jerry_char_t *)"test");
+    jerry_value_t error_obj = jerry_create_error (errors[idx], (const jerry_char_t *) "test");
     TEST_ASSERT (jerry_value_is_error (error_obj));
     TEST_ASSERT (jerry_get_error_type (error_obj) == errors[idx]);
 
@@ -47,8 +40,7 @@ main (void)
     jerry_release_value (error_obj);
   }
 
-  jerry_value_t test_values[] =
-  {
+  jerry_value_t test_values[] = {
     jerry_create_number (11),
     jerry_create_string ((const jerry_char_t *) "message"),
     jerry_create_boolean (true),
@@ -64,18 +56,14 @@ main (void)
 
   char test_source[] = "\xF0\x9D\x84\x9E";
 
-  jerry_value_t result = jerry_parse ((const jerry_char_t *) test_source,
-                                      sizeof (test_source) - 1,
-                                      NULL);
+  jerry_value_t result = jerry_parse ((const jerry_char_t *) test_source, sizeof (test_source) - 1, NULL);
   TEST_ASSERT (jerry_value_is_error (result));
   TEST_ASSERT (jerry_get_error_type (result) == JERRY_ERROR_SYNTAX);
 
   jerry_release_value (result);
 
   char test_invalid_error[] = "Object.create(Error.prototype)";
-  result = jerry_eval ((const jerry_char_t *) test_invalid_error,
-                       sizeof (test_invalid_error) - 1,
-                       JERRY_PARSE_NO_OPTS);
+  result = jerry_eval ((const jerry_char_t *) test_invalid_error, sizeof (test_invalid_error) - 1, JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (result) && jerry_value_is_object (result));
   TEST_ASSERT (jerry_get_error_type (result) == JERRY_ERROR_NONE);
 

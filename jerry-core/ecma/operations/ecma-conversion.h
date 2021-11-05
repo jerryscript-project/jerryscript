@@ -16,9 +16,9 @@
 #ifndef ECMA_CONVERSION_H
 #define ECMA_CONVERSION_H
 
+#include "ecma-builtins.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-builtins.h"
 
 /** \addtogroup ecma ECMA
  * @{

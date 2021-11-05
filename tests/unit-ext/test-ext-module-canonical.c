@@ -16,11 +16,12 @@
 #include <string.h>
 
 #include "jerryscript.h"
-#include "test-common.h"
+
 #include "jerryscript-ext/module.h"
+#include "test-common.h"
 
 #define ACTUAL_NAME "alice"
-#define ALIAS_NAME "bob"
+#define ALIAS_NAME  "bob"
 
 static jerry_value_t
 get_canonical_name (const jerry_value_t name)
@@ -60,11 +61,8 @@ resolve (const jerry_value_t canonical_name, jerry_value_t *result)
   return false;
 } /* resolve */
 
-static const jerryx_module_resolver_t canonical_test =
-{
-  .get_canonical_name_p = get_canonical_name,
-  .resolve_p = resolve
-};
+static const jerryx_module_resolver_t canonical_test = { .get_canonical_name_p = get_canonical_name,
+                                                         .resolve_p = resolve };
 
 #define TEST_VALUE 95.0
 

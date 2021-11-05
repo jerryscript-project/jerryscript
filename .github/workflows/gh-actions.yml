@@ -12,13 +12,16 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
       - run: sudo apt update
-      - run: sudo apt install doxygen vera++ cppcheck pylint python-serial
+      - run: sudo apt install doxygen clang-format-10 cppcheck pylint python-serial
       - run: $RUNNER --check-signed-off=gh-actions
         if: ${{ always() }}
       - run: $RUNNER --check-doxygen
         if: ${{ always() }}
-      - run: $RUNNER --check-vera
+      - run: $RUNNER --check-format
         if: ${{ always() }}
       - run: $RUNNER --check-license
         if: ${{ always() }}
@@ -145,7 +148,7 @@ jobs:
       - run: sudo apt update
       - run: sudo apt install gcc-multilib
       - run: $RUNNER -q --unittests
-      # clang has bug in supporting lto 
+      # clang has bug in supporting lto
       - run: $RUNNER -q --buildoption-test --buildoptions=--lto=off
 
   ASAN_Tests:

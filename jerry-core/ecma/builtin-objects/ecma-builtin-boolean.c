@@ -22,6 +22,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+
 #include "jrt.h"
 
 #if JERRY_BUILTIN_BOOLEAN
@@ -30,7 +31,7 @@
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-boolean.inc.h"
-#define BUILTIN_UNDERSCORED_ID boolean
+#define BUILTIN_UNDERSCORED_ID  boolean
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA

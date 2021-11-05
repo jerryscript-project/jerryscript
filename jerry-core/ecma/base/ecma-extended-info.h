@@ -23,9 +23,9 @@
  * @{
  */
 
-#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
-
 #include "ecma-globals.h"
+
+#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
 
 /**
  * Vlq encoding: flag which is set for all bytes except the last one.

@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include "jerryscript.h"
+
+#include "config.h"
 #include "test-common.h"
 
 int

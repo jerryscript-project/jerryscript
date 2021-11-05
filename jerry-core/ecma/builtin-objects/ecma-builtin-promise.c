@@ -15,8 +15,8 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
-#include "ecma-builtin-helpers.h"
 #include "ecma-builtin-handlers.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -24,6 +24,7 @@
 #include "ecma-iterator-object.h"
 #include "ecma-number-object.h"
 #include "ecma-promise-object.h"
+
 #include "jcontext.h"
 
 #if JERRY_ESNEXT
@@ -52,7 +53,7 @@ enum
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-promise.inc.h"
-#define BUILTIN_UNDERSCORED_ID promise
+#define BUILTIN_UNDERSCORED_ID  promise
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -87,8 +88,7 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
 
-  ecma_value_t resolve = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (ctor),
-                                                         LIT_MAGIC_STRING_RESOLVE);
+  ecma_value_t resolve = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (ctor), LIT_MAGIC_STRING_RESOLVE);
 
   if (ECMA_IS_VALUE_ERROR (resolve))
   {
@@ -143,7 +143,7 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
     }
 
     /* i. */
-    ecma_value_t args[2] = {capability_p->resolve, capability_p->reject};
+    ecma_value_t args[2] = { capability_p->resolve, capability_p->reject };
     ecma_value_t result = ecma_op_invoke_by_magic_id (next_promise, LIT_MAGIC_STRING_THEN, args, 2);
     ecma_free_value (next_promise);
 
@@ -175,7 +175,7 @@ exit:
 static inline ecma_value_t
 ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
                               ecma_value_t next_method, /**< next method */
-                              ecma_object_t *capability_obj_p,  /**< PromiseCapability record */
+                              ecma_object_t *capability_obj_p, /**< PromiseCapability record */
                               ecma_value_t ctor, /**< the caller of Promise.all */
                               uint8_t builtin_routine_id, /**< built-in wide routine identifier */
                               bool *done_p) /**< [out] iteratorRecord[[done]] */
@@ -186,8 +186,7 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
 
-  ecma_value_t resolve = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (ctor),
-                                                         LIT_MAGIC_STRING_RESOLVE);
+  ecma_value_t resolve = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (ctor), LIT_MAGIC_STRING_RESOLVE);
 
   if (ECMA_IS_VALUE_ERROR (resolve))
   {
@@ -293,8 +292,8 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
     if (builtin_routine_id != ECMA_PROMISE_ROUTINE_ANY)
     {
       /* k. */
-      executor_func_p = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER,
-                                                       sizeof (ecma_promise_all_executor_t));
+      executor_func_p =
+        ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER, sizeof (ecma_promise_all_executor_t));
 
       ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) executor_func_p;
 
@@ -339,8 +338,8 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
         executor_type = ECMA_PROMISE_ANY_REJECT << ECMA_NATIVE_HANDLER_COMMON_FLAGS_SHIFT;
       }
 
-      ecma_object_t *reject_func_p = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER,
-                                                                    sizeof (ecma_promise_all_executor_t));
+      ecma_object_t *reject_func_p =
+        ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER, sizeof (ecma_promise_all_executor_t));
 
       ecma_promise_all_executor_t *reject_p = (ecma_promise_all_executor_t *) reject_func_p;
       reject_p->index = idx;
@@ -421,12 +420,8 @@ ecma_builtin_promise_helper (ecma_value_t this_arg, /**< 'this' argument */
   }
   else
   {
-    ret = ecma_builtin_promise_perform (iterator,
-                                        next_method,
-                                        capability_obj_p,
-                                        this_arg,
-                                        builtin_routine_id,
-                                        &is_done);
+    ret =
+      ecma_builtin_promise_perform (iterator, next_method, capability_obj_p, this_arg, builtin_routine_id, &is_done);
   }
 
   if (ECMA_IS_VALUE_ERROR (ret))

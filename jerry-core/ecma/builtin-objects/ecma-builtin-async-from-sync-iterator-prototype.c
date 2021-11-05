@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "jerryscript-types.h"
+
 #include "ecma-builtin-handlers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
@@ -23,8 +25,8 @@
 #include "ecma-iterator-object.h"
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
+
 #include "jcontext.h"
-#include "jerryscript-types.h"
 #include "jrt.h"
 #include "lit-magic-strings.h"
 #include "lit-strings.h"
@@ -37,8 +39,8 @@
 #include "ecma-builtins-internal.h"
 
 /**
-  * This object has a custom dispatch function.
-  */
+ * This object has a custom dispatch function.
+ */
 #define BUILTIN_CUSTOM_DISPATCH
 
 /**
@@ -53,7 +55,7 @@ enum
 } ecma_async_from_sync_iterator_operation_type_t;
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-async-from-sync-iterator-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID async_from_sync_iterator_prototype
+#define BUILTIN_UNDERSCORED_ID  async_from_sync_iterator_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -146,9 +148,8 @@ ecma_builtin_async_from_sync_iterator_prototype_next (ecma_async_from_sync_itera
                                                       ecma_value_t value) /**< routine's 'value' argument */
 {
   /* 5. */
-  ecma_value_t next_result = ecma_op_iterator_next (iter_p->header.u.cls.u3.sync_iterator,
-                                                    iter_p->sync_next_method,
-                                                    value);
+  ecma_value_t next_result =
+    ecma_op_iterator_next (iter_p->header.u.cls.u3.sync_iterator, iter_p->sync_next_method, value);
 
   /* 6. */
   if (ECMA_IS_VALUE_ERROR (ecma_op_if_abrupt_reject_promise (&next_result, capability_p)))
@@ -224,10 +225,8 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
     }
 
     /* 7.b. */
-    ecma_value_t resolve = ecma_op_function_call (ecma_get_object_from_value (func_obj),
-                                                  ECMA_VALUE_UNDEFINED,
-                                                  &call_arg,
-                                                  arg_size);
+    ecma_value_t resolve =
+      ecma_op_function_call (ecma_get_object_from_value (func_obj), ECMA_VALUE_UNDEFINED, &call_arg, arg_size);
     JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (resolve));
     ecma_free_value (resolve);
 
@@ -273,10 +272,8 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
     ecma_value_t type_error = ecma_make_object_value (type_error_obj_p);
 
     /* 10.a. */
-    ecma_value_t reject = ecma_op_function_call (ecma_get_object_from_value (capability_p->reject),
-                                                 ECMA_VALUE_UNDEFINED,
-                                                 &type_error,
-                                                 1);
+    ecma_value_t reject =
+      ecma_op_function_call (ecma_get_object_from_value (capability_p->reject), ECMA_VALUE_UNDEFINED, &type_error, 1);
     JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (reject));
     ecma_deref_object (type_error_obj_p);
     ecma_free_value (reject);
@@ -292,11 +289,11 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
 } /* ecma_builtin_async_from_sync_iterator_prototype_do */
 
 /**
-  * Dispatcher of the %AsyncFromSyncIteratorPrototype% built-in's routines
-  *
-  * @return ecma value
-  *         Returned value must be freed with ecma_free_value.
-  */
+ * Dispatcher of the %AsyncFromSyncIteratorPrototype% built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
 ecma_value_t
 ecma_builtin_async_from_sync_iterator_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide
                                                                                                *   routine

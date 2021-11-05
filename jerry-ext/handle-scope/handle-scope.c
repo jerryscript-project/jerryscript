@@ -14,6 +14,7 @@
  */
 
 #include <stdlib.h>
+
 #include "handle-scope-internal.h"
 #include "jext-common.h"
 
@@ -30,7 +31,7 @@ jerryx_open_handle_scope (jerryx_handle_scope *result)
 {
   *result = jerryx_handle_scope_alloc ();
   return jerryx_handle_scope_ok;
-} /** jerryx_open_handle_scope */
+} /* jerryx_open_handle_scope */
 
 /**
  * Release all jerry values attached to given scope
@@ -60,7 +61,7 @@ jerryx_handle_scope_release_handles (jerryx_handle_scope scope)
     jerry_release_value (scope->handle_prelist[idx]);
   }
   scope->prelist_handle_count = 0;
-} /** jerryx_handle_scope_release_handles */
+} /* jerryx_handle_scope_release_handles */
 
 /**
  * Close the scope and its child scopes and release all jerry values that
@@ -83,11 +84,10 @@ jerryx_close_handle_scope (jerryx_handle_scope scope)
     jerryx_handle_scope child = jerryx_handle_scope_get_child (a_scope);
     jerryx_handle_scope_free (a_scope);
     a_scope = child;
-  }
-  while (a_scope != NULL);
+  } while (a_scope != NULL);
 
   return jerryx_handle_scope_ok;
-} /** jerryx_close_handle_scope */
+} /* jerryx_close_handle_scope */
 
 /**
  * Opens a new handle scope from which one object can be promoted to the outer scope
@@ -100,7 +100,7 @@ jerryx_handle_scope_status
 jerryx_open_escapable_handle_scope (jerryx_handle_scope *result)
 {
   return jerryx_open_handle_scope (result);
-} /** jerryx_open_escapable_handle_scope */
+} /* jerryx_open_escapable_handle_scope */
 
 /**
  * Close the scope and its child scopes and release all jerry values that
@@ -114,7 +114,7 @@ jerryx_handle_scope_status
 jerryx_close_escapable_handle_scope (jerryx_handle_scope scope)
 {
   return jerryx_close_handle_scope (scope);
-} /** jerryx_close_escapable_handle_scope */
+} /* jerryx_close_escapable_handle_scope */
 
 /**
  * Internal helper.
@@ -143,7 +143,7 @@ jerryx_hand_scope_escape_handle_from_prelist (jerryx_handle_scope scope, size_t 
     scope->handle_prelist[idx] = scope->handle_prelist[scope->prelist_handle_count - 1];
   }
   return jval;
-} /** jerryx_hand_scope_escape_handle_from_prelist */
+} /* jerryx_hand_scope_escape_handle_from_prelist */
 
 /**
  * Internal helper.
@@ -261,7 +261,7 @@ jerryx_escape_handle_internal (jerryx_escapable_handle_scope scope,
     scope->escaped = true;
   }
   return jerryx_handle_scope_ok;
-} /** jerryx_escape_handle_internal */
+} /* jerryx_escape_handle_internal */
 
 /**
  * Promotes the handle to the JavaScript object so that it is valid for the lifetime of
@@ -274,12 +274,10 @@ jerryx_escape_handle_internal (jerryx_escapable_handle_scope scope,
  * @return status code, jerryx_handle_scope_ok if success.
  */
 jerryx_handle_scope_status
-jerryx_escape_handle (jerryx_escapable_handle_scope scope,
-                      jerry_value_t escapee,
-                      jerry_value_t *result)
+jerryx_escape_handle (jerryx_escapable_handle_scope scope, jerry_value_t escapee, jerry_value_t *result)
 {
   return jerryx_escape_handle_internal (scope, escapee, result, true);
-} /** jerryx_escape_handle */
+} /* jerryx_escape_handle */
 
 /**
  * Escape a handle from scope yet do not promote it to the outer scope.
@@ -291,12 +289,10 @@ jerryx_escape_handle (jerryx_escapable_handle_scope scope,
  * @return status code, jerryx_handle_scope_ok if success.
  */
 jerryx_handle_scope_status
-jerryx_remove_handle (jerryx_escapable_handle_scope scope,
-                      jerry_value_t escapee,
-                      jerry_value_t *result)
+jerryx_remove_handle (jerryx_escapable_handle_scope scope, jerry_value_t escapee, jerry_value_t *result)
 {
   return jerryx_escape_handle_internal (scope, escapee, result, false);
-} /** jerryx_remove_handle */
+} /* jerryx_remove_handle */
 
 /**
  * Try to reuse given handle if possible while adding to the scope.
@@ -321,7 +317,7 @@ jerryx_handle_scope_add_handle_to (jerryx_handle_t *handle, jerryx_handle_scope 
   handle->sibling = scope->handle_ptr;
   scope->handle_ptr = handle;
   return handle->jval;
-} /** jerryx_handle_scope_add_handle_to */
+} /* jerryx_handle_scope_add_handle_to */
 
 /**
  * Add given jerry value to the scope.
@@ -349,7 +345,7 @@ jerryx_create_handle_in_scope (jerry_value_t jval, jerryx_handle_scope scope)
   scope->handle_ptr = handle;
 
   return jval;
-} /** jerryx_create_handle_in_scope */
+} /* jerryx_create_handle_in_scope */
 
 /**
  * Add given jerry value to current top scope.
@@ -361,4 +357,4 @@ jerry_value_t
 jerryx_create_handle (jerry_value_t jval)
 {
   return jerryx_create_handle_in_scope (jval, jerryx_handle_scope_get_current ());
-} /** jerryx_create_handle */
+} /* jerryx_create_handle */

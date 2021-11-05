@@ -29,102 +29,102 @@
  * By default all built-ins are enabled if they are not defined.
  */
 #ifndef JERRY_BUILTINS
-# define JERRY_BUILTINS 1
+#define JERRY_BUILTINS 1
 #endif /* !defined (JERRY_BUILTINS) */
 
 #ifndef JERRY_BUILTIN_ANNEXB
-# define JERRY_BUILTIN_ANNEXB JERRY_BUILTINS
+#define JERRY_BUILTIN_ANNEXB JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_ANNEXB) */
 
 #ifndef JERRY_BUILTIN_ARRAY
-# define JERRY_BUILTIN_ARRAY JERRY_BUILTINS
+#define JERRY_BUILTIN_ARRAY JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_ARRAY) */
 
 #ifndef JERRY_BUILTIN_BOOLEAN
-# define JERRY_BUILTIN_BOOLEAN JERRY_BUILTINS
+#define JERRY_BUILTIN_BOOLEAN JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_BOOLEAN) */
 
 #ifndef JERRY_BUILTIN_DATE
-# define JERRY_BUILTIN_DATE JERRY_BUILTINS
+#define JERRY_BUILTIN_DATE JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_DATE) */
 
 #ifndef JERRY_BUILTIN_ERRORS
-# define JERRY_BUILTIN_ERRORS JERRY_BUILTINS
+#define JERRY_BUILTIN_ERRORS JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_ERRORS) */
 
 #ifndef JERRY_BUILTIN_JSON
-# define JERRY_BUILTIN_JSON JERRY_BUILTINS
+#define JERRY_BUILTIN_JSON JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_JSON) */
 
 #ifndef JERRY_BUILTIN_MATH
-# define JERRY_BUILTIN_MATH JERRY_BUILTINS
+#define JERRY_BUILTIN_MATH JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_MATH) */
 
 #ifndef JERRY_BUILTIN_NUMBER
-# define JERRY_BUILTIN_NUMBER JERRY_BUILTINS
+#define JERRY_BUILTIN_NUMBER JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_NUMBER) */
 
 #ifndef JERRY_BUILTIN_REGEXP
-# define JERRY_BUILTIN_REGEXP JERRY_BUILTINS
+#define JERRY_BUILTIN_REGEXP JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_REGEXP) */
 
 #ifndef JERRY_BUILTIN_STRING
-# define JERRY_BUILTIN_STRING JERRY_BUILTINS
+#define JERRY_BUILTIN_STRING JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_STRING) */
 
 /**
  * ES2015+ related features, by default all of them are enabled.
  */
 #ifndef JERRY_ESNEXT
-# define JERRY_ESNEXT 1
+#define JERRY_ESNEXT 1
 #endif /* !defined (JERRY_ESNEXT) */
 
 #ifndef JERRY_BUILTIN_BIGINT
-# define JERRY_BUILTIN_BIGINT JERRY_ESNEXT
+#define JERRY_BUILTIN_BIGINT JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_BIGINT) */
 
 #ifndef JERRY_BUILTIN_CONTAINER
-# define JERRY_BUILTIN_CONTAINER JERRY_ESNEXT
+#define JERRY_BUILTIN_CONTAINER JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_CONTAINER) */
 
 #ifndef JERRY_BUILTIN_DATAVIEW
-# define JERRY_BUILTIN_DATAVIEW JERRY_ESNEXT
+#define JERRY_BUILTIN_DATAVIEW JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_DATAVIEW) */
 
 #ifndef JERRY_BUILTIN_GLOBAL_THIS
-# define JERRY_BUILTIN_GLOBAL_THIS JERRY_ESNEXT
+#define JERRY_BUILTIN_GLOBAL_THIS JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_GLOBAL_THIS) */
 
 #ifndef JERRY_BUILTIN_PROXY
-# define JERRY_BUILTIN_PROXY JERRY_ESNEXT
+#define JERRY_BUILTIN_PROXY JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_PROXY) */
 
 #ifndef JERRY_BUILTIN_REALMS
-# define JERRY_BUILTIN_REALMS JERRY_ESNEXT
+#define JERRY_BUILTIN_REALMS JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_REALMS) */
 
 #ifndef JERRY_BUILTIN_REFLECT
-# define JERRY_BUILTIN_REFLECT JERRY_ESNEXT
+#define JERRY_BUILTIN_REFLECT JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_REFLECT) */
 
 #ifndef JERRY_BUILTIN_TYPEDARRAY
-# define JERRY_BUILTIN_TYPEDARRAY JERRY_ESNEXT
+#define JERRY_BUILTIN_TYPEDARRAY JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_TYPEDARRAY) */
 
 #ifndef JERRY_BUILTIN_SHAREDARRAYBUFFER
-# define JERRY_BUILTIN_SHAREDARRAYBUFFER JERRY_ESNEXT
+#define JERRY_BUILTIN_SHAREDARRAYBUFFER JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_SHAREDARRAYBUFFER) */
 
 #ifndef JERRY_BUILTIN_ATOMICS
-# define JERRY_BUILTIN_ATOMICS JERRY_ESNEXT
+#define JERRY_BUILTIN_ATOMICS JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_ATOMICS) */
 
 #ifndef JERRY_BUILTIN_WEAKREF
-# define JERRY_BUILTIN_WEAKREF JERRY_ESNEXT
+#define JERRY_BUILTIN_WEAKREF JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_WEAKREF) */
 
 #ifndef JERRY_MODULE_SYSTEM
-# define JERRY_MODULE_SYSTEM JERRY_ESNEXT
+#define JERRY_MODULE_SYSTEM JERRY_ESNEXT
 #endif /* !defined (JERRY_MODULE_SYSTEM) */
 
 /**
@@ -142,7 +142,7 @@
  * For more details see: jmem/jmem.h
  */
 #ifndef JERRY_CPOINTER_32_BIT
-# define JERRY_CPOINTER_32_BIT 0
+#define JERRY_CPOINTER_32_BIT 0
 #endif /* !defined (JERRY_CPOINTER_32_BIT) */
 
 /**
@@ -153,7 +153,7 @@
  *  1: Enable the debugger.
  */
 #ifndef JERRY_DEBUGGER
-# define JERRY_DEBUGGER 0
+#define JERRY_DEBUGGER 0
 #endif /* !defined (JERRY_DEBUGGER) */
 
 /**
@@ -166,7 +166,7 @@
  * Default value: 0
  */
 #ifndef JERRY_ERROR_MESSAGES
-# define JERRY_ERROR_MESSAGES 0
+#define JERRY_ERROR_MESSAGES 0
 #endif /* !defined (JERRY_ERROR_MESSAGES) */
 
 /**
@@ -179,7 +179,7 @@
  * Default value: 0
  */
 #ifndef JERRY_EXTERNAL_CONTEXT
-# define JERRY_EXTERNAL_CONTEXT 0
+#define JERRY_EXTERNAL_CONTEXT 0
 #endif /* !defined (JERRY_EXTERNAL_CONTEXT) */
 
 /**
@@ -188,7 +188,7 @@
  * Default value: 512 KiB
  */
 #ifndef JERRY_GLOBAL_HEAP_SIZE
-# define JERRY_GLOBAL_HEAP_SIZE (512)
+#define JERRY_GLOBAL_HEAP_SIZE (512)
 #endif /* !defined (JERRY_GLOBAL_HEAP_SIZE) */
 
 /**
@@ -197,7 +197,7 @@
  * If value is 0, the default is 1/32 of JERRY_HEAP_SIZE
  */
 #ifndef JERRY_GC_LIMIT
-# define JERRY_GC_LIMIT 0
+#define JERRY_GC_LIMIT 0
 #endif /* !defined (JERRY_GC_LIMIT) */
 
 /**
@@ -210,7 +210,7 @@
  * Default value: 0, unlimited
  */
 #ifndef JERRY_STACK_LIMIT
-# define JERRY_STACK_LIMIT (0)
+#define JERRY_STACK_LIMIT (0)
 #endif /* !defined (JERRY_STACK_LIMIT) */
 
 /**
@@ -219,7 +219,7 @@
  * Default value: 8
  */
 #ifndef JERRY_GC_MARK_LIMIT
-# define JERRY_GC_MARK_LIMIT (8)
+#define JERRY_GC_MARK_LIMIT (8)
 #endif /* !defined (JERRY_GC_MARK_LIMIT) */
 
 /**
@@ -232,7 +232,7 @@
  * Default value: 1
  */
 #ifndef JERRY_LCACHE
-# define JERRY_LCACHE 1
+#define JERRY_LCACHE 1
 #endif /* !defined (JERRY_LCACHE) */
 
 /**
@@ -245,7 +245,7 @@
  * Default value: 0
  */
 #ifndef JERRY_FUNCTION_TO_STRING
-# define JERRY_FUNCTION_TO_STRING 0
+#define JERRY_FUNCTION_TO_STRING 0
 #endif /* !defined (JERRY_FUNCTION_TO_STRING) */
 
 /**
@@ -258,7 +258,7 @@
  * Default value: 0
  */
 #ifndef JERRY_LINE_INFO
-# define JERRY_LINE_INFO 0
+#define JERRY_LINE_INFO 0
 #endif /* !defined (JERRY_LINE_INFO) */
 
 /**
@@ -271,7 +271,7 @@
  * Default value: 0
  */
 #ifndef JERRY_LOGGING
-# define JERRY_LOGGING 0
+#define JERRY_LOGGING 0
 #endif /* !defined (JERRY_LOGGING) */
 
 /**
@@ -286,7 +286,7 @@
  *           Only enable it for debugging purposes.
  */
 #ifndef JERRY_MEM_GC_BEFORE_EACH_ALLOC
-# define JERRY_MEM_GC_BEFORE_EACH_ALLOC 0
+#define JERRY_MEM_GC_BEFORE_EACH_ALLOC 0
 #endif /* !defined (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
 
 /**
@@ -299,7 +299,7 @@
  * Default value: 0
  */
 #ifndef JERRY_MEM_STATS
-# define JERRY_MEM_STATS 0
+#define JERRY_MEM_STATS 0
 #endif /* !defined (JERRY_MEM_STATS) */
 
 /**
@@ -313,7 +313,7 @@
  * Default value: 1
  */
 #ifndef JERRY_NUMBER_TYPE_FLOAT64
-# define JERRY_NUMBER_TYPE_FLOAT64 1
+#define JERRY_NUMBER_TYPE_FLOAT64 1
 #endif /* !defined (JERRY_NUMBER_TYPE_FLOAT64 */
 
 /**
@@ -326,7 +326,7 @@
  * Default value: 1
  */
 #ifndef JERRY_PARSER
-# define JERRY_PARSER 1
+#define JERRY_PARSER 1
 #endif /* !defined (JERRY_PARSER) */
 
 /**
@@ -341,7 +341,7 @@
  * Default value: 0
  */
 #ifndef JERRY_PARSER_DUMP_BYTE_CODE
-# define JERRY_PARSER_DUMP_BYTE_CODE 0
+#define JERRY_PARSER_DUMP_BYTE_CODE 0
 #endif /* defined (JERRY_PARSER_DUMP_BYTE_CODE) */
 
 /**
@@ -354,7 +354,7 @@
  * Default value: 1
  */
 #ifndef JERRY_PROPERTY_HASHMAP
-# define JERRY_PROPERTY_HASHMAP 1
+#define JERRY_PROPERTY_HASHMAP 1
 #endif /* !defined (JERRY_PROPERTY_HASHMAP) */
 
 /**
@@ -363,7 +363,7 @@
  * Default value: 0
  */
 #ifndef JERRY_PROMISE_CALLBACK
-# define JERRY_PROMISE_CALLBACK 0
+#define JERRY_PROMISE_CALLBACK 0
 #endif /* !defined (JERRY_PROMISE_CALLBACK) */
 
 /**
@@ -379,7 +379,7 @@
  * Default value: 0
  */
 #ifndef JERRY_REGEXP_DUMP_BYTE_CODE
-# define JERRY_REGEXP_DUMP_BYTE_CODE 0
+#define JERRY_REGEXP_DUMP_BYTE_CODE 0
 #endif /* !defined (JERRY_REGEXP_DUMP_BYTE_CODE) */
 
 /**
@@ -388,7 +388,7 @@
  * Default value: 0
  */
 #ifndef JERRY_REGEXP_STRICT_MODE
-# define JERRY_REGEXP_STRICT_MODE 0
+#define JERRY_REGEXP_STRICT_MODE 0
 #endif /* !defined (JERRY_REGEXP_STRICT_MODE) */
 
 /**
@@ -401,7 +401,7 @@
  * Default value: 0
  */
 #ifndef JERRY_SNAPSHOT_EXEC
-# define JERRY_SNAPSHOT_EXEC 0
+#define JERRY_SNAPSHOT_EXEC 0
 #endif /* !defined (JERRY_SNAPSHOT_EXEC) */
 
 /**
@@ -412,7 +412,7 @@
  *  1: Enable snapshot save functions.
  */
 #ifndef JERRY_SNAPSHOT_SAVE
-# define JERRY_SNAPSHOT_SAVE 0
+#define JERRY_SNAPSHOT_SAVE 0
 #endif /* !defined (JERRY_SNAPSHOT_SAVE) */
 
 /**
@@ -425,7 +425,7 @@
  * Default value: 0
  */
 #ifndef JERRY_SYSTEM_ALLOCATOR
-# define JERRY_SYSTEM_ALLOCATOR 0
+#define JERRY_SYSTEM_ALLOCATOR 0
 #endif /* !defined (JERRY_SYSTEM_ALLOCATOR) */
 
 /**
@@ -433,7 +433,7 @@
  * By default Unicode case conversion is enabled.
  */
 #ifndef JERRY_UNICODE_CASE_CONVERSION
-# define JERRY_UNICODE_CASE_CONVERSION 1
+#define JERRY_UNICODE_CASE_CONVERSION 1
 #endif /* !defined (JERRY_UNICODE_CASE_CONVERSION) */
 
 /**
@@ -444,7 +444,7 @@
  *  1: Enable the Valgrind specific allocation notifications.
  */
 #ifndef JERRY_VALGRIND
-# define JERRY_VALGRIND 0
+#define JERRY_VALGRIND 0
 #endif /* !defined (JERRY_VALGRIND) */
 
 /**
@@ -455,7 +455,7 @@
  *  1: Enable vm exec stop callback support.
  */
 #ifndef JERRY_VM_EXEC_STOP
-# define JERRY_VM_EXEC_STOP 0
+#define JERRY_VM_EXEC_STOP 0
 #endif /* !defined (JERRY_VM_EXEC_STOP) */
 
 /**
@@ -466,7 +466,7 @@
  *  1: Enable vm throw callback support.
  */
 #ifndef JERRY_VM_THROW
-# define JERRY_VM_THROW 0
+#define JERRY_VM_THROW 0
 #endif /* !defined (JERRY_VM_THROW) */
 
 /**
@@ -487,7 +487,7 @@
  *  # define JERRY_ATTR_CONST_DATA __attribute__((section(".rodata.const")))
  */
 #ifndef JERRY_ATTR_CONST_DATA
-# define JERRY_ATTR_CONST_DATA
+#define JERRY_ATTR_CONST_DATA
 #endif /* !defined (JERRY_ATTR_CONST_DATA) */
 
 /**
@@ -497,7 +497,7 @@
  *   #define JERRY_ATTR_GLOBAL_HEAP __attribute__((section(".text.globalheap")))
  */
 #ifndef JERRY_ATTR_GLOBAL_HEAP
-# define JERRY_ATTR_GLOBAL_HEAP
+#define JERRY_ATTR_GLOBAL_HEAP
 #endif /* !defined (JERRY_ATTR_GLOBAL_HEAP) */
 
 /**
@@ -508,232 +508,194 @@
 /**
  * Check base builtins.
  */
-#if !defined (JERRY_BUILTIN_ANNEXB) \
-|| ((JERRY_BUILTIN_ANNEXB != 0) && (JERRY_BUILTIN_ANNEXB != 1))
-# error "Invalid value for JERRY_BUILTIN_ANNEXB macro."
-#endif
-#if !defined (JERRY_BUILTIN_ARRAY) \
-|| ((JERRY_BUILTIN_ARRAY != 0) && (JERRY_BUILTIN_ARRAY != 1))
-# error "Invalid value for JERRY_BUILTIN_ARRAY macro."
-#endif
-#if !defined (JERRY_BUILTIN_BOOLEAN) \
-|| ((JERRY_BUILTIN_BOOLEAN != 0) && (JERRY_BUILTIN_BOOLEAN != 1))
-# error "Invalid value for JERRY_BUILTIN_BOOLEAN macro."
-#endif
-#if !defined (JERRY_BUILTIN_DATE) \
-|| ((JERRY_BUILTIN_DATE != 0) && (JERRY_BUILTIN_DATE != 1))
-# error "Invalid value for JERRY_BUILTIN_DATE macro."
-#endif
-#if !defined (JERRY_BUILTIN_ERRORS) \
-|| ((JERRY_BUILTIN_ERRORS != 0) && (JERRY_BUILTIN_ERRORS != 1))
-# error "Invalid value for JERRY_BUILTIN_ERRORS macro."
-#endif
-#if !defined (JERRY_BUILTIN_JSON) \
-|| ((JERRY_BUILTIN_JSON != 0) && (JERRY_BUILTIN_JSON != 1))
-# error "Invalid value for JERRY_BUILTIN_JSON macro."
-#endif
-#if !defined (JERRY_BUILTIN_MATH) \
-|| ((JERRY_BUILTIN_MATH != 0) && (JERRY_BUILTIN_MATH != 1))
-# error "Invalid value for JERRY_BUILTIN_MATH macro."
-#endif
-#if !defined (JERRY_BUILTIN_NUMBER) \
-|| ((JERRY_BUILTIN_NUMBER != 0) && (JERRY_BUILTIN_NUMBER != 1))
-# error "Invalid value for JERRY_BUILTIN_NUMBER macro."
-#endif
-#if !defined (JERRY_BUILTIN_REGEXP) \
-|| ((JERRY_BUILTIN_REGEXP != 0) && (JERRY_BUILTIN_REGEXP != 1))
-# error "Invalid value for JERRY_BUILTIN_REGEXP macro."
-#endif
-#if !defined (JERRY_BUILTIN_STRING) \
-|| ((JERRY_BUILTIN_STRING != 0) && (JERRY_BUILTIN_STRING != 1))
-# error "Invalid value for JERRY_BUILTIN_STRING macro."
-#endif
-#if !defined (JERRY_BUILTINS) \
-|| ((JERRY_BUILTINS != 0) && (JERRY_BUILTINS != 1))
-# error "Invalid value for JERRY_BUILTINS macro."
-#endif
+#if (JERRY_BUILTIN_ANNEXB != 0) && (JERRY_BUILTIN_ANNEXB != 1)
+#error "Invalid value for JERRY_BUILTIN_ANNEXB macro."
+#endif /* (JERRY_BUILTIN_ANNEXB != 0) && (JERRY_BUILTIN_ANNEXB != 1) */
+#if (JERRY_BUILTIN_ARRAY != 0) && (JERRY_BUILTIN_ARRAY != 1)
+#error "Invalid value for JERRY_BUILTIN_ARRAY macro."
+#endif /* (JERRY_BUILTIN_ARRAY != 0) && (JERRY_BUILTIN_ARRAY != 1) */
+#if (JERRY_BUILTIN_BOOLEAN != 0) && (JERRY_BUILTIN_BOOLEAN != 1)
+#error "Invalid value for JERRY_BUILTIN_BOOLEAN macro."
+#endif /* (JERRY_BUILTIN_BOOLEAN != 0) && (JERRY_BUILTIN_BOOLEAN != 1) */
+#if (JERRY_BUILTIN_DATE != 0) && (JERRY_BUILTIN_DATE != 1)
+#error "Invalid value for JERRY_BUILTIN_DATE macro."
+#endif /* (JERRY_BUILTIN_DATE != 0) && (JERRY_BUILTIN_DATE != 1) */
+#if (JERRY_BUILTIN_ERRORS != 0) && (JERRY_BUILTIN_ERRORS != 1)
+#error "Invalid value for JERRY_BUILTIN_ERRORS macro."
+#endif /* (JERRY_BUILTIN_ERRORS != 0) && (JERRY_BUILTIN_ERRORS != 1) */
+#if (JERRY_BUILTIN_JSON != 0) && (JERRY_BUILTIN_JSON != 1)
+#error "Invalid value for JERRY_BUILTIN_JSON macro."
+#endif /* (JERRY_BUILTIN_JSON != 0) && (JERRY_BUILTIN_JSON != 1) */
+#if (JERRY_BUILTIN_MATH != 0) && (JERRY_BUILTIN_MATH != 1)
+#error "Invalid value for JERRY_BUILTIN_MATH macro."
+#endif /* (JERRY_BUILTIN_MATH != 0) && (JERRY_BUILTIN_MATH != 1) */
+#if (JERRY_BUILTIN_NUMBER != 0) && (JERRY_BUILTIN_NUMBER != 1)
+#error "Invalid value for JERRY_BUILTIN_NUMBER macro."
+#endif /* (JERRY_BUILTIN_NUMBER != 0) && (JERRY_BUILTIN_NUMBER != 1) */
+#if (JERRY_BUILTIN_REGEXP != 0) && (JERRY_BUILTIN_REGEXP != 1)
+#error "Invalid value for JERRY_BUILTIN_REGEXP macro."
+#endif /* (JERRY_BUILTIN_REGEXP != 0) && (JERRY_BUILTIN_REGEXP != 1) */
+#if (JERRY_BUILTIN_STRING != 0) && (JERRY_BUILTIN_STRING != 1)
+#error "Invalid value for JERRY_BUILTIN_STRING macro."
+#endif /* (JERRY_BUILTIN_STRING != 0) && (JERRY_BUILTIN_STRING != 1) */
+#if (JERRY_BUILTINS != 0) && (JERRY_BUILTINS != 1)
+#error "Invalid value for JERRY_BUILTINS macro."
+#endif /* (JERRY_BUILTINS != 0) && (JERRY_BUILTINS != 1) */
 
 /**
  * Check ES2015+ features
  */
-#if !defined (JERRY_ESNEXT) \
-|| ((JERRY_ESNEXT != 0) && (JERRY_ESNEXT != 1))
-# error "Invalid value for JERRY_ESNEXT macro."
-#endif
-#if !defined (JERRY_BUILTIN_REALMS) \
-|| ((JERRY_BUILTIN_REALMS != 0) && (JERRY_BUILTIN_REALMS != 1))
-# error "Invalid value for JERRY_BUILTIN_REALMS macro."
-#endif
-#if !defined (JERRY_BUILTIN_DATAVIEW) \
-|| ((JERRY_BUILTIN_DATAVIEW != 0) && (JERRY_BUILTIN_DATAVIEW != 1))
-# error "Invalid value for JERRY_BUILTIN_DATAVIEW macro."
-#endif
-#if !defined (JERRY_BUILTIN_GLOBAL_THIS) \
-|| ((JERRY_BUILTIN_GLOBAL_THIS != 0) && (JERRY_BUILTIN_GLOBAL_THIS != 1))
-# error "Invalid value for JERRY_BUILTIN_GLOBAL_THIS macro."
-#endif /* !defined (JERRY_BUILTIN_GLOBAL_THIS) */
-#if !defined (JERRY_BUILTIN_REFLECT) \
-|| ((JERRY_BUILTIN_REFLECT != 0) && (JERRY_BUILTIN_REFLECT != 1))
-# error "Invalid value for JERRY_BUILTIN_REFLECT macro."
-#endif
-#if !defined (JERRY_BUILTIN_WEAKREF) \
-|| ((JERRY_BUILTIN_WEAKREF != 0) && (JERRY_BUILTIN_WEAKREF != 1))
-# error "Invalid value for JERRY_BUILTIN_WEAKREF macro."
-#endif
-#if !defined (JERRY_BUILTIN_PROXY) \
-|| ((JERRY_BUILTIN_PROXY != 0) && (JERRY_BUILTIN_PROXY != 1))
-# error "Invalid value for JERRY_BUILTIN_PROXY macro."
-#endif
-#if !defined (JERRY_BUILTIN_TYPEDARRAY) \
-|| ((JERRY_BUILTIN_TYPEDARRAY != 0) && (JERRY_BUILTIN_TYPEDARRAY != 1))
-# error "Invalid value for JERRY_BUILTIN_TYPEDARRAY macro."
-#endif
-#if !defined (JERRY_BUILTIN_SHAREDARRAYBUFFER) \
-|| ((JERRY_BUILTIN_SHAREDARRAYBUFFER != 0) && (JERRY_BUILTIN_SHAREDARRAYBUFFER != 1))
-# error "Invalid value for JERRY_BUILTIN_SHAREDARRAYBUFFER macro."
-#endif
-#if !defined (JERRY_BUILTIN_ATOMICS) \
-|| ((JERRY_BUILTIN_ATOMICS != 0) && (JERRY_BUILTIN_ATOMICS != 1))
-# error "Invalid value for JERRY_BUILTIN_ATOMICS macro."
-#endif
-#if !defined (JERRY_BUILTIN_BIGINT) \
-|| ((JERRY_BUILTIN_BIGINT != 0) && (JERRY_BUILTIN_BIGINT != 1))
-# error "Invalid value for JERRY_BUILTIN_BIGINT macro."
-#endif
-#if !defined (JERRY_MODULE_SYSTEM) \
-|| ((JERRY_MODULE_SYSTEM != 0) && (JERRY_MODULE_SYSTEM != 1))
-# error "Invalid value for JERRY_MODULE_SYSTEM macro."
-#endif
-#if (JERRY_ESNEXT == 0) \
-&& ((JERRY_BUILTIN_DATAVIEW == 1) \
-|| (JERRY_BUILTIN_CONTAINER == 1) \
-|| (JERRY_BUILTIN_PROXY == 1) \
-|| (JERRY_BUILTIN_REFLECT == 1) \
-|| (JERRY_BUILTIN_TYPEDARRAY == 1) \
-|| (JERRY_BUILTIN_WEAKREF == 1))
-# error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_xxxxx macro."
-#endif
+#if (JERRY_ESNEXT != 0) && (JERRY_ESNEXT != 1)
+#error "Invalid value for JERRY_ESNEXT macro."
+#endif /* (JERRY_ESNEXT != 0) && (JERRY_ESNEXT != 1) */
+#if (JERRY_BUILTIN_REALMS != 0) && (JERRY_BUILTIN_REALMS != 1)
+#error "Invalid value for JERRY_BUILTIN_REALMS macro."
+#endif /* (JERRY_BUILTIN_REALMS != 0) && (JERRY_BUILTIN_REALMS != 1) */
+#if (JERRY_BUILTIN_DATAVIEW != 0) && (JERRY_BUILTIN_DATAVIEW != 1)
+#error "Invalid value for JERRY_BUILTIN_DATAVIEW macro."
+#endif /* (JERRY_BUILTIN_DATAVIEW != 0) && (JERRY_BUILTIN_DATAVIEW != 1) */
+#if (JERRY_BUILTIN_GLOBAL_THIS != 0) && (JERRY_BUILTIN_GLOBAL_THIS != 1)
+#error "Invalid value for JERRY_BUILTIN_GLOBAL_THIS macro."
+#endif /* (JERRY_BUILTIN_GLOBAL_THIS != 0) && (JERRY_BUILTIN_GLOBAL_THIS != 1) */
+#if (JERRY_BUILTIN_REFLECT != 0) && (JERRY_BUILTIN_REFLECT != 1)
+#error "Invalid value for JERRY_BUILTIN_REFLECT macro."
+#endif /* (JERRY_BUILTIN_REFLECT != 0) && (JERRY_BUILTIN_REFLECT != 1) */
+#if (JERRY_BUILTIN_WEAKREF != 0) && (JERRY_BUILTIN_WEAKREF != 1)
+#error "Invalid value for JERRY_BUILTIN_WEAKREF macro."
+#endif /* (JERRY_BUILTIN_WEAKREF != 0) && (JERRY_BUILTIN_WEAKREF != 1) */
+#if (JERRY_BUILTIN_PROXY != 0) && (JERRY_BUILTIN_PROXY != 1)
+#error "Invalid value for JERRY_BUILTIN_PROXY macro."
+#endif /* (JERRY_BUILTIN_PROXY != 0) && (JERRY_BUILTIN_PROXY != 1) */
+#if (JERRY_BUILTIN_TYPEDARRAY != 0) && (JERRY_BUILTIN_TYPEDARRAY != 1)
+#error "Invalid value for JERRY_BUILTIN_TYPEDARRAY macro."
+#endif /* (JERRY_BUILTIN_TYPEDARRAY != 0) && (JERRY_BUILTIN_TYPEDARRAY != 1) */
+#if (JERRY_BUILTIN_SHAREDARRAYBUFFER != 0) && (JERRY_BUILTIN_SHAREDARRAYBUFFER != 1)
+#error "Invalid value for JERRY_BUILTIN_SHAREDARRAYBUFFER macro."
+#endif /* (JERRY_BUILTIN_SHAREDARRAYBUFFER != 0) && (JERRY_BUILTIN_SHAREDARRAYBUFFER != 1) */
+#if (JERRY_BUILTIN_ATOMICS != 0) && (JERRY_BUILTIN_ATOMICS != 1)
+#error "Invalid value for JERRY_BUILTIN_ATOMICS macro."
+#endif /* (JERRY_BUILTIN_ATOMICS != 0) && (JERRY_BUILTIN_ATOMICS != 1) */
+#if (JERRY_BUILTIN_BIGINT != 0) && (JERRY_BUILTIN_BIGINT != 1)
+#error "Invalid value for JERRY_BUILTIN_BIGINT macro."
+#endif /* (JERRY_BUILTIN_BIGINT != 0) && (JERRY_BUILTIN_BIGINT != 1) */
+#if (JERRY_MODULE_SYSTEM != 0) && (JERRY_MODULE_SYSTEM != 1)
+#error "Invalid value for JERRY_MODULE_SYSTEM macro."
+#endif /* (JERRY_MODULE_SYSTEM != 0) && (JERRY_MODULE_SYSTEM != 1) */
+#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_DATAVIEW == 1)
+#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_DATAVIEW macro."
+#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_DATAVIEW == 1) */
+#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_CONTAINER == 1)
+#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_CONTAINER macro."
+#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_CONTAINER == 1) */
+#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_PROXY == 1)
+#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_PROXY macro."
+#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_PROXY == 1) */
+#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_REFLECT == 1)
+#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_REFLECT macro."
+#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_REFLECT == 1) */
+#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_TYPEDARRAY == 1)
+#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_TYPEDARRAY macro."
+#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_TYPEDARRAY == 1) */
+#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_WEAKREF == 1)
+#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_WEAKREF macro."
+#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_WEAKREF == 1) */
 #if (JERRY_ESNEXT == 0) && (JERRY_MODULE_SYSTEM == 1)
-# error "JERRY_ESNEXT should be enabled too to enable JERRY_MODULE_SYSTEM macro."
-#endif
+#error "JERRY_ESNEXT should be enabled too to enable JERRY_MODULE_SYSTEM macro."
+#endif /* (JERRY_ESNEXT == 0) && (JERRY_MODULE_SYSTEM == 1) */
 #if (JERRY_BUILTIN_TYPEDARRAY == 0) && (JERRY_BUILTIN_SHAREDARRAYBUFFER == 1)
-# error "JERRY_BUILTIN_TYPEDARRAY should be enabled too to enable JERRY_BUILTIN_SHAREDARRAYBUFFER macro."
-#endif
+#error "JERRY_BUILTIN_TYPEDARRAY should be enabled too to enable JERRY_BUILTIN_SHAREDARRAYBUFFER macro."
+#endif /* (JERRY_BUILTIN_TYPEDARRAY == 0) && (JERRY_BUILTIN_SHAREDARRAYBUFFER == 1) */
 #if (JERRY_BUILTIN_SHAREDARRAYBUFFER == 0) && (JERRY_BUILTIN_ATOMICS == 1)
-# error "JERRY_BUILTIN_SHAREDARRAYBUFFER should be enabled too to enable JERRY_BUILTIN_ATOMICS macro."
-#endif
+#error "JERRY_BUILTIN_SHAREDARRAYBUFFER should be enabled too to enable JERRY_BUILTIN_ATOMICS macro."
+#endif /* (JERRY_BUILTIN_SHAREDARRAYBUFFER == 0) && (JERRY_BUILTIN_ATOMICS == 1) */
 
 /**
  * Internal options.
  */
-#if !defined (JERRY_CPOINTER_32_BIT) \
-|| ((JERRY_CPOINTER_32_BIT != 0) && (JERRY_CPOINTER_32_BIT != 1))
-# error "Invalid value for 'JERRY_CPOINTER_32_BIT' macro."
-#endif
-#if !defined (JERRY_DEBUGGER) \
-|| ((JERRY_DEBUGGER != 0) && (JERRY_DEBUGGER != 1))
-# error "Invalid value for 'JERRY_DEBUGGER' macro."
-#endif
-#if !defined (JERRY_ERROR_MESSAGES) \
-|| ((JERRY_ERROR_MESSAGES != 0) && (JERRY_ERROR_MESSAGES != 1))
-# error "Invalid value for 'JERRY_ERROR_MESSAGES' macro."
-#endif
-#if !defined (JERRY_EXTERNAL_CONTEXT) \
-|| ((JERRY_EXTERNAL_CONTEXT != 0) && (JERRY_EXTERNAL_CONTEXT != 1))
-# error "Invalid value for 'JERRY_EXTERNAL_CONTEXT' macro."
-#endif
-#if !defined (JERRY_GLOBAL_HEAP_SIZE) || (JERRY_GLOBAL_HEAP_SIZE <= 0)
-# error "Invalid value for 'JERRY_GLOBAL_HEAP_SIZE' macro."
-#endif
-#if !defined (JERRY_GC_LIMIT) || (JERRY_GC_LIMIT < 0)
-# error "Invalid value for 'JERRY_GC_LIMIT' macro."
-#endif
-#if !defined (JERRY_STACK_LIMIT) || (JERRY_STACK_LIMIT < 0)
-# error "Invalid value for 'JERRY_STACK_LIMIT' macro."
-#endif
-#if !defined (JERRY_GC_MARK_LIMIT) || (JERRY_GC_MARK_LIMIT < 0)
-# error "Invalid value for 'JERRY_GC_MARK_LIMIT' macro."
-#endif
-#if !defined (JERRY_LCACHE) \
-|| ((JERRY_LCACHE != 0) && (JERRY_LCACHE != 1))
-# error "Invalid value for 'JERRY_LCACHE' macro."
-#endif
-#if !defined (JERRY_FUNCTION_TO_STRING) \
-|| ((JERRY_FUNCTION_TO_STRING != 0) && (JERRY_FUNCTION_TO_STRING != 1))
-# error "Invalid value for 'JERRY_FUNCTION_TO_STRING' macro."
-#endif
-#if !defined (JERRY_LINE_INFO) \
-|| ((JERRY_LINE_INFO != 0) && (JERRY_LINE_INFO != 1))
-# error "Invalid value for 'JERRY_LINE_INFO' macro."
-#endif
-#if !defined (JERRY_LOGGING) \
-|| ((JERRY_LOGGING != 0) && (JERRY_LOGGING != 1))
-# error "Invalid value for 'JERRY_LOGGING' macro."
-#endif
-#if !defined (JERRY_MEM_GC_BEFORE_EACH_ALLOC) \
-|| ((JERRY_MEM_GC_BEFORE_EACH_ALLOC != 0) && (JERRY_MEM_GC_BEFORE_EACH_ALLOC != 1))
-# error "Invalid value for 'JERRY_MEM_GC_BEFORE_EACH_ALLOC' macro."
-#endif
-#if !defined (JERRY_MEM_STATS) \
-|| ((JERRY_MEM_STATS != 0) && (JERRY_MEM_STATS != 1))
-# error "Invalid value for 'JERRY_MEM_STATS' macro."
-#endif
-#if !defined (JERRY_NUMBER_TYPE_FLOAT64) \
-|| ((JERRY_NUMBER_TYPE_FLOAT64 != 0) && (JERRY_NUMBER_TYPE_FLOAT64 != 1))
-# error "Invalid value for 'JERRY_NUMBER_TYPE_FLOAT64' macro."
-#endif
-#if !defined (JERRY_PARSER) \
-|| ((JERRY_PARSER != 0) && (JERRY_PARSER != 1))
-# error "Invalid value for 'JERRY_PARSER' macro."
-#endif
-#if !defined (JERRY_PARSER_DUMP_BYTE_CODE) \
-|| ((JERRY_PARSER_DUMP_BYTE_CODE != 0) && (JERRY_PARSER_DUMP_BYTE_CODE != 1))
-# error "Invalid value for 'JERRY_PARSER_DUMP_BYTE_CODE' macro."
-#endif
-#if !defined (JERRY_PROPERTY_HASHMAP) \
-|| ((JERRY_PROPERTY_HASHMAP != 0) && (JERRY_PROPERTY_HASHMAP != 1))
-# error "Invalid value for 'JERRY_PROPERTY_HASHMAP' macro."
-#endif
-#if !defined (JERRY_PROMISE_CALLBACK) \
-|| ((JERRY_PROMISE_CALLBACK != 0) && (JERRY_PROMISE_CALLBACK != 1))
-# error "Invalid value for 'JERRY_PROMISE_CALLBACK' macro."
-#endif
-#if !defined (JERRY_REGEXP_DUMP_BYTE_CODE) \
-|| ((JERRY_REGEXP_DUMP_BYTE_CODE != 0) && (JERRY_REGEXP_DUMP_BYTE_CODE != 1))
-# error "Invalid value for 'JERRY_REGEXP_DUMP_BYTE_CODE' macro."
-#endif
-#if !defined (JERRY_REGEXP_STRICT_MODE) \
-|| ((JERRY_REGEXP_STRICT_MODE != 0) && (JERRY_REGEXP_STRICT_MODE != 1))
-# error "Invalid value for 'JERRY_REGEXP_STRICT_MODE' macro."
-#endif
-#if !defined (JERRY_SNAPSHOT_EXEC) \
-|| ((JERRY_SNAPSHOT_EXEC != 0) && (JERRY_SNAPSHOT_EXEC != 1))
-# error "Invalid value for 'JERRY_SNAPSHOT_EXEC' macro."
-#endif
-#if !defined (JERRY_SNAPSHOT_SAVE) \
-|| ((JERRY_SNAPSHOT_SAVE != 0) && (JERRY_SNAPSHOT_SAVE != 1))
-# error "Invalid value for 'JERRY_SNAPSHOT_SAVE' macro."
-#endif
-#if !defined (JERRY_SYSTEM_ALLOCATOR) \
-|| ((JERRY_SYSTEM_ALLOCATOR != 0) && (JERRY_SYSTEM_ALLOCATOR != 1))
-# error "Invalid value for 'JERRY_SYSTEM_ALLOCATOR' macro."
-#endif
-#if !defined (JERRY_UNICODE_CASE_CONVERSION) \
-|| ((JERRY_UNICODE_CASE_CONVERSION != 0) && (JERRY_UNICODE_CASE_CONVERSION != 1))
-# error "Invalid value for 'JERRY_UNICODE_CASE_CONVERSION' macro."
-#endif
-#if !defined (JERRY_VALGRIND) \
-|| ((JERRY_VALGRIND != 0) && (JERRY_VALGRIND != 1))
-# error "Invalid value for 'JERRY_VALGRIND' macro."
-#endif
-#if !defined (JERRY_VM_EXEC_STOP) \
-|| ((JERRY_VM_EXEC_STOP != 0) && (JERRY_VM_EXEC_STOP != 1))
-# error "Invalid value for 'JERRY_VM_EXEC_STOP' macro."
-#endif
-#if !defined (JERRY_VM_THROW) \
-|| ((JERRY_VM_THROW != 0) && (JERRY_VM_THROW != 1))
-# error "Invalid value for 'JERRY_VM_THROW' macro."
-#endif
+#if (JERRY_CPOINTER_32_BIT != 0) && (JERRY_CPOINTER_32_BIT != 1)
+#error "Invalid value for 'JERRY_CPOINTER_32_BIT' macro."
+#endif /* (JERRY_CPOINTER_32_BIT != 0) && (JERRY_CPOINTER_32_BIT != 1) */
+#if (JERRY_DEBUGGER != 0) && (JERRY_DEBUGGER != 1)
+#error "Invalid value for 'JERRY_DEBUGGER' macro."
+#endif /* (JERRY_DEBUGGER != 0) && (JERRY_DEBUGGER != 1) */
+#if (JERRY_ERROR_MESSAGES != 0) && (JERRY_ERROR_MESSAGES != 1)
+#error "Invalid value for 'JERRY_ERROR_MESSAGES' macro."
+#endif /* (JERRY_ERROR_MESSAGES != 0) && (JERRY_ERROR_MESSAGES != 1) */
+#if (JERRY_EXTERNAL_CONTEXT != 0) && (JERRY_EXTERNAL_CONTEXT != 1)
+#error "Invalid value for 'JERRY_EXTERNAL_CONTEXT' macro."
+#endif /* (JERRY_EXTERNAL_CONTEXT != 0) && (JERRY_EXTERNAL_CONTEXT != 1) */
+#if JERRY_GLOBAL_HEAP_SIZE <= 0
+#error "Invalid value for 'JERRY_GLOBAL_HEAP_SIZE' macro."
+#endif /* JERRY_GLOBAL_HEAP_SIZE <= 0 */
+#if JERRY_GC_LIMIT < 0
+#error "Invalid value for 'JERRY_GC_LIMIT' macro."
+#endif /* JERRY_GC_LIMIT < 0 */
+#if JERRY_STACK_LIMIT < 0
+#error "Invalid value for 'JERRY_STACK_LIMIT' macro."
+#endif /* JERRY_STACK_LIMIT < 0 */
+#if JERRY_GC_MARK_LIMIT < 0
+#error "Invalid value for 'JERRY_GC_MARK_LIMIT' macro."
+#endif /* JERRY_GC_MARK_LIMIT < 0 */
+#if (JERRY_LCACHE != 0) && (JERRY_LCACHE != 1)
+#error "Invalid value for 'JERRY_LCACHE' macro."
+#endif /* (JERRY_LCACHE != 0) && (JERRY_LCACHE != 1) */
+#if (JERRY_FUNCTION_TO_STRING != 0) && (JERRY_FUNCTION_TO_STRING != 1)
+#error "Invalid value for 'JERRY_FUNCTION_TO_STRING' macro."
+#endif /* (JERRY_FUNCTION_TO_STRING != 0) && (JERRY_FUNCTION_TO_STRING != 1) */
+#if (JERRY_LINE_INFO != 0) && (JERRY_LINE_INFO != 1)
+#error "Invalid value for 'JERRY_LINE_INFO' macro."
+#endif /* (JERRY_LINE_INFO != 0) && (JERRY_LINE_INFO != 1) */
+#if (JERRY_LOGGING != 0) && (JERRY_LOGGING != 1)
+#error "Invalid value for 'JERRY_LOGGING' macro."
+#endif /* (JERRY_LOGGING != 0) && (JERRY_LOGGING != 1) */
+#if (JERRY_MEM_GC_BEFORE_EACH_ALLOC != 0) && (JERRY_MEM_GC_BEFORE_EACH_ALLOC != 1)
+#error "Invalid value for 'JERRY_MEM_GC_BEFORE_EACH_ALLOC' macro."
+#endif /* (JERRY_MEM_GC_BEFORE_EACH_ALLOC != 0) && (JERRY_MEM_GC_BEFORE_EACH_ALLOC != 1) */
+#if (JERRY_MEM_STATS != 0) && (JERRY_MEM_STATS != 1)
+#error "Invalid value for 'JERRY_MEM_STATS' macro."
+#endif /* (JERRY_MEM_STATS != 0) && (JERRY_MEM_STATS != 1) */
+#if (JERRY_NUMBER_TYPE_FLOAT64 != 0) && (JERRY_NUMBER_TYPE_FLOAT64 != 1)
+#error "Invalid value for 'JERRY_NUMBER_TYPE_FLOAT64' macro."
+#endif /* (JERRY_NUMBER_TYPE_FLOAT64 != 0) && (JERRY_NUMBER_TYPE_FLOAT64 != 1) */
+#if (JERRY_PARSER != 0) && (JERRY_PARSER != 1)
+#error "Invalid value for 'JERRY_PARSER' macro."
+#endif /* (JERRY_PARSER != 0) && (JERRY_PARSER != 1) */
+#if (JERRY_PARSER_DUMP_BYTE_CODE != 0) && (JERRY_PARSER_DUMP_BYTE_CODE != 1)
+#error "Invalid value for 'JERRY_PARSER_DUMP_BYTE_CODE' macro."
+#endif /* (JERRY_PARSER_DUMP_BYTE_CODE != 0) && (JERRY_PARSER_DUMP_BYTE_CODE != 1) */
+#if (JERRY_PROPERTY_HASHMAP != 0) && (JERRY_PROPERTY_HASHMAP != 1)
+#error "Invalid value for 'JERRY_PROPERTY_HASHMAP' macro."
+#endif /* (JERRY_PROPERTY_HASHMAP != 0) && (JERRY_PROPERTY_HASHMAP != 1) */
+#if (JERRY_PROMISE_CALLBACK != 0) && (JERRY_PROMISE_CALLBACK != 1)
+#error "Invalid value for 'JERRY_PROMISE_CALLBACK' macro."
+#endif /* (JERRY_PROMISE_CALLBACK != 0) && (JERRY_PROMISE_CALLBACK != 1) */
+#if (JERRY_REGEXP_DUMP_BYTE_CODE != 0) && (JERRY_REGEXP_DUMP_BYTE_CODE != 1)
+#error "Invalid value for 'JERRY_REGEXP_DUMP_BYTE_CODE' macro."
+#endif /* (JERRY_REGEXP_DUMP_BYTE_CODE != 0) && (JERRY_REGEXP_DUMP_BYTE_CODE != 1) */
+#if (JERRY_REGEXP_STRICT_MODE != 0) && (JERRY_REGEXP_STRICT_MODE != 1)
+#error "Invalid value for 'JERRY_REGEXP_STRICT_MODE' macro."
+#endif /* (JERRY_REGEXP_STRICT_MODE != 0) && (JERRY_REGEXP_STRICT_MODE != 1) */
+#if (JERRY_SNAPSHOT_EXEC != 0) && (JERRY_SNAPSHOT_EXEC != 1)
+#error "Invalid value for 'JERRY_SNAPSHOT_EXEC' macro."
+#endif /* (JERRY_SNAPSHOT_EXEC != 0) && (JERRY_SNAPSHOT_EXEC != 1) */
+#if (JERRY_SNAPSHOT_SAVE != 0) && (JERRY_SNAPSHOT_SAVE != 1)
+#error "Invalid value for 'JERRY_SNAPSHOT_SAVE' macro."
+#endif /* (JERRY_SNAPSHOT_SAVE != 0) && (JERRY_SNAPSHOT_SAVE != 1) */
+#if (JERRY_SYSTEM_ALLOCATOR != 0) && (JERRY_SYSTEM_ALLOCATOR != 1)
+#error "Invalid value for 'JERRY_SYSTEM_ALLOCATOR' macro."
+#endif /* (JERRY_SYSTEM_ALLOCATOR != 0) && (JERRY_SYSTEM_ALLOCATOR != 1) */
+#if (JERRY_UNICODE_CASE_CONVERSION != 0) && (JERRY_UNICODE_CASE_CONVERSION != 1)
+#error "Invalid value for 'JERRY_UNICODE_CASE_CONVERSION' macro."
+#endif /* (JERRY_UNICODE_CASE_CONVERSION != 0) && (JERRY_UNICODE_CASE_CONVERSION != 1) */
+#if (JERRY_VALGRIND != 0) && (JERRY_VALGRIND != 1)
+#error "Invalid value for 'JERRY_VALGRIND' macro."
+#endif /* (JERRY_VALGRIND != 0) && (JERRY_VALGRIND != 1) */
+#if (JERRY_VM_EXEC_STOP != 0) && (JERRY_VM_EXEC_STOP != 1)
+#error "Invalid value for 'JERRY_VM_EXEC_STOP' macro."
+#endif /* (JERRY_VM_EXEC_STOP != 0) && (JERRY_VM_EXEC_STOP != 1) */
+#if (JERRY_VM_THROW != 0) && (JERRY_VM_THROW != 1)
+#error "Invalid value for 'JERRY_VM_THROW' macro."
+#endif /* (JERRY_VM_THROW != 0) && (JERRY_VM_THROW != 1) */
 
 /**
  * Cross component requirements check.
@@ -743,23 +705,23 @@
  * The date module can only use the float 64 number types.
  */
 #if JERRY_BUILTIN_DATE && !JERRY_NUMBER_TYPE_FLOAT64
-#  error "Date does not support float32"
-#endif
+#error "Date does not support float32"
+#endif /* JERRY_BUILTIN_DATE && !JERRY_NUMBER_TYPE_FLOAT64 */
 
 /**
  * Promise support must be enabled if Promise callback support is enabled.
  */
 #if JERRY_PROMISE_CALLBACK && !JERRY_ESNEXT
-#  error "Promise callback support depends on ESNext support"
+#error "Promise callback support depends on ESNext support"
 #endif /* JERRY_PROMISE_CALLBACK && !JERRY_ESNEXT */
 
 /**
  * Resource name related types into a single guard
  */
 #if JERRY_LINE_INFO || JERRY_ERROR_MESSAGES || JERRY_MODULE_SYSTEM
-# define JERRY_RESOURCE_NAME 1
-#else
-# define JERRY_RESOURCE_NAME 0
-#endif
+#define JERRY_RESOURCE_NAME 1
+#else /* !(JERRY_LINE_INFO || JERRY_ERROR_MESSAGES || JERRY_MODULE_SYSTEM) */
+#define JERRY_RESOURCE_NAME 0
+#endif /* JERRY_LINE_INFO || JERRY_ERROR_MESSAGES || JERRY_MODULE_SYSTEM */
 
 #endif /* !JERRYSCRIPT_CONFIG_H */

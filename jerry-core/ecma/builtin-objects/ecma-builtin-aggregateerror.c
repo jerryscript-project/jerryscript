@@ -14,19 +14,20 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-builtin-helpers.h"
-#include "ecma-objects.h"
-#include "ecma-function-object.h"
 #include "ecma-iterator-object.h"
-#include "ecma-array-object.h"
-#include "jrt.h"
+#include "ecma-objects.h"
+
 #include "jcontext.h"
+#include "jrt.h"
 
 #if JERRY_ESNEXT
 
@@ -34,7 +35,7 @@
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-aggregateerror.inc.h"
-#define BUILTIN_UNDERSCORED_ID aggregate_error
+#define BUILTIN_UNDERSCORED_ID  aggregate_error
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA

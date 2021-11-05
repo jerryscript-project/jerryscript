@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#include "ecma-typedarray-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-typedarray-object.h"
-#include "ecma-function-object.h"
+
 #include "jrt.h"
 
 #if JERRY_BUILTIN_TYPEDARRAY
@@ -29,9 +29,8 @@
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-typedarray.inc.h"
-#define BUILTIN_UNDERSCORED_ID typedarray
+#define BUILTIN_UNDERSCORED_ID  typedarray
 #include "ecma-builtin-internal-routines-template.inc.h"
-
 #include "ecma-builtin-typedarray-helpers.h"
 
 /** \addtogroup ecma ECMA
@@ -91,10 +90,7 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
     }
   }
 
-  return ecma_op_typedarray_from (this_arg,
-                                  source,
-                                  map_fn,
-                                  this_in_fn);
+  return ecma_op_typedarray_from (this_arg, source, map_fn, this_in_fn);
 
 } /* ecma_builtin_typedarray_from */
 

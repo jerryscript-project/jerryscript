@@ -14,23 +14,21 @@
  */
 
 #include <stdlib.h>
+
 #include "handle-scope-internal.h"
 #include "jext-common.h"
 
-static jerryx_handle_scope_t jerryx_handle_scope_root =
-{
+static jerryx_handle_scope_t jerryx_handle_scope_root = {
   .prelist_handle_count = 0,
   .handle_ptr = NULL,
 };
 static jerryx_handle_scope_t *jerryx_handle_scope_current = &jerryx_handle_scope_root;
-static jerryx_handle_scope_pool_t jerryx_handle_scope_pool =
-{
+static jerryx_handle_scope_pool_t jerryx_handle_scope_pool = {
   .count = 0,
   .start = NULL,
 };
 
-#define JERRYX_HANDLE_SCOPE_POOL_PRELIST_LAST \
-  jerryx_handle_scope_pool.prelist + JERRYX_SCOPE_PRELIST_SIZE - 1
+#define JERRYX_HANDLE_SCOPE_POOL_PRELIST_LAST jerryx_handle_scope_pool.prelist + JERRYX_SCOPE_PRELIST_SIZE - 1
 
 #define JERRYX_HANDLE_SCOPE_PRELIST_IDX(scope) (scope - jerryx_handle_scope_pool.prelist)
 
@@ -61,8 +59,8 @@ static bool
 jerryx_handle_scope_is_in_prelist (jerryx_handle_scope_t *scope)
 {
   return (jerryx_handle_scope_pool.prelist <= scope)
-  && (scope <= (jerryx_handle_scope_pool.prelist + JERRYX_SCOPE_PRELIST_SIZE - 1));
-} /** jerryx_handle_scope_is_in_prelist */
+         && (scope <= (jerryx_handle_scope_pool.prelist + JERRYX_SCOPE_PRELIST_SIZE - 1));
+} /* jerryx_handle_scope_is_in_prelist */
 
 /**
  * Get the parent of given handle scope.
@@ -95,7 +93,7 @@ jerryx_handle_scope_get_parent (jerryx_handle_scope_t *scope)
     return &jerryx_handle_scope_root;
   }
   return jerryx_handle_scope_pool.prelist + JERRYX_HANDLE_SCOPE_PRELIST_IDX (scope) - 1;
-} /** jerryx_handle_scope_get_parent */
+} /* jerryx_handle_scope_get_parent */
 
 /**
  * Get the child of given handle scope.
@@ -136,7 +134,7 @@ jerryx_handle_scope_get_child (jerryx_handle_scope_t *scope)
     return NULL;
   }
   return jerryx_handle_scope_pool.prelist + idx + 1;
-} /** jerryx_handle_scope_get_child */
+} /* jerryx_handle_scope_get_child */
 
 /**
  * Claims a handle scope either from prelist or allocating a new memory block,
@@ -184,7 +182,7 @@ jerryx_handle_scope_alloc (void)
   jerryx_handle_scope_current = scope;
   ++jerryx_handle_scope_pool.count;
   return (jerryx_handle_scope_t *) scope;
-} /** jerryx_handle_scope_alloc */
+} /* jerryx_handle_scope_alloc */
 
 /**
  * Deannounce a previously claimed handle scope, return it to pool
@@ -223,4 +221,4 @@ jerryx_handle_scope_free (jerryx_handle_scope_t *scope)
   /**
    * Nothing to do with scopes in prelist
    */
-} /** jerryx_handle_scope_free */
+} /* jerryx_handle_scope_free */

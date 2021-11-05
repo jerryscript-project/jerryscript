@@ -19,9 +19,10 @@
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
-#include "jcontext.h"
 #include "ecma-objects.h"
 #include "ecma-regexp-object.h"
+
+#include "jcontext.h"
 
 #if JERRY_BUILTIN_REGEXP
 
@@ -29,7 +30,7 @@
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-regexp.inc.h"
-#define BUILTIN_UNDERSCORED_ID regexp
+#define BUILTIN_UNDERSCORED_ID  regexp
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -199,8 +200,7 @@ ecma_value_t
 ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                    uint32_t arguments_list_len) /**< number of arguments */
 {
-  return ecma_builtin_regexp_dispatch_helper (arguments_list_p,
-                                              arguments_list_len);
+  return ecma_builtin_regexp_dispatch_helper (arguments_list_p, arguments_list_len);
 } /* ecma_builtin_regexp_dispatch_call */
 
 /**
@@ -213,8 +213,7 @@ ecma_value_t
 ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                         uint32_t arguments_list_len) /**< number of arguments */
 {
-  return ecma_builtin_regexp_dispatch_helper (arguments_list_p,
-                                              arguments_list_len);
+  return ecma_builtin_regexp_dispatch_helper (arguments_list_p, arguments_list_len);
 } /* ecma_builtin_regexp_dispatch_construct */
 
 #if JERRY_ESNEXT

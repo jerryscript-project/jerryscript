@@ -14,9 +14,9 @@
  */
 
 #include "ecma-helpers.h"
-#include "lit-strings.h"
 #include "ecma-init-finalize.h"
 
+#include "lit-strings.h"
 #include "test-common.h"
 
 /* Iterations count. */
@@ -26,7 +26,7 @@
 #define test_subiters (128)
 
 /* Max bytes in string. */
-#define max_bytes_in_string (65 * 1024)
+#define max_bytes_in_string      (65 * 1024)
 #define max_code_units_in_string (max_bytes_in_string)
 
 typedef enum
@@ -38,8 +38,7 @@ typedef enum
 } utf8_char_size;
 
 static lit_utf8_size_t
-generate_cesu8_char (utf8_char_size char_size,
-                     lit_utf8_byte_t *buf)
+generate_cesu8_char (utf8_char_size char_size, lit_utf8_byte_t *buf)
 {
   TEST_ASSERT (char_size >= 0 && char_size <= LIT_CESU8_MAX_BYTES_IN_CODE_UNIT);
   lit_code_point_t code_point = (lit_code_point_t) rand ();
@@ -50,21 +49,20 @@ generate_cesu8_char (utf8_char_size char_size,
   }
   else if (char_size == 2)
   {
-    code_point = LIT_UTF8_2_BYTE_CODE_POINT_MIN + code_point % (LIT_UTF8_2_BYTE_CODE_POINT_MAX -
-                                                                LIT_UTF8_2_BYTE_CODE_POINT_MIN);
+    code_point =
+      LIT_UTF8_2_BYTE_CODE_POINT_MIN + code_point % (LIT_UTF8_2_BYTE_CODE_POINT_MAX - LIT_UTF8_2_BYTE_CODE_POINT_MIN);
   }
   else if (char_size == 3)
   {
-    code_point = LIT_UTF8_3_BYTE_CODE_POINT_MIN + code_point % (LIT_UTF8_3_BYTE_CODE_POINT_MAX -
-                                                                LIT_UTF8_3_BYTE_CODE_POINT_MIN);
+    code_point =
+      LIT_UTF8_3_BYTE_CODE_POINT_MIN + code_point % (LIT_UTF8_3_BYTE_CODE_POINT_MAX - LIT_UTF8_3_BYTE_CODE_POINT_MIN);
   }
   else
   {
     code_point %= LIT_UTF8_3_BYTE_CODE_POINT_MAX;
   }
 
-  if (code_point >= LIT_UTF16_HIGH_SURROGATE_MIN
-      && code_point <= LIT_UTF16_LOW_SURROGATE_MAX)
+  if (code_point >= LIT_UTF16_HIGH_SURROGATE_MIN && code_point <= LIT_UTF16_LOW_SURROGATE_MAX)
   {
     code_point = LIT_UTF16_HIGH_SURROGATE_MIN - 1;
   }
@@ -73,17 +71,15 @@ generate_cesu8_char (utf8_char_size char_size,
 } /* generate_cesu8_char */
 
 static lit_utf8_size_t
-generate_cesu8_string (lit_utf8_byte_t *buf_p,
-                       lit_utf8_size_t buf_size)
+generate_cesu8_string (lit_utf8_byte_t *buf_p, lit_utf8_size_t buf_size)
 {
   lit_utf8_size_t length = 0;
 
   lit_utf8_size_t size = 0;
-  while (size  < buf_size)
+  while (size < buf_size)
   {
-    const utf8_char_size char_size = (((buf_size - size) > LIT_CESU8_MAX_BYTES_IN_CODE_UNIT)
-                                      ? CESU8_ANY_SIZE
-                                      : (utf8_char_size) (buf_size - size));
+    const utf8_char_size char_size =
+      (((buf_size - size) > LIT_CESU8_MAX_BYTES_IN_CODE_UNIT) ? CESU8_ANY_SIZE : (utf8_char_size) (buf_size - size));
 
     lit_utf8_size_t bytes_generated = generate_cesu8_char (char_size, buf_p);
 
@@ -182,19 +178,19 @@ main (void)
   }
 
   /* Overlong-encoded code point */
-  lit_utf8_byte_t invalid_cesu8_string_1[] = {0xC0, 0x82};
+  lit_utf8_byte_t invalid_cesu8_string_1[] = { 0xC0, 0x82 };
   TEST_ASSERT (!lit_is_valid_cesu8_string (invalid_cesu8_string_1, sizeof (invalid_cesu8_string_1)));
 
   /* Overlong-encoded code point */
-  lit_utf8_byte_t invalid_cesu8_string_2[] = {0xE0, 0x80, 0x81};
+  lit_utf8_byte_t invalid_cesu8_string_2[] = { 0xE0, 0x80, 0x81 };
   TEST_ASSERT (!lit_is_valid_cesu8_string (invalid_cesu8_string_2, sizeof (invalid_cesu8_string_2)));
 
   /* Pair of surrogates: 0xD901 0xDFF0 which encode Unicode character 0x507F0 */
-  lit_utf8_byte_t invalid_cesu8_string_3[] = {0xED, 0xA4, 0x81, 0xED, 0xBF, 0xB0};
+  lit_utf8_byte_t invalid_cesu8_string_3[] = { 0xED, 0xA4, 0x81, 0xED, 0xBF, 0xB0 };
   TEST_ASSERT (lit_is_valid_cesu8_string (invalid_cesu8_string_3, sizeof (invalid_cesu8_string_3)));
 
   /* Isolated high surrogate 0xD901 */
-  lit_utf8_byte_t valid_utf8_string_1[] = {0xED, 0xA4, 0x81};
+  lit_utf8_byte_t valid_utf8_string_1[] = { 0xED, 0xA4, 0x81 };
   TEST_ASSERT (lit_is_valid_cesu8_string (valid_utf8_string_1, sizeof (valid_utf8_string_1)));
 
   lit_utf8_byte_t res_buf[3];
@@ -216,39 +212,39 @@ main (void)
   TEST_ASSERT (res_buf[2] == 0xBF);
 
   /* Ascii string */
-  lit_utf8_byte_t utf8_string_ascii[] = {'G','o','o','d','b','y','e'};
+  lit_utf8_byte_t utf8_string_ascii[] = { 'G', 'o', 'o', 'd', 'b', 'y', 'e' };
   TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_ascii, sizeof (utf8_string_ascii), true));
 
   /* Control character */
-  lit_utf8_byte_t utf8_string_control[] = {0x00};
+  lit_utf8_byte_t utf8_string_control[] = { 0x00 };
   TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_control, sizeof (utf8_string_control), true));
 
   /* 3 byte characters */
-  lit_utf8_byte_t utf8_string_3byte[] = {0xe4, 0xbd, 0xa0, 0xe5, 0xa5, 0xbd, 0xe4, 0xb8, 0x96, 0xe7, 0x95, 0x8c};
+  lit_utf8_byte_t utf8_string_3byte[] = { 0xe4, 0xbd, 0xa0, 0xe5, 0xa5, 0xbd, 0xe4, 0xb8, 0x96, 0xe7, 0x95, 0x8c };
   TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_3byte, sizeof (utf8_string_3byte), true));
 
   /* 4 byte characters */
-  lit_utf8_byte_t utf8_string_4byte[] = {0xf0, 0x90, 0x80, 0x80, 0xf0, 0x9f, 0xa7, 0xbf};
+  lit_utf8_byte_t utf8_string_4byte[] = { 0xf0, 0x90, 0x80, 0x80, 0xf0, 0x9f, 0xa7, 0xbf };
   TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_4byte, sizeof (utf8_string_4byte), true));
 
   /* Invalid continuation byte */
-  lit_utf8_byte_t utf8_string_invalid[] = {0xa0};
+  lit_utf8_byte_t utf8_string_invalid[] = { 0xa0 };
   TEST_ASSERT (!lit_is_valid_utf8_string (utf8_string_invalid, sizeof (utf8_string_invalid), true));
 
   /* Isolated high surrogate */
-  lit_utf8_byte_t utf8_string_high[] = {0xed, 0xa0, 0x80};
+  lit_utf8_byte_t utf8_string_high[] = { 0xed, 0xa0, 0x80 };
   TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_high, sizeof (utf8_string_high), true));
 
   /* Isolated low surrogate */
-  lit_utf8_byte_t utf8_string_low[] = {0xed, 0xbf, 0xbf};
+  lit_utf8_byte_t utf8_string_low[] = { 0xed, 0xbf, 0xbf };
   TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_low, sizeof (utf8_string_low), true));
 
   /* Correct pair of surrogates in strict*/
-  lit_utf8_byte_t utf8_string_surrogates_strict[] = {0xed, 0xa0, 0x80, 0xed, 0xbf, 0xbf};
+  lit_utf8_byte_t utf8_string_surrogates_strict[] = { 0xed, 0xa0, 0x80, 0xed, 0xbf, 0xbf };
   TEST_ASSERT (!lit_is_valid_utf8_string (utf8_string_surrogates_strict, sizeof (utf8_string_surrogates_strict), true));
 
   /* Correct pair of surrogates*/
-  lit_utf8_byte_t utf8_string_surrogates[] = {0xed, 0xa0, 0x80, 0xed, 0xbf, 0xbf};
+  lit_utf8_byte_t utf8_string_surrogates[] = { 0xed, 0xa0, 0x80, 0xed, 0xbf, 0xbf };
   TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_surrogates, sizeof (utf8_string_surrogates), false));
 
   ecma_finalize ();

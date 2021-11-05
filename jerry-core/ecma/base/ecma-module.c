@@ -521,7 +521,7 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
       star_export_p = star_export_p->next_p;
     }
 
-  next_iteration:
+next_iteration:
     current_set_p = current_set_p->next_p;
   } while (current_set_p != NULL);
 

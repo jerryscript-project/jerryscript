@@ -254,7 +254,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
       k++;
     }
 
-  iterator_cleanup:
+iterator_cleanup:
     ecma_free_value (iterator);
     ecma_free_value (next_method);
     ecma_deref_object (array_obj_p);

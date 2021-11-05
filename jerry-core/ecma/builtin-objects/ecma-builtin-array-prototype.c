@@ -668,7 +668,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
 
     ret_value = ECMA_VALUE_EMPTY;
 
-  clean_up:
+clean_up:
     ecma_free_value (upper_value);
     ecma_free_value (lower_value);
     ecma_deref_ecma_string (lower_str_p);

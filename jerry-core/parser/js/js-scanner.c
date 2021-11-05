@@ -3388,7 +3388,7 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
       lexer_next_token (context_p);
     }
 
-  scan_completed:
+scan_completed:
     if (context_p->stack_top_uint8 != SCAN_STACK_SCRIPT && context_p->stack_top_uint8 != SCAN_STACK_SCRIPT_FUNCTION)
     {
       scanner_raise_error (context_p);

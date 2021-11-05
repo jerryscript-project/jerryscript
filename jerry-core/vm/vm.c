@@ -4674,13 +4674,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         VM_GET_REGISTERS (frame_ctx_p)[0] = result;
       }
 
-    free_both_values:
+free_both_values:
       ecma_fast_free_value (right_value);
-    free_left_value:
+free_left_value:
       ecma_fast_free_value (left_value);
     }
 
-  error:
+error:
     ecma_fast_free_value (left_value);
     ecma_fast_free_value (right_value);
 
@@ -4851,7 +4851,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       } while (frame_ctx_p->context_depth > 0);
     }
 
-  finish:
+finish:
     frame_ctx_p->call_operation = VM_NO_EXEC_OP;
     return result;
   }

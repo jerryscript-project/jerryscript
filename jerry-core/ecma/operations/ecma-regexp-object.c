@@ -1483,7 +1483,7 @@ ecma_regexp_run (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         goto fail;
 
-      class_found:
+class_found:
         if (flags & RE_CLASS_INVERT)
         {
           goto fail;
@@ -1565,7 +1565,7 @@ ecma_regexp_run (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
     }
 
     JERRY_UNREACHABLE ();
-  fail:
+fail:
     bc_p = next_alternative_p;
 
     if (bc_p == NULL || *bc_p++ != RE_OP_ALTERNATIVE_NEXT)

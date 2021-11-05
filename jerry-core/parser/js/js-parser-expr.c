@@ -3957,7 +3957,7 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
 
     while (true)
     {
-    process_unary_expression:
+process_unary_expression:
       parser_process_unary_expression (context_p, grouping_level);
 
       if (JERRY_LIKELY (grouping_level != PARSE_EXPR_LEFT_HAND_SIDE))

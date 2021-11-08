@@ -982,7 +982,7 @@ typedef struct
 #endif /* JERRY_BUILTIN_REALMS */
   uint32_t refs_and_type; /**< reference counter and type of the function */
 #if JERRY_RESOURCE_NAME
-  ecma_value_t resource_name; /**< resource name */
+  ecma_value_t source_name; /**< resource name */
 #endif /* JERRY_RESOURCE_NAME */
 #if JERRY_FUNCTION_TO_STRING
   ecma_value_t source_code; /**< source code */

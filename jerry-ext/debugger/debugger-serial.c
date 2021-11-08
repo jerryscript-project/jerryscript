@@ -367,7 +367,7 @@ jerryx_debugger_serial_create (const char *config) /**< specify the configuratio
 
   JERRYX_DEBUG_MSG ("Client connected\n");
 
-  size_t size = sizeof (jerryx_debugger_transport_serial_t);
+  jerry_size_t size = sizeof (jerryx_debugger_transport_serial_t);
 
   jerry_debugger_transport_header_t *header_p;
   header_p = (jerry_debugger_transport_header_t *) jerry_heap_alloc (size);

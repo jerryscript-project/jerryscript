@@ -20,7 +20,7 @@
 int
 main (void)
 {
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_BIGINT))
+  if (!jerry_feature_enabled (JERRY_FEATURE_BIGINT))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Bigint support is disabled!\n");
     return 0;
@@ -28,34 +28,34 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_value_t string = jerry_create_string ((const jerry_char_t *) "0xfffffff1fffffff2fffffff3");
-  TEST_ASSERT (!jerry_value_is_error (string));
+  jerry_value_t string = jerry_string_sz ("0xfffffff1fffffff2fffffff3");
+  TEST_ASSERT (!jerry_value_is_exception (string));
 
   jerry_value_t bigint = jerry_value_to_bigint (string);
-  jerry_release_value (string);
+  jerry_value_free (string);
 
-  TEST_ASSERT (!jerry_value_is_error (bigint));
+  TEST_ASSERT (!jerry_value_is_exception (bigint));
   TEST_ASSERT (jerry_value_is_bigint (bigint));
 
   string = jerry_value_to_string (bigint);
-  TEST_ASSERT (!jerry_value_is_error (string));
+  TEST_ASSERT (!jerry_value_is_exception (string));
 
   static jerry_char_t str_buffer[64];
   const char *expected_string_p = "79228162256009920505775652851";
 
-  jerry_size_t size = jerry_string_to_char_buffer (string, str_buffer, sizeof (str_buffer));
+  jerry_size_t size = jerry_string_to_buffer (string, JERRY_ENCODING_CESU8, str_buffer, sizeof (str_buffer));
   TEST_ASSERT (size == strlen (expected_string_p));
   TEST_ASSERT (memcmp (str_buffer, expected_string_p, size) == 0);
-  jerry_release_value (string);
+  jerry_value_free (string);
 
-  TEST_ASSERT (jerry_get_bigint_size_in_digits (bigint) == 2);
+  TEST_ASSERT (jerry_bigint_digit_count (bigint) == 2);
 
   uint64_t digits_buffer[4];
   bool sign;
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = true;
-  jerry_get_bigint_digits (bigint, digits_buffer, 0, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 0, &sign);
   TEST_ASSERT (sign == false);
   TEST_ASSERT (digits_buffer[0] == ~((uint64_t) 0));
   TEST_ASSERT (digits_buffer[1] == ~((uint64_t) 0));
@@ -64,7 +64,7 @@ main (void)
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = true;
-  jerry_get_bigint_digits (bigint, digits_buffer, 1, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 1, &sign);
   TEST_ASSERT (sign == false);
   TEST_ASSERT (digits_buffer[0] == 0xfffffff2fffffff3ull);
   TEST_ASSERT (digits_buffer[1] == ~((uint64_t) 0));
@@ -73,7 +73,7 @@ main (void)
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = true;
-  jerry_get_bigint_digits (bigint, digits_buffer, 2, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 2, &sign);
   TEST_ASSERT (sign == false);
   TEST_ASSERT (digits_buffer[0] == 0xfffffff2fffffff3ull);
   TEST_ASSERT (digits_buffer[1] == 0xfffffff1ull);
@@ -82,7 +82,7 @@ main (void)
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = true;
-  jerry_get_bigint_digits (bigint, digits_buffer, 3, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 3, &sign);
   TEST_ASSERT (sign == false);
   TEST_ASSERT (digits_buffer[0] == 0xfffffff2fffffff3ull);
   TEST_ASSERT (digits_buffer[1] == 0xfffffff1ull);
@@ -90,44 +90,44 @@ main (void)
   TEST_ASSERT (digits_buffer[3] == ~((uint64_t) 0));
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
-  jerry_get_bigint_digits (bigint, digits_buffer, 4, NULL);
+  jerry_bigint_to_digits (bigint, digits_buffer, 4, NULL);
   TEST_ASSERT (digits_buffer[0] == 0xfffffff2fffffff3ull);
   TEST_ASSERT (digits_buffer[1] == 0xfffffff1ull);
   TEST_ASSERT (digits_buffer[2] == 0);
   TEST_ASSERT (digits_buffer[3] == 0);
 
-  jerry_release_value (bigint);
+  jerry_value_free (bigint);
 
   digits_buffer[0] = 0;
   digits_buffer[1] = 0;
   digits_buffer[2] = 0;
   /* Sign of zero value is always positive, even if we set negative. */
-  bigint = jerry_create_bigint (digits_buffer, 3, true);
+  bigint = jerry_bigint (digits_buffer, 3, true);
   TEST_ASSERT (jerry_value_is_bigint (bigint));
-  TEST_ASSERT (jerry_get_bigint_size_in_digits (bigint) == 0);
+  TEST_ASSERT (jerry_bigint_digit_count (bigint) == 0);
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = true;
-  jerry_get_bigint_digits (bigint, digits_buffer, 2, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 2, &sign);
   TEST_ASSERT (sign == false);
   TEST_ASSERT (digits_buffer[0] == 0);
   TEST_ASSERT (digits_buffer[1] == 0);
   TEST_ASSERT (digits_buffer[2] == ~((uint64_t) 0));
   TEST_ASSERT (digits_buffer[3] == ~((uint64_t) 0));
 
-  jerry_release_value (bigint);
+  jerry_value_free (bigint);
 
   digits_buffer[0] = 1;
   digits_buffer[1] = 0;
   digits_buffer[2] = 0;
   digits_buffer[3] = 0;
-  bigint = jerry_create_bigint (digits_buffer, 4, true);
+  bigint = jerry_bigint (digits_buffer, 4, true);
   TEST_ASSERT (jerry_value_is_bigint (bigint));
-  TEST_ASSERT (jerry_get_bigint_size_in_digits (bigint) == 1);
+  TEST_ASSERT (jerry_bigint_digit_count (bigint) == 1);
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = false;
-  jerry_get_bigint_digits (bigint, digits_buffer, 1, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 1, &sign);
   TEST_ASSERT (sign == true);
   TEST_ASSERT (digits_buffer[0] == 1);
   TEST_ASSERT (digits_buffer[1] == ~((uint64_t) 0));
@@ -136,26 +136,26 @@ main (void)
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = false;
-  jerry_get_bigint_digits (bigint, digits_buffer, 2, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 2, &sign);
   TEST_ASSERT (sign == true);
   TEST_ASSERT (digits_buffer[0] == 1);
   TEST_ASSERT (digits_buffer[1] == 0);
   TEST_ASSERT (digits_buffer[2] == ~((uint64_t) 0));
   TEST_ASSERT (digits_buffer[3] == ~((uint64_t) 0));
 
-  jerry_release_value (bigint);
+  jerry_value_free (bigint);
 
   digits_buffer[0] = 0;
   digits_buffer[1] = 1;
   digits_buffer[2] = 0;
   digits_buffer[3] = 0;
-  bigint = jerry_create_bigint (digits_buffer, 4, true);
+  bigint = jerry_bigint (digits_buffer, 4, true);
   TEST_ASSERT (jerry_value_is_bigint (bigint));
-  TEST_ASSERT (jerry_get_bigint_size_in_digits (bigint) == 2);
+  TEST_ASSERT (jerry_bigint_digit_count (bigint) == 2);
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = false;
-  jerry_get_bigint_digits (bigint, digits_buffer, 1, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 1, &sign);
   TEST_ASSERT (sign == true);
   TEST_ASSERT (digits_buffer[0] == 0);
   TEST_ASSERT (digits_buffer[1] == ~((uint64_t) 0));
@@ -164,7 +164,7 @@ main (void)
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = false;
-  jerry_get_bigint_digits (bigint, digits_buffer, 2, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 2, &sign);
   TEST_ASSERT (sign == true);
   TEST_ASSERT (digits_buffer[0] == 0);
   TEST_ASSERT (digits_buffer[1] == 1);
@@ -173,14 +173,14 @@ main (void)
 
   memset (digits_buffer, 0xff, sizeof (digits_buffer));
   sign = false;
-  jerry_get_bigint_digits (bigint, digits_buffer, 3, &sign);
+  jerry_bigint_to_digits (bigint, digits_buffer, 3, &sign);
   TEST_ASSERT (sign == true);
   TEST_ASSERT (digits_buffer[0] == 0);
   TEST_ASSERT (digits_buffer[1] == 1);
   TEST_ASSERT (digits_buffer[2] == 0);
   TEST_ASSERT (digits_buffer[3] == ~((uint64_t) 0));
 
-  jerry_release_value (bigint);
+  jerry_value_free (bigint);
 
   jerry_cleanup ();
   return 0;

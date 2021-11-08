@@ -56,7 +56,7 @@
  */
 typedef enum
 {
-  ECMA_STATUS_API_AVAILABLE = (1u << 0), /**< api available */
+  ECMA_STATUS_API_ENABLED = (1u << 0), /**< api available */
   ECMA_STATUS_DIRECT_EVAL = (1u << 1), /**< eval is called directly */
 #if JERRY_PROPERTY_HASHMAP
   ECMA_STATUS_HIGH_PRESSURE_GC = (1u << 2), /**< last gc was under high pressure */
@@ -1951,14 +1951,14 @@ typedef struct
 #endif /* !defined (JERRY_BUILTIN_BIGINT) */
 
 /**
- * Abort flag for errors in C API.
+ * Flags for exception values.
  */
-#define ECMA_ERROR_API_ABORT (1u << 0)
-
-/**
- * Throw captured flag for errors in C API.
- */
-#define ECMA_ERROR_API_THROW_CAPTURED (1u << 1)
+typedef enum
+{
+  ECMA_ERROR_API_FLAG_NONE = 0,
+  ECMA_ERROR_API_FLAG_ABORT = (1u << 0), /**< abort flag */
+  ECMA_ERROR_API_FLAG_THROW_CAPTURED = (1u << 1), /**< throw captured flag */
+} ecma_error_api_flags_t;
 
 /**
  * Representation of a thrown value on API level.

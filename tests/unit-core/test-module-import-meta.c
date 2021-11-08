@@ -29,24 +29,24 @@ global_assert (const jerry_call_info_t *call_info_p, /**< call information */
   JERRY_UNUSED (call_info_p);
 
   TEST_ASSERT (args_cnt == 1 && jerry_value_is_true (args_p[0]));
-  return jerry_create_boolean (true);
+  return jerry_boolean (true);
 } /* global_assert */
 
 static void
 register_assert (void)
 {
-  jerry_value_t global_object_value = jerry_get_global_object ();
+  jerry_value_t global_object_value = jerry_current_realm ();
 
-  jerry_value_t function_value = jerry_create_external_function (global_assert);
-  jerry_value_t function_name_value = jerry_create_string ((const jerry_char_t *) "assert");
-  jerry_value_t result_value = jerry_set_property (global_object_value, function_name_value, function_value);
+  jerry_value_t function_value = jerry_function_external (global_assert);
+  jerry_value_t function_name_value = jerry_string_sz ("assert");
+  jerry_value_t result_value = jerry_object_set (global_object_value, function_name_value, function_value);
 
-  jerry_release_value (function_name_value);
-  jerry_release_value (function_value);
-  jerry_release_value (global_object_value);
+  jerry_value_free (function_name_value);
+  jerry_value_free (function_value);
+  jerry_value_free (global_object_value);
 
   TEST_ASSERT (jerry_value_is_true (result_value));
-  jerry_release_value (result_value);
+  jerry_value_free (result_value);
 } /* register_assert */
 
 static void
@@ -57,10 +57,10 @@ module_import_meta_callback (const jerry_value_t module, /**< module */
   TEST_ASSERT (user_p == (void *) &counter);
   TEST_ASSERT (module == global_module_value);
 
-  jerry_value_t property_name_value = jerry_create_string ((const jerry_char_t *) "prop");
-  jerry_value_t result_value = jerry_set_property (meta_object, property_name_value, property_name_value);
-  jerry_release_value (result_value);
-  jerry_release_value (property_name_value);
+  jerry_value_t property_name_value = jerry_string_sz ("prop");
+  jerry_value_t result_value = jerry_object_set (meta_object, property_name_value, property_name_value);
+  jerry_value_free (result_value);
+  jerry_value_free (property_name_value);
 
   counter++;
 } /* module_import_meta_callback */
@@ -70,8 +70,8 @@ test_syntax_error (const char *source_p, /**< source code */
                    const jerry_parse_options_t *options_p) /**< parse options */
 {
   jerry_value_t result_value = jerry_parse ((const jerry_char_t *) source_p, strlen (source_p), options_p);
-  TEST_ASSERT (jerry_value_is_error (result_value) && jerry_get_error_type (result_value) == JERRY_ERROR_SYNTAX);
-  jerry_release_value (result_value);
+  TEST_ASSERT (jerry_value_is_exception (result_value) && jerry_error_type (result_value) == JERRY_ERROR_SYNTAX);
+  jerry_value_free (result_value);
 } /* test_syntax_error */
 
 static void
@@ -79,18 +79,18 @@ run_module (const char *source_p, /* source code */
             jerry_parse_options_t *parse_options_p) /* parse options */
 {
   global_module_value = jerry_parse ((const jerry_char_t *) source_p, strlen (source_p), parse_options_p);
-  TEST_ASSERT (!jerry_value_is_error (global_module_value));
+  TEST_ASSERT (!jerry_value_is_exception (global_module_value));
 
   jerry_value_t result_value = jerry_module_link (global_module_value, NULL, NULL);
-  TEST_ASSERT (!jerry_value_is_error (result_value));
-  jerry_release_value (result_value);
+  TEST_ASSERT (!jerry_value_is_exception (result_value));
+  jerry_value_free (result_value);
 
   result_value = jerry_module_evaluate (global_module_value);
 
-  jerry_release_value (global_module_value);
+  jerry_value_free (global_module_value);
 
-  TEST_ASSERT (!jerry_value_is_error (result_value));
-  jerry_release_value (result_value);
+  TEST_ASSERT (!jerry_value_is_exception (result_value));
+  jerry_value_free (result_value);
 } /* run_module */
 
 int
@@ -98,7 +98,7 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_MODULE))
+  if (!jerry_feature_enabled (JERRY_FEATURE_MODULE))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Module is disabled!\n");
     jerry_cleanup ();
@@ -106,7 +106,7 @@ main (void)
   }
 
   register_assert ();
-  jerry_module_set_import_meta_callback (module_import_meta_callback, (void *) &counter);
+  jerry_module_on_import_meta (module_import_meta_callback, (void *) &counter);
 
   /* Syntax errors. */
   test_syntax_error ("import.meta", NULL);

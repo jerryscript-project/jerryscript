@@ -32,7 +32,7 @@ ecma_object_t *ecma_new_standard_error (jerry_error_t error_type, ecma_string_t 
 #if JERRY_ERROR_MESSAGES
 ecma_value_t ecma_raise_standard_error_with_format (jerry_error_t error_type, const char *msg_p, ...);
 #endif /* JERRY_ERROR_MESSAGES */
-ecma_value_t ecma_raise_standard_error (jerry_error_t error_type, const lit_utf8_byte_t *msg_p);
+ecma_value_t ecma_raise_standard_error (jerry_error_t error_type, const char *msg_p);
 ecma_value_t ecma_raise_common_error (ecma_error_msg_t msg);
 ecma_value_t ecma_raise_range_error (ecma_error_msg_t msg);
 ecma_value_t ecma_raise_reference_error (ecma_error_msg_t msg);

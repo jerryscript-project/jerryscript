@@ -131,7 +131,7 @@ static bool
 check_feature (jerry_feature_t feature, /**< feature to check */
                const char *option) /**< command line option that triggered this check */
 {
-  if (!jerry_is_feature_enabled (feature))
+  if (!jerry_feature_enabled (feature))
   {
     jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
     jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Ignoring '%s' option because this feature is disabled!\n", option);
@@ -184,7 +184,7 @@ main_parse_args (int argc, /**< argc */
       }
       case OPT_MEM_STATS:
       {
-        if (check_feature (JERRY_FEATURE_MEM_STATS, cli_state.arg))
+        if (check_feature (JERRY_FEATURE_HEAP_STATS, cli_state.arg))
         {
           jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
           arguments_p->init_flags |= JERRY_INIT_MEM_STATS;

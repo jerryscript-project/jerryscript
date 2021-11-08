@@ -47,7 +47,7 @@ jerryx_handle_scope_release_handles (jerryx_handle_scope scope)
     jerryx_handle_t *a_handle = scope->handle_ptr;
     while (a_handle != NULL)
     {
-      jerry_release_value (a_handle->jval);
+      jerry_value_free (a_handle->jval);
       jerryx_handle_t *sibling = a_handle->sibling;
       jerry_heap_free (a_handle, sizeof (jerryx_handle_t));
       a_handle = sibling;
@@ -58,7 +58,7 @@ jerryx_handle_scope_release_handles (jerryx_handle_scope scope)
 
   for (size_t idx = 0; idx < prelist_handle_count; idx++)
   {
-    jerry_release_value (scope->handle_prelist[idx]);
+    jerry_value_free (scope->handle_prelist[idx]);
   }
   scope->prelist_handle_count = 0;
 } /* jerryx_handle_scope_release_handles */

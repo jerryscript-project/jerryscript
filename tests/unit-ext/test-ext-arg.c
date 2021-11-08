@@ -116,7 +116,7 @@ test_validator1_handler (const jerry_call_info_t *call_info_p, /**< call informa
   bool arg1;
   double arg2 = 0.0;
   char arg3[5] = "1234";
-  jerry_value_t arg4 = jerry_create_undefined ();
+  jerry_value_t arg4 = jerry_undefined ();
 
   jerryx_arg_t mapping[] = { /* ignore this */
                              jerryx_arg_ignore (),
@@ -135,7 +135,7 @@ test_validator1_handler (const jerry_call_info_t *call_info_p, /**< call informa
 
   if (validator1_count == 0)
   {
-    TEST_ASSERT (!jerry_value_is_error (is_ok));
+    TEST_ASSERT (!jerry_value_is_exception (is_ok));
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2 == 10.5);
     TEST_ASSERT (strcmp (arg3, "abc") == 0);
@@ -143,7 +143,7 @@ test_validator1_handler (const jerry_call_info_t *call_info_p, /**< call informa
   }
   else if (validator1_count == 1)
   {
-    TEST_ASSERT (!jerry_value_is_error (is_ok));
+    TEST_ASSERT (!jerry_value_is_exception (is_ok));
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2 == 10.5);
     TEST_ASSERT (strcmp (arg3, "abc") == 0);
@@ -151,7 +151,7 @@ test_validator1_handler (const jerry_call_info_t *call_info_p, /**< call informa
   }
   else if (validator1_count == 2)
   {
-    TEST_ASSERT (!jerry_value_is_error (is_ok));
+    TEST_ASSERT (!jerry_value_is_exception (is_ok));
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2 == 10.5);
     TEST_ASSERT (strcmp (arg3, "") == 0);
@@ -159,14 +159,14 @@ test_validator1_handler (const jerry_call_info_t *call_info_p, /**< call informa
   }
   else
   {
-    TEST_ASSERT (jerry_value_is_error (is_ok));
+    TEST_ASSERT (jerry_value_is_exception (is_ok));
   }
 
-  jerry_release_value (is_ok);
-  jerry_release_value (arg4);
+  jerry_value_free (is_ok);
+  jerry_value_free (arg4);
   validator1_count++;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator1_handler */
 
 /**
@@ -179,22 +179,22 @@ my_custom_transform (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS 
   jerry_value_t js_arg = jerryx_arg_js_iterator_pop (js_arg_iter_p);
   jerry_value_t to_number = jerry_value_to_number (js_arg);
 
-  if (jerry_value_is_error (to_number))
+  if (jerry_value_is_exception (to_number))
   {
-    jerry_release_value (to_number);
+    jerry_value_free (to_number);
 
-    return jerry_create_error (JERRY_ERROR_TYPE, (jerry_char_t *) "It can not be converted to a number.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, "It can not be converted to a number.");
   }
 
   int expected_num = (int) c_arg_p->extra_info;
-  int get_num = (int) jerry_get_number_value (to_number);
+  int get_num = (int) jerry_value_as_number (to_number);
 
   if (get_num != expected_num)
   {
-    return jerry_create_error (JERRY_ERROR_TYPE, (jerry_char_t *) "Number value is not expected.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, "Number value is not expected.");
   }
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* my_custom_transform */
 
 /**
@@ -220,19 +220,19 @@ test_validator2_handler (const jerry_call_info_t *call_info_p, /**< call informa
 
   if (validator2_count == 0)
   {
-    TEST_ASSERT (!jerry_value_is_error (is_ok));
+    TEST_ASSERT (!jerry_value_is_exception (is_ok));
     TEST_ASSERT (thing_p == &my_thing_a);
     TEST_ASSERT (thing_p->x == 1);
   }
   else
   {
-    TEST_ASSERT (jerry_value_is_error (is_ok));
+    TEST_ASSERT (jerry_value_is_exception (is_ok));
   }
 
-  jerry_release_value (is_ok);
+  jerry_value_free (is_ok);
   validator2_count++;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator2_handler */
 
 /**
@@ -262,20 +262,20 @@ test_validator3_handler (const jerry_call_info_t *call_info_p, /**< call informa
 
   if (validator3_count == 0)
   {
-    TEST_ASSERT (!jerry_value_is_error (is_ok));
+    TEST_ASSERT (!jerry_value_is_exception (is_ok));
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2);
   }
   else if (validator3_count == 1)
   {
-    TEST_ASSERT (!jerry_value_is_error (is_ok));
+    TEST_ASSERT (!jerry_value_is_exception (is_ok));
     TEST_ASSERT (arg1);
     /* arg2 must be unchanged */
     TEST_ASSERT (!arg2);
   }
   else if (validator3_count == 2)
   {
-    TEST_ASSERT (!jerry_value_is_error (is_ok));
+    TEST_ASSERT (!jerry_value_is_exception (is_ok));
     /* arg1 must be unchanged */
     TEST_ASSERT (!arg1);
     /* arg2 must be unchanged */
@@ -283,17 +283,17 @@ test_validator3_handler (const jerry_call_info_t *call_info_p, /**< call informa
   }
   else if (validator3_count == 3)
   {
-    TEST_ASSERT (!jerry_value_is_error (is_ok));
+    TEST_ASSERT (!jerry_value_is_exception (is_ok));
     /* arg1 must be unchanged */
     TEST_ASSERT (!arg1);
     /* arg2 must be unchanged */
     TEST_ASSERT (!arg2);
   }
 
-  jerry_release_value (is_ok);
+  jerry_value_free (is_ok);
   validator3_count++;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator3_handler */
 
 /**
@@ -323,14 +323,14 @@ test_validator_prop1_handler (const jerry_call_info_t *call_info_p, /**< call in
                                                                 mapping,
                                                                 ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (!jerry_value_is_error (is_ok));
+  TEST_ASSERT (!jerry_value_is_exception (is_ok));
   TEST_ASSERT (native1);
   TEST_ASSERT (native2 == 1.5);
   TEST_ASSERT (native3 == 3);
 
   validator_prop_count++;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator_prop1_handler */
 
 /**
@@ -367,7 +367,7 @@ test_validator_prop2_handler (const jerry_call_info_t *call_info_p, /**< call in
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (!jerry_value_is_error (is_ok));
+  TEST_ASSERT (!jerry_value_is_exception (is_ok));
 
   if (validator_prop_count == 1)
   {
@@ -378,7 +378,7 @@ test_validator_prop2_handler (const jerry_call_info_t *call_info_p, /**< call in
 
   validator_prop_count++;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator_prop2_handler */
 
 static jerry_value_t
@@ -405,14 +405,14 @@ test_validator_prop3_handler (const jerry_call_info_t *call_info_p, /**< call in
                                                                 mapping,
                                                                 ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (jerry_value_is_error (is_ok));
+  TEST_ASSERT (jerry_value_is_exception (is_ok));
   TEST_ASSERT (!native1);
   TEST_ASSERT (native2);
 
   validator_prop_count++;
-  jerry_release_value (is_ok);
+  jerry_value_free (is_ok);
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator_prop3_handler */
 
 /*
@@ -447,7 +447,7 @@ test_validator_int1_handler (const jerry_call_info_t *call_info_p, /**< call inf
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (!jerry_value_is_error (is_ok));
+  TEST_ASSERT (!jerry_value_is_exception (is_ok));
   TEST_ASSERT (num0 == 0);
   TEST_ASSERT (num1 == 255);
   TEST_ASSERT (num2 == 128);
@@ -461,10 +461,10 @@ test_validator_int1_handler (const jerry_call_info_t *call_info_p, /**< call inf
   TEST_ASSERT (num10 == 2147483647);
   TEST_ASSERT (num11 == -2147483647);
 
-  jerry_release_value (is_ok);
+  jerry_value_free (is_ok);
   validator_int_count++;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator_int1_handler */
 
 static jerry_value_t
@@ -493,7 +493,7 @@ test_validator_int2_handler (const jerry_call_info_t *call_info_p, /**< call inf
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (jerry_value_is_error (is_ok));
+  TEST_ASSERT (jerry_value_is_exception (is_ok));
   TEST_ASSERT (num0 == -2);
   TEST_ASSERT (num1 == -2);
   TEST_ASSERT (num2 == -1);
@@ -505,10 +505,10 @@ test_validator_int2_handler (const jerry_call_info_t *call_info_p, /**< call inf
   TEST_ASSERT (num8 == 127);
   TEST_ASSERT (num9 == 123);
 
-  jerry_release_value (is_ok);
+  jerry_value_free (is_ok);
   validator_int_count++;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator_int2_handler */
 
 static jerry_value_t
@@ -526,12 +526,12 @@ test_validator_int3_handler (const jerry_call_info_t *call_info_p, /**< call inf
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (jerry_value_is_error (is_ok));
+  TEST_ASSERT (jerry_value_is_exception (is_ok));
 
-  jerry_release_value (is_ok);
+  jerry_value_free (is_ok);
   validator_int_count++;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator_int3_handler */
 
 static jerry_value_t
@@ -560,7 +560,7 @@ test_validator_array1_handler (const jerry_call_info_t *call_info_p, /**< call i
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (!jerry_value_is_error (is_ok));
+  TEST_ASSERT (!jerry_value_is_exception (is_ok));
 
   if (validator_array_count == 0)
   {
@@ -571,7 +571,7 @@ test_validator_array1_handler (const jerry_call_info_t *call_info_p, /**< call i
 
   validator_array_count++;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator_array1_handler */
 
 static jerry_value_t
@@ -590,14 +590,14 @@ test_validator_array2_handler (const jerry_call_info_t *call_info_p, /**< call i
 
   jerry_value_t is_ok = jerryx_arg_transform_array (args_p[0], item_mapping, ARRAY_SIZE (item_mapping));
 
-  TEST_ASSERT (jerry_value_is_error (is_ok));
+  TEST_ASSERT (jerry_value_is_exception (is_ok));
   TEST_ASSERT (native1 == 1);
   TEST_ASSERT (!native2);
 
   validator_array_count++;
-  jerry_release_value (is_ok);
+  jerry_value_free (is_ok);
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator_array2_handler */
 
 /**
@@ -673,7 +673,7 @@ jerry_arg_to_double_or_bool_t (jerryx_arg_js_iterator_t *js_arg_iter_p, const je
                                            (jerryx_arg_coerce_t) extra_info[0],
                                            JERRYX_ARG_OPTIONAL);
   conversion_result = conversion_function.func (js_arg_iter_p, &conversion_function);
-  if (!jerry_value_is_error (conversion_result))
+  if (!jerry_value_is_exception (conversion_result))
   {
     if (last_parameter)
     {
@@ -696,9 +696,9 @@ jerry_arg_to_double_or_bool_t (jerryx_arg_js_iterator_t *js_arg_iter_p, const je
                                             (jerryx_arg_coerce_t) extra_info[0],
                                             (jerryx_arg_optional_t) extra_info[1]);
 
-  jerry_release_value (conversion_result);
+  jerry_value_free (conversion_result);
   conversion_result = conversion_function.func (js_arg_iter_p, &conversion_function);
-  if (!jerry_value_is_error (conversion_result))
+  if (!jerry_value_is_exception (conversion_result))
   {
     if (last_parameter)
     {
@@ -717,8 +717,8 @@ jerry_arg_to_double_or_bool_t (jerryx_arg_js_iterator_t *js_arg_iter_p, const je
 
   /* Fall through indicates that whatever they gave us, it wasn't
    * one of the types we were expecting... */
-  jerry_release_value (conversion_result);
-  return jerry_create_error (JERRY_ERROR_TYPE, (const jerry_char_t *) "double_or_bool-type error.");
+  jerry_value_free (conversion_result);
+  return jerry_throw_sz (JERRY_ERROR_TYPE, "double_or_bool-type error.");
 } /* jerry_arg_to_double_or_bool_t */
 
 /**
@@ -740,7 +740,7 @@ test_validator_restore_handler (const jerry_call_info_t *call_info_p, /**< call 
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, item_mapping, ARRAY_SIZE (item_mapping));
 
-  TEST_ASSERT (!jerry_value_is_error (is_ok));
+  TEST_ASSERT (!jerry_value_is_exception (is_ok));
 
   /* We are going to call this with [false, 3.0] and [3.0, false] parameters... */
   bool arg1_is_false = (arg1.type_of_value == BOOL_VALUE && arg1.value.bool_field == false);
@@ -749,16 +749,16 @@ test_validator_restore_handler (const jerry_call_info_t *call_info_p, /**< call 
   bool arg2_is_three = (arg2.type_of_value == DOUBLE_VALUE && arg2.value.double_field == 3.0);
   TEST_ASSERT ((arg1_is_false && arg2_is_three) || (arg1_is_three && arg2_is_false));
 
-  jerry_release_value (is_ok);
+  jerry_value_free (is_ok);
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* test_validator_restore_handler */
 
 static void
 test_utf8_string (void)
 {
   /* test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
-  jerry_value_t str = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
+  jerry_value_t str = jerry_string_sz ("\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
   char expect_utf8_buf[] = "\x73\x74\x72\x3a \xf0\x90\x90\x80";
   size_t buf_len = sizeof (expect_utf8_buf) - 1;
   JERRY_VLA (char, buf, buf_len + 1);
@@ -769,10 +769,10 @@ test_utf8_string (void)
 
   jerry_value_t is_ok = jerryx_arg_transform_args (&str, 1, mapping, ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (!jerry_value_is_error (is_ok));
+  TEST_ASSERT (!jerry_value_is_exception (is_ok));
   TEST_ASSERT (!strcmp (buf, expect_utf8_buf));
 
-  jerry_release_value (str);
+  jerry_value_free (str);
 } /* test_utf8_string */
 
 static jerry_value_t
@@ -786,9 +786,9 @@ create_object_a_handler (const jerry_call_info_t *call_info_p, /**< call informa
   TEST_ASSERT (jerry_value_is_object (call_info_p->this_value));
 
   my_thing_a.x = 1;
-  jerry_set_object_native_pointer (call_info_p->this_value, &my_thing_a, &thing_a_info);
+  jerry_object_set_native_ptr (call_info_p->this_value, &thing_a_info, &my_thing_a);
 
-  return jerry_create_boolean (true);
+  return jerry_boolean (true);
 } /* create_object_a_handler */
 
 static jerry_value_t
@@ -802,9 +802,9 @@ create_object_b_handler (const jerry_call_info_t *call_info_p, /**< call informa
   TEST_ASSERT (jerry_value_is_object (call_info_p->this_value));
 
   my_thing_b.x = false;
-  jerry_set_object_native_pointer (call_info_p->this_value, &my_thing_b, &thing_b_info);
+  jerry_object_set_native_ptr (call_info_p->this_value, &thing_b_info, &my_thing_b);
 
-  return jerry_create_boolean (true);
+  return jerry_boolean (true);
 } /* create_object_b_handler */
 
 /**
@@ -814,17 +814,17 @@ static void
 register_js_function (const char *name_p, /**< name of the function */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t global_obj_val = jerry_get_global_object ();
+  jerry_value_t global_obj_val = jerry_current_realm ();
 
-  jerry_value_t function_val = jerry_create_external_function (handler_p);
-  jerry_value_t function_name_val = jerry_create_string ((const jerry_char_t *) name_p);
-  jerry_value_t result_val = jerry_set_property (global_obj_val, function_name_val, function_val);
+  jerry_value_t function_val = jerry_function_external (handler_p);
+  jerry_value_t function_name_val = jerry_string_sz (name_p);
+  jerry_value_t result_val = jerry_object_set (global_obj_val, function_name_val, function_val);
 
-  jerry_release_value (function_name_val);
-  jerry_release_value (function_val);
-  jerry_release_value (global_obj_val);
+  jerry_value_free (function_name_val);
+  jerry_value_free (function_val);
+  jerry_value_free (global_obj_val);
 
-  jerry_release_value (result_val);
+  jerry_value_free (result_val);
 } /* register_js_function */
 
 int
@@ -850,10 +850,10 @@ main (void)
   register_js_function ("test_validator_restore", test_validator_restore_handler);
 
   jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
-  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
 
   jerry_value_t res = jerry_run (parsed_code_val);
-  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (validator1_count == 5);
   TEST_ASSERT (validator2_count == 3);
   TEST_ASSERT (validator_prop_count == 4);
@@ -861,8 +861,8 @@ main (void)
   TEST_ASSERT (validator_array_count == 3);
   TEST_ASSERT (validator_restore_count == 4);
 
-  jerry_release_value (res);
-  jerry_release_value (parsed_code_val);
+  jerry_value_free (res);
+  jerry_value_free (parsed_code_val);
 
   jerry_cleanup ();
 } /* main */

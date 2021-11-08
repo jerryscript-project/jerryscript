@@ -1300,7 +1300,7 @@ ecma_gc_free_native_pointer (ecma_property_t property, /**< property descriptor 
 
     if (native_pointer_p->native_info_p != NULL)
     {
-      jerry_object_native_free_callback_t free_cb = native_pointer_p->native_info_p->free_cb;
+      jerry_object_native_free_cb_t free_cb = native_pointer_p->native_info_p->free_cb;
 
       if (free_cb != NULL)
       {
@@ -1324,7 +1324,7 @@ ecma_gc_free_native_pointer (ecma_property_t property, /**< property descriptor 
   {
     if (item_p->data.native_info_p != NULL)
     {
-      jerry_object_native_free_callback_t free_cb = item_p->data.native_info_p->free_cb;
+      jerry_object_native_free_cb_t free_cb = item_p->data.native_info_p->free_cb;
 
       if (free_cb != NULL)
       {

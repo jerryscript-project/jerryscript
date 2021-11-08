@@ -31,8 +31,8 @@ static const jerry_char_t test_source[] = TEST_STRING_LITERAL ("var p1 = create_
 static int count_in_assert = 0;
 static jerry_value_t my_promise1;
 static jerry_value_t my_promise2;
-static const jerry_char_t s1[] = "resolved";
-static const jerry_char_t s2[] = "rejected";
+static const char s1[] = "resolved";
+static const char s2[] = "rejected";
 
 static jerry_value_t
 create_promise1_handler (const jerry_call_info_t *call_info_p, /**< call information */
@@ -43,8 +43,8 @@ create_promise1_handler (const jerry_call_info_t *call_info_p, /**< call informa
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_cnt);
 
-  jerry_value_t ret = jerry_create_promise ();
-  my_promise1 = jerry_acquire_value (ret);
+  jerry_value_t ret = jerry_promise ();
+  my_promise1 = jerry_value_copy (ret);
 
   return ret;
 } /* create_promise1_handler */
@@ -58,8 +58,8 @@ create_promise2_handler (const jerry_call_info_t *call_info_p, /**< call informa
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_cnt);
 
-  jerry_value_t ret = jerry_create_promise ();
-  my_promise2 = jerry_acquire_value (ret);
+  jerry_value_t ret = jerry_promise ();
+  my_promise2 = jerry_value_copy (ret);
 
   return ret;
 } /* create_promise2_handler */
@@ -75,7 +75,7 @@ assert_handler (const jerry_call_info_t *call_info_p, /**< call information */
 
   if (args_cnt == 1 && jerry_value_is_true (args_p[0]))
   {
-    return jerry_create_boolean (true);
+    return jerry_boolean (true);
   }
   else
   {
@@ -90,17 +90,17 @@ static void
 register_js_function (const char *name_p, /**< name of the function */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t global_obj_val = jerry_get_global_object ();
+  jerry_value_t global_obj_val = jerry_current_realm ();
 
-  jerry_value_t function_val = jerry_create_external_function (handler_p);
-  jerry_value_t function_name_val = jerry_create_string ((const jerry_char_t *) name_p);
-  jerry_value_t result_val = jerry_set_property (global_obj_val, function_name_val, function_val);
+  jerry_value_t function_val = jerry_function_external (handler_p);
+  jerry_value_t function_name_val = jerry_string_sz (name_p);
+  jerry_value_t result_val = jerry_object_set (global_obj_val, function_name_val, function_val);
 
-  jerry_release_value (function_name_val);
-  jerry_release_value (function_val);
-  jerry_release_value (global_obj_val);
+  jerry_value_free (function_name_val);
+  jerry_value_free (function_val);
+  jerry_value_free (global_obj_val);
 
-  jerry_release_value (result_val);
+  jerry_value_free (result_val);
 } /* register_js_function */
 
 int
@@ -108,7 +108,7 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_PROMISE))
+  if (!jerry_feature_enabled (JERRY_FEATURE_PROMISE))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Promise is disabled!\n");
     jerry_cleanup ();
@@ -120,41 +120,41 @@ main (void)
   register_js_function ("assert", assert_handler);
 
   jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
-  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
 
   jerry_value_t res = jerry_run (parsed_code_val);
-  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (!jerry_value_is_exception (res));
 
-  jerry_release_value (res);
-  jerry_release_value (parsed_code_val);
+  jerry_value_free (res);
+  jerry_value_free (parsed_code_val);
 
-  /* Test jerry_create_promise and jerry_value_is_promise. */
+  /* Test jerry_promise and jerry_value_is_promise. */
   TEST_ASSERT (jerry_value_is_promise (my_promise1));
   TEST_ASSERT (jerry_value_is_promise (my_promise2));
 
   TEST_ASSERT (count_in_assert == 0);
 
   /* Test jerry_resolve_or_reject_promise. */
-  jerry_value_t str_resolve = jerry_create_string (s1);
-  jerry_value_t str_reject = jerry_create_string (s2);
+  jerry_value_t str_resolve = jerry_string_sz (s1);
+  jerry_value_t str_reject = jerry_string_sz (s2);
 
-  jerry_resolve_or_reject_promise (my_promise1, str_resolve, true);
-  jerry_resolve_or_reject_promise (my_promise2, str_reject, false);
+  jerry_promise_resolve (my_promise1, str_resolve);
+  jerry_promise_reject (my_promise2, str_reject);
 
   /* The resolve/reject function should be invalid after the promise has the result. */
-  jerry_resolve_or_reject_promise (my_promise2, str_resolve, true);
-  jerry_resolve_or_reject_promise (my_promise1, str_reject, false);
+  jerry_promise_resolve (my_promise2, str_resolve);
+  jerry_promise_reject (my_promise1, str_reject);
 
   /* Run the jobqueue. */
-  res = jerry_run_all_enqueued_jobs ();
+  res = jerry_run_jobs ();
 
-  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (count_in_assert == 2);
 
-  jerry_release_value (my_promise1);
-  jerry_release_value (my_promise2);
-  jerry_release_value (str_resolve);
-  jerry_release_value (str_reject);
+  jerry_value_free (my_promise1);
+  jerry_value_free (my_promise2);
+  jerry_value_free (str_resolve);
+  jerry_value_free (str_reject);
 
   jerry_cleanup ();
 

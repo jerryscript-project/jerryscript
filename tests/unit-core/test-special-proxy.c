@@ -26,10 +26,10 @@ create_special_proxy_handler (const jerry_call_info_t *call_info_p, /**< call in
 
   if (args_count < 2)
   {
-    return jerry_create_undefined ();
+    return jerry_undefined ();
   }
 
-  return jerry_create_special_proxy (args_p[0], args_p[1], JERRY_PROXY_SKIP_RESULT_VALIDATION);
+  return jerry_proxy_custom (args_p[0], args_p[1], JERRY_PROXY_SKIP_RESULT_VALIDATION);
 } /* create_special_proxy_handler */
 
 static void
@@ -37,8 +37,8 @@ run_eval (const char *source_p)
 {
   jerry_value_t result = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
 
-  TEST_ASSERT (!jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (!jerry_value_is_exception (result));
+  jerry_value_free (result);
 } /* run_eval */
 
 /**
@@ -49,7 +49,7 @@ main (void)
 {
   TEST_INIT ();
 
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_PROXY))
+  if (!jerry_feature_enabled (JERRY_FEATURE_PROXY))
   {
     printf ("Skipping test, Proxy not enabled\n");
     return 0;
@@ -57,18 +57,18 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_value_t global = jerry_get_global_object ();
+  jerry_value_t global = jerry_current_realm ();
 
-  jerry_value_t function = jerry_create_external_function (create_special_proxy_handler);
-  jerry_value_t name = jerry_create_string ((const jerry_char_t *) "create_special_proxy");
-  jerry_value_t result = jerry_set_property (global, name, function);
-  TEST_ASSERT (!jerry_value_is_error (result));
+  jerry_value_t function = jerry_function_external (create_special_proxy_handler);
+  jerry_value_t name = jerry_string_sz ("create_special_proxy");
+  jerry_value_t result = jerry_object_set (global, name, function);
+  TEST_ASSERT (!jerry_value_is_exception (result));
 
-  jerry_release_value (result);
-  jerry_release_value (name);
-  jerry_release_value (function);
+  jerry_value_free (result);
+  jerry_value_free (name);
+  jerry_value_free (function);
 
-  jerry_release_value (global);
+  jerry_value_free (global);
 
   run_eval ("function assert (v) {\n"
             "  if (v !== true)\n"

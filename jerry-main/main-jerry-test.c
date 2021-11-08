@@ -75,7 +75,7 @@ static JERRY_ATTR_NOINLINE int
 run (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
-  jerry_value_t ret_value = jerry_create_undefined ();
+  jerry_value_t ret_value = jerry_undefined ();
 
   for (int i = 1; i < argc; i++)
   {
@@ -86,33 +86,34 @@ run (void)
 
     if (source_p == NULL)
     {
-      ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "");
+      ret_value = jerry_throw_sz (JERRY_ERROR_COMMON, "");
       break;
     }
     else
     {
       ret_value = jerry_parse (source_p, source_size, NULL);
 
-      if (!jerry_value_is_error (ret_value))
+      if (!jerry_value_is_exception (ret_value))
       {
         jerry_value_t func_val = ret_value;
         ret_value = jerry_run (func_val);
-        jerry_release_value (func_val);
+        jerry_value_free (func_val);
       }
     }
 
-    if (jerry_value_is_error (ret_value))
+    if (jerry_value_is_exception (ret_value))
     {
       break;
     }
 
-    jerry_release_value (ret_value);
-    ret_value = jerry_create_undefined ();
+    jerry_value_free (ret_value);
+    ret_value = jerry_undefined ();
   }
 
-  int ret_code = !jerry_value_is_error (ret_value) ? JERRY_STANDALONE_EXIT_CODE_OK : JERRY_STANDALONE_EXIT_CODE_FAIL;
+  int ret_code =
+    !jerry_value_is_exception (ret_value) ? JERRY_STANDALONE_EXIT_CODE_OK : JERRY_STANDALONE_EXIT_CODE_FAIL;
 
-  jerry_release_value (ret_value);
+  jerry_value_free (ret_value);
   jerry_cleanup ();
 
   return ret_code;

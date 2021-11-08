@@ -22,7 +22,7 @@
 static jerry_value_t
 my_custom_module_on_resolve (void)
 {
-  return jerry_create_number (42);
+  return jerry_number (42);
 } /* my_custom_module_on_resolve */
 
 JERRYX_NATIVE_MODULE (MODULE_NAME, my_custom_module_on_resolve)

@@ -24,7 +24,7 @@ JERRY_C_API_BEGIN
  * Handler registration helper
  */
 
-jerry_value_t jerryx_handler_register_global (const jerry_char_t *name_p, jerry_external_handler_t handler_p);
+jerry_value_t jerryx_handler_register_global (const char *name_p, jerry_external_handler_t handler_p);
 
 /*
  * Common external function handlers
@@ -44,9 +44,9 @@ jerryx_handler_gc (const jerry_call_info_t *call_info_p, const jerry_value_t arg
 jerry_value_t jerryx_handler_print (const jerry_call_info_t *call_info_p,
                                     const jerry_value_t args_p[],
                                     const jerry_length_t args_cnt);
-jerry_value_t jerryx_handler_resource_name (const jerry_call_info_t *call_info_p,
-                                            const jerry_value_t args_p[],
-                                            const jerry_length_t args_cnt);
+jerry_value_t jerryx_handler_source_name (const jerry_call_info_t *call_info_p,
+                                          const jerry_value_t args_p[],
+                                          const jerry_length_t args_cnt);
 
 /**
  * Struct used by the `jerryx_set_functions` method to
@@ -61,32 +61,32 @@ typedef struct
 #define JERRYX_PROPERTY_NUMBER(NAME, NUMBER) \
   (jerryx_property_entry)                    \
   {                                          \
-    NAME, jerry_create_number (NUMBER)       \
+    NAME, jerry_number (NUMBER)              \
   }
-#define JERRYX_PROPERTY_STRING(NAME, STR)                            \
-  (jerryx_property_entry)                                            \
-  {                                                                  \
-    NAME, jerry_create_string_from_utf8 ((const jerry_char_t *) STR) \
+#define JERRYX_PROPERTY_STRING(NAME, STR, SIZE)                                \
+  (jerryx_property_entry)                                                      \
+  {                                                                            \
+    NAME, jerry_string ((const jerry_char_t *) STR, SIZE, JERRY_ENCODING_UTF8) \
   }
-#define JERRYX_PROPERTY_STRING_SZ(NAME, STR, SIZE)                            \
-  (jerryx_property_entry)                                                     \
-  {                                                                           \
-    NAME, jerry_create_string_sz_from_utf8 ((const jerry_char_t *) STR, SIZE) \
+#define JERRYX_PROPERTY_STRING_SZ(NAME, STR) \
+  (jerryx_property_entry)                    \
+  {                                          \
+    NAME, jerry_string_sz (STR)              \
   }
 #define JERRYX_PROPERTY_BOOLEAN(NAME, VALUE) \
   (jerryx_property_entry)                    \
   {                                          \
-    NAME, jerry_create_boolean (VALUE)       \
+    NAME, jerry_boolean (VALUE)              \
   }
-#define JERRYX_PROPERTY_FUNCTION(NAME, FUNC)    \
-  (jerryx_property_entry)                       \
-  {                                             \
-    NAME, jerry_create_external_function (FUNC) \
+#define JERRYX_PROPERTY_FUNCTION(NAME, FUNC) \
+  (jerryx_property_entry)                    \
+  {                                          \
+    NAME, jerry_function_external (FUNC)     \
   }
 #define JERRYX_PROPERTY_UNDEFINED(NAME) \
   (jerryx_property_entry)               \
   {                                     \
-    NAME, jerry_create_undefined ()     \
+    NAME, jerry_undefined ()            \
   }
 #define JERRYX_PROPERTY_LIST_END() \
   (jerryx_property_entry)          \

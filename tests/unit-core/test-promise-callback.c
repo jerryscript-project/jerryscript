@@ -108,12 +108,12 @@ run_eval (const uint8_t *event_list_p, /**< event list */
 
   jerry_value_t result = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
 
-  TEST_ASSERT (!jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (!jerry_value_is_exception (result));
+  jerry_value_free (result);
 
-  result = jerry_run_all_enqueued_jobs ();
-  TEST_ASSERT (!jerry_value_is_error (result));
-  jerry_release_value (result);
+  result = jerry_run_jobs ();
+  TEST_ASSERT (!jerry_value_is_exception (result));
+  jerry_value_free (result);
 
   TEST_ASSERT (*next_event_p == UINT8_MAX);
 } /* run_eval */
@@ -123,14 +123,14 @@ main (void)
 {
   TEST_INIT ();
 
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_PROMISE))
+  if (!jerry_feature_enabled (JERRY_FEATURE_PROMISE))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Promise is disabled!\n");
     return 0;
   }
 
   /* The test system enables this feature when Promises are enabled. */
-  TEST_ASSERT (jerry_is_feature_enabled (JERRY_FEATURE_PROMISE_CALLBACK));
+  TEST_ASSERT (jerry_feature_enabled (JERRY_FEATURE_PROMISE_CALLBACK));
 
   jerry_init (JERRY_INIT_EMPTY);
 
@@ -139,7 +139,7 @@ main (void)
      | JERRY_PROMISE_EVENT_FILTER_ERROR | JERRY_PROMISE_EVENT_FILTER_REACTION_JOB
      | JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN | JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB);
 
-  jerry_promise_set_callback (filters, promise_callback, (void *) &user);
+  jerry_promise_on_event (filters, promise_callback, (void *) &user);
 
   /* Test promise creation. */
   static uint8_t events1[] = { C, C, C, E };
@@ -341,7 +341,7 @@ main (void)
             "p.then(() => {}).catch(() => {})\n");
 
   /* Test disabled filters. */
-  jerry_promise_set_callback (JERRY_PROMISE_EVENT_FILTER_DISABLE, promise_callback, (void *) &user);
+  jerry_promise_on_event (JERRY_PROMISE_EVENT_FILTER_DISABLE, promise_callback, (void *) &user);
 
   static uint8_t events24[] = { E };
 
@@ -352,7 +352,7 @@ main (void)
 
   /* Test filtered events. */
   filters = JERRY_PROMISE_EVENT_FILTER_REACTION_JOB | JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB;
-  jerry_promise_set_callback (filters, promise_callback, (void *) &user);
+  jerry_promise_on_event (filters, promise_callback, (void *) &user);
 
   static uint8_t events25[] = { BR, AR, BRS, ARS, E };
 

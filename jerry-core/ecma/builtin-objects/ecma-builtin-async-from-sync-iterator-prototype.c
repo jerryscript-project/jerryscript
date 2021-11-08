@@ -255,7 +255,7 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
     ecma_free_value (call_result);
 
 #if JERRY_ERROR_MESSAGES
-    const lit_utf8_byte_t *msg_p = ecma_get_error_utf8 (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
+    const lit_utf8_byte_t *msg_p = (lit_utf8_byte_t *) ecma_get_error_msg (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
     lit_utf8_size_t msg_size = ecma_get_error_size (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
     ecma_string_t *error_msg_p = ecma_new_ecma_string_from_ascii (msg_p, msg_size);
 #else /* !JERRY_ERROR_MESSAGES */

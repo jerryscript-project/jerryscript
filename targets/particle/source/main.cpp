@@ -30,16 +30,16 @@ set_led  (const jerry_value_t func_value, /**< function object */
   if (args_cnt != 2)
   {
     Serial.println ("Wrong arguments count in 'test.setLed' function.");
-    return jerry_create_boolean (false);
+    return jerry_boolean (false);
   }
 
-  int ledPin = jerry_get_number_value (args_p[0]);
+  int ledPin = jerry_value_as_number (args_p[0]);
   bool value = jerry_value_is_true (args_p[1]);
 
   pinMode (ledPin, OUTPUT);
   digitalWrite (ledPin, value);
 
-  return jerry_create_boolean (true);
+  return jerry_boolean (true);
 } /* set_led */
 
 /**
@@ -54,14 +54,14 @@ js_delay (const jerry_value_t func_value, /**< function object */
   if (args_cnt != 1)
   {
     Serial.println ("Wrong arguments count in 'test.delay' function.");
-    return jerry_create_boolean (false);
+    return jerry_boolean (false);
   }
 
-  int millisec = jerry_get_number_value (args_p[0]);
+  int millisec = jerry_value_as_number (args_p[0]);
 
   delay (millisec);
 
-  return jerry_create_boolean (true);
+  return jerry_boolean (true);
 } /* js_delay */
 
 /*
@@ -73,32 +73,32 @@ init_jerry ()
   jerry_init (JERRY_INIT_EMPTY);
 
   /* Create an empty JS object */
-  jerry_value_t object = jerry_create_object ();
+  jerry_value_t object = jerry_object ();
 
   jerry_value_t func_obj;
   jerry_value_t prop_name;
 
-  func_obj = jerry_create_external_function (set_led);
-  prop_name = jerry_create_string ((const jerry_char_t *) "setLed");
-  jerry_release_value (jerry_set_property (object, prop_name, func_obj));
-  jerry_release_value (prop_name);
-  jerry_release_value (func_obj);
+  func_obj = jerry_function_external (set_led);
+  prop_name = jerry_string_sz ("setLed");
+  jerry_value_free (jerry_object_set (object, prop_name, func_obj));
+  jerry_value_free (prop_name);
+  jerry_value_free (func_obj);
 
-  func_obj = jerry_create_external_function (js_delay);
-  prop_name = jerry_create_string ((const jerry_char_t *) "delay");
-  jerry_release_value (jerry_set_property (object, prop_name, func_obj));
-  jerry_release_value (prop_name);
-  jerry_release_value (func_obj);
+  func_obj = jerry_function_external (js_delay);
+  prop_name = jerry_string_sz ("delay");
+  jerry_value_free (jerry_object_set (object, prop_name, func_obj));
+  jerry_value_free (prop_name);
+  jerry_value_free (func_obj);
 
   /* Wrap the JS object (not empty anymore) into a jerry api value */
-  jerry_value_t global_object = jerry_get_global_object ();
+  jerry_value_t global_object = jerry_current_realm ();
 
   /* Add the JS object to the global context */
-  prop_name = jerry_create_string ((const jerry_char_t *) "test");
-  jerry_release_value (jerry_set_property (global_object, prop_name, object));
-  jerry_release_value (prop_name);
-  jerry_release_value (object);
-  jerry_release_value (global_object);
+  prop_name = jerry_string_sz ("test");
+  jerry_value_free (jerry_object_set (global_object, prop_name, object));
+  jerry_value_free (prop_name);
+  jerry_value_free (object);
+  jerry_value_free (global_object);
 } /* init_jerry */
 
 /**
@@ -117,7 +117,7 @@ test_jerry ()
   jerry_value_t eval_ret = jerry_eval (script, sizeof (script) - 1, JERRY_PARSE_NO_OPTS);
 
   /* Free JavaScript value, returned by eval */
-  jerry_release_value (eval_ret);
+  jerry_value_free (eval_ret);
 } /* test_jerry */
 
 /**

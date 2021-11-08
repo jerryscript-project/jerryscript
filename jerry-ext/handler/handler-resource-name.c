@@ -18,7 +18,7 @@
 /**
  * Get the resource name (usually a file name) of the currently executed script or the given function object
  *
- * Note: returned value must be freed with jerry_release_value, when it is no longer needed
+ * Note: returned value must be freed with jerry_value_free, when it is no longer needed
  *
  * @return JS string constructed from
  *         - the currently executed function object's resource name, if the given value is undefined
@@ -26,15 +26,15 @@
  *         - "<anonymous>", otherwise
  */
 jerry_value_t
-jerryx_handler_resource_name (const jerry_call_info_t *call_info_p, /**< call information */
-                              const jerry_value_t args_p[], /**< function arguments */
-                              const jerry_length_t args_cnt) /**< number of function arguments */
+jerryx_handler_source_name (const jerry_call_info_t *call_info_p, /**< call information */
+                            const jerry_value_t args_p[], /**< function arguments */
+                            const jerry_length_t args_cnt) /**< number of function arguments */
 {
   (void) call_info_p; /* unused */
 
-  jerry_value_t undefined_value = jerry_create_undefined ();
-  jerry_value_t resource_name = jerry_get_resource_name (args_cnt > 0 ? args_p[0] : undefined_value);
-  jerry_release_value (undefined_value);
+  jerry_value_t undefined_value = jerry_undefined ();
+  jerry_value_t source_name = jerry_source_name (args_cnt > 0 ? args_p[0] : undefined_value);
+  jerry_value_free (undefined_value);
 
-  return resource_name;
-} /* jerryx_handler_resource_name */
+  return source_name;
+} /* jerryx_handler_source_name */

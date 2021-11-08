@@ -15,13 +15,14 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "jerryscript-port.h"
 #include "jerryscript.h"
+
 #include "jerryscript-ext/debugger.h"
 #include "jerryscript-ext/handler.h"
-#include "jerryscript-port.h"
 #include "setjmp.h"
 
 /**
@@ -111,7 +112,7 @@ read_file (const char *file_name, /**< source code */
   if (!bytes_read || bytes_read != script_len)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to read file: %s\n", file_name);
-    free ((void*) buffer);
+    free ((void *) buffer);
 
     fclose (file);
     return NULL;
@@ -132,7 +133,7 @@ static uint32_t
 str_to_uint (const char *num_str_p, /**< string to convert */
              char **out_p) /**< [out] end of the number */
 {
-  assert (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES));
+  assert (jerry_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES));
 
   uint32_t result = 0;
 
@@ -157,124 +158,111 @@ str_to_uint (const char *num_str_p, /**< string to convert */
 static void
 print_unhandled_exception (jerry_value_t error_value) /**< error value */
 {
-  assert (jerry_value_is_error (error_value));
+  assert (jerry_value_is_exception (error_value));
 
-  error_value = jerry_get_value_from_error (error_value, false);
+  error_value = jerry_exception_value (error_value, false);
   jerry_value_t err_str_val = jerry_value_to_string (error_value);
-  jerry_size_t err_str_size = jerry_get_utf8_string_size (err_str_val);
   jerry_char_t err_str_buf[256];
 
-  jerry_release_value (error_value);
+  jerry_value_free (error_value);
 
-  if (err_str_size >= 256)
-  {
-    const char msg[] = "[Error message too long]";
-    err_str_size = sizeof (msg) / sizeof (char) - 1;
-    memcpy (err_str_buf, msg, err_str_size);
-  }
-  else
-  {
-    jerry_size_t sz = jerry_string_to_utf8_char_buffer (err_str_val, err_str_buf, err_str_size);
-    assert (sz == err_str_size);
-    err_str_buf[err_str_size] = 0;
+  jerry_size_t sz = jerry_string_to_buffer (err_str_val, JERRY_ENCODING_UTF8, err_str_buf, sizeof (err_str_buf) - 1);
+  err_str_buf[sz] = '\0';
 
-    if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES)
-        && jerry_get_error_type (error_value) == JERRY_ERROR_SYNTAX)
+  if (jerry_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES) && jerry_error_type (error_value) == JERRY_ERROR_SYNTAX)
+  {
+    jerry_char_t *string_end_p = err_str_buf + sz;
+    uint32_t err_line = 0;
+    uint32_t err_col = 0;
+    char *path_str_p = NULL;
+    char *path_str_end_p = NULL;
+
+    /* 1. parse column and line information */
+    for (jerry_char_t *current_p = err_str_buf; current_p < string_end_p; current_p++)
     {
-      jerry_char_t *string_end_p = err_str_buf + sz;
-      uint32_t err_line = 0;
-      uint32_t err_col = 0;
-      char *path_str_p = NULL;
-      char *path_str_end_p = NULL;
-
-      /* 1. parse column and line information */
-      for (jerry_char_t *current_p = err_str_buf; current_p < string_end_p; current_p++)
+      if (*current_p == '[')
       {
-        if (*current_p == '[')
+        current_p++;
+
+        if (*current_p == '<')
         {
-          current_p++;
-
-          if (*current_p == '<')
-          {
-            break;
-          }
-
-          path_str_p = (char *) current_p;
-          while (current_p < string_end_p && *current_p != ':')
-          {
-            current_p++;
-          }
-
-          path_str_end_p = (char *) current_p++;
-
-          err_line = str_to_uint ((char *) current_p, (char **) &current_p);
-
-          current_p++;
-
-          err_col = str_to_uint ((char *) current_p, NULL);
           break;
         }
-      } /* for */
 
-      if (err_line != 0 && err_col != 0)
-      {
-        uint32_t curr_line = 1;
-
-        bool is_printing_context = false;
-        uint32_t pos = 0;
-
-        /* Temporarily modify the error message, so we can use the path. */
-        *path_str_end_p = '\0';
-
-        size_t source_size;
-        const jerry_char_t *source_p = read_file (path_str_p, &source_size);
-
-        /* Revert the error message. */
-        *path_str_end_p = ':';
-
-        /* 2. seek and print */
-        while (source_p[pos] != '\0')
+        path_str_p = (char *) current_p;
+        while (current_p < string_end_p && *current_p != ':')
         {
-          if (source_p[pos] == '\n')
-          {
-            curr_line++;
-          }
-
-          if (err_line < SYNTAX_ERROR_CONTEXT_SIZE
-              || (err_line >= curr_line
-                  && (err_line - curr_line) <= SYNTAX_ERROR_CONTEXT_SIZE))
-          {
-            /* context must be printed */
-            is_printing_context = true;
-          }
-
-          if (curr_line > err_line)
-          {
-            break;
-          }
-
-          if (is_printing_context)
-          {
-            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", source_p[pos]);
-          }
-
-          pos++;
+          current_p++;
         }
 
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
+        path_str_end_p = (char *) current_p++;
 
-        while (--err_col)
-        {
-          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "~");
-        }
+        err_line = str_to_uint ((char *) current_p, (char **) &current_p);
 
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^\n");
+        current_p++;
+
+        err_col = str_to_uint ((char *) current_p, NULL);
+        break;
       }
+    } /* for */
+
+    if (err_line != 0 && err_col != 0)
+    {
+      uint32_t curr_line = 1;
+
+      bool is_printing_context = false;
+      uint32_t pos = 0;
+
+      /* Temporarily modify the error message, so we can use the path. */
+      *path_str_end_p = '\0';
+
+      size_t source_size;
+      const jerry_char_t *source_p = read_file (path_str_p, &source_size);
+
+      /* Revert the error message. */
+      *path_str_end_p = ':';
+
+      /* 2. seek and print */
+      while (source_p[pos] != '\0')
+      {
+        if (source_p[pos] == '\n')
+        {
+          curr_line++;
+        }
+
+        if (err_line < SYNTAX_ERROR_CONTEXT_SIZE
+            || (err_line >= curr_line && (err_line - curr_line) <= SYNTAX_ERROR_CONTEXT_SIZE))
+        {
+          /* context must be printed */
+          is_printing_context = true;
+        }
+
+        if (curr_line > err_line)
+        {
+          break;
+        }
+
+        if (is_printing_context)
+        {
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", source_p[pos]);
+        }
+
+        pos++;
+      }
+
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
+
+      while (--err_col)
+      {
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "~");
+      }
+
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^\n");
     }
   }
 
   jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: %s\n", err_str_buf);
-  jerry_release_value (err_str_val);
+  jerry_value_free (err_str_val);
 } /* print_unhandled_exception */
 
 /**
@@ -284,16 +272,15 @@ static void
 register_js_function (const char *name_p, /**< name of the function */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t result_val = jerryx_handler_register_global ((const jerry_char_t *) name_p, handler_p);
+  jerry_value_t result_val = jerryx_handler_register_global (name_p, handler_p);
 
-  if (jerry_value_is_error (result_val))
+  if (jerry_value_is_exception (result_val))
   {
     jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register '%s' method.", name_p);
   }
 
-  jerry_release_value (result_val);
+  jerry_value_free (result_val);
 } /* register_js_function */
-
 
 /**
  * Main program.
@@ -301,9 +288,11 @@ register_js_function (const char *name_p, /**< name of the function */
  * @return 0 if success, error code otherwise
  */
 #ifdef CONFIG_BUILD_KERNEL
-int main (int argc, FAR char *argv[])
+int
+main (int argc, FAR char *argv[])
 #else /* !defined(CONFIG_BUILD_KERNEL) */
-int jerry_main (int argc, char *argv[])
+int
+jerry_main (int argc, char *argv[])
 #endif /* defined(CONFIG_BUILD_KERNEL) */
 {
   if (argc > JERRY_MAX_COMMAND_LINE_ARGS)
@@ -335,11 +324,6 @@ int jerry_main (int argc, char *argv[])
       flags |= JERRY_INIT_MEM_STATS;
       set_log_level (JERRY_LOG_LEVEL_DEBUG);
     }
-    else if (!strcmp ("--mem-stats-separate", argv[i]))
-    {
-      flags |= JERRY_INIT_MEM_STATS_SEPARATE;
-      set_log_level (JERRY_LOG_LEVEL_DEBUG);
-    }
     else if (!strcmp ("--show-opcodes", argv[i]))
     {
       flags |= JERRY_INIT_SHOW_OPCODES | JERRY_INIT_SHOW_REGEXP_OPCODES;
@@ -347,7 +331,7 @@ int jerry_main (int argc, char *argv[])
     }
     else if (!strcmp ("--log-level", argv[i]))
     {
-      if (++i < argc && strlen (argv[i]) == 1 && argv[i][0] >='0' && argv[i][0] <= '3')
+      if (++i < argc && strlen (argv[i]) == 1 && argv[i][0] >= '0' && argv[i][0] <= '3')
       {
         set_log_level (argv[i][0] - '0');
       }
@@ -383,15 +367,14 @@ int jerry_main (int argc, char *argv[])
 
   if (start_debug_server)
   {
-    jerryx_debugger_after_connect (jerryx_debugger_tcp_create (debug_port)
-                                   && jerryx_debugger_ws_create ());
+    jerryx_debugger_after_connect (jerryx_debugger_tcp_create (debug_port) && jerryx_debugger_ws_create ());
   }
 
   register_js_function ("assert", jerryx_handler_assert);
   register_js_function ("gc", jerryx_handler_gc);
   register_js_function ("print", jerryx_handler_print);
 
-  jerry_value_t ret_value = jerry_create_undefined ();
+  jerry_value_t ret_value = jerry_undefined ();
 
   if (files_counter == 0)
   {
@@ -400,7 +383,7 @@ int jerry_main (int argc, char *argv[])
 
     ret_value = jerry_parse (script, sizeof (script) - 1, NULL);
 
-    if (!jerry_value_is_error (ret_value))
+    if (!jerry_value_is_exception (ret_value))
     {
       ret_value = jerry_run (ret_value);
     }
@@ -419,50 +402,48 @@ int jerry_main (int argc, char *argv[])
       }
 
       jerry_parse_options_t parse_options;
-      parse_options.options = JERRY_PARSE_HAS_RESOURCE;
-      parse_options.resource_name = jerry_create_string ((const jerry_char_t *) file_names[i]);
+      parse_options.options = JERRY_PARSE_HAS_SOURCE_NAME;
+      parse_options.source_name = jerry_string_sz (file_names[i]);
 
-      ret_value = jerry_parse (source_p,
-                               source_size,
-                               &parse_options);
-      jerry_release_value (parse_options.resource_name);
-      free ((void*) source_p);
+      ret_value = jerry_parse (source_p, source_size, &parse_options);
+      jerry_value_free (parse_options.source_name);
+      free ((void *) source_p);
 
-      if (!jerry_value_is_error (ret_value))
+      if (!jerry_value_is_exception (ret_value))
       {
         jerry_value_t func_val = ret_value;
         ret_value = jerry_run (func_val);
-        jerry_release_value (func_val);
+        jerry_value_free (func_val);
       }
 
-      if (jerry_value_is_error (ret_value))
+      if (jerry_value_is_exception (ret_value))
       {
         print_unhandled_exception (ret_value);
         break;
       }
 
-      jerry_release_value (ret_value);
-      ret_value = jerry_create_undefined ();
+      jerry_value_free (ret_value);
+      ret_value = jerry_undefined ();
     }
   }
 
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
 
-  if (jerry_value_is_error (ret_value))
+  if (jerry_value_is_exception (ret_value))
   {
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  jerry_release_value (ret_value);
+  jerry_value_free (ret_value);
 
-  ret_value = jerry_run_all_enqueued_jobs ();
+  ret_value = jerry_run_jobs ();
 
-  if (jerry_value_is_error (ret_value))
+  if (jerry_value_is_exception (ret_value))
   {
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  jerry_release_value (ret_value);
+  jerry_value_free (ret_value);
   jerry_cleanup ();
 
   return ret_code;

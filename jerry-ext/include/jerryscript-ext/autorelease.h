@@ -21,25 +21,25 @@ JERRY_C_API_BEGIN
 #include "autorelease.impl.h"
 
 /*
- * Macro for `const jerry_value_t` for which jerry_release_value () is
+ * Macro for `const jerry_value_t` for which jerry_value_free () is
  * automatically called when the variable goes out of scope.
  *
  * Example usage:
  * static void foo (bool enable)
  * {
- *   JERRYX_AR_VALUE_T bar = jerry_create_string (...);
+ *   JERRYX_AR_VALUE_T bar = jerry_string (...);
  *
  *   if (enable) {
- *     JERRYX_AR_VALUE_T baz = jerry_get_global_object ();
+ *     JERRYX_AR_VALUE_T baz = jerry_current_realm ();
  *
  *     // ...
  *
- *     // jerry_release_value (baz) and jerry_release_value (bar) is called automatically before
+ *     // jerry_value_free (baz) and jerry_value_free (bar) is called automatically before
  *     // returning, because `baz` and `bar` go out of scope.
  *     return;
  *   }
  *
- *   // jerry_release_value (bar) is called automatically when the function returns,
+ *   // jerry_value_free (bar) is called automatically when the function returns,
  *   // because `bar` goes out of scope.
  * }
  */

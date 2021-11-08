@@ -43,11 +43,11 @@ create_array_from_container_handler (const jerry_call_info_t *call_info_p,
 
   if (args_count < 2)
   {
-    return jerry_create_undefined ();
+    return jerry_undefined ();
   }
 
   bool is_key_value_pairs = false;
-  jerry_value_t result = jerry_get_array_from_container (args_p[0], &is_key_value_pairs);
+  jerry_value_t result = jerry_container_to_array (args_p[0], &is_key_value_pairs);
 
   TEST_ASSERT (is_key_value_pairs == jerry_value_is_true (args_p[1]));
   return result;
@@ -58,15 +58,15 @@ run_eval (const char *source_p)
 {
   jerry_value_t result = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
 
-  TEST_ASSERT (!jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (!jerry_value_is_exception (result));
+  jerry_value_free (result);
 } /* run_eval */
 
 static void
 run_eval_error (const char *source_p)
 {
   jerry_value_t result = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
-  jerry_release_value (result);
+  jerry_value_free (result);
 } /* run_eval_error */
 
 int
@@ -74,8 +74,8 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_MAP) || !jerry_is_feature_enabled (JERRY_FEATURE_SET)
-      || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKMAP) || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKSET))
+  if (!jerry_feature_enabled (JERRY_FEATURE_MAP) || !jerry_feature_enabled (JERRY_FEATURE_SET)
+      || !jerry_feature_enabled (JERRY_FEATURE_WEAKMAP) || !jerry_feature_enabled (JERRY_FEATURE_WEAKSET))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Containers are disabled!\n");
     jerry_cleanup ();
@@ -83,63 +83,63 @@ main (void)
   }
 
   jerry_value_t instance_check;
-  jerry_value_t global = jerry_get_global_object ();
-  jerry_value_t map_str = jerry_create_string ((jerry_char_t *) "Map");
-  jerry_value_t set_str = jerry_create_string ((jerry_char_t *) "Set");
-  jerry_value_t weakmap_str = jerry_create_string ((jerry_char_t *) "WeakMap");
-  jerry_value_t weakset_str = jerry_create_string ((jerry_char_t *) "WeakSet");
-  jerry_value_t global_map = jerry_get_property (global, map_str);
-  jerry_value_t global_set = jerry_get_property (global, set_str);
-  jerry_value_t global_weakmap = jerry_get_property (global, weakmap_str);
-  jerry_value_t global_weakset = jerry_get_property (global, weakset_str);
+  jerry_value_t global = jerry_current_realm ();
+  jerry_value_t map_str = jerry_string_sz ("Map");
+  jerry_value_t set_str = jerry_string_sz ("Set");
+  jerry_value_t weakmap_str = jerry_string_sz ("WeakMap");
+  jerry_value_t weakset_str = jerry_string_sz ("WeakSet");
+  jerry_value_t global_map = jerry_object_get (global, map_str);
+  jerry_value_t global_set = jerry_object_get (global, set_str);
+  jerry_value_t global_weakmap = jerry_object_get (global, weakmap_str);
+  jerry_value_t global_weakset = jerry_object_get (global, weakset_str);
 
-  jerry_value_t function = jerry_create_external_function (create_array_from_container_handler);
-  jerry_value_t name = jerry_create_string ((const jerry_char_t *) "create_array_from_container");
-  jerry_value_t res = jerry_set_property (global, name, function);
-  TEST_ASSERT (!jerry_value_is_error (res));
+  jerry_value_t function = jerry_function_external (create_array_from_container_handler);
+  jerry_value_t name = jerry_string_sz ("create_array_from_container");
+  jerry_value_t res = jerry_object_set (global, name, function);
+  TEST_ASSERT (!jerry_value_is_exception (res));
 
-  jerry_release_value (res);
-  jerry_release_value (name);
-  jerry_release_value (function);
+  jerry_value_free (res);
+  jerry_value_free (name);
+  jerry_value_free (function);
 
-  jerry_release_value (global);
+  jerry_value_free (global);
 
-  jerry_release_value (map_str);
-  jerry_release_value (set_str);
-  jerry_release_value (weakmap_str);
-  jerry_release_value (weakset_str);
+  jerry_value_free (map_str);
+  jerry_value_free (set_str);
+  jerry_value_free (weakmap_str);
+  jerry_value_free (weakset_str);
 
-  jerry_value_t empty_map = jerry_create_container (JERRY_CONTAINER_TYPE_MAP, NULL, 0);
-  TEST_ASSERT (jerry_get_container_type (empty_map) == JERRY_CONTAINER_TYPE_MAP);
-  instance_check = jerry_binary_operation (JERRY_BIN_OP_INSTANCEOF, empty_map, global_map);
+  jerry_value_t empty_map = jerry_container (JERRY_CONTAINER_TYPE_MAP, NULL, 0);
+  TEST_ASSERT (jerry_container_type (empty_map) == JERRY_CONTAINER_TYPE_MAP);
+  instance_check = jerry_binary_op (JERRY_BIN_OP_INSTANCEOF, empty_map, global_map);
   TEST_ASSERT (jerry_value_is_true (instance_check));
-  jerry_release_value (instance_check);
-  jerry_release_value (global_map);
-  jerry_release_value (empty_map);
+  jerry_value_free (instance_check);
+  jerry_value_free (global_map);
+  jerry_value_free (empty_map);
 
-  jerry_value_t empty_set = jerry_create_container (JERRY_CONTAINER_TYPE_SET, NULL, 0);
-  TEST_ASSERT (jerry_get_container_type (empty_set) == JERRY_CONTAINER_TYPE_SET);
-  instance_check = jerry_binary_operation (JERRY_BIN_OP_INSTANCEOF, empty_set, global_set);
+  jerry_value_t empty_set = jerry_container (JERRY_CONTAINER_TYPE_SET, NULL, 0);
+  TEST_ASSERT (jerry_container_type (empty_set) == JERRY_CONTAINER_TYPE_SET);
+  instance_check = jerry_binary_op (JERRY_BIN_OP_INSTANCEOF, empty_set, global_set);
   TEST_ASSERT (jerry_value_is_true (instance_check));
-  jerry_release_value (instance_check);
-  jerry_release_value (global_set);
-  jerry_release_value (empty_set);
+  jerry_value_free (instance_check);
+  jerry_value_free (global_set);
+  jerry_value_free (empty_set);
 
-  jerry_value_t empty_weakmap = jerry_create_container (JERRY_CONTAINER_TYPE_WEAKMAP, NULL, 0);
-  TEST_ASSERT (jerry_get_container_type (empty_weakmap) == JERRY_CONTAINER_TYPE_WEAKMAP);
-  instance_check = jerry_binary_operation (JERRY_BIN_OP_INSTANCEOF, empty_weakmap, global_weakmap);
+  jerry_value_t empty_weakmap = jerry_container (JERRY_CONTAINER_TYPE_WEAKMAP, NULL, 0);
+  TEST_ASSERT (jerry_container_type (empty_weakmap) == JERRY_CONTAINER_TYPE_WEAKMAP);
+  instance_check = jerry_binary_op (JERRY_BIN_OP_INSTANCEOF, empty_weakmap, global_weakmap);
   TEST_ASSERT (jerry_value_is_true (instance_check));
-  jerry_release_value (instance_check);
-  jerry_release_value (global_weakmap);
-  jerry_release_value (empty_weakmap);
+  jerry_value_free (instance_check);
+  jerry_value_free (global_weakmap);
+  jerry_value_free (empty_weakmap);
 
-  jerry_value_t empty_weakset = jerry_create_container (JERRY_CONTAINER_TYPE_WEAKSET, NULL, 0);
-  TEST_ASSERT (jerry_get_container_type (empty_weakset) == JERRY_CONTAINER_TYPE_WEAKSET);
-  instance_check = jerry_binary_operation (JERRY_BIN_OP_INSTANCEOF, empty_weakset, global_weakset);
+  jerry_value_t empty_weakset = jerry_container (JERRY_CONTAINER_TYPE_WEAKSET, NULL, 0);
+  TEST_ASSERT (jerry_container_type (empty_weakset) == JERRY_CONTAINER_TYPE_WEAKSET);
+  instance_check = jerry_binary_op (JERRY_BIN_OP_INSTANCEOF, empty_weakset, global_weakset);
   TEST_ASSERT (jerry_value_is_true (instance_check));
-  jerry_release_value (instance_check);
-  jerry_release_value (global_weakset);
-  jerry_release_value (empty_weakset);
+  jerry_value_free (instance_check);
+  jerry_value_free (global_weakset);
+  jerry_value_free (empty_weakset);
 
   const jerry_char_t source[] = TEST_STRING_LITERAL ("(function () {\n"
                                                      "  var o1 = {}\n"
@@ -153,11 +153,11 @@ main (void)
   jerry_value_t result = jerry_eval (source, sizeof (source) - 1, JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (jerry_value_is_object (result));
 
-  jerry_set_object_native_pointer (result, (void *) &global_counter, &native_info);
-  jerry_release_value (result);
+  jerry_object_set_native_ptr (result, &native_info, (void *) &global_counter);
+  jerry_value_free (result);
 
   global_counter = 0;
-  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (global_counter == 1);
 
   run_eval ("function assert(v) {\n"

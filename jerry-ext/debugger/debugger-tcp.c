@@ -364,7 +364,7 @@ jerryx_debugger_tcp_create (uint16_t port) /**< listening port */
 
   JERRYX_DEBUG_MSG ("Connected from: %s\n", inet_ntoa (addr.sin_addr));
 
-  size_t size = sizeof (jerryx_debugger_transport_tcp_t);
+  jerry_size_t size = sizeof (jerryx_debugger_transport_tcp_t);
 
   jerry_debugger_transport_header_t *header_p;
   header_p = (jerry_debugger_transport_header_t *) jerry_heap_alloc (size);

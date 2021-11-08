@@ -78,8 +78,8 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
   while (context_p != NULL)
   {
     const ecma_compiled_code_t *bytecode_header_p = context_p->shared_p->bytecode_header_p;
-    ecma_value_t resource_name = ecma_get_resource_name (bytecode_header_p);
-    ecma_string_t *str_p = ecma_get_string_from_value (resource_name);
+    ecma_value_t source_name = ecma_get_source_name (bytecode_header_p);
+    ecma_string_t *str_p = ecma_get_string_from_value (source_name);
     ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
     if (ecma_string_is_empty (str_p))
@@ -94,7 +94,7 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
 
     if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_LINE_INFO)
     {
-      jerry_backtrace_location_t location;
+      jerry_frame_location_t location;
       ecma_line_info_get (ecma_compiled_code_get_line_info (bytecode_header_p),
                           (uint32_t) (context_p->byte_code_p - context_p->byte_code_start_p),
                           &location);

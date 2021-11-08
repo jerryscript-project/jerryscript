@@ -135,10 +135,10 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  TEST_ASSERT (!strcmp (*((const char **) jerry_get_context_data (&manager1)), "item1"));
-  TEST_ASSERT (!strcmp (*((const char **) jerry_get_context_data (&manager2)), "item2"));
-  TEST_ASSERT (jerry_get_context_data (&manager3) == NULL);
-  TEST_ASSERT (jerry_get_context_data (&manager4) == NULL);
+  TEST_ASSERT (!strcmp (*((const char **) jerry_context_data (&manager1)), "item1"));
+  TEST_ASSERT (!strcmp (*((const char **) jerry_context_data (&manager2)), "item2"));
+  TEST_ASSERT (jerry_context_data (&manager3) == NULL);
+  TEST_ASSERT (jerry_context_data (&manager4) == NULL);
 
   TEST_ASSERT (test_context_data1_new_called);
   TEST_ASSERT (test_context_data2_new_called);

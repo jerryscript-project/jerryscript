@@ -30,9 +30,9 @@ typedef struct
   {                        \
     TYPE, VALUE, true      \
   }
-#define ENTRY_IF(TYPE, VALUE, FEATURE)              \
-  {                                                 \
-    TYPE, VALUE, jerry_is_feature_enabled (FEATURE) \
+#define ENTRY_IF(TYPE, VALUE, FEATURE)           \
+  {                                              \
+    TYPE, VALUE, jerry_feature_enabled (FEATURE) \
   }
 #define EVALUATE(BUFF) (jerry_eval ((BUFF), sizeof ((BUFF)) - 1, JERRY_PARSE_NO_OPTS))
 
@@ -66,15 +66,15 @@ main (void)
   const jerry_char_t set_iterator_symbol_iterator[] = "new Set([1, 2, 3])[Symbol.iterator]()";
 
   test_entry_t entries[] = {
-    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_create_number (-33.0)),
-    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_create_boolean (true)),
-    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_create_undefined ()),
-    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_create_null ()),
-    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_create_string ((const jerry_char_t *) "foo")),
-    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_create_error (JERRY_ERROR_TYPE, (const jerry_char_t *) "error")),
+    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_number (-33.0)),
+    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_boolean (true)),
+    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_undefined ()),
+    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_null ()),
+    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_string_sz ("foo")),
+    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_throw_sz (JERRY_ERROR_TYPE, "error")),
 
-    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_create_object ()),
-    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_create_array (10)),
+    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_object ()),
+    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_array (10)),
 
     ENTRY_IF (JERRY_ITERATOR_TYPE_ARRAY, EVALUATE (array_iterator_keys), JERRY_FEATURE_SYMBOL),
     ENTRY_IF (JERRY_ITERATOR_TYPE_ARRAY, EVALUATE (array_iterator_values), JERRY_FEATURE_SYMBOL),
@@ -101,9 +101,9 @@ main (void)
 
   for (size_t idx = 0; idx < sizeof (entries) / sizeof (entries[0]); idx++)
   {
-    jerry_iterator_type_t type_info = jerry_iterator_get_type (entries[idx].value);
+    jerry_iterator_type_t type_info = jerry_iterator_type (entries[idx].value);
     TEST_ASSERT (!entries[idx].active || type_info == entries[idx].type_info);
-    jerry_release_value (entries[idx].value);
+    jerry_value_free (entries[idx].value);
   }
 
   jerry_cleanup ();

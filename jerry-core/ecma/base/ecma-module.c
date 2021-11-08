@@ -563,9 +563,9 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
     {
       ret_value = module_p->u.callback (ecma_make_object_value (&module_p->header.object));
 
-      if (JERRY_UNLIKELY (ecma_is_value_error_reference (ret_value)))
+      if (JERRY_UNLIKELY (ecma_is_value_exception (ret_value)))
       {
-        ecma_raise_error_from_error_reference (ret_value);
+        ecma_throw_exception (ret_value);
         ret_value = ECMA_VALUE_ERROR;
       }
     }
@@ -1099,7 +1099,7 @@ typedef struct ecma_module_stack_item_t
  */
 ecma_value_t
 ecma_module_link (ecma_module_t *module_p, /**< root module */
-                  jerry_module_resolve_callback_t callback, /**< resolve module callback */
+                  jerry_module_resolve_cb_t callback, /**< resolve module callback */
                   void *user_p) /**< pointer passed to the resolve callback */
 {
   if (module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_UNLINKED)
@@ -1141,9 +1141,9 @@ restart:
 
       ecma_value_t resolve_result = callback (node_p->u.path_or_module, module_val, user_p);
 
-      if (JERRY_UNLIKELY (ecma_is_value_error_reference (resolve_result)))
+      if (JERRY_UNLIKELY (ecma_is_value_exception (resolve_result)))
       {
-        ecma_raise_error_from_error_reference (resolve_result);
+        ecma_throw_exception (resolve_result);
         goto error;
       }
 
@@ -1373,9 +1373,9 @@ ecma_module_import (ecma_value_t specifier, /**< module specifier */
                                                      JERRY_CONTEXT (module_import_callback_user_p));
   ecma_deref_ecma_string (specifier_p);
 
-  if (JERRY_UNLIKELY (ecma_is_value_error_reference (result)))
+  if (JERRY_UNLIKELY (ecma_is_value_exception (result)))
   {
-    ecma_raise_error_from_error_reference (result);
+    ecma_throw_exception (result);
     goto error;
   }
 

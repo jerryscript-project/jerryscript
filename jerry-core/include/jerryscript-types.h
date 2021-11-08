@@ -24,24 +24,10 @@
 
 JERRY_C_API_BEGIN
 
-/** \addtogroup jerry Jerry engine interface
+/**
+ * @defgroup jerry-api-types JerryScript public API types
  * @{
  */
-
-/**
- * Major version of JerryScript API.
- */
-#define JERRY_API_MAJOR_VERSION 3
-
-/**
- * Minor version of JerryScript API.
- */
-#define JERRY_API_MINOR_VERSION 0
-
-/**
- * Patch version of JerryScript API.
- */
-#define JERRY_API_PATCH_VERSION 0
 
 /**
  * JerryScript init flags.
@@ -52,8 +38,6 @@ typedef enum
   JERRY_INIT_SHOW_OPCODES = (1u << 0), /**< dump byte-code to log after parse */
   JERRY_INIT_SHOW_REGEXP_OPCODES = (1u << 1), /**< dump regexp byte-code to log after compilation */
   JERRY_INIT_MEM_STATS = (1u << 2), /**< dump memory statistics */
-  JERRY_INIT_MEM_STATS_SEPARATE = (1u << 3), /**< deprecated, an unused placeholder now */
-  JERRY_INIT_DEBUGGER = (1u << 4), /**< deprecated, an unused placeholder now */
 } jerry_init_flag_t;
 
 /**
@@ -81,7 +65,7 @@ typedef enum
   JERRY_FEATURE_CPOINTER_32_BIT, /**< 32 bit compressed pointers */
   JERRY_FEATURE_ERROR_MESSAGES, /**< error messages */
   JERRY_FEATURE_JS_PARSER, /**< js-parser */
-  JERRY_FEATURE_MEM_STATS, /**< memory statistics */
+  JERRY_FEATURE_HEAP_STATS, /**< memory statistics */
   JERRY_FEATURE_PARSER_DUMP, /**< parser byte-code dumps */
   JERRY_FEATURE_REGEXP_DUMP, /**< regexp byte-code dumps */
   JERRY_FEATURE_SNAPSHOT_SAVE, /**< saving snapshot files */
@@ -167,7 +151,7 @@ typedef enum
   JERRY_PARSE_MODULE = (1 << 1), /**< parse source as an ECMAScript module */
   JERRY_PARSE_HAS_ARGUMENT_LIST = (1 << 2), /**< argument_list field is valid,
                                              * this also means that function parsing will be done */
-  JERRY_PARSE_HAS_RESOURCE = (1 << 3), /**< resource_name field is valid */
+  JERRY_PARSE_HAS_SOURCE_NAME = (1 << 3), /**< source_name field is valid */
   JERRY_PARSE_HAS_START = (1 << 4), /**< start_line and start_column fields are valid */
   JERRY_PARSE_HAS_USER_VALUE = (1 << 5), /**< user_value field is valid */
 } jerry_parse_option_enable_feature_t;
@@ -180,9 +164,9 @@ typedef struct
   uint32_t options; /**< combination of jerry_parse_option_enable_feature_t values */
   jerry_value_t argument_list; /**< function argument list if JERRY_PARSE_HAS_ARGUMENT_LIST is set in options
                                 *   Note: must be string value */
-  jerry_value_t resource_name; /**< resource name string (usually a file name)
-                                *   if JERRY_PARSE_HAS_RESOURCE is set in options
-                                *   Note: must be string value */
+  jerry_value_t source_name; /**< source name string (usually a file name)
+                              *   if JERRY_PARSE_HAS_SOURCE_NAME is set in options
+                              *   Note: must be string value */
   uint32_t start_line; /**< start line of the source code if JERRY_PARSE_HAS_START is set in options */
   uint32_t start_column; /**< start column of the source code if JERRY_PARSE_HAS_START is set in options */
   jerry_value_t user_value; /**< user value assigned to all functions created by this script including eval
@@ -246,6 +230,15 @@ typedef enum
 } jerry_property_filter_t;
 
 /**
+ * String encoding.
+ */
+typedef enum
+{
+  JERRY_ENCODING_CESU8, /**< cesu-8 encoding */
+  JERRY_ENCODING_UTF8, /**< utf-8 encoding */
+} jerry_encoding_t;
+
+/**
  * Description of JerryScript heap memory stats.
  * It is for memory profiling.
  */
@@ -278,7 +271,7 @@ typedef jerry_value_t (*jerry_external_handler_t) (const jerry_call_info_t *call
 /**
  * Native free callback of generic value types.
  */
-typedef void (*jerry_value_free_callback_t) (void *native_p);
+typedef void (*jerry_value_free_cb_t) (void *native_p);
 
 /**
  * Forward definition of jerry_object_native_info_t.
@@ -288,59 +281,63 @@ struct jerry_object_native_info_t;
 /**
  * Native free callback of an object.
  */
-typedef void (*jerry_object_native_free_callback_t) (void *native_p, struct jerry_object_native_info_t *info_p);
+typedef void (*jerry_object_native_free_cb_t) (void *native_p, struct jerry_object_native_info_t *info_p);
 
 /**
  * Free callback for external strings.
  */
-typedef void (*jerry_external_string_free_callback_t) (jerry_char_t *string_p, jerry_size_t string_size, void *user_p);
+typedef void (*jerry_external_string_free_cb_t) (jerry_char_t *string_p, jerry_size_t string_size, void *user_p);
 
 /**
  * Decorator callback for Error objects. The decorator can create
  * or update any properties of the newly created Error object.
  */
-typedef void (*jerry_error_object_created_callback_t) (const jerry_value_t error_object, void *user_p);
+typedef void (*jerry_error_object_created_cb_t) (const jerry_value_t error_object, void *user_p);
 
 /**
  * Callback which tells whether the ECMAScript execution should be stopped.
  *
  * As long as the function returns with undefined the execution continues.
  * When a non-undefined value is returned the execution stops and the value
- * is thrown by the engine (if the error flag is not set for the returned
- * value the engine automatically sets it).
+ * is thrown by the engine as an exception.
  *
  * Note: if the function returns with a non-undefined value it
  *       must return with the same value for future calls.
  */
-typedef jerry_value_t (*jerry_vm_exec_stop_callback_t) (void *user_p);
+typedef jerry_value_t (*jerry_halt_cb_t) (void *user_p);
 
 /**
- * Callback function which is called when an error is thrown in an ECMAScript code.
- * The callback should not change the error_value. The callback is not called again
+ * Callback function which is called when an exception is thrown in an ECMAScript code.
+ * The callback should not change the exception_value. The callback is not called again
  * until the value is caught.
  *
- * Note: the engine considers errors thrown by external functions as never caught.
+ * Note: the engine considers exceptions thrown by external functions as never caught.
  */
-typedef void (*jerry_vm_throw_callback_t) (const jerry_value_t error_value, void *user_p);
+typedef void (*jerry_throw_cb_t) (const jerry_value_t exception_value, void *user_p);
+
+/**
+ * Function type applied each byte of a string
+ */
+typedef void (*jerry_string_iterate_cb_t) (uint8_t byte, void *user_p);
 
 /**
  * Function type applied for each data property of an object.
  */
-typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_name,
-                                                 const jerry_value_t property_value,
-                                                 void *user_data_p);
+typedef bool (*jerry_object_property_foreach_cb_t) (const jerry_value_t property_name,
+                                                    const jerry_value_t property_value,
+                                                    void *user_data_p);
 
 /**
  * Function type applied for each object in the engine.
  */
-typedef bool (*jerry_objects_foreach_t) (const jerry_value_t object, void *user_data_p);
+typedef bool (*jerry_foreach_live_object_cb_t) (const jerry_value_t object, void *user_data_p);
 
 /**
  * Function type applied for each matching object in the engine.
  */
-typedef bool (*jerry_objects_foreach_by_native_info_t) (const jerry_value_t object,
-                                                        void *object_data_p,
-                                                        void *user_data_p);
+typedef bool (*jerry_foreach_live_object_with_info_cb_t) (const jerry_value_t object,
+                                                          void *object_data_p,
+                                                          void *user_data_p);
 
 /**
  * User context item manager
@@ -349,7 +346,7 @@ typedef struct
 {
   /**
    * Callback responsible for initializing a context item, or NULL to zero out the memory. This is called lazily, the
-   * first time jerry_get_context_data () is called with this manager.
+   * first time jerry_context_data () is called with this manager.
    *
    * @param [in] data The buffer that JerryScript allocated for the manager. The buffer is zeroed out. The size is
    * determined by the bytes_needed field. The buffer is kept alive until jerry_cleanup () is called.
@@ -382,7 +379,7 @@ typedef struct
   /**
    * Number of bytes to allocate for this manager. This is the size of the buffer that JerryScript will allocate on
    * behalf of the manager. The pointer to this buffer is passed into init_cb, deinit_cb and finalize_cb. It is also
-   * returned from the jerry_get_context_data () API.
+   * returned from the jerry_context_data () API.
    */
   size_t bytes_needed;
 } jerry_context_data_manager_t;
@@ -390,14 +387,14 @@ typedef struct
 /**
  * Function type for allocating buffer for JerryScript context.
  */
-typedef void *(*jerry_context_alloc_t) (size_t size, void *cb_data_p);
+typedef void *(*jerry_context_alloc_cb_t) (size_t size, void *cb_data_p);
 
 /**
  * Type information of a native pointer.
  */
 typedef struct jerry_object_native_info_t
 {
-  jerry_object_native_free_callback_t free_cb; /**< the free callback of the native pointer */
+  jerry_object_native_free_cb_t free_cb; /**< the free callback of the native pointer */
   uint16_t number_of_references; /**< the number of value references which are marked by the garbage collector */
   uint16_t offset_of_references; /**< byte offset indicating the start offset of value
                                   *   references in the user allocated buffer */
@@ -425,44 +422,44 @@ typedef enum
   JERRY_BIN_OP_MUL, /**< multiplication operator (*) */
   JERRY_BIN_OP_DIV, /**< division operator (/) */
   JERRY_BIN_OP_REM, /**< remainder operator (%) */
-} jerry_binary_operation_t;
+} jerry_binary_op_t;
 
 /**
  * Backtrace related types.
  */
 
 /**
- * List of backtrace frame types returned by jerry_backtrace_get_frame_type.
+ * List of backtrace frame types returned by jerry_frame_type.
  */
 typedef enum
 {
   JERRY_BACKTRACE_FRAME_JS, /**< indicates that the frame is created for a JavaScript function/method */
-} jerry_backtrace_frame_types_t;
+} jerry_frame_type_t;
 
 /**
- * Location info retrieved by jerry_backtrace_get_location.
+ * Location info retrieved by jerry_frame_location.
  */
 typedef struct
 {
-  jerry_value_t resource_name; /**< resource name */
+  jerry_value_t source_name; /**< resource name */
   jerry_size_t line; /**< line index */
   jerry_size_t column; /**< column index */
-} jerry_backtrace_location_t;
+} jerry_frame_location_t;
+
+/*
+ * Internal data structure for jerry_frame_t definition.
+ */
+struct jerry_frame_internal_t;
 
 /**
- * Internal data structure for jerry_backtrace_frame_t definition.
+ * Backtrace frame data passed to the jerry_backtrace_cb_t handler.
  */
-struct jerry_backtrace_frame_internal_t;
+typedef struct jerry_frame_internal_t jerry_frame_t;
 
 /**
- * Backtrace frame data passed to the jerry_backtrace_callback_t handler.
+ * Callback function which is called by jerry_backtrace for each stack frame.
  */
-typedef struct jerry_backtrace_frame_internal_t jerry_backtrace_frame_t;
-
-/**
- * Callback function which is called by jerry_backtrace_capture for each stack frame.
- */
-typedef bool (*jerry_backtrace_callback_t) (jerry_backtrace_frame_t *frame_p, void *user_p);
+typedef bool (*jerry_backtrace_cb_t) (jerry_frame_t *frame_p, void *user_p);
 
 /**
  * Detailed value type related types.
@@ -481,7 +478,7 @@ typedef enum
   JERRY_TYPE_STRING, /**< string type */
   JERRY_TYPE_OBJECT, /**< object type */
   JERRY_TYPE_FUNCTION, /**< function type */
-  JERRY_TYPE_ERROR, /**< error/abort type */
+  JERRY_TYPE_EXCEPTION, /**< exception/abort type */
   JERRY_TYPE_SYMBOL, /**< symbol type */
   JERRY_TYPE_BIGINT, /**< bigint type */
 } jerry_type_t;
@@ -500,9 +497,9 @@ typedef enum
   JERRY_OBJECT_TYPE_MODULE, /**< Module object (see jerry_parse) */
   JERRY_OBJECT_TYPE_PROMISE, /**< Promise object */
   JERRY_OBJECT_TYPE_DATAVIEW, /**< Dataview object */
-  JERRY_OBJECT_TYPE_FUNCTION, /**< Function object (see jerry_function_get_type) */
-  JERRY_OBJECT_TYPE_TYPEDARRAY, /**< %TypedArray% object (see jerry_get_typedarray_type) */
-  JERRY_OBJECT_TYPE_ITERATOR, /**< Iterator object (see jerry_iterator_get_type) */
+  JERRY_OBJECT_TYPE_FUNCTION, /**< Function object (see jerry_function_type) */
+  JERRY_OBJECT_TYPE_TYPEDARRAY, /**< %TypedArray% object (see jerry_typedarray_type) */
+  JERRY_OBJECT_TYPE_ITERATOR, /**< Iterator object (see jerry_iterator_type) */
   JERRY_OBJECT_TYPE_CONTAINER, /**< Container object (see jerry_container_get_type) */
   JERRY_OBJECT_TYPE_ERROR, /**< Error object */
   JERRY_OBJECT_TYPE_ARRAYBUFFER, /**< Array buffer object */
@@ -554,7 +551,7 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_MODULE_STATE_INVALID = 0, /**< return value for jerry_module_get_state when its argument is not a module */
+  JERRY_MODULE_STATE_INVALID = 0, /**< return value for jerry_module_state when its argument is not a module */
   JERRY_MODULE_STATE_UNLINKED = 1, /**< module is currently unlinked */
   JERRY_MODULE_STATE_LINKING = 2, /**< module is currently being linked */
   JERRY_MODULE_STATE_LINKED = 3, /**< module has been linked (its dependencies has been resolved) */
@@ -566,36 +563,36 @@ typedef enum
 /**
  * Callback which is called by jerry_module_link to get the referenced module.
  */
-typedef jerry_value_t (*jerry_module_resolve_callback_t) (const jerry_value_t specifier,
-                                                          const jerry_value_t referrer,
-                                                          void *user_p);
+typedef jerry_value_t (*jerry_module_resolve_cb_t) (const jerry_value_t specifier,
+                                                    const jerry_value_t referrer,
+                                                    void *user_p);
 
 /**
  * Callback which is called when an import is resolved dynamically to get the referenced module.
  */
-typedef jerry_value_t (*jerry_module_import_callback_t) (const jerry_value_t specifier,
-                                                         const jerry_value_t user_value,
-                                                         void *user_p);
+typedef jerry_value_t (*jerry_module_import_cb_t) (const jerry_value_t specifier,
+                                                   const jerry_value_t user_value,
+                                                   void *user_p);
 
 /**
  * Callback which is called after the module enters into linked, evaluated or error state.
  */
-typedef void (*jerry_module_state_changed_callback_t) (jerry_module_state_t new_state,
-                                                       const jerry_value_t module,
-                                                       const jerry_value_t value,
-                                                       void *user_p);
+typedef void (*jerry_module_state_changed_cb_t) (jerry_module_state_t new_state,
+                                                 const jerry_value_t module,
+                                                 const jerry_value_t value,
+                                                 void *user_p);
 
 /**
  * Callback which is called when an import.meta expression of a module is evaluated the first time.
  */
-typedef void (*jerry_module_import_meta_callback_t) (const jerry_value_t module,
-                                                     const jerry_value_t meta_object,
-                                                     void *user_p);
+typedef void (*jerry_module_import_meta_cb_t) (const jerry_value_t module,
+                                               const jerry_value_t meta_object,
+                                               void *user_p);
 
 /**
  * Callback which is called by jerry_module_evaluate to evaluate the native module.
  */
-typedef jerry_value_t (*jerry_native_module_evaluate_callback_t) (const jerry_value_t native_module);
+typedef jerry_value_t (*jerry_native_module_evaluate_cb_t) (const jerry_value_t native_module);
 
 /**
  * Proxy related types.
@@ -611,7 +608,7 @@ typedef enum
                                                    *   [[PreventExtensions]], [[GetOwnProperty]],
                                                    *   [[DefineOwnProperty]], [[HasProperty]], [[Get]],
                                                    *   [[Set]], [[Delete]] and [[OwnPropertyKeys]] */
-} jerry_proxy_object_options_t;
+} jerry_proxy_custom_behavior_t;
 
 /**
  * Promise related types.
@@ -629,7 +626,7 @@ typedef enum
 } jerry_promise_state_t;
 
 /**
- * Event types for jerry_promise_callback_t callback function.
+ * Event types for jerry_promise_event_cb_t callback function.
  * The description of the 'object' and 'value' arguments are provided for each type.
  */
 typedef enum
@@ -680,7 +677,7 @@ typedef enum
 } jerry_promise_event_type_t;
 
 /**
- * Filter types for jerry_promise_set_callback callback function.
+ * Filter types for jerry_promise_on_event callback function.
  * The callback is only called for those events which are enabled by the filters.
  */
 typedef enum
@@ -712,7 +709,7 @@ typedef enum
 /**
  * Notification callback for tracking Promise and async function operations.
  */
-typedef void (*jerry_promise_callback_t) (jerry_promise_event_type_t event_type,
+typedef void (*jerry_promise_event_cb_t) (jerry_promise_event_type_t event_type,
                                           const jerry_value_t object,
                                           const jerry_value_t value,
                                           void *user_p);
@@ -788,7 +785,7 @@ typedef enum
   JERRY_CONTAINER_OP_DELETE, /**< Set/WeakSet/Map/WeakMap delete operation */
   JERRY_CONTAINER_OP_SIZE, /**< Set/WeakSet/Map/WeakMap size operation */
   JERRY_CONTAINER_OP_CLEAR, /**< Set/Map clear operation */
-} jerry_container_operation_t;
+} jerry_container_op_t;
 
 /**
  * Miscellaneous types.
@@ -833,19 +830,19 @@ typedef enum
 /**
  * Callback for allocating the backing store of array buffer or shared array buffer objects.
  */
-typedef uint8_t *(*jerry_arraybuffer_allocate_t) (jerry_arraybuffer_type_t buffer_type,
-                                                  uint32_t buffer_size,
-                                                  void **arraybuffer_user_p,
-                                                  void *user_p);
+typedef uint8_t *(*jerry_arraybuffer_allocate_cb_t) (jerry_arraybuffer_type_t buffer_type,
+                                                     uint32_t buffer_size,
+                                                     void **arraybuffer_user_p,
+                                                     void *user_p);
 
 /**
  * Callback for freeing the backing store of array buffer or shared array buffer objects.
  */
-typedef void (*jerry_arraybuffer_free_t) (jerry_arraybuffer_type_t buffer_type,
-                                          uint8_t *buffer_p,
-                                          uint32_t buffer_size,
-                                          void *arraybuffer_user_p,
-                                          void *user_p);
+typedef void (*jerry_arraybuffer_free_cb_t) (jerry_arraybuffer_type_t buffer_type,
+                                             uint8_t *buffer_p,
+                                             uint32_t buffer_size,
+                                             void *arraybuffer_user_p,
+                                             void *user_p);
 
 /**
  * @}

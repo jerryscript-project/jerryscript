@@ -34,7 +34,7 @@
 
 #if defined(JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
 /**
- * The alloc function passed to jerry_create_context
+ * The alloc function passed to jerry_context_create
  */
 static void *
 context_alloc (size_t size, void *cb_data_p)
@@ -62,7 +62,7 @@ main (int argc, char **argv)
   main_parse_args (argc, argv, &arguments);
 
 #if defined(JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
-  jerry_context_t *context_p = jerry_create_context (JERRY_GLOBAL_HEAP_SIZE * 1024, context_alloc, NULL);
+  jerry_context_t *context_p = jerry_context_alloc (JERRY_GLOBAL_HEAP_SIZE * 1024, context_alloc, NULL);
   jerry_port_default_set_current_context (context_p);
 #endif /* defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1) */
 
@@ -78,45 +78,46 @@ restart:
 
     if (source_file_p->type == SOURCE_MODULE)
     {
-      jerry_value_t specifier = jerry_create_string_from_utf8 ((const jerry_char_t *) file_path_p);
-      jerry_value_t referrer = jerry_create_undefined ();
+      jerry_value_t specifier =
+        jerry_string ((const jerry_char_t *) file_path_p, (jerry_size_t) strlen (file_path_p), JERRY_ENCODING_UTF8);
+      jerry_value_t referrer = jerry_undefined ();
       ret_value = jerry_port_module_resolve (specifier, referrer, NULL);
-      jerry_release_value (referrer);
-      jerry_release_value (specifier);
+      jerry_value_free (referrer);
+      jerry_value_free (specifier);
 
-      if (!jerry_value_is_error (ret_value))
+      if (!jerry_value_is_exception (ret_value))
       {
-        if (jerry_module_get_state (ret_value) != JERRY_MODULE_STATE_UNLINKED)
+        if (jerry_module_state (ret_value) != JERRY_MODULE_STATE_UNLINKED)
         {
           /* A module can be evaluated only once. */
-          jerry_release_value (ret_value);
+          jerry_value_free (ret_value);
           continue;
         }
 
         jerry_value_t link_val = jerry_module_link (ret_value, NULL, NULL);
 
-        if (jerry_value_is_error (link_val))
+        if (jerry_value_is_exception (link_val))
         {
-          jerry_release_value (ret_value);
+          jerry_value_free (ret_value);
           ret_value = link_val;
         }
         else
         {
-          jerry_release_value (link_val);
+          jerry_value_free (link_val);
 
           jerry_value_t module_val = ret_value;
           ret_value = jerry_module_evaluate (module_val);
-          jerry_release_value (module_val);
+          jerry_value_free (module_val);
         }
       }
 
-      if (jerry_value_is_error (ret_value))
+      if (jerry_value_is_exception (ret_value))
       {
         main_print_unhandled_exception (ret_value);
         goto exit;
       }
 
-      jerry_release_value (ret_value);
+      jerry_value_free (ret_value);
       continue;
     }
 
@@ -145,7 +146,7 @@ restart:
       {
         assert (source_file_p->type == SOURCE_SCRIPT || source_file_p->type == SOURCE_MODULE);
 
-        if (!jerry_is_valid_utf8_string ((jerry_char_t *) source_p, (jerry_size_t) source_size))
+        if (!jerry_validate_string ((jerry_char_t *) source_p, (jerry_size_t) source_size, JERRY_ENCODING_UTF8))
         {
           jerry_port_release_source (source_p);
           jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Input must be a valid UTF-8 string.");
@@ -153,27 +154,27 @@ restart:
         }
 
         jerry_parse_options_t parse_options;
-        parse_options.options = JERRY_PARSE_HAS_RESOURCE;
-        parse_options.resource_name =
-          jerry_create_string_sz ((const jerry_char_t *) file_path_p, (jerry_size_t) strlen (file_path_p));
+        parse_options.options = JERRY_PARSE_HAS_SOURCE_NAME;
+        parse_options.source_name =
+          jerry_string ((const jerry_char_t *) file_path_p, (jerry_size_t) strlen (file_path_p), JERRY_ENCODING_UTF8);
 
         ret_value = jerry_parse (source_p, source_size, &parse_options);
 
-        jerry_release_value (parse_options.resource_name);
+        jerry_value_free (parse_options.source_name);
         jerry_port_release_source (source_p);
 
-        if (!jerry_value_is_error (ret_value) && !(arguments.option_flags & OPT_FLAG_PARSE_ONLY))
+        if (!jerry_value_is_exception (ret_value) && !(arguments.option_flags & OPT_FLAG_PARSE_ONLY))
         {
           jerry_value_t func_val = ret_value;
           ret_value = jerry_run (func_val);
-          jerry_release_value (func_val);
+          jerry_value_free (func_val);
         }
 
         break;
       }
     }
 
-    if (jerry_value_is_error (ret_value))
+    if (jerry_value_is_exception (ret_value))
     {
       if (main_is_value_reset (ret_value))
       {
@@ -186,7 +187,7 @@ restart:
       goto exit;
     }
 
-    jerry_release_value (ret_value);
+    jerry_value_free (ret_value);
   }
 
   if (arguments.option_flags & OPT_FLAG_WAIT_SOURCE)
@@ -218,7 +219,7 @@ restart:
       }
 
       assert (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVED);
-      jerry_release_value (ret_value);
+      jerry_value_free (ret_value);
     }
   }
   else if (arguments.option_flags & OPT_FLAG_USE_STDIN)
@@ -241,7 +242,7 @@ restart:
     ret_value = jerry_parse ((jerry_char_t *) source_p, source_size, NULL);
     free (source_p);
 
-    if (jerry_value_is_error (ret_value))
+    if (jerry_value_is_exception (ret_value))
     {
       main_print_unhandled_exception (ret_value);
       goto exit;
@@ -249,15 +250,15 @@ restart:
 
     jerry_value_t func_val = ret_value;
     ret_value = jerry_run (func_val);
-    jerry_release_value (func_val);
+    jerry_value_free (func_val);
 
-    if (jerry_value_is_error (ret_value))
+    if (jerry_value_is_exception (ret_value))
     {
       main_print_unhandled_exception (ret_value);
       goto exit;
     }
 
-    jerry_release_value (ret_value);
+    jerry_value_free (ret_value);
   }
   else if (arguments.source_count == 0)
   {
@@ -282,7 +283,7 @@ restart:
         continue;
       }
 
-      if (!jerry_is_valid_utf8_string ((jerry_char_t *) str_p, (jerry_size_t) len))
+      if (!jerry_validate_string ((jerry_char_t *) str_p, (jerry_size_t) len, JERRY_ENCODING_UTF8))
       {
         jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Input must be a valid UTF-8 string.\n");
         continue;
@@ -290,7 +291,7 @@ restart:
 
       ret_value = jerry_parse ((jerry_char_t *) str_p, len, NULL);
 
-      if (jerry_value_is_error (ret_value))
+      if (jerry_value_is_exception (ret_value))
       {
         main_print_unhandled_exception (ret_value);
         continue;
@@ -298,9 +299,9 @@ restart:
 
       jerry_value_t func_val = ret_value;
       ret_value = jerry_run (func_val);
-      jerry_release_value (func_val);
+      jerry_value_free (func_val);
 
-      if (jerry_value_is_error (ret_value))
+      if (jerry_value_is_exception (ret_value))
       {
         main_print_unhandled_exception (ret_value);
         continue;
@@ -308,53 +309,53 @@ restart:
 
       const jerry_value_t args[] = { ret_value };
       jerry_value_t ret_val_print = jerryx_handler_print (NULL, args, 1);
-      jerry_release_value (ret_val_print);
-      jerry_release_value (ret_value);
-      ret_value = jerry_run_all_enqueued_jobs ();
+      jerry_value_free (ret_val_print);
+      jerry_value_free (ret_value);
+      ret_value = jerry_run_jobs ();
 
-      if (jerry_value_is_error (ret_value))
+      if (jerry_value_is_exception (ret_value))
       {
         main_print_unhandled_exception (ret_value);
         continue;
       }
 
-      jerry_release_value (ret_value);
+      jerry_value_free (ret_value);
     }
   }
 
-  ret_value = jerry_run_all_enqueued_jobs ();
+  ret_value = jerry_run_jobs ();
 
-  if (jerry_value_is_error (ret_value))
+  if (jerry_value_is_exception (ret_value))
   {
     main_print_unhandled_exception (ret_value);
     goto exit;
   }
 
-  jerry_release_value (ret_value);
+  jerry_value_free (ret_value);
 
   if (arguments.exit_cb_name_p != NULL)
   {
-    jerry_value_t global = jerry_get_global_object ();
-    jerry_value_t name_str = jerry_create_string ((jerry_char_t *) arguments.exit_cb_name_p);
-    jerry_value_t callback_fn = jerry_get_property (global, name_str);
+    jerry_value_t global = jerry_current_realm ();
+    jerry_value_t name_str = jerry_string_sz (arguments.exit_cb_name_p);
+    jerry_value_t callback_fn = jerry_object_get (global, name_str);
 
-    jerry_release_value (global);
-    jerry_release_value (name_str);
+    jerry_value_free (global);
+    jerry_value_free (name_str);
 
     if (jerry_value_is_function (callback_fn))
     {
-      ret_value = jerry_call_function (callback_fn, jerry_create_undefined (), NULL, 0);
+      ret_value = jerry_call (callback_fn, jerry_undefined (), NULL, 0);
 
-      if (jerry_value_is_error (ret_value))
+      if (jerry_value_is_exception (ret_value))
       {
         main_print_unhandled_exception (ret_value);
         goto exit;
       }
 
-      jerry_release_value (ret_value);
+      jerry_value_free (ret_value);
     }
 
-    jerry_release_value (callback_fn);
+    jerry_value_free (callback_fn);
   }
 
   return_code = JERRY_STANDALONE_EXIT_CODE_OK;

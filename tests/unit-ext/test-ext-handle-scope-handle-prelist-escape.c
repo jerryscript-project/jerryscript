@@ -51,8 +51,8 @@ create_object (void)
   jerry_value_t obj;
   for (size_t idx = 0; idx < handle_count; idx++)
   {
-    obj = jerryx_create_handle (jerry_create_object ());
-    jerry_set_object_native_pointer (obj, NULL, &native_info);
+    obj = jerryx_create_handle (jerry_object ());
+    jerry_object_set_native_ptr (obj, &native_info, NULL);
   }
 
   // If leaves `escaped` uninitialized, there will be a style error on linux thrown by compiler
@@ -72,7 +72,7 @@ test_handle_scope_val (void)
   jerry_value_t obj = create_object ();
   (void) obj;
 
-  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == (handle_count - 1));
 
   jerryx_close_handle_scope (scope);
@@ -86,7 +86,7 @@ main (void)
   native_free_cb_call_count = 0;
   test_handle_scope_val ();
 
-  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == handle_count);
 
   jerry_cleanup ();

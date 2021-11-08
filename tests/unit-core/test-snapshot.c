@@ -45,8 +45,7 @@ static void
 test_function_snapshot (void)
 {
   /* function to snapshot */
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
-      || !jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  if (!jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) || !jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
     return;
   }
@@ -60,20 +59,20 @@ test_function_snapshot (void)
 
   jerry_parse_options_t parse_options;
   parse_options.options = JERRY_PARSE_HAS_ARGUMENT_LIST;
-  parse_options.argument_list = jerry_create_string ((const jerry_char_t *) "a, b");
+  parse_options.argument_list = jerry_string_sz ("a, b");
 
   jerry_value_t parse_result = jerry_parse (code_to_snapshot, sizeof (code_to_snapshot) - 1, &parse_options);
-  TEST_ASSERT (!jerry_value_is_error (parse_result));
+  TEST_ASSERT (!jerry_value_is_exception (parse_result));
 
   jerry_value_t generate_result =
     jerry_generate_snapshot (parse_result, 0, function_snapshot_buffer, SNAPSHOT_BUFFER_SIZE);
-  jerry_release_value (parse_result);
-  jerry_release_value (parse_options.argument_list);
+  jerry_value_free (parse_result);
+  jerry_value_free (parse_options.argument_list);
 
-  TEST_ASSERT (!jerry_value_is_error (generate_result) && jerry_value_is_number (generate_result));
+  TEST_ASSERT (!jerry_value_is_exception (generate_result) && jerry_value_is_number (generate_result));
 
-  size_t function_snapshot_size = (size_t) jerry_get_number_value (generate_result);
-  jerry_release_value (generate_result);
+  size_t function_snapshot_size = (size_t) jerry_value_as_number (generate_result);
+  jerry_value_free (generate_result);
 
   jerry_cleanup ();
 
@@ -85,25 +84,25 @@ test_function_snapshot (void)
                                                     JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION,
                                                     NULL);
 
-  TEST_ASSERT (!jerry_value_is_error (function_obj));
+  TEST_ASSERT (!jerry_value_is_exception (function_obj));
   TEST_ASSERT (jerry_value_is_function (function_obj));
 
-  jerry_value_t this_val = jerry_create_undefined ();
+  jerry_value_t this_val = jerry_undefined ();
   jerry_value_t args[2];
-  args[0] = jerry_create_number (1.0);
-  args[1] = jerry_create_number (2.0);
+  args[0] = jerry_number (1.0);
+  args[1] = jerry_number (2.0);
 
-  jerry_value_t res = jerry_call_function (function_obj, this_val, args, 2);
+  jerry_value_t res = jerry_call (function_obj, this_val, args, 2);
 
-  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_number (res));
-  double num = jerry_get_number_value (res);
+  double num = jerry_value_as_number (res);
   TEST_ASSERT (num == 3);
 
-  jerry_release_value (args[0]);
-  jerry_release_value (args[1]);
-  jerry_release_value (res);
-  jerry_release_value (function_obj);
+  jerry_value_free (args[0]);
+  jerry_value_free (args[1]);
+  jerry_value_free (res);
+  jerry_value_free (function_obj);
 
   jerry_cleanup ();
 } /* test_function_snapshot */
@@ -113,11 +112,11 @@ arguments_test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint32
 {
   jerry_init (JERRY_INIT_EMPTY);
   jerry_value_t res = jerry_exec_snapshot (snapshot_p, snapshot_size, 0, exec_snapshot_flags, NULL);
-  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_number (res));
-  double raw_value = jerry_get_number_value (res);
+  double raw_value = jerry_value_as_number (res);
   TEST_ASSERT (raw_value == 15);
-  jerry_release_value (res);
+  jerry_value_free (res);
 
   jerry_cleanup ();
 } /* arguments_test_exec_snapshot */
@@ -125,7 +124,7 @@ arguments_test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint32
 static void
 test_function_arguments_snapshot (void)
 {
-  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  if (jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
     static uint32_t arguments_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
@@ -139,16 +138,16 @@ test_function_arguments_snapshot (void)
     jerry_init (JERRY_INIT_EMPTY);
 
     jerry_value_t parse_result = jerry_parse (code_to_snapshot, sizeof (code_to_snapshot) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    TEST_ASSERT (!jerry_value_is_exception (parse_result));
 
     jerry_value_t generate_result =
       jerry_generate_snapshot (parse_result, 0, arguments_snapshot_buffer, SNAPSHOT_BUFFER_SIZE);
-    jerry_release_value (parse_result);
+    jerry_value_free (parse_result);
 
-    TEST_ASSERT (!jerry_value_is_error (generate_result) && jerry_value_is_number (generate_result));
+    TEST_ASSERT (!jerry_value_is_exception (generate_result) && jerry_value_is_number (generate_result));
 
-    size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
-    jerry_release_value (generate_result);
+    size_t snapshot_size = (size_t) jerry_value_as_number (generate_result);
+    jerry_value_free (generate_result);
 
     jerry_cleanup ();
 
@@ -170,13 +169,13 @@ test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint32_t exec_sn
 
   jerry_value_t res = jerry_exec_snapshot (snapshot_p, snapshot_size, 0, exec_snapshot_flags, NULL);
 
-  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_string (res));
-  jerry_size_t sz = jerry_get_string_size (res);
+  jerry_size_t sz = jerry_string_size (res, JERRY_ENCODING_CESU8);
   TEST_ASSERT (sz == 20);
-  sz = jerry_string_to_char_buffer (res, (jerry_char_t *) string_data, sz);
+  sz = jerry_string_to_buffer (res, JERRY_ENCODING_CESU8, (jerry_char_t *) string_data, sz);
   TEST_ASSERT (sz == 20);
-  jerry_release_value (res);
+  jerry_value_free (res);
   TEST_ASSERT (!strncmp (string_data, "string from snapshot", (size_t) sz));
 
   jerry_cleanup ();
@@ -185,7 +184,7 @@ test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint32_t exec_sn
 static void
 test_snapshot_with_user (void)
 {
-  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  if (jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
     static uint32_t snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
@@ -194,15 +193,15 @@ test_snapshot_with_user (void)
     jerry_init (JERRY_INIT_EMPTY);
 
     jerry_value_t parse_result = jerry_parse (code_to_snapshot, sizeof (code_to_snapshot) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    TEST_ASSERT (!jerry_value_is_exception (parse_result));
 
     jerry_value_t generate_result = jerry_generate_snapshot (parse_result, 0, snapshot_buffer, SNAPSHOT_BUFFER_SIZE);
-    jerry_release_value (parse_result);
+    jerry_value_free (parse_result);
 
-    TEST_ASSERT (!jerry_value_is_error (generate_result) && jerry_value_is_number (generate_result));
+    TEST_ASSERT (!jerry_value_is_exception (generate_result) && jerry_value_is_number (generate_result));
 
-    size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
-    jerry_release_value (generate_result);
+    size_t snapshot_size = (size_t) jerry_value_as_number (generate_result);
+    jerry_value_free (generate_result);
 
     for (int i = 0; i < 3; i++)
     {
@@ -210,15 +209,15 @@ test_snapshot_with_user (void)
 
       if (i == 0)
       {
-        snapshot_exec_options.user_value = jerry_create_object ();
+        snapshot_exec_options.user_value = jerry_object ();
       }
       else if (i == 1)
       {
-        snapshot_exec_options.user_value = jerry_create_number (-3.5);
+        snapshot_exec_options.user_value = jerry_number (-3.5);
       }
       else
       {
-        snapshot_exec_options.user_value = jerry_create_string ((const jerry_char_t *) "AnyString...");
+        snapshot_exec_options.user_value = jerry_string_sz ("AnyString...");
       }
 
       jerry_value_t result = jerry_exec_snapshot (snapshot_buffer,
@@ -227,18 +226,18 @@ test_snapshot_with_user (void)
                                                   JERRY_SNAPSHOT_EXEC_HAS_USER_VALUE,
                                                   &snapshot_exec_options);
 
-      TEST_ASSERT (!jerry_value_is_error (result) && jerry_value_is_function (result));
+      TEST_ASSERT (!jerry_value_is_exception (result) && jerry_value_is_function (result));
 
-      jerry_value_t user_value = jerry_get_user_value (result);
-      jerry_release_value (result);
+      jerry_value_t user_value = jerry_source_user_value (result);
+      jerry_value_free (result);
 
-      result = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, user_value, snapshot_exec_options.user_value);
+      result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, user_value, snapshot_exec_options.user_value);
 
       TEST_ASSERT (jerry_value_is_true (result));
 
-      jerry_release_value (result);
-      jerry_release_value (user_value);
-      jerry_release_value (snapshot_exec_options.user_value);
+      jerry_value_free (result);
+      jerry_value_free (user_value);
+      jerry_value_free (snapshot_exec_options.user_value);
     }
 
     jerry_cleanup ();
@@ -251,7 +250,7 @@ main (void)
   TEST_INIT ();
 
   /* Static snapshot */
-  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  if (jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
     static uint32_t snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
     const jerry_char_t code_to_snapshot[] = TEST_STRING_LITERAL ("function func(a, b, c) {"
@@ -266,21 +265,21 @@ main (void)
                                   magic_string_lengths);
 
     jerry_value_t parse_result = jerry_parse (code_to_snapshot, sizeof (code_to_snapshot) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    TEST_ASSERT (!jerry_value_is_exception (parse_result));
 
     jerry_value_t generate_result =
       jerry_generate_snapshot (parse_result, JERRY_SNAPSHOT_SAVE_STATIC, snapshot_buffer, SNAPSHOT_BUFFER_SIZE);
-    jerry_release_value (parse_result);
+    jerry_value_free (parse_result);
 
-    TEST_ASSERT (!jerry_value_is_error (generate_result) && jerry_value_is_number (generate_result));
+    TEST_ASSERT (!jerry_value_is_exception (generate_result) && jerry_value_is_number (generate_result));
 
-    size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
-    jerry_release_value (generate_result);
+    size_t snapshot_size = (size_t) jerry_value_as_number (generate_result);
+    jerry_value_free (generate_result);
 
     /* Static snapshots are not supported by default. */
     jerry_value_t exec_result = jerry_exec_snapshot (snapshot_buffer, snapshot_size, 0, 0, NULL);
-    TEST_ASSERT (jerry_value_is_error (exec_result));
-    jerry_release_value (exec_result);
+    TEST_ASSERT (jerry_value_is_exception (exec_result));
+    jerry_value_free (exec_result);
 
     jerry_cleanup ();
 
@@ -288,7 +287,7 @@ main (void)
   }
 
   /* Merge snapshot */
-  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  if (jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
     static uint32_t snapshot_buffer_0[SNAPSHOT_BUFFER_SIZE];
     static uint32_t snapshot_buffer_1[SNAPSHOT_BUFFER_SIZE];
@@ -300,15 +299,15 @@ main (void)
     jerry_init (JERRY_INIT_EMPTY);
 
     jerry_value_t parse_result = jerry_parse (code_to_snapshot1, sizeof (code_to_snapshot1) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    TEST_ASSERT (!jerry_value_is_exception (parse_result));
 
     jerry_value_t generate_result = jerry_generate_snapshot (parse_result, 0, snapshot_buffer_0, SNAPSHOT_BUFFER_SIZE);
-    jerry_release_value (parse_result);
+    jerry_value_free (parse_result);
 
-    TEST_ASSERT (!jerry_value_is_error (generate_result) && jerry_value_is_number (generate_result));
+    TEST_ASSERT (!jerry_value_is_exception (generate_result) && jerry_value_is_number (generate_result));
 
-    snapshot_sizes[0] = (size_t) jerry_get_number_value (generate_result);
-    jerry_release_value (generate_result);
+    snapshot_sizes[0] = (size_t) jerry_value_as_number (generate_result);
+    jerry_value_free (generate_result);
 
     jerry_cleanup ();
 
@@ -317,15 +316,15 @@ main (void)
     jerry_init (JERRY_INIT_EMPTY);
 
     parse_result = jerry_parse (code_to_snapshot2, sizeof (code_to_snapshot2) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    TEST_ASSERT (!jerry_value_is_exception (parse_result));
 
     generate_result = jerry_generate_snapshot (parse_result, 0, snapshot_buffer_1, SNAPSHOT_BUFFER_SIZE);
-    jerry_release_value (parse_result);
+    jerry_value_free (parse_result);
 
-    TEST_ASSERT (!jerry_value_is_error (generate_result) && jerry_value_is_number (generate_result));
+    TEST_ASSERT (!jerry_value_is_exception (generate_result) && jerry_value_is_number (generate_result));
 
-    snapshot_sizes[1] = (size_t) jerry_get_number_value (generate_result);
-    jerry_release_value (generate_result);
+    snapshot_sizes[1] = (size_t) jerry_value_as_number (generate_result);
+    jerry_value_free (generate_result);
 
     jerry_cleanup ();
 
@@ -358,20 +357,20 @@ main (void)
     jerry_init (JERRY_INIT_EMPTY);
 
     jerry_value_t res = jerry_exec_snapshot (merged_snapshot_buffer, merged_size, 0, 0, NULL);
-    TEST_ASSERT (!jerry_value_is_error (res));
-    TEST_ASSERT (jerry_get_number_value (res) == 123);
-    jerry_release_value (res);
+    TEST_ASSERT (!jerry_value_is_exception (res));
+    TEST_ASSERT (jerry_value_as_number (res) == 123);
+    jerry_value_free (res);
 
     res = jerry_exec_snapshot (merged_snapshot_buffer, merged_size, 1, 0, NULL);
-    TEST_ASSERT (!jerry_value_is_error (res));
-    TEST_ASSERT (jerry_get_number_value (res) == 456);
-    jerry_release_value (res);
+    TEST_ASSERT (!jerry_value_is_exception (res));
+    TEST_ASSERT (jerry_value_as_number (res) == 456);
+    jerry_value_free (res);
 
     jerry_cleanup ();
   }
 
   /* Save literals */
-  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE))
+  if (jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE))
   {
     /* C format generation */
     jerry_init (JERRY_INIT_EMPTY);
@@ -381,17 +380,17 @@ main (void)
     static const jerry_char_t code_for_c_format[] = "var object = { aa:'fo\" o\\n \\\\', Bb:'max', aaa:'xzy0' };";
 
     jerry_value_t parse_result = jerry_parse (code_for_c_format, sizeof (code_for_c_format) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    TEST_ASSERT (!jerry_value_is_exception (parse_result));
 
     jerry_value_t generate_result =
       jerry_generate_snapshot (parse_result, 0, literal_snapshot_buffer, SNAPSHOT_BUFFER_SIZE);
-    jerry_release_value (parse_result);
+    jerry_value_free (parse_result);
 
-    TEST_ASSERT (!jerry_value_is_error (generate_result));
+    TEST_ASSERT (!jerry_value_is_exception (generate_result));
     TEST_ASSERT (jerry_value_is_number (generate_result));
 
-    size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
-    jerry_release_value (generate_result);
+    size_t snapshot_size = (size_t) jerry_value_as_number (generate_result);
+    jerry_value_free (generate_result);
 
     const size_t lit_c_buf_sz = jerry_get_literals_from_snapshot (literal_snapshot_buffer,
                                                                   snapshot_size,

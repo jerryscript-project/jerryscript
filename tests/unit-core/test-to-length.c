@@ -50,7 +50,7 @@ main (void)
   TEST_ASSERT (num == 123);
 
   /* 1, 3 */
-  ecma_value_t error_throw = ecma_raise_standard_error (JERRY_ERROR_TYPE, (const lit_utf8_byte_t *) "I'm an error");
+  ecma_value_t error_throw = ecma_raise_standard_error (JERRY_ERROR_TYPE, "I'm an error");
 
   result = ecma_op_to_length (error_throw, &num);
 

@@ -140,7 +140,7 @@ ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer
   ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) arraybuffer_p;
   uint32_t arraybuffer_length = extended_object_p->u.cls.u3.length;
   ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) arraybuffer_p;
-  jerry_arraybuffer_allocate_t arraybuffer_allocate_callback = JERRY_CONTEXT (arraybuffer_allocate_callback);
+  jerry_arraybuffer_allocate_cb_t arraybuffer_allocate_callback = JERRY_CONTEXT (arraybuffer_allocate_callback);
   uint8_t *buffer_p;
 
   if (arraybuffer_allocate_callback != NULL)
@@ -212,7 +212,7 @@ ecma_arraybuffer_release_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer 
   JERRY_ASSERT (ecma_object_class_is (arraybuffer_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
                 || ecma_object_is_shared_arraybuffer (arraybuffer_p));
 
-  jerry_arraybuffer_free_t free_callback = JERRY_CONTEXT (arraybuffer_free_callback);
+  jerry_arraybuffer_free_cb_t free_callback = JERRY_CONTEXT (arraybuffer_free_callback);
   ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) arraybuffer_p;
   uint32_t arraybuffer_length = arraybuffer_pointer_p->extended_object.u.cls.u3.length;
 

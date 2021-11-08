@@ -2109,18 +2109,18 @@ parser_parse_source (void *source_p, /**< source code */
   }
 
 #if JERRY_RESOURCE_NAME
-  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+  ecma_value_t source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
 
-  if (context.options_p != NULL && (context.options_p->options & JERRY_PARSE_HAS_RESOURCE))
+  if (context.options_p != NULL && (context.options_p->options & JERRY_PARSE_HAS_SOURCE_NAME))
   {
-    JERRY_ASSERT (ecma_is_value_string (context.options_p->resource_name));
+    JERRY_ASSERT (ecma_is_value_string (context.options_p->source_name));
 
-    ecma_ref_ecma_string (ecma_get_string_from_value (context.options_p->resource_name));
-    resource_name = context.options_p->resource_name;
+    ecma_ref_ecma_string (ecma_get_string_from_value (context.options_p->source_name));
+    source_name = context.options_p->source_name;
   }
   else if (context.global_status_flags & ECMA_PARSE_EVAL)
   {
-    resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
+    source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
   }
 #endif /* JERRY_RESOURCE_NAME */
 
@@ -2263,7 +2263,7 @@ parser_parse_source (void *source_p, /**< source code */
 #endif /* JERRY_BUILTIN_REALMS */
 
 #if JERRY_RESOURCE_NAME
-    context.script_p->resource_name = resource_name;
+    context.script_p->source_name = source_name;
 #endif /* JERRY_RESOURCE_NAME */
 
     ECMA_SET_INTERNAL_VALUE_POINTER (context.script_value, context.script_p);
@@ -2431,7 +2431,7 @@ parser_parse_source (void *source_p, /**< source code */
     parser_cbc_stream_free (&context.byte_code);
 
 #if JERRY_RESOURCE_NAME
-    ecma_deref_ecma_string (ecma_get_string_from_value (context.script_p->resource_name));
+    ecma_deref_ecma_string (ecma_get_string_from_value (context.script_p->source_name));
 #endif /* JERRY_RESOURCE_NAME */
 
     if (context.script_p != NULL)
@@ -2515,7 +2515,7 @@ parser_parse_source (void *source_p, /**< source code */
   ecma_raise_standard_error_with_format (JERRY_ERROR_SYNTAX,
                                          "% [%:%:%]",
                                          err_str_val,
-                                         resource_name,
+                                         source_name,
                                          line_str_val,
                                          col_str_val);
 
@@ -3361,7 +3361,7 @@ parser_parse_script (void *source_p, /**< source code */
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
   JERRY_UNUSED (parse_opts);
-  JERRY_UNUSED (resource_name);
+  JERRY_UNUSED (source_name);
 
   ecma_raise_syntax_error (ECMA_ERR_PARSER_NOT_SUPPORTED);
   return NULL;

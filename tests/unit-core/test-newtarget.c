@@ -26,16 +26,16 @@ static jerry_value_t
 register_js_function (const char *name_p, /**< name of the function */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t global_obj_val = jerry_get_global_object ();
+  jerry_value_t global_obj_val = jerry_current_realm ();
 
-  jerry_value_t function_val = jerry_create_external_function (handler_p);
-  jerry_value_t function_name_val = jerry_create_string ((const jerry_char_t *) name_p);
-  jerry_value_t result_val = jerry_set_property (global_obj_val, function_name_val, function_val);
+  jerry_value_t function_val = jerry_function_external (handler_p);
+  jerry_value_t function_name_val = jerry_string_sz (name_p);
+  jerry_value_t result_val = jerry_object_set (global_obj_val, function_name_val, function_val);
 
-  jerry_release_value (function_name_val);
-  jerry_release_value (global_obj_val);
+  jerry_value_free (function_name_val);
+  jerry_value_free (global_obj_val);
 
-  jerry_release_value (result_val);
+  jerry_value_free (result_val);
 
   return function_val;
 } /* register_js_function */
@@ -59,7 +59,7 @@ construct_handler (const jerry_call_info_t *call_info_p, /**< call information *
     TEST_ASSERT (0 && "Invalid arguments for demo method");
   }
 
-  int test_id = (int) jerry_get_number_value (args_p[0]);
+  int test_id = (int) jerry_value_as_number (args_p[0]);
 
   switch (test_id)
   {
@@ -87,11 +87,11 @@ construct_handler (const jerry_call_info_t *call_info_p, /**< call information *
       TEST_ASSERT (target == call_info_p->function);
 
       /* Calling a function should hide the old "new.target". */
-      jerry_value_t sub_arg = jerry_create_number (TEST_ID_SIMPLE_CALL);
+      jerry_value_t sub_arg = jerry_number (TEST_ID_SIMPLE_CALL);
       jerry_value_t func_call_result;
 
-      func_call_result = jerry_call_function (call_info_p->function, call_info_p->this_value, &sub_arg, 1);
-      TEST_ASSERT (!jerry_value_is_error (func_call_result));
+      func_call_result = jerry_call (call_info_p->function, call_info_p->this_value, &sub_arg, 1);
+      TEST_ASSERT (!jerry_value_is_exception (func_call_result));
       TEST_ASSERT (jerry_value_is_undefined (func_call_result));
       break;
     }
@@ -103,14 +103,14 @@ construct_handler (const jerry_call_info_t *call_info_p, /**< call information *
     }
   }
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* construct_handler */
 
 int
 main (void)
 {
   /* Test JERRY_FEATURE_SYMBOL feature as it is a must-have in ES.next */
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_SYMBOL))
+  if (!jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Skipping test, ES.next support is disabled.\n");
     return 0;
@@ -121,57 +121,57 @@ main (void)
   jerry_value_t demo_func = register_js_function ("Demo", construct_handler);
 
   {
-    jerry_value_t test_arg = jerry_create_number (TEST_ID_SIMPLE_CONSTRUCT);
-    jerry_value_t constructed = jerry_construct_object (demo_func, &test_arg, 1);
-    TEST_ASSERT (!jerry_value_is_error (constructed));
+    jerry_value_t test_arg = jerry_number (TEST_ID_SIMPLE_CONSTRUCT);
+    jerry_value_t constructed = jerry_construct (demo_func, &test_arg, 1);
+    TEST_ASSERT (!jerry_value_is_exception (constructed));
     TEST_ASSERT (jerry_value_is_object (constructed));
-    jerry_release_value (test_arg);
-    jerry_release_value (constructed);
+    jerry_value_free (test_arg);
+    jerry_value_free (constructed);
   }
 
   {
-    jerry_value_t test_arg = jerry_create_number (TEST_ID_SIMPLE_CALL);
-    jerry_value_t this_arg = jerry_create_undefined ();
-    jerry_value_t constructed = jerry_call_function (demo_func, this_arg, &test_arg, 1);
+    jerry_value_t test_arg = jerry_number (TEST_ID_SIMPLE_CALL);
+    jerry_value_t this_arg = jerry_undefined ();
+    jerry_value_t constructed = jerry_call (demo_func, this_arg, &test_arg, 1);
     TEST_ASSERT (jerry_value_is_undefined (constructed));
-    jerry_release_value (constructed);
-    jerry_release_value (constructed);
-    jerry_release_value (test_arg);
+    jerry_value_free (constructed);
+    jerry_value_free (constructed);
+    jerry_value_free (test_arg);
   }
 
   {
-    jerry_value_t test_arg = jerry_create_number (TEST_ID_CONSTRUCT_AND_CALL_SUB);
-    jerry_value_t constructed = jerry_construct_object (demo_func, &test_arg, 1);
-    TEST_ASSERT (!jerry_value_is_error (constructed));
+    jerry_value_t test_arg = jerry_number (TEST_ID_CONSTRUCT_AND_CALL_SUB);
+    jerry_value_t constructed = jerry_construct (demo_func, &test_arg, 1);
+    TEST_ASSERT (!jerry_value_is_exception (constructed));
     TEST_ASSERT (jerry_value_is_object (constructed));
-    jerry_release_value (test_arg);
-    jerry_release_value (constructed);
+    jerry_value_free (test_arg);
+    jerry_value_free (constructed);
   }
 
   {
     static const jerry_char_t test_source[] = TEST_STRING_LITERAL ("new Demo (1)");
 
     jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+    TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
 
     jerry_value_t res = jerry_run (parsed_code_val);
-    TEST_ASSERT (!jerry_value_is_error (res));
+    TEST_ASSERT (!jerry_value_is_exception (res));
 
-    jerry_release_value (res);
-    jerry_release_value (parsed_code_val);
+    jerry_value_free (res);
+    jerry_value_free (parsed_code_val);
   }
 
   {
     static const jerry_char_t test_source[] = TEST_STRING_LITERAL ("Demo (2)");
 
     jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+    TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
 
     jerry_value_t res = jerry_run (parsed_code_val);
-    TEST_ASSERT (!jerry_value_is_error (res));
+    TEST_ASSERT (!jerry_value_is_exception (res));
 
-    jerry_release_value (res);
-    jerry_release_value (parsed_code_val);
+    jerry_value_free (res);
+    jerry_value_free (parsed_code_val);
   }
 
   {
@@ -181,16 +181,16 @@ main (void)
                                                                    "new base(3);");
 
     jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+    TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
 
     jerry_value_t res = jerry_run (parsed_code_val);
-    TEST_ASSERT (!jerry_value_is_error (res));
+    TEST_ASSERT (!jerry_value_is_exception (res));
 
-    jerry_release_value (res);
-    jerry_release_value (parsed_code_val);
+    jerry_value_free (res);
+    jerry_value_free (parsed_code_val);
   }
 
-  jerry_release_value (demo_func);
+  jerry_value_free (demo_func);
   jerry_cleanup ();
   return 0;
 } /* main */

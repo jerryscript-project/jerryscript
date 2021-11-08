@@ -140,7 +140,7 @@ jerryx_debugger_rp_receive (jerry_debugger_transport_header_t *header_p, /**< he
 bool
 jerryx_debugger_rp_create (void)
 {
-  const size_t interface_size = sizeof (jerry_debugger_transport_header_t);
+  const jerry_size_t interface_size = sizeof (jerry_debugger_transport_header_t);
   jerry_debugger_transport_header_t *header_p;
   header_p = (jerry_debugger_transport_header_t *) jerry_heap_alloc (interface_size);
 

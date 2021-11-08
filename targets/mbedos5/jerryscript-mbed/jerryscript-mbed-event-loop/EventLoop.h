@@ -73,7 +73,7 @@ class EventLoop {
     }
 
     void callback(jerry_value_t f) {
-        queue.call(jerry_call_function, f, jerry_create_null(), (const jerry_value_t*)NULL, 0);
+        queue.call(jerry_call, f, jerry_null(), (const jerry_value_t*)NULL, 0);
     }
 
     void nativeCallback(Callback<void()> cb) {

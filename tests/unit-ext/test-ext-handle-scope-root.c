@@ -43,8 +43,8 @@ static const jerry_object_native_info_t native_info = {
 static jerry_value_t
 create_object (void)
 {
-  jerry_value_t obj = jerry_create_object ();
-  jerry_set_object_native_pointer (obj, NULL, &native_info);
+  jerry_value_t obj = jerry_object ();
+  jerry_object_set_native_ptr (obj, &native_info, NULL);
   return obj;
 } /* create_object */
 
@@ -58,7 +58,7 @@ test_handle_scope_val (void)
     jerry_value_t obj = jerryx_create_handle (create_object ());
     (void) obj;
     jerryx_close_handle_scope (root);
-    jerry_gc (JERRY_GC_PRESSURE_LOW);
+    jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
     TEST_ASSERT (native_free_cb_call_count == (i + 1));
   }
 } /* test_handle_scope_val */
@@ -71,7 +71,7 @@ main (void)
   native_free_cb_call_count = 0;
   test_handle_scope_val ();
 
-  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == reusing_times);
 
   jerry_cleanup ();

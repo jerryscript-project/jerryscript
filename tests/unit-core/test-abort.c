@@ -25,8 +25,8 @@ callback_func (const jerry_call_info_t *call_info_p, const jerry_value_t args_p[
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_count);
 
-  jerry_value_t value = jerry_create_string ((jerry_char_t *) "Abort run!");
-  value = jerry_create_abort_from_value (value, true);
+  jerry_value_t value = jerry_string_sz ("Abort run!");
+  value = jerry_throw_abort (value, true);
   return value;
 } /* callback_func */
 
@@ -37,16 +37,16 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_value_t global = jerry_get_global_object ();
-  jerry_value_t callback_name = jerry_create_string ((jerry_char_t *) "callback");
-  jerry_value_t func = jerry_create_external_function (callback_func);
-  jerry_value_t res = jerry_set_property (global, callback_name, func);
-  TEST_ASSERT (!jerry_value_is_error (res));
+  jerry_value_t global = jerry_current_realm ();
+  jerry_value_t callback_name = jerry_string_sz ("callback");
+  jerry_value_t func = jerry_function_external (callback_func);
+  jerry_value_t res = jerry_object_set (global, callback_name, func);
+  TEST_ASSERT (!jerry_value_is_exception (res));
 
-  jerry_release_value (res);
-  jerry_release_value (func);
-  jerry_release_value (callback_name);
-  jerry_release_value (global);
+  jerry_value_free (res);
+  jerry_value_free (func);
+  jerry_value_free (callback_name);
+  jerry_value_free (global);
 
   const jerry_char_t inf_loop_code_src1[] = TEST_STRING_LITERAL ("while(true) {\n"
                                                                  "  with ({}) {\n"
@@ -60,13 +60,13 @@ main (void)
 
   jerry_value_t parsed_code_val = jerry_parse (inf_loop_code_src1, sizeof (inf_loop_code_src1) - 1, NULL);
 
-  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
   res = jerry_run (parsed_code_val);
 
   TEST_ASSERT (jerry_value_is_abort (res));
 
-  jerry_release_value (res);
-  jerry_release_value (parsed_code_val);
+  jerry_value_free (res);
+  jerry_value_free (parsed_code_val);
 
   const jerry_char_t inf_loop_code_src2[] = TEST_STRING_LITERAL ("function f() {"
                                                                  "  while(true) {\n"
@@ -89,32 +89,32 @@ main (void)
 
   parsed_code_val = jerry_parse (inf_loop_code_src2, sizeof (inf_loop_code_src2) - 1, NULL);
 
-  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
   res = jerry_run (parsed_code_val);
 
   TEST_ASSERT (jerry_value_is_abort (res));
 
-  jerry_release_value (res);
-  jerry_release_value (parsed_code_val);
+  jerry_value_free (res);
+  jerry_value_free (parsed_code_val);
 
   /* Test flag overwrites. */
-  jerry_value_t value = jerry_create_string ((jerry_char_t *) "Error description");
+  jerry_value_t value = jerry_string_sz ("Error description");
   TEST_ASSERT (!jerry_value_is_abort (value));
-  TEST_ASSERT (!jerry_value_is_error (value));
+  TEST_ASSERT (!jerry_value_is_exception (value));
 
-  value = jerry_create_abort_from_value (value, true);
+  value = jerry_throw_abort (value, true);
   TEST_ASSERT (jerry_value_is_abort (value));
-  TEST_ASSERT (jerry_value_is_error (value));
+  TEST_ASSERT (jerry_value_is_exception (value));
 
-  value = jerry_create_error_from_value (value, true);
+  value = jerry_throw_value (value, true);
   TEST_ASSERT (!jerry_value_is_abort (value));
-  TEST_ASSERT (jerry_value_is_error (value));
+  TEST_ASSERT (jerry_value_is_exception (value));
 
-  value = jerry_create_abort_from_value (value, true);
+  value = jerry_throw_abort (value, true);
   TEST_ASSERT (jerry_value_is_abort (value));
-  TEST_ASSERT (jerry_value_is_error (value));
+  TEST_ASSERT (jerry_value_is_exception (value));
 
-  jerry_release_value (value);
+  jerry_value_free (value);
 
   jerry_cleanup ();
   return 0;

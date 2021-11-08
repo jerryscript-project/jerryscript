@@ -80,13 +80,13 @@ const char eval_string7[] = "(function() {"
 static bool
 resolve_differently_handled_module (const jerry_value_t name, jerry_value_t *result)
 {
-  jerry_size_t name_size = jerry_get_utf8_string_size (name);
+  jerry_size_t name_size = jerry_string_size (name, JERRY_ENCODING_UTF8);
   JERRY_VLA (jerry_char_t, name_string, name_size);
-  jerry_string_to_utf8_char_buffer (name, name_string, name_size);
+  jerry_string_to_buffer (name, JERRY_ENCODING_UTF8, name_string, name_size);
 
   if (!strncmp ((char *) name_string, "differently-handled-module", name_size))
   {
-    (*result) = jerry_create_number (29);
+    (*result) = jerry_number (29);
     return true;
   }
   return false;
@@ -102,13 +102,13 @@ static jerryx_module_resolver_t differently_handled_module_resolver = { NULL, re
 static bool
 cache_check (const jerry_value_t name, jerry_value_t *result)
 {
-  jerry_size_t name_size = jerry_get_utf8_string_size (name);
+  jerry_size_t name_size = jerry_string_size (name, JERRY_ENCODING_UTF8);
   JERRY_VLA (jerry_char_t, name_string, name_size);
-  jerry_string_to_utf8_char_buffer (name, name_string, name_size);
+  jerry_string_to_buffer (name, JERRY_ENCODING_UTF8, name_string, name_size);
 
   if (!strncmp ((char *) name_string, "cache-check", name_size))
   {
-    (*result) = jerry_create_object ();
+    (*result) = jerry_object ();
     return true;
   }
   return false;
@@ -151,8 +151,8 @@ handle_require (const jerry_call_info_t *call_info_p, const jerry_value_t args_p
 static void
 assert_number (jerry_value_t js_value, double expected_result)
 {
-  TEST_ASSERT (!jerry_value_is_error (js_value));
-  TEST_ASSERT (jerry_get_number_value (js_value) == expected_result);
+  TEST_ASSERT (!jerry_value_is_exception (js_value));
+  TEST_ASSERT (jerry_value_as_number (js_value) == expected_result);
 } /* assert_number */
 
 static void
@@ -161,7 +161,7 @@ eval_one (const char *the_string, double expected_result)
   jerry_value_t js_eval_result =
     jerry_eval ((const jerry_char_t *) the_string, strlen (the_string), JERRY_PARSE_STRICT_MODE);
   assert_number (js_eval_result, expected_result);
-  jerry_release_value (js_eval_result);
+  jerry_value_free (js_eval_result);
 } /* eval_one */
 
 #ifndef ENABLE_INIT_FINI
@@ -184,27 +184,27 @@ main (int argc, char **argv)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  js_global = jerry_get_global_object ();
+  js_global = jerry_current_realm ();
 
-  js_function = jerry_create_external_function (handle_require);
-  js_property_name = jerry_create_string ((const jerry_char_t *) "require");
-  res = jerry_set_property (js_global, js_property_name, js_function);
-  TEST_ASSERT (!jerry_value_is_error (res));
+  js_function = jerry_function_external (handle_require);
+  js_property_name = jerry_string_sz ("require");
+  res = jerry_object_set (js_global, js_property_name, js_function);
+  TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_boolean (res) && jerry_value_is_true (res));
-  jerry_release_value (res);
-  jerry_release_value (js_property_name);
-  jerry_release_value (js_function);
+  jerry_value_free (res);
+  jerry_value_free (js_property_name);
+  jerry_value_free (js_function);
 
-  js_function = jerry_create_external_function (handle_clear_require_cache);
-  js_property_name = jerry_create_string ((const jerry_char_t *) "clear_require_cache");
-  res = jerry_set_property (js_global, js_property_name, js_function);
-  TEST_ASSERT (!jerry_value_is_error (res));
+  js_function = jerry_function_external (handle_clear_require_cache);
+  js_property_name = jerry_string_sz ("clear_require_cache");
+  res = jerry_object_set (js_global, js_property_name, js_function);
+  TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_boolean (res) && jerry_value_is_true (res));
-  jerry_release_value (res);
-  jerry_release_value (js_property_name);
-  jerry_release_value (js_function);
+  jerry_value_free (res);
+  jerry_value_free (js_property_name);
+  jerry_value_free (js_function);
 
-  jerry_release_value (js_global);
+  jerry_value_free (js_global);
 
   eval_one (eval_string1, 42);
   eval_one (eval_string2, 29);

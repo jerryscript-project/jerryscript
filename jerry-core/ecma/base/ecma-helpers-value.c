@@ -423,10 +423,10 @@ ecma_is_value_object (ecma_value_t value) /**< ecma value */
  *         false - otherwise
  */
 extern inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
-ecma_is_value_error_reference (ecma_value_t value) /**< ecma value */
+ecma_is_value_exception (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_ERROR);
-} /* ecma_is_value_error_reference */
+} /* ecma_is_value_exception */
 
 /**
  * Debug assertion that specified value's type is one of ECMA-defined

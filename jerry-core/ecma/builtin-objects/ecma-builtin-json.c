@@ -133,6 +133,22 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
       break;
     }
 
+    if (*current_p >= LIT_UTF8_4_BYTE_MARKER)
+    {
+      ecma_stringbuilder_append_raw (&result_builder, unappended_p, (lit_utf8_size_t) (current_p - unappended_p));
+      JERRY_ASSERT (current_p + 4 <= end_p);
+
+      lit_code_point_t cp;
+      lit_utf8_size_t read_size = lit_read_code_point_from_utf8 (current_p, 4, &cp);
+      JERRY_ASSERT (read_size == 4);
+
+      ecma_stringbuilder_append_codepoint (&result_builder, cp);
+      current_p += 4;
+
+      unappended_p = current_p;
+      continue;
+    }
+
     if (*current_p == LIT_CHAR_BACKSLASH)
     {
       ecma_stringbuilder_append_raw (&result_builder, unappended_p, (lit_utf8_size_t) (current_p - unappended_p));

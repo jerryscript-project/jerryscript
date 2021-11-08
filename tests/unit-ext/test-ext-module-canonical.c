@@ -26,36 +26,36 @@
 static jerry_value_t
 get_canonical_name (const jerry_value_t name)
 {
-  jerry_size_t name_size = jerry_get_string_size (name);
+  jerry_size_t name_size = jerry_string_size (name, JERRY_ENCODING_CESU8);
   JERRY_VLA (jerry_char_t, name_string, name_size + 1);
-  jerry_string_to_char_buffer (name, name_string, name_size);
+  jerry_string_to_buffer (name, JERRY_ENCODING_CESU8, name_string, name_size);
   name_string[name_size] = 0;
 
   if (!strcmp ((char *) name_string, ACTUAL_NAME))
   {
-    return jerry_acquire_value (name);
+    return jerry_value_copy (name);
   }
   else if (!strcmp ((char *) name_string, ALIAS_NAME))
   {
-    return jerry_create_string ((jerry_char_t *) ACTUAL_NAME);
+    return jerry_string_sz (ACTUAL_NAME);
   }
   else
   {
-    return jerry_create_undefined ();
+    return jerry_undefined ();
   }
 } /* get_canonical_name */
 
 static bool
 resolve (const jerry_value_t canonical_name, jerry_value_t *result)
 {
-  jerry_size_t name_size = jerry_get_string_size (canonical_name);
+  jerry_size_t name_size = jerry_string_size (canonical_name, JERRY_ENCODING_CESU8);
   JERRY_VLA (jerry_char_t, name_string, name_size + 1);
-  jerry_string_to_char_buffer (canonical_name, name_string, name_size);
+  jerry_string_to_buffer (canonical_name, JERRY_ENCODING_CESU8, name_string, name_size);
   name_string[name_size] = 0;
 
   if (!strcmp ((char *) name_string, ACTUAL_NAME))
   {
-    *result = jerry_create_object ();
+    *result = jerry_object ();
     return true;
   }
   return false;
@@ -76,28 +76,28 @@ main (int argc, char **argv)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_value_t actual_name = jerry_create_string ((jerry_char_t *) ACTUAL_NAME);
-  jerry_value_t alias_name = jerry_create_string ((jerry_char_t *) ALIAS_NAME);
+  jerry_value_t actual_name = jerry_string_sz (ACTUAL_NAME);
+  jerry_value_t alias_name = jerry_string_sz (ALIAS_NAME);
 
   /* It's important that we resolve by the non-canonical name first. */
   jerry_value_t result2 = jerryx_module_resolve (alias_name, &resolver, 1);
   jerry_value_t result1 = jerryx_module_resolve (actual_name, &resolver, 1);
-  jerry_release_value (actual_name);
-  jerry_release_value (alias_name);
+  jerry_value_free (actual_name);
+  jerry_value_free (alias_name);
 
   /* An elaborate way of doing strict equal - set a property on one object and it "magically" appears on the other. */
-  jerry_value_t prop_name = jerry_create_string ((jerry_char_t *) "something");
-  jerry_value_t prop_value = jerry_create_number (TEST_VALUE);
-  jerry_release_value (jerry_set_property (result1, prop_name, prop_value));
-  jerry_release_value (prop_value);
+  jerry_value_t prop_name = jerry_string_sz ("something");
+  jerry_value_t prop_value = jerry_number (TEST_VALUE);
+  jerry_value_free (jerry_object_set (result1, prop_name, prop_value));
+  jerry_value_free (prop_value);
 
-  prop_value = jerry_get_property (result2, prop_name);
-  TEST_ASSERT (jerry_get_number_value (prop_value) == TEST_VALUE);
-  jerry_release_value (prop_value);
+  prop_value = jerry_object_get (result2, prop_name);
+  TEST_ASSERT (jerry_value_as_number (prop_value) == TEST_VALUE);
+  jerry_value_free (prop_value);
 
-  jerry_release_value (prop_name);
-  jerry_release_value (result1);
-  jerry_release_value (result2);
+  jerry_value_free (prop_name);
+  jerry_value_free (result1);
+  jerry_value_free (result2);
 
   jerry_cleanup ();
 

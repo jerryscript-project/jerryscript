@@ -33,7 +33,7 @@
 static ecma_value_t
 ecma_bigint_raise_memory_error (void)
 {
-  return ecma_raise_range_error (ECMA_ERR_MSG ("Cannot allocate memory for a BigInt value"));
+  return ecma_raise_range_error (ECMA_ERR_ALLOCATE_BIGINT_VALUE);
 } /* ecma_bigint_raise_memory_error */
 
 /**
@@ -172,7 +172,7 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
       {
         return ECMA_VALUE_FALSE;
       }
-      return ecma_raise_syntax_error (ECMA_ERR_MSG ("String cannot be converted to BigInt value"));
+      return ecma_raise_syntax_error (ECMA_ERR_STRING_CANNOT_BE_CONVERTED_TO_BIGINT_VALUE);
     }
 
     result_p = ecma_big_uint_mul_digit (result_p, radix, digit);
@@ -239,7 +239,7 @@ ecma_bigint_to_string (ecma_value_t value, /**< BigInt value */
 
   if (JERRY_UNLIKELY (string_buffer_p == NULL))
   {
-    ecma_raise_range_error (ECMA_ERR_MSG ("Cannot allocate memory for a string representation of a BigInt value"));
+    ecma_raise_range_error (ECMA_ERR_ALLOCATE_BIGINT_STRING);
     return NULL;
   }
 
@@ -382,7 +382,7 @@ ecma_bigint_number_to_bigint (ecma_number_t number) /**< ecma number */
 {
   if (ecma_number_is_nan (number) || ecma_number_is_infinity (number))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Infinity or NaN cannot be converted to BigInt"));
+    return ecma_raise_range_error (ECMA_ERR_INFINITY_OR_NAN_CANNOT_BE_CONVERTED_TO_BIGINT);
   }
 
   ecma_bigint_digit_t digits[3];
@@ -393,7 +393,7 @@ ecma_bigint_number_to_bigint (ecma_number_t number) /**< ecma number */
 
   if (result & ECMA_BIGINT_NUMBER_TO_DIGITS_HAS_FRACTION)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Only integer numbers can be converted to BigInt"));
+    return ecma_raise_range_error (ECMA_ERR_ONLY_INTEGER_NUMBERS_CAN_BE_CONVERTED_TO_BIGINT);
   }
 
   uint32_t digits_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS_SIZE (result);
@@ -483,7 +483,7 @@ ecma_bigint_to_bigint (ecma_value_t value, /**< any value */
   }
   else
   {
-    result = ecma_raise_type_error (ECMA_ERR_MSG ("Value cannot be converted to BigInt"));
+    result = ecma_raise_type_error (ECMA_ERR_VALUE_CANNOT_BE_CONVERTED_TO_BIGINT);
   }
 
   if (free_value)
@@ -665,7 +665,7 @@ ecma_bigint_get_bigint (ecma_value_t value, /**< any value */
     ecma_free_value (default_value);
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a BigInt value to a number"));
+  return ecma_raise_type_error (ECMA_ERR_CONVERT_BIGINT_TO_NUMBER);
 } /* ecma_bigint_get_bigint */
 
 /**
@@ -1306,7 +1306,7 @@ ecma_bigint_div_mod (ecma_value_t left_value, /**< left BigInt value */
 
   if (right_value == ECMA_BIGINT_ZERO)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("BigInt division by zero"));
+    return ecma_raise_range_error (ECMA_ERR_BIGINT_ZERO_DIVISION);
   }
 
   if (left_value == ECMA_BIGINT_ZERO)
@@ -1473,7 +1473,7 @@ ecma_bigint_pow (ecma_value_t left_value, /**< left BigInt value */
 
   if (right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Negative exponent is not allowed for BigInts"));
+    return ecma_raise_range_error (ECMA_ERR_NEGATIVE_EXPONENT_IS_NOT_ALLOWED_FOR_BIGINTS);
   }
 
   if (left_value == ECMA_BIGINT_ZERO)

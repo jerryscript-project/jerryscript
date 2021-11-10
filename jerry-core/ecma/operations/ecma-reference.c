@@ -308,7 +308,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 #if JERRY_ESNEXT
         if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
         {
-          return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+          return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
         }
 #endif /* JERRY_ESNEXT */
 
@@ -336,7 +336,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
           if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
           {
-            return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+            return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
           }
 
           return ecma_fast_copy_value (property_value_p->value);
@@ -410,7 +410,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
   ecma_value_t error_value =
     ecma_raise_standard_error_with_format (JERRY_ERROR_REFERENCE, "% is not defined", name_val);
 #else /* JERRY_ERROR_MESSAGES */
-  ecma_value_t error_value = ecma_raise_reference_error (NULL);
+  ecma_value_t error_value = ecma_raise_reference_error (ECMA_ERR_EMPTY);
 #endif /* !JERRY_ERROR_MESSAGES */
   return error_value;
 } /* ecma_op_resolve_reference_value */

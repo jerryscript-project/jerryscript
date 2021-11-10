@@ -46,10 +46,9 @@ bool ecma_object_is_constructor (ecma_object_t *obj_p);
  *
  * Use after the ecma_*_check_constructor calls.
  */
-#define ECMA_IS_VALID_CONSTRUCTOR ((char *) 0x1)
 
-char *ecma_object_check_constructor (ecma_object_t *obj_p);
-char *ecma_check_constructor (ecma_value_t value);
+ecma_error_msg_t ecma_object_check_constructor (ecma_object_t *obj_p);
+ecma_error_msg_t ecma_check_constructor (ecma_value_t value);
 
 ecma_object_t *ecma_op_create_simple_function_object (ecma_object_t *scope_p,
                                                       const ecma_compiled_code_t *bytecode_data_p);

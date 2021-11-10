@@ -298,7 +298,7 @@ ecma_get_error_type (ecma_object_t *error_object_p) /**< possible error object *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-static ecma_value_t
+ecma_value_t
 ecma_raise_standard_error (jerry_error_t error_type, /**< error type */
                            const lit_utf8_byte_t *msg_p) /**< error message */
 {
@@ -414,9 +414,9 @@ ecma_raise_standard_error_with_format (jerry_error_t error_type, /**< error type
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_raise_common_error (const char *msg_p) /**< error message */
+ecma_raise_common_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_COMMON, (const lit_utf8_byte_t *) msg_p);
+  return ecma_raise_standard_error (JERRY_ERROR_COMMON, ecma_get_error_utf8 (msg));
 } /* ecma_raise_common_error */
 
 /**
@@ -428,9 +428,9 @@ ecma_raise_common_error (const char *msg_p) /**< error message */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_raise_range_error (const char *msg_p) /**< error message */
+ecma_raise_range_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_RANGE, (const lit_utf8_byte_t *) msg_p);
+  return ecma_raise_standard_error (JERRY_ERROR_RANGE, ecma_get_error_utf8 (msg));
 } /* ecma_raise_range_error */
 
 /**
@@ -442,9 +442,9 @@ ecma_raise_range_error (const char *msg_p) /**< error message */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_raise_reference_error (const char *msg_p) /**< error message */
+ecma_raise_reference_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_REFERENCE, (const lit_utf8_byte_t *) msg_p);
+  return ecma_raise_standard_error (JERRY_ERROR_REFERENCE, ecma_get_error_utf8 (msg));
 } /* ecma_raise_reference_error */
 
 /**
@@ -456,9 +456,9 @@ ecma_raise_reference_error (const char *msg_p) /**< error message */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_raise_syntax_error (const char *msg_p) /**< error message */
+ecma_raise_syntax_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_SYNTAX, (const lit_utf8_byte_t *) msg_p);
+  return ecma_raise_standard_error (JERRY_ERROR_SYNTAX, ecma_get_error_utf8 (msg));
 } /* ecma_raise_syntax_error */
 
 /**
@@ -470,9 +470,9 @@ ecma_raise_syntax_error (const char *msg_p) /**< error message */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_raise_type_error (const char *msg_p) /**< error message */
+ecma_raise_type_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_TYPE, (const lit_utf8_byte_t *) msg_p);
+  return ecma_raise_standard_error (JERRY_ERROR_TYPE, ecma_get_error_utf8 (msg));
 } /* ecma_raise_type_error */
 
 /**
@@ -484,10 +484,24 @@ ecma_raise_type_error (const char *msg_p) /**< error message */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_raise_uri_error (const char *msg_p) /**< error message */
+ecma_raise_uri_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_URI, (const lit_utf8_byte_t *) msg_p);
+  return ecma_raise_standard_error (JERRY_ERROR_URI, ecma_get_error_utf8 (msg));
 } /* ecma_raise_uri_error */
+
+#if (JERRY_STACK_LIMIT != 0)
+/**
+ * Raise a RangeError with "Maximum call stack size exceeded" message.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_raise_maximum_callstack_error (void)
+{
+  return ecma_raise_range_error (ECMA_ERR_MAXIMUM_CALL_STACK_SIZE_EXCEEDED);
+} /* ecma_raise_maximum_callstack_error */
+#endif /* (JERRY_STACK_LIMIT != 0) */
 
 #if JERRY_ESNEXT
 

@@ -811,7 +811,7 @@ ecma_builtin_json_parse_buffer (const lit_utf8_byte_t *str_start_p, /**< String 
     ecma_free_value (result);
   }
 
-  return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid JSON format"));
+  return ecma_raise_syntax_error (ECMA_ERR_INVALID_JSON_FORMAT);
 } /* ecma_builtin_json_parse_buffer */
 
 /**
@@ -987,7 +987,7 @@ ecma_builtin_json_serialize_object (ecma_json_stringify_context_t *context_p, /*
   /* 1. */
   if (ecma_json_has_object_in_stack (context_p->occurrence_stack_last_p, obj_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical"));
+    return ecma_raise_type_error (ECMA_ERR_THE_STRUCTURE_IS_CYCLICAL);
   }
 
   /* 2. */
@@ -1124,7 +1124,7 @@ ecma_builtin_json_serialize_array (ecma_json_stringify_context_t *context_p, /**
   /* 1. */
   if (ecma_json_has_object_in_stack (context_p->occurrence_stack_last_p, obj_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical"));
+    return ecma_raise_type_error (ECMA_ERR_THE_STRUCTURE_IS_CYCLICAL);
   }
 
   /* 2. */
@@ -1414,7 +1414,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
   if (ecma_is_value_bigint (value))
   {
     ecma_free_value (value);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("BigInt cannot be serialized"));
+    return ecma_raise_type_error (ECMA_ERR_BIGINT_SERIALIZED);
   }
 #endif /* JERRY_BUILTIN_BIGINT */
 

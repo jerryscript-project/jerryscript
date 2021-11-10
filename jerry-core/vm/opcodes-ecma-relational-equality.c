@@ -104,7 +104,7 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
 {
   if (!ecma_is_value_object (right_value))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Right value of 'instanceof' must be an object"));
+    return ecma_raise_type_error (ECMA_ERR_RIGHT_VALUE_OF_INSTANCEOF_MUST_BE_AN_OBJECT);
   }
 
 #if JERRY_ESNEXT
@@ -153,7 +153,7 @@ opfunc_in (ecma_value_t left_value, /**< left value */
 {
   if (!ecma_is_value_object (right_value))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Right value of 'in' must be an object"));
+    return ecma_raise_type_error (ECMA_ERR_RIGHT_VALUE_OF_IN_MUST_BE_AN_OBJECT);
   }
 
   ecma_string_t *property_name_p = ecma_op_to_property_key (left_value);

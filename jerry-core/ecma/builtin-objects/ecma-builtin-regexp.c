@@ -152,7 +152,7 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
       return ecma_copy_value (pattern_value);
     }
 
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument is passed to RegExp function"));
+    return ecma_raise_type_error (ECMA_ERR_INVALID_ARGUMENT_IS_PASSED_TO_REGEXP_FUNCTION);
   }
 #endif /* JERRY_ESNEXT */
 

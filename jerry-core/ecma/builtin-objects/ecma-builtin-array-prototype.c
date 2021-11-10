@@ -434,7 +434,7 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
   {
     if ((ecma_number_t) (length + arguments_number) > UINT32_MAX)
     {
-      return ecma_raise_range_error (ECMA_ERR_MSG (ecma_error_invalid_array_length));
+      return ecma_raise_range_error (ECMA_ERR_INVALID_ARRAY_LENGTH);
     }
 
     if (arguments_number == 0)
@@ -460,7 +460,7 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
   /* 5. */
   if ((ecma_number_t) (length + arguments_number) > ECMA_NUMBER_MAX_SAFE_INTEGER)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Pushing element over 2**53-1 length is disallowed"));
+    return ecma_raise_type_error (ECMA_ERR_PUSHING_TOO_HIGH_ELEMENT);
   }
 
   /* 6. */
@@ -1089,7 +1089,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   /* Check if the provided compare function is callable. */
   if (!ecma_is_value_undefined (arg1) && !ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Compare function is not callable"));
+    return ecma_raise_type_error (ECMA_ERR_COMPARE_FUNC_NOT_CALLABLE);
   }
 
   ecma_length_t len;
@@ -1284,7 +1284,7 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
   /* ES11: 8. */
   if ((ecma_number_t) new_length > ECMA_NUMBER_MAX_SAFE_INTEGER)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid new Array length"));
+    return ecma_raise_type_error (ECMA_ERR_INVALID_NEW_ARRAY_LENGTH);
   }
 
   /* ES11: 9. */
@@ -1486,7 +1486,7 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
     {
       if (args_number > UINT32_MAX - len)
       {
-        return ecma_raise_range_error (ECMA_ERR_MSG (ecma_error_invalid_array_length));
+        return ecma_raise_range_error (ECMA_ERR_INVALID_ARRAY_LENGTH);
       }
 
       if (args_number == 0)
@@ -1523,7 +1523,7 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
     /* ES11:4.a. */
     if ((ecma_number_t) (len + args_number) > ECMA_NUMBER_MAX_SAFE_INTEGER)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Unshift elements over 2**53-1 length is disallowed"));
+      return ecma_raise_type_error (ECMA_ERR_UNSHIFT_TOO_HIGH);
     }
 #endif /* JERRY_ESNEXT */
 
@@ -1854,7 +1854,7 @@ ecma_builtin_array_apply (ecma_value_t arg1, /**< callbackfn */
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
+    return ecma_raise_type_error (ECMA_ERR_CALLBACK_IS_NOT_CALLABLE);
   }
 
   /* We already checked that arg1 is callable */
@@ -1937,7 +1937,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
+    return ecma_raise_type_error (ECMA_ERR_CALLBACK_IS_NOT_CALLABLE);
   }
 
   /* 6. */
@@ -2028,7 +2028,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
+    return ecma_raise_type_error (ECMA_ERR_CALLBACK_IS_NOT_CALLABLE);
   }
 
   /* 6. */
@@ -2133,13 +2133,13 @@ ecma_builtin_array_reduce_from (const ecma_value_t args_p[], /**< routine's argu
   /* 4. */
   if (!ecma_op_is_callable (args_p[0]))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
+    return ecma_raise_type_error (ECMA_ERR_CALLBACK_IS_NOT_CALLABLE);
   }
 
   /* 5. */
   if (len == 0 && args_number == 1)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Reduce of empty Array with no initial value"));
+    return ecma_raise_type_error (ECMA_ERR_REDUCE_OF_EMPTY_ARRAY_WITH_NO_INITIAL_VALUE);
   }
 
   JERRY_ASSERT (ecma_is_value_object (args_p[0]));
@@ -2191,7 +2191,7 @@ ecma_builtin_array_reduce_from (const ecma_value_t args_p[], /**< routine's argu
     /* 8.c */
     if (!k_present)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Missing Array element"));
+      return ecma_raise_type_error (ECMA_ERR_MISSING_ARRAY_ELEMENT);
     }
   }
   /* 9. */
@@ -2343,7 +2343,7 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
   /* 5. */
   if (!ecma_op_is_callable (predicate))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
+    return ecma_raise_type_error (ECMA_ERR_CALLBACK_IS_NOT_CALLABLE);
   }
 
   /* We already checked that predicate is callable, so it will always be an object. */
@@ -2825,7 +2825,7 @@ ecma_builtin_array_prototype_object_flat_map (ecma_value_t callback, /**< callba
 {
   if (!ecma_op_is_callable (callback))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
+    return ecma_raise_type_error (ECMA_ERR_CALLBACK_IS_NOT_CALLABLE);
   }
 
   /* 4. */

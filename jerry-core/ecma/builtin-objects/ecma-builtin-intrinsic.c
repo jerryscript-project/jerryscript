@@ -172,12 +172,12 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
     {
       if (!ecma_is_typedarray (this_arg))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray"));
+        return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_TYPED_ARRAY);
       }
 
       if (ecma_arraybuffer_is_detached (ecma_typedarray_get_arraybuffer (ecma_get_object_from_value (this_arg))))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
+        return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
       }
 
       return ecma_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_VALUES);
@@ -208,7 +208,7 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
       if (!ecma_is_value_object (this_arg)
           || !ecma_object_class_is (ecma_get_object_from_value (this_arg), ECMA_OBJECT_CLASS_DATE))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Date object"));
+        return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_DATE_OBJECT);
       }
 
 #if JERRY_ESNEXT

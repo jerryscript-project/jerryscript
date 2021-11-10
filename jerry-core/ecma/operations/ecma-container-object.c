@@ -415,7 +415,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
   if (!ecma_op_is_callable (result))
   {
     ecma_free_value (result);
-    result = ecma_raise_type_error (ECMA_ERR_MSG ("Function add/set is not callable"));
+    result = ecma_raise_type_error (ECMA_ERR_FUNCTION_ADD_ORSET_IS_NOT_CALLABLE);
     goto cleanup_object;
   }
 
@@ -468,7 +468,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
       if (!ecma_is_value_object (result))
       {
         ecma_free_value (result);
-        ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object"));
+        ecma_raise_type_error (ECMA_ERR_ITERATOR_VALUE_IS_NOT_AN_OBJECT);
         result = ecma_op_iterator_close (iterator);
         JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
         goto cleanup_iterator;
@@ -560,7 +560,7 @@ ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
                                          "Expected a % object",
                                          ecma_make_string_value (ecma_get_magic_string (lit_id)));
 #else /* !JERRY_ERROR_MESSAGES */
-  ecma_raise_type_error (NULL);
+  ecma_raise_type_error (ECMA_ERR_EMPTY);
 #endif /* JERRY_ERROR_MESSAGES */
 
   return NULL;
@@ -681,7 +681,7 @@ ecma_op_container_set (ecma_extended_object_t *map_object_p, /**< map object */
 
   if ((map_object_p->u.cls.u1.container_flags & ECMA_CONTAINER_FLAGS_WEAK) != 0 && !ecma_is_value_object (key_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Key must be an object"));
+    return ecma_raise_type_error (ECMA_ERR_KEY_MUST_BE_AN_OBJECT);
   }
 
   ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, lit_id);
@@ -720,7 +720,7 @@ ecma_op_container_foreach (ecma_extended_object_t *map_object_p, /**< map object
 {
   if (!ecma_op_is_callable (predicate))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
+    return ecma_raise_type_error (ECMA_ERR_CALLBACK_IS_NOT_CALLABLE);
   }
 
   JERRY_ASSERT (ecma_is_value_object (predicate));
@@ -972,7 +972,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
 {
   if (!ecma_is_value_object (this_val))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
@@ -980,7 +980,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
 
   if (!ecma_object_class_is (obj_p, iterator_type))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_ITERATOR);
   }
 
   ecma_value_t iterated_value = ext_obj_p->u.cls.u3.iterated_value;

@@ -261,7 +261,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
 #if !JERRY_ESNEXT
   if (ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_regexp));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_AN_REGEXP);
   }
 #endif /* !JERRY_ESNEXT */
 
@@ -275,7 +275,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
   {
     if (!ecma_is_value_undefined (flags_arg))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument"));
+      return ecma_raise_type_error (ECMA_ERR_INVALID_ARGUMENT);
     }
 
     ecma_extended_object_t *pattern_obj_p = (ecma_extended_object_t *) ecma_get_object_from_value (pattern_arg);
@@ -666,7 +666,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
 
   if (obj_p == NULL)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   switch (builtin_routine_id)
@@ -723,7 +723,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
           return ecma_make_magic_string_value (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
         }
 
-        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_regexp));
+        return ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_AN_REGEXP);
       }
 
       ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
@@ -743,7 +743,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
           return ECMA_VALUE_UNDEFINED;
         }
 
-        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_regexp));
+        return ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_AN_REGEXP);
       }
 
       ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;

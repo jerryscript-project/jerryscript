@@ -218,7 +218,7 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
 #if JERRY_ESNEXT
   if (is_strict && ecma_is_value_false (delete_op_ret))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Operator delete returned false in strict mode"));
+    return ecma_raise_type_error (ECMA_ERR_OPERATOR_DELETE_RETURNED_FALSE_IN_STRICT_MODE);
   }
 #endif /* JERRY_ESNEXT */
 
@@ -1159,7 +1159,7 @@ opfunc_init_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     /* 6.f, 6.g.i */
     if (!ecma_is_constructor (super_class))
     {
-      return ecma_raise_type_error ("Class extends value is not a constructor or null");
+      return ecma_raise_type_error (ECMA_ERR_CLASS_EXTENDS_NOT_CONSTRUCTOR);
     }
 
     ecma_object_t *parent_p = ecma_get_object_from_value (super_class);
@@ -1186,7 +1186,7 @@ opfunc_init_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     else
     {
       ecma_free_value (proto_parent);
-      return ecma_raise_type_error ("Property 'prototype' is not an object or null");
+      return ecma_raise_type_error (ECMA_ERR_PROPERTY_PROTOTYPE_IS_NOT_AN_OBJECT);
     }
 
     /* 6.g.v */
@@ -1391,8 +1391,7 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
 
     if (!ecma_op_this_binding_is_initialized (environment_record_p))
     {
-      return ecma_raise_reference_error (ECMA_ERR_MSG ("Must call super constructor in derived class before "
-                                                       "accessing 'this' or returning from it"));
+      return ecma_raise_reference_error (ECMA_ERR_CALL_SUPER_CONSTRUCTOR_DERIVED_CLASS_BEFORE_THIS);
     }
   }
 
@@ -1400,7 +1399,7 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
 
   if (ECMA_IS_VALUE_ERROR (parent))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot invoke nullable super method"));
+    return ecma_raise_type_error (ECMA_ERR_INVOKE_NULLABLE_SUPER_METHOD);
   }
 
   if (!ecma_op_require_object_coercible (parent))

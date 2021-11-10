@@ -112,7 +112,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
     /* 4. */
     if (is_throw)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a configurable property"));
+      return ecma_raise_type_error (ECMA_ERR_EXPECTED_A_CONFIGURABLE_PROPERTY);
     }
 
     /* 5. */
@@ -258,7 +258,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
     ecma_free_value (result);
 
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Result of [[DefaultValue]] is invalid"));
+    return ecma_raise_type_error (ECMA_ERR_RESULT_OF_DEFAULTVALUE_IS_INVALID);
   }
 
   ecma_free_value (exotic_to_prim);
@@ -330,7 +330,7 @@ ecma_op_general_object_ordinary_value (ecma_object_t *obj_p, /**< the object */
     ecma_free_value (call_completion);
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Result of [[DefaultValue]] is invalid"));
+  return ecma_raise_type_error (ECMA_ERR_RESULT_OF_DEFAULTVALUE_IS_INVALID);
 } /* ecma_op_general_object_ordinary_value */
 
 /**
@@ -475,7 +475,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
     {
       if (JERRY_UNLIKELY (ext_property_ref.property_ref.virtual_value == ECMA_VALUE_UNINITIALIZED))
       {
-        return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+        return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
       }
 
       if (property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED)

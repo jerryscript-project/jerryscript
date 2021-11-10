@@ -93,7 +93,7 @@ ecma_builtin_proxy_dispatch_call (const ecma_value_t *arguments_list_p, /**< arg
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   /* 1. */
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor Proxy requires 'new'"));
+  return ecma_raise_type_error (ECMA_ERR_CONSTRUCTOR_PROXY_REQUIRES_NEW);
 } /* ecma_builtin_proxy_dispatch_call */
 
 /**

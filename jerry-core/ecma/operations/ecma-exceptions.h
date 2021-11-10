@@ -27,23 +27,21 @@
  * @{
  */
 
-#if JERRY_ERROR_MESSAGES
-#define ECMA_ERR_MSG(msg) msg
-#else /* !JERRY_ERROR_MESSAGES */
-#define ECMA_ERR_MSG(msg) NULL
-#endif /* JERRY_ERROR_MESSAGES */
-
 jerry_error_t ecma_get_error_type (ecma_object_t *error_object_p);
 ecma_object_t *ecma_new_standard_error (jerry_error_t error_type, ecma_string_t *message_string_p);
 #if JERRY_ERROR_MESSAGES
 ecma_value_t ecma_raise_standard_error_with_format (jerry_error_t error_type, const char *msg_p, ...);
 #endif /* JERRY_ERROR_MESSAGES */
-ecma_value_t ecma_raise_common_error (const char *msg_p);
-ecma_value_t ecma_raise_range_error (const char *msg_p);
-ecma_value_t ecma_raise_reference_error (const char *msg_p);
-ecma_value_t ecma_raise_syntax_error (const char *msg_p);
-ecma_value_t ecma_raise_type_error (const char *msg_p);
-ecma_value_t ecma_raise_uri_error (const char *msg_p);
+ecma_value_t ecma_raise_standard_error (jerry_error_t error_type, const lit_utf8_byte_t *msg_p);
+ecma_value_t ecma_raise_common_error (ecma_error_msg_t msg);
+ecma_value_t ecma_raise_range_error (ecma_error_msg_t msg);
+ecma_value_t ecma_raise_reference_error (ecma_error_msg_t msg);
+ecma_value_t ecma_raise_syntax_error (ecma_error_msg_t msg);
+ecma_value_t ecma_raise_type_error (ecma_error_msg_t msg);
+ecma_value_t ecma_raise_uri_error (ecma_error_msg_t msg);
+#if (JERRY_STACK_LIMIT != 0)
+ecma_value_t ecma_raise_maximum_callstack_error (void);
+#endif /* (JERRY_STACK_LIMIT != 0) */
 #if JERRY_ESNEXT
 ecma_value_t ecma_new_aggregate_error (ecma_value_t error_list_val, ecma_value_t message_val);
 ecma_value_t ecma_raise_aggregate_error (ecma_value_t error_list_val, ecma_value_t message_val);

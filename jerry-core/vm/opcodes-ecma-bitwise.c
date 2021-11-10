@@ -157,7 +157,7 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
       {
         JERRY_ASSERT (op == NUMBER_BITWISE_SHIFT_URIGHT);
 
-        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Unsigned right shift is not allowed for BigInts"));
+        ret_value = ecma_raise_type_error (ECMA_ERR_UNSIGNED_RIGHT_SHIFT_IS_NOT_ALLOWED_FOR_BIGINTS);
         break;
       }
     }

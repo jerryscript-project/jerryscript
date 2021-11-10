@@ -192,7 +192,7 @@ def get_arguments():
                         help='Run format check')
     parser.add_argument('--check-license', action='store_true',
                         help='Run license check')
-    parser.add_argument('--check-magic-strings', action='store_true',
+    parser.add_argument('--check-strings', action='store_true',
                         help='Run "magic string source code generator should be executed" check')
     parser.add_argument('--build-debug', action='store_true',
                         help='Build debug version jerryscript')
@@ -506,7 +506,7 @@ def main(options):
         Check(options.check_pylint, run_check, [settings.PYLINT_SCRIPT]),
         Check(options.check_format, run_check, [settings.FORMAT_SCRIPT]),
         Check(options.check_license, run_check, [settings.LICENSE_SCRIPT]),
-        Check(options.check_magic_strings, run_check, [settings.MAGIC_STRINGS_SCRIPT]),
+        Check(options.check_strings, run_check, [settings.STRINGS_SCRIPT]),
         Check(options.jerry_debugger, run_jerry_debugger_tests, options),
         Check(options.jerry_tests, run_jerry_tests, options),
         Check(options.test262 or options.test262_es2015 or options.test262_esnext, run_test262_test_suite, options),

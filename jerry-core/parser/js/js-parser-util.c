@@ -1237,7 +1237,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
 #if JERRY_ESNEXT
     case PARSER_ERR_VARIABLE_REDECLARED:
     {
-      return ecma_error_local_variable_is_redeclared;
+      return (const char *) ecma_get_error_utf8 (ECMA_ERR_LOCAL_VARIABLE_IS_REDECLARED);
     }
     case PARSER_ERR_LEXICAL_SINGLE_STATEMENT:
     {

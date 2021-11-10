@@ -57,7 +57,7 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
   /* 2. */
   if (!ecma_is_value_object (this_val))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
@@ -65,7 +65,7 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
   /* 3. */
   if (!ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_ITERATOR);
   }
 
   ecma_regexp_string_iterator_t *regexp_string_iterator_obj = (ecma_regexp_string_iterator_t *) obj_p;

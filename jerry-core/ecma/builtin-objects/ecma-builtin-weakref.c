@@ -50,7 +50,7 @@ ecma_builtin_weakref_dispatch_call (const ecma_value_t *arguments_list_p, /**< a
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor WeakRef requires 'new'."));
+  return ecma_raise_type_error (ECMA_ERR_CONSTRUCTOR_WEAKREF_REQUIRES_NEW);
 } /* ecma_builtin_weakref_dispatch_call */
 
 /**
@@ -64,7 +64,7 @@ ecma_builtin_weakref_dispatch_construct (const ecma_value_t *arguments_list_p, /
 {
   if (arguments_list_len == 0 || !ecma_is_value_object (arguments_list_p[0]))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("WeakRef target must be an object"));
+    return ecma_raise_type_error (ECMA_ERR_WEAKREF_TARGET_MUST_BE_AN_OBJECT);
   }
 
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target_p) != NULL);

@@ -214,7 +214,7 @@ ecma_builtin_date_prototype_to_primitive (ecma_value_t this_arg, /**< this argum
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type in toPrimitive"));
+  return ecma_raise_type_error (ECMA_ERR_INVALID_ARGUMENT_TYPE_IN_TOPRIMITIVE);
 } /* ecma_builtin_date_prototype_to_primitive */
 #endif /* JERRY_ESNEXT */
 
@@ -638,7 +638,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
   if (!ecma_is_value_object (this_arg)
       || !ecma_object_class_is (ecma_get_object_from_value (this_arg), ECMA_OBJECT_CLASS_DATE))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Date object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_DATE_OBJECT);
   }
 
   ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
@@ -712,7 +712,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
   {
     if (ecma_number_is_nan (date_value))
     {
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Date must be a finite number"));
+      return ecma_raise_range_error (ECMA_ERR_DATE_MUST_BE_A_FINITE_NUMBER);
     }
 
     return ecma_date_value_to_iso_string (date_value);

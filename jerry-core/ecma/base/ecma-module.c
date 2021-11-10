@@ -282,7 +282,7 @@ ecma_module_resolve_throw (ecma_module_resolve_result_t *resolve_result_p, /**< 
   JERRY_UNUSED (resolve_result_p);
   JERRY_UNUSED (name_p);
 
-  return ecma_raise_syntax_error (NULL);
+  return ecma_raise_syntax_error (ECMA_ERR_EMPTY);
 #endif /* !JERRY_ERROR_MESSAGES */
 } /* ecma_module_resolve_throw */
 
@@ -540,7 +540,7 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
 {
   if (module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_ERROR)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Module is in error state"));
+    return ecma_raise_range_error (ECMA_ERR_MODULE_IS_IN_ERROR_STATE);
   }
 
   if (module_p->header.u.cls.u1.module_state >= JERRY_MODULE_STATE_EVALUATING)
@@ -947,7 +947,7 @@ ecma_module_connect_imports (ecma_module_t *module_p)
 
       if (binding_p != NULL)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Imported binding shadows local variable"));
+        return ecma_raise_syntax_error (ECMA_ERR_IMPORTED_BINDING_SHADOWS_LOCAL_VARIABLE);
       }
 
       ecma_value_t status = ecma_op_has_binding (lex_env_p, import_names_p->local_name_p);
@@ -961,7 +961,7 @@ ecma_module_connect_imports (ecma_module_t *module_p)
 
       if (ecma_is_value_true (status))
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Imported binding shadows local variable"));
+        return ecma_raise_syntax_error (ECMA_ERR_IMPORTED_BINDING_SHADOWS_LOCAL_VARIABLE);
       }
 
       import_names_p = import_names_p->next_p;
@@ -1104,7 +1104,7 @@ ecma_module_link (ecma_module_t *module_p, /**< root module */
 {
   if (module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_UNLINKED)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Module must be in unlinked state"));
+    return ecma_raise_type_error (ECMA_ERR_MODULE_MUST_BE_IN_UNLINKED_STATE);
   }
 
   module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_LINKING;
@@ -1152,7 +1152,7 @@ restart:
       if (resolved_module_p == NULL)
       {
         ecma_free_value (resolve_result);
-        ecma_raise_type_error (ECMA_ERR_MSG ("Callback result must be a module"));
+        ecma_raise_type_error (ECMA_ERR_CALLBACK_RESULT_NOT_MODULE);
         goto error;
       }
 
@@ -1167,7 +1167,7 @@ restart:
 
     if (resolved_module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_ERROR)
     {
-      ecma_raise_type_error (ECMA_ERR_MSG ("Cannot link to a module which is in error state"));
+      ecma_raise_type_error (ECMA_ERR_LINK_TO_MODULE_IN_ERROR_STATE);
       goto error;
     }
 
@@ -1404,7 +1404,7 @@ ecma_module_import (ecma_value_t specifier, /**< module specifier */
   return result;
 
 error_module_instantiate:
-  ecma_raise_range_error (ECMA_ERR_MSG ("Module cannot be instantiated"));
+  ecma_raise_range_error (ECMA_ERR_MODULE_CANNOT_BE_INSTANTIATED);
 
 error:
   if (jcontext_has_pending_abort ())

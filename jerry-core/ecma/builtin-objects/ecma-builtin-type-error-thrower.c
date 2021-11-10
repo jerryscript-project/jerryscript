@@ -55,8 +55,7 @@ ecma_builtin_type_error_thrower_dispatch_call (const ecma_value_t *arguments_lis
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("'caller', 'callee', and 'arguments' properties may not be accessed"
-                                              " on strict mode functions or the arguments objects for calls to them"));
+  return ecma_raise_type_error (ECMA_ERR_CANNOT_ACCESS_CALLER_CALLE_ARGUMENTS);
 } /* ecma_builtin_type_error_thrower_dispatch_call */
 
 /**

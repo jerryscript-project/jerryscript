@@ -468,7 +468,7 @@ ecma_is_value_array (ecma_value_t arg) /**< argument */
 
     if (proxy_obj_p->handler == ECMA_VALUE_NULL)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Proxy handler is null for 'isArray' operation"));
+      return ecma_raise_type_error (ECMA_ERR_PROXY_HANDLER_IS_NULL_FOR_ISARRAY_OPERATION);
     }
 
     return ecma_is_value_array (proxy_obj_p->target);

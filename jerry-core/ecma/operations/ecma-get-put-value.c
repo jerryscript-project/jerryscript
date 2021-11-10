@@ -65,7 +65,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 #if JERRY_ESNEXT
           if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
           {
-            return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+            return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
           }
 #endif /* JERRY_ESNEXT */
 
@@ -93,7 +93,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 
             if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
             {
-              return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+              return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
             }
 
             return ecma_fast_copy_value (property_value_p->value);
@@ -134,7 +134,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
                                                 "% is not defined",
                                                 ecma_make_string_value (name_p));
 #else /* JERRY_ERROR_MESSAGES */
-  return ecma_raise_reference_error (NULL);
+  return ecma_raise_reference_error (ECMA_ERR_EMPTY);
 #endif /* JERRY_ERROR_MESSAGES */
 
 } /* ecma_op_get_value_lex_env_base */
@@ -322,7 +322,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
                                                   "% is not defined",
                                                   ecma_make_string_value (name_p));
 #else /* !JERRY_ERROR_MESSAGES */
-    return ecma_raise_reference_error (NULL);
+    return ecma_raise_reference_error (ECMA_ERR_EMPTY);
 #endif /* JERRY_ERROR_MESSAGES */
   }
 

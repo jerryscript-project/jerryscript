@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "jerryscript-types.h"
 #include "jerryscript.h"
 
 #include "ecma-conversion.h"
@@ -23,6 +24,7 @@
 #include "ecma-init-finalize.h"
 
 #include "jcontext.h"
+#include "lit-globals.h"
 #include "test-common.h"
 
 /**
@@ -48,7 +50,7 @@ main (void)
   TEST_ASSERT (num == 123);
 
   /* 1, 3 */
-  ecma_value_t error_throw = ecma_raise_type_error (ECMA_ERR_MSG ("I'm an error"));
+  ecma_value_t error_throw = ecma_raise_standard_error (JERRY_ERROR_TYPE, (const lit_utf8_byte_t *) "I'm an error");
 
   result = ecma_op_to_length (error_throw, &num);
 

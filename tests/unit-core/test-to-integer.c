@@ -23,6 +23,7 @@
 #include "ecma-init-finalize.h"
 
 #include "jcontext.h"
+#include "lit-globals.h"
 #include "test-common.h"
 
 /**
@@ -48,7 +49,8 @@ main (void)
   TEST_ASSERT (num == 123);
 
   /* 2 */
-  ecma_value_t error = ecma_raise_type_error (ECMA_ERR_MSG ("I am a neat little error message"));
+  ecma_value_t error =
+    ecma_raise_standard_error (JERRY_ERROR_TYPE, (const lit_utf8_byte_t *) "I am a neat little error message");
 
   result = ecma_op_to_integer (error, &num);
 

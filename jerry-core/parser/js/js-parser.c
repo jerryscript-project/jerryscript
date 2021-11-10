@@ -2359,7 +2359,7 @@ parser_parse_source (void *source_p, /**< source code */
     jcontext_release_exception ();
   }
 
-  ecma_raise_syntax_error ("");
+  ecma_raise_syntax_error (ECMA_ERR_EMPTY);
 #endif /* JERRY_ERROR_MESSAGES */
 
   return NULL;
@@ -3132,7 +3132,7 @@ parser_parse_script (void *source_p, /**< source code */
   JERRY_UNUSED (parse_opts);
   JERRY_UNUSED (resource_name);
 
-  ecma_raise_syntax_error (ECMA_ERR_MSG ("Source code parsing is disabled"));
+  ecma_raise_syntax_error (ECMA_ERR_PARSER_NOT_SUPPORTED);
   return NULL;
 #endif /* JERRY_PARSER */
 } /* parser_parse_script */

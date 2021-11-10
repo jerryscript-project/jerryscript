@@ -210,7 +210,7 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
     if (hex_value == UINT32_MAX)
     {
       ecma_stringbuilder_destroy (&builder);
-      return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid hexadecimal value"));
+      return ecma_raise_uri_error (ECMA_ERR_INVALID_HEXADECIMAL_VALUE);
     }
 
     ecma_char_t decoded_byte = (ecma_char_t) hex_value;
@@ -248,7 +248,7 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       else
       {
         ecma_stringbuilder_destroy (&builder);
-        return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 character"));
+        return ecma_raise_uri_error (ECMA_ERR_INVALID_UTF8_CHARACTER);
       }
 
       lit_utf8_byte_t octets[LIT_UTF8_MAX_BYTES_IN_CODE_POINT];
@@ -280,7 +280,7 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       if (!is_valid || !lit_is_valid_utf8_string (octets, bytes_count, true))
       {
         ecma_stringbuilder_destroy (&builder);
-        return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 string"));
+        return ecma_raise_uri_error (ECMA_ERR_INVALID_UTF8_STRING);
       }
 
       lit_code_point_t cp;
@@ -289,7 +289,7 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       if (lit_is_code_point_utf16_high_surrogate (cp) || lit_is_code_point_utf16_low_surrogate (cp))
       {
         ecma_stringbuilder_destroy (&builder);
-        return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 codepoint"));
+        return ecma_raise_uri_error (ECMA_ERR_INVALID_UTF8_CODEPOINT);
       }
 
       lit_utf8_byte_t result_chars[LIT_CESU8_MAX_BYTES_IN_CODE_POINT];
@@ -348,7 +348,7 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
     if (lit_is_code_point_utf16_low_surrogate (ch))
     {
       ecma_stringbuilder_destroy (&builder);
-      return ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing"));
+      return ecma_raise_uri_error (ECMA_ERR_UNICODE_SURROGATE_PAIR_MISSING);
     }
 
     lit_code_point_t cp = ch;
@@ -358,7 +358,7 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       if (input_char_p == input_end_p)
       {
         ecma_stringbuilder_destroy (&builder);
-        return ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing"));
+        return ecma_raise_uri_error (ECMA_ERR_UNICODE_SURROGATE_PAIR_MISSING);
       }
 
       ecma_char_t next_ch;
@@ -372,7 +372,7 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       else
       {
         ecma_stringbuilder_destroy (&builder);
-        return ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing"));
+        return ecma_raise_uri_error (ECMA_ERR_UNICODE_SURROGATE_PAIR_MISSING);
       }
     }
 

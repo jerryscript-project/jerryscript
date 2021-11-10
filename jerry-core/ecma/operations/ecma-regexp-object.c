@@ -114,7 +114,7 @@ ecma_regexp_parse_flags (ecma_string_t *flags_str_p, /**< Input string with flag
 
     if (flag == RE_FLAG_EMPTY || (result_flags & flag) != 0)
     {
-      ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags"));
+      ret_value = ecma_raise_syntax_error (ECMA_ERR_INVALID_REGEXP_FLAGS);
       break;
     }
 
@@ -1883,7 +1883,7 @@ match_found:
 
   if (ECMA_RE_STACK_LIMIT_REACHED (matched_p))
   {
-    ret_value = ecma_raise_range_error (ECMA_ERR_MSG ("Stack limit exceeded"));
+    ret_value = ecma_raise_range_error (ECMA_ERR_STACK_LIMIT_EXCEEDED);
     goto cleanup_context;
   }
 
@@ -1973,7 +1973,7 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
   /* 2. */
   if (!ecma_is_value_object (regexp_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   ecma_value_t result = ECMA_VALUE_ERROR;
@@ -2079,7 +2079,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
   /* 2. */
   if (!ecma_is_value_object (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   ecma_value_t result = ECMA_VALUE_ERROR;
@@ -2447,7 +2447,7 @@ cleanup_string:
 
     if (ECMA_RE_STACK_LIMIT_REACHED (matched_p))
     {
-      result = ecma_raise_range_error (ECMA_ERR_MSG ("Stack limit exceeded"));
+      result = ecma_raise_range_error (ECMA_ERR_STACK_LIMIT_EXCEEDED);
       goto cleanup_array;
     }
 
@@ -2472,7 +2472,7 @@ cleanup_string:
 
     if (ECMA_RE_STACK_LIMIT_REACHED (matched_p))
     {
-      result = ecma_raise_range_error (ECMA_ERR_MSG ("Stack limit exceeded"));
+      result = ecma_raise_range_error (ECMA_ERR_STACK_LIMIT_EXCEEDED);
       goto cleanup_array;
     }
 
@@ -2658,7 +2658,7 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
     {
       if (ECMA_RE_STACK_LIMIT_REACHED (matched_p))
       {
-        result = ecma_raise_range_error (ECMA_ERR_MSG ("Stack limit exceeded"));
+        result = ecma_raise_range_error (ECMA_ERR_STACK_LIMIT_EXCEEDED);
         goto cleanup_builder;
       }
 
@@ -2830,7 +2830,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
   /* 2. */
   if (!ecma_is_value_object (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
@@ -2956,7 +2956,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
       if (!ecma_is_value_object (result) && !ecma_is_value_null (result))
       {
         ecma_free_value (result);
-        result = ecma_raise_type_error (ECMA_ERR_MSG ("Return value of 'exec' must be an object or null"));
+        result = ecma_raise_type_error (ECMA_ERR_RETURN_VALUE_OF_EXEC_MUST_BE_AN_OBJECT_OR_NULL);
         goto cleanup_results;
       }
     }
@@ -2966,7 +2966,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
 
       if (!ecma_object_class_is (this_obj_p, ECMA_OBJECT_CLASS_REGEXP))
       {
-        result = ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a valid RegExp object"));
+        result = ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_REG_EXP_OBJECT);
         goto cleanup_results;
       }
 
@@ -3305,7 +3305,7 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
 {
   if (!ecma_is_value_object (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   ecma_string_t *str_p = ecma_op_to_string (string_arg);
@@ -3503,7 +3503,7 @@ ecma_op_regexp_exec (ecma_value_t this_arg, /**< this argument */
     if (!ecma_is_value_object (result) && !ecma_is_value_null (result))
     {
       ecma_free_value (result);
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Return value of 'exec' must be an object or null"));
+      return ecma_raise_type_error (ECMA_ERR_RETURN_VALUE_OF_EXEC_MUST_BE_AN_OBJECT_OR_NULL);
     }
 
     return result;
@@ -3516,7 +3516,7 @@ ecma_op_regexp_exec (ecma_value_t this_arg, /**< this argument */
 
   if (!ecma_object_is_regexp_object (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a valid RegExp"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_REG_EXP);
   }
 
   return ecma_regexp_exec_helper (arg_obj_p, str_p);

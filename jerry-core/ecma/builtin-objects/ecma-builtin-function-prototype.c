@@ -217,7 +217,7 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
   /* 3. */
   if (!ecma_is_value_object (arg2))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (arg2);
@@ -233,7 +233,7 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
 
   if (length >= ECMA_FUNCTION_APPLY_ARGUMENT_COUNT_LIMIT)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Too many arguments declared for Function.apply"));
+    return ecma_raise_range_error (ECMA_ERR_TOO_MANY_ARGUMENTS_DECLARED_FOR_FUNCTION_APPLY);
   }
 
   /* 6. */
@@ -498,7 +498,7 @@ ecma_builtin_function_prototype_dispatch_construct (const ecma_value_t *argument
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Function.prototype is not a constructor"));
+  return ecma_raise_type_error (ECMA_ERR_FUNCTION_PROTOTYPE_NOT_A_CONSTRUCTOR);
 } /* ecma_builtin_function_prototype_dispatch_construct */
 
 /**
@@ -523,7 +523,7 @@ ecma_builtin_function_prototype_dispatch_routine (uint8_t builtin_routine_id, /*
     }
 #endif /* JERRY_ESNEXT */
 
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a function"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_FUNCTION);
   }
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (this_arg);

@@ -25,7 +25,7 @@ jobs:
         if: ${{ always() }}
       - run: $RUNNER --check-license
         if: ${{ always() }}
-      - run: $RUNNER --check-magic-strings
+      - run: $RUNNER --check-strings
         if: ${{ always() }}
       - run: $RUNNER --check-pylint
         if: ${{ always() }}

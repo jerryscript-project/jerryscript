@@ -142,7 +142,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a string or a String object"));
+  return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_STRING_OBJECT);
 } /* ecma_builtin_string_prototype_object_to_string */
 
 /**
@@ -447,7 +447,7 @@ ecma_builtin_string_prototype_object_match_all (ecma_value_t this_argument, /**<
 
       if (!(parsed_flag & RE_FLAG_GLOBAL))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("RegExp argument should have global flag"));
+        return ecma_raise_type_error (ECMA_ERR_REGEXP_ARGUMENT_SHOULD_HAVE_GLOBAL_FLAG);
       }
     }
 
@@ -567,7 +567,7 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
 
         if (!have_global_flag)
         {
-          return ecma_raise_type_error (ECMA_ERR_MSG ("RegExp argument should have global flag"));
+          return ecma_raise_type_error (ECMA_ERR_REGEXP_ARGUMENT_SHOULD_HAVE_GLOBAL_FLAG);
         }
       }
     }
@@ -1258,7 +1258,7 @@ ecma_builtin_string_prototype_object_repeat (ecma_string_t *original_string_p, /
   /* 6, 7 */
   if (count_number < 0 || (!isNan && ecma_number_is_infinity (count_number)))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid count value"));
+    return ecma_raise_range_error (ECMA_ERR_INVALID_COUNT_VALUE);
   }
 
   lit_utf8_size_t size = ecma_string_get_size (original_string_p);
@@ -1270,7 +1270,7 @@ ecma_builtin_string_prototype_object_repeat (ecma_string_t *original_string_p, /
 
   if ((uint32_t) repeat_count >= (ECMA_STRING_SIZE_LIMIT / size))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid string length"));
+    return ecma_raise_range_error (ECMA_ERR_INVALID_STRING_);
   }
 
   lit_utf8_size_t total_size = size * (lit_utf8_size_t) repeat_count;

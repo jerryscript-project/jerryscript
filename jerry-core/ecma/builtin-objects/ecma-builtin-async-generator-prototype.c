@@ -111,7 +111,7 @@ ecma_builtin_async_generator_prototype_dispatch_routine (uint8_t builtin_routine
 
   if (executable_object_p == NULL)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an async generator object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_ASYNC_GENERATOR);
   }
 
   if (executable_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED)

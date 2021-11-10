@@ -223,12 +223,12 @@ ecma_builtin_generator_prototype_dispatch_routine (uint8_t builtin_routine_id, /
 
   if (executable_object_p == NULL)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a generator object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_GENERATOR_OBJECT);
   }
 
   if (executable_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_RUNNING)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Generator is currently under execution"));
+    return ecma_raise_type_error (ECMA_ERR_GENERATOR_IS_CURRENTLY_UNDER_EXECUTION);
   }
 
   if (executable_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED)

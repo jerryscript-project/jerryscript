@@ -82,7 +82,7 @@ ecma_builtin_bigint_prototype_object_value_of (ecma_value_t this_arg) /**< this 
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("BigInt value expected"));
+  return ecma_raise_type_error (ECMA_ERR_BIGINT_VALUE_EXCPECTED);
 } /* ecma_builtin_bigint_prototype_object_value_of */
 
 /**
@@ -112,7 +112,7 @@ ecma_builtin_bigint_prototype_object_to_string (ecma_value_t this_arg, /**< this
 
     if (arg_num < 2 || arg_num > 36)
     {
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Radix must be between 2 and 36"));
+      return ecma_raise_range_error (ECMA_ERR_RADIX_IS_OUT_OF_RANGE);
     }
 
     radix = (uint32_t) arg_num;

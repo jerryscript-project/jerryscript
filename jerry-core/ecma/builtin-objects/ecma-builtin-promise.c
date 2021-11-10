@@ -98,7 +98,7 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
   if (!ecma_op_is_callable (resolve))
   {
     ecma_free_value (resolve);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Resolve method must be callable"));
+    return ecma_raise_type_error (ECMA_ERR_RESOLVE_METHOD_MUST_BE_CALLABLE);
   }
 
   ecma_object_t *resolve_func_p = ecma_get_object_from_value (resolve);
@@ -196,7 +196,7 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
   if (!ecma_op_is_callable (resolve))
   {
     ecma_free_value (resolve);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Resolve method must be callable"));
+    return ecma_raise_type_error (ECMA_ERR_RESOLVE_METHOD_MUST_BE_CALLABLE);
   }
 
   ecma_object_t *resolve_func_p = ecma_get_object_from_value (resolve);
@@ -281,7 +281,7 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
 
     if (JERRY_UNLIKELY (idx == UINT32_MAX - 1))
     {
-      ecma_raise_range_error (ECMA_ERR_MSG ("Promise.all remaining elements limit reached"));
+      ecma_raise_range_error (ECMA_ERR_PROMISE_ALL_REMAINING_ELEMENTS_LIMIT_REACHED);
       goto exit;
     }
 
@@ -456,7 +456,7 @@ ecma_builtin_promise_dispatch_call (const ecma_value_t *arguments_list_p, /**< a
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor Promise requires 'new'"));
+  return ecma_raise_type_error (ECMA_ERR_CONSTRUCTOR_PROMISE_REQUIRES_NEW);
 } /* ecma_builtin_promise_dispatch_call */
 
 /**
@@ -472,7 +472,7 @@ ecma_builtin_promise_dispatch_construct (const ecma_value_t *arguments_list_p, /
 
   if (arguments_list_len == 0 || !ecma_op_is_callable (arguments_list_p[0]))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("First parameter must be callable"));
+    return ecma_raise_type_error (ECMA_ERR_FIRST_PARAMETER_MUST_BE_CALLABLE);
   }
 
   return ecma_op_create_promise_object (arguments_list_p[0],

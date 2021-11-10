@@ -305,7 +305,7 @@ ecma_builtin_string_object_from_code_point (const ecma_value_t args[], /**< argu
     if (!ecma_op_is_integer (to_number_num))
     {
       ecma_stringbuilder_destroy (&builder);
-      return ecma_raise_range_error ("Error: Invalid code point");
+      return ecma_raise_range_error (ECMA_ERR_INVALID_CODE_POINT_ERROR);
     }
 
     ecma_free_value (to_number_value);
@@ -313,7 +313,7 @@ ecma_builtin_string_object_from_code_point (const ecma_value_t args[], /**< argu
     if (to_number_num < 0 || to_number_num > LIT_UNICODE_CODE_POINT_MAX)
     {
       ecma_stringbuilder_destroy (&builder);
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid code point"));
+      return ecma_raise_range_error (ECMA_ERR_INVALID_CODE_POINT);
     }
 
     lit_code_point_t code_point = (lit_code_point_t) to_number_num;

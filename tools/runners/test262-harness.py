@@ -405,6 +405,7 @@ class TempFile(object):
         os.write(self.file_desc, string)
 
     def read(self):
+        # pylint: disable=undefined-variable
         file_desc = file(self.name)
         result = file_desc.read()
         file_desc.close()

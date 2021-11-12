@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright JS Foundation and other contributors, http://js.foundation
 #
@@ -18,7 +18,12 @@ import struct
 
 MAX_BUFFER_SIZE = 256
 
-class RawPacket(object):
+def safe_ord(data):
+    if isinstance(data, int):
+        return data
+    return ord(data)
+
+class RawPacket():
     """ Simplified transmission layer. """
     def __init__(self, protocol):
         self.protocol = protocol
@@ -70,7 +75,7 @@ class RawPacket(object):
 
         while True:
             if len(self.data_buffer) >= 1:
-                size = ord(self.data_buffer[0])
+                size = safe_ord(self.data_buffer[0])
                 if size == 0:
                     raise Exception("Unexpected data frame")
 

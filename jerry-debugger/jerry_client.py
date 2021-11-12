@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright JS Foundation and other contributors, http://js.foundation
 #
@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 from cmd import Cmd
 from pprint import pprint
 import math
@@ -104,7 +103,7 @@ class DebuggerPrompt(Cmd):
                     if res_type == result.END:
                         self.quit = True
                         return
-                    elif res_type == result.TEXT:
+                    if res_type == result.TEXT:
                         write(result.get_text())
                     elif res_type == result.PROMPT:
                         break
@@ -325,7 +324,7 @@ def main():
 
         if res_type == result.END:
             break
-        elif res_type == result.PROMPT:
+        if res_type == result.PROMPT:
             prompt.cmdloop()
         elif res_type == result.TEXT:
             write(result.get_text())
@@ -339,7 +338,7 @@ if __name__ == "__main__":
         MSG = str(error_msg)
         if ERRNO == 111:
             sys.exit("Failed to connect to the JerryScript debugger.")
-        elif ERRNO == 32 or ERRNO == 104:
+        elif ERRNO in (32, 104):
             sys.exit("Connection closed.")
         else:
             sys.exit("Failed to connect to the JerryScript debugger.\nError: %s" % (MSG))

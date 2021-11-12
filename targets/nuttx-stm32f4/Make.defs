@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ifeq ($(CONFIG_JERRYSCRIPT),y)
-CONFIGURED_APPS += interpreters/jerryscript
+ifeq ($(CONFIG_INTERPRETERS_JERRYSCRIPT),y)
+CONFIGURED_APPS += $(APPDIR)/interpreters/jerryscript
 endif

@@ -3,28 +3,18 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-config JERRYSCRIPT
-	bool "Jerryscript"
+config INTERPRETERS_JERRYSCRIPT
+	bool "Jerryscript JavaScript engine"
 	default n
-	---help---
-		Enable Jerryscript ECMAScript 5.1 interpreter
 
-if JERRYSCRIPT
+if INTERPRETERS_JERRYSCRIPT
 
-config JERRYSCRIPT_PROGNAME
-	string "Program name"
-	default "jerry"
-	depends on BUILD_KERNEL
-	---help---
-		This is the name of the program that will be
-		 use when the NSH ELF program is installed.
-
-config JERRYSCRIPT_PRIORITY
-	int "Jerryscript task priority"
+config INTERPRETERS_JERRYSCRIPT_PRIORITY
+	int "Jerryscript priority"
 	default 100
 
-config JERRYSCRIPT_STACKSIZE
+config INTERPRETERS_JERRYSCRIPT_STACKSIZE
 	int "Jerryscript stack size"
 	default 16384
 
-endif # JERRYSCRIPT
+endif # INTERPRETERS_JERRYSCRIPT

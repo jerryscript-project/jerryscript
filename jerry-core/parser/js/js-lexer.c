@@ -1510,6 +1510,55 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   }
 
 /**
+ * Four tokens, where the first is the prefix of the other three
+ * and the second is prefix of the fourth (e.g. &, &&, &=, &&= ).
+ *
+ * @param char1 first character
+ * @param type1 type of the first character
+ * @param char2 second character
+ * @param type2 type of the second character
+ * @param char3 third character
+ * @param type3 type of the third character
+ * @param char4 fourth character
+ * @param type4 type of the fourth character
+ */
+#if JERRY_ESNEXT
+#define LEXER_TYPE_D_TOKEN(char1, type1, char2, type2, char3, type3, char4, type4) \
+  case (uint8_t) (char1):                                                          \
+  {                                                                                \
+    if (length >= 2)                                                               \
+    {                                                                              \
+      if (context_p->source_p[1] == (uint8_t) (char2))                             \
+      {                                                                            \
+        context_p->token.type = (type2);                                           \
+        length = 2;                                                                \
+        break;                                                                     \
+      }                                                                            \
+                                                                                   \
+      if (context_p->source_p[1] == (uint8_t) (char3))                             \
+      {                                                                            \
+        if (length >= 3 && context_p->source_p[2] == (uint8_t) (char4))            \
+        {                                                                          \
+          context_p->token.type = (type4);                                         \
+          length = 3;                                                              \
+          break;                                                                   \
+        }                                                                          \
+        context_p->token.type = (type3);                                           \
+        length = 2;                                                                \
+        break;                                                                     \
+      }                                                                            \
+    }                                                                              \
+                                                                                   \
+    context_p->token.type = (type1);                                               \
+    length = 1;                                                                    \
+    break;                                                                         \
+  }
+#else /* !JERRY_ESNEXT */
+#define LEXER_TYPE_D_TOKEN(char1, type1, char2, type2, char3, type3, char4, type4) \
+  LEXER_TYPE_C_TOKEN (char1, type1, char2, type2, char3, type3)
+#endif /* JERRY_ESNEXT */
+
+/**
  * Get next token.
  */
 void
@@ -1759,18 +1808,22 @@ lexer_next_token (parser_context_t *context_p) /**< context */
       LEXER_TYPE_B_TOKEN (LIT_CHAR_SLASH, LEXER_DIVIDE, LIT_CHAR_EQUALS, LEXER_ASSIGN_DIVIDE)
       LEXER_TYPE_B_TOKEN (LIT_CHAR_PERCENT, LEXER_MODULO, LIT_CHAR_EQUALS, LEXER_ASSIGN_MODULO)
 
-      LEXER_TYPE_C_TOKEN (LIT_CHAR_AMPERSAND,
+      LEXER_TYPE_D_TOKEN (LIT_CHAR_AMPERSAND,
                           LEXER_BIT_AND,
                           LIT_CHAR_EQUALS,
                           LEXER_ASSIGN_BIT_AND,
                           LIT_CHAR_AMPERSAND,
-                          LEXER_LOGICAL_AND)
-      LEXER_TYPE_C_TOKEN (LIT_CHAR_VLINE,
+                          LEXER_LOGICAL_AND,
+                          LIT_CHAR_EQUALS,
+                          LEXER_ASSIGN_LOGICAL_AND)
+      LEXER_TYPE_D_TOKEN (LIT_CHAR_VLINE,
                           LEXER_BIT_OR,
                           LIT_CHAR_EQUALS,
                           LEXER_ASSIGN_BIT_OR,
                           LIT_CHAR_VLINE,
-                          LEXER_LOGICAL_OR)
+                          LEXER_LOGICAL_OR,
+                          LIT_CHAR_EQUALS,
+                          LEXER_ASSIGN_LOGICAL_OR)
 
       LEXER_TYPE_B_TOKEN (LIT_CHAR_CIRCUMFLEX, LEXER_BIT_XOR, LIT_CHAR_EQUALS, LEXER_ASSIGN_BIT_XOR)
 
@@ -1782,6 +1835,12 @@ lexer_next_token (parser_context_t *context_p) /**< context */
       {
         if (context_p->source_p[1] == (uint8_t) LIT_CHAR_QUESTION)
         {
+          if (length >= 3 && context_p->source_p[2] == (uint8_t) LIT_CHAR_EQUALS)
+          {
+            context_p->token.type = LEXER_ASSIGN_NULLISH_COALESCING;
+            length = 3;
+            break;
+          }
           context_p->token.type = LEXER_NULLISH_COALESCING;
           length = 2;
           break;

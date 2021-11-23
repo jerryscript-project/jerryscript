@@ -3331,6 +3331,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #if JERRY_ESNEXT
+        case VM_OC_POP_REFERENCE:
+        {
+          ecma_free_value (stack_top_p[-2]);
+          ecma_free_value (stack_top_p[-3]);
+          stack_top_p[-3] = stack_top_p[-1];
+          stack_top_p -= 2;
+          continue;
+        }
         case VM_OC_BRANCH_IF_NULLISH:
         {
           left_value = stack_top_p[-1];

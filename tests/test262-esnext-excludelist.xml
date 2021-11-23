@@ -1821,57 +1821,6 @@
   <test id="built-ins/WeakRef/prototype/deref/this-does-not-have-internal-target-throws.js"><reason></reason></test>
   <!-- END - ESNext stage 4 proposal: WeakRefs -->
 
-  <!-- ESNext stage 4 proposal: Logical Assignment Operators
-       features: [logical-assignment-operators]
-       https://github.com/tc39/proposal-logical-assignment
-  -->
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-bigint.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-no-set-put.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-no-set.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-non-extensible.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-non-writeable-put.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-non-writeable.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-unresolved-lhs.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-unresolved-rhs-put.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator-unresolved-rhs.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-assignment-operator.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-and-whitespace.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-bigint.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-no-set-put.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-no-set.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-extensible.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-writeable-put.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-writeable.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-unresolved-lhs.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-unresolved-rhs-put.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator-unresolved-rhs.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-assignment-operator.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-nullish-whitespace.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-bigint.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-class-expression.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-function.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-no-set-put.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-no-set.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-non-extensible.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-non-writeable-put.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-non-writeable.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-unresolved-lhs.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-unresolved-rhs-put.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-unresolved-rhs.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator.js"><reason></reason></test>
-  <test id="language/expressions/logical-assignment/lgcl-or-whitespace.js"><reason></reason></test>
-  <!-- END - ESNext stage 4 proposal: Logical Assignment Operators -->
-
   <!-- ES2015: Proper Tail Call (PTC) Optimization
        features: [tail-call-optimization]
   -->

@@ -70,7 +70,7 @@ JERRY_C_API_BEGIN
  * instead.
  */
 void *__cdecl _alloca (size_t _Size);
-#define JERRY_VLA(type, name, size) type *name = (type *) (_alloca (sizeof (type) * size))
+#define JERRY_VLA(type, name, size) type *name = (type *) (_alloca (sizeof (type) * (size)))
 
 #endif /* _MSC_VER */
 

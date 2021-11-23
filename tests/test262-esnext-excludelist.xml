@@ -100,8 +100,6 @@
   <test id="language/expressions/call/eval-spread-empty-leading.js"><reason></reason></test>
   <test id="language/expressions/call/eval-spread-empty-trailing.js"><reason></reason></test>
   <test id="language/expressions/call/eval-spread.js"><reason></reason></test>
-  <test id="language/expressions/class/accessor-name-inst/literal-numeric-leading-decimal.js"><reason></reason></test>
-  <test id="language/expressions/class/accessor-name-static/literal-numeric-leading-decimal.js"><reason></reason></test>
   <test id="language/expressions/class/class-name-ident-let-escaped.js"><reason></reason></test>
   <test id="language/expressions/class/class-name-ident-let.js"><reason></reason></test>
   <test id="language/expressions/class/class-name-ident-static-escaped.js"><reason></reason></test>
@@ -307,8 +305,6 @@
   <test id="language/module-code/parse-err-hoist-lex-fun.js"><reason></reason></test>
   <test id="language/module-code/parse-err-hoist-lex-gen.js"><reason></reason></test>
   <test id="language/statements/async-function/let-newline-await-in-async-function.js"><reason></reason></test>
-  <test id="language/statements/class/accessor-name-inst/literal-numeric-leading-decimal.js"><reason></reason></test>
-  <test id="language/statements/class/accessor-name-static/literal-numeric-leading-decimal.js"><reason></reason></test>
   <test id="language/statements/class/class-name-ident-let-escaped.js"><reason></reason></test>
   <test id="language/statements/class/class-name-ident-let.js"><reason></reason></test>
   <test id="language/statements/class/class-name-ident-static-escaped.js"><reason></reason></test>

@@ -12,20 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
--include $(TOPDIR)/Make.defs
+include $(APPDIR)/Make.defs
 
 # Jerryscript built-in application information.
-CONFIG_JERRYSCRIPT_PRIORITY ?= SCHED_PRIORITY_DEFAULT
-CONFIG_JERRYSCRIPT_PROGNAME ?= jerry$(EXEEXT)
-CONFIG_JERRYSCRIPT_STACKSIZE ?= 16384
+PROGNAME  = jerry
+PRIORITY  = $(CONFIG_INTERPRETERS_JERRYSCRIPT_PRIORITY)
+STACKSIZE = $(CONFIG_INTERPRETERS_JERRYSCRIPT_STACKSIZE)
 
-PROGNAME = $(CONFIG_JERRYSCRIPT_PROGNAME)
-PRIORITY = $(CONFIG_JERRYSCRIPT_PRIORITY)
-STACKSIZE = $(CONFIG_JERRYSCRIPT_STACKSIZE)
-
-# Path to the JerryScript project. If not specified, it is supposed
-# that JerryScript is located next to the nuttx-apps folder.
+# Path to the JerryScript and NuttX projects. If not specified, it is
+# supposed that JerryScript is located next to the nuttx folder.
 JERRYSCRIPT_ROOT_DIR ?= ../../../jerryscript
+NUTTX_ROOT_DIR ?= $(JERRYSCRIPT_ROOT_DIR)/../nuttx
 
 CFLAGS += -std=c99
 CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-core/include
@@ -35,7 +32,6 @@ CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-math/include
 # These libs should be copied from the JerryScript project.
 LIBS = libjerry-core.a libjerry-ext.a libjerry-math.a
 
-APPNAME = jerry
 ASRCS = setjmp.S
 CSRCS = jerry_port.c jerry_module.c
 MAINSRC = jerry_main.c
@@ -55,8 +51,21 @@ updateobjs:
 cleanlibs: updateobjs
 	rm -f $(OBJS)
 
+.PHONY: libjerry
+libjerry:
+	$(JERRYSCRIPT_ROOT_DIR)/tools/build.py \
+		--clean \
+		--lto=OFF \
+		--jerry-cmdline=OFF \
+		--jerry-math=ON \
+		--amalgam=ON \
+		--mem-heap=70 \
+		--profile=es.next \
+		--compile-flag="--sysroot=${NUTTX_ROOT_DIR}" \
+		--toolchain=$(abspath $(JERRYSCRIPT_ROOT_DIR)/cmake/toolchain_mcu_stm32f4.cmake)
+
 clean:: cleanlibs
 
-.built: $(LIBS) updateobjs
+archive: libjerry $(LIBS) updateobjs
 
 include $(APPDIR)/Application.mk

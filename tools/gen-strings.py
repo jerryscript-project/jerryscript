@@ -37,6 +37,9 @@ MAGIC_STRINGS_INC_H = os.path.join(PROJECT_DIR, 'jerry-core', 'lit', 'lit-magic-
 ECMA_ERRORS_INI = os.path.join(PROJECT_DIR, 'jerry-core', 'ecma', 'base', 'ecma-error-messages.ini')
 ECMA_ERRORS_INC_H = os.path.join(PROJECT_DIR, 'jerry-core', 'ecma', 'base', 'ecma-error-messages.inc.h')
 
+PARSER_ERRORS_INI = os.path.join(PROJECT_DIR, 'jerry-core', 'parser', 'js', 'parser-error-messages.ini')
+PARSER_ERRORS_INC_H = os.path.join(PROJECT_DIR, 'jerry-core', 'parser', 'js', 'parser-error-messages.inc.h')
+
 LIMIT_MAGIC_STR_LENGTH = 255
 
 def debug_dump(obj):
@@ -316,6 +319,13 @@ def main():
                            'ECMA_ERR',
                            ECMA_ERRORS_INC_H,
                            'ECMA_ERROR_DEF')
+
+    generate_magic_strings(args,
+                           PARSER_ERRORS_INI,
+                           'PARSER_ERR_MSG',
+                           'PARSER_ERR',
+                           PARSER_ERRORS_INC_H,
+                           'PARSER_ERROR_DEF')
 
     subprocess.call([FORMAT_SCRIPT, '--fix'])
 

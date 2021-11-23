@@ -25,6 +25,7 @@
 #include "js-parser-limits.h"
 #include "js-parser.h"
 #include "js-scanner.h"
+#include "parser-errors.h"
 
 /** \addtogroup parser Parser
  * @{
@@ -533,7 +534,7 @@ typedef struct parser_saved_context_t
 typedef struct
 {
   PARSER_TRY_CONTEXT (try_buffer); /**< try_buffer */
-  parser_error_t error; /**< error code */
+  parser_error_msg_t error; /**< error code */
   /** Union for rarely used members. */
   union
   {
@@ -923,7 +924,7 @@ uint16_t parser_check_anonymous_function_declaration (parser_context_t *context_
 
 /* Error management. */
 
-void parser_raise_error (parser_context_t *context_p, parser_error_t error);
+void parser_raise_error (parser_context_t *context_p, parser_error_msg_t error);
 
 /* Debug functions. */
 

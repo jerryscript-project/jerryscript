@@ -1585,7 +1585,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       {
         if (context_p->token.type != end_type)
         {
-          parser_error_t error =
+          parser_error_msg_t error =
             ((end_type == LEXER_RIGHT_PAREN) ? PARSER_ERR_RIGHT_PAREN_EXPECTED : PARSER_ERR_IDENTIFIER_EXPECTED);
 
           parser_raise_error (context_p, error);
@@ -1729,7 +1729,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     {
       if (context_p->token.type != end_type)
       {
-        parser_error_t error =
+        parser_error_msg_t error =
           ((end_type == LEXER_RIGHT_PAREN) ? PARSER_ERR_RIGHT_PAREN_EXPECTED : PARSER_ERR_IDENTIFIER_EXPECTED);
 
         parser_raise_error (context_p, error);
@@ -2335,9 +2335,8 @@ parser_parse_source (void *source_p, /**< source code */
   }
   else
   {
-    const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (context.error);
-    lit_utf8_size_t err_bytes_size = lit_zt_utf8_string_size (err_bytes_p);
-    err_str_p = ecma_new_ecma_string_from_utf8 (err_bytes_p, err_bytes_size);
+    err_str_p =
+      ecma_new_ecma_string_from_utf8 (parser_get_error_utf8 (context.error), parser_get_error_size (context.error));
   }
   ecma_value_t err_str_val = ecma_make_string_value (err_str_p);
   ecma_value_t line_str_val = ecma_make_uint32_value (context.token.line);
@@ -3015,7 +3014,7 @@ parser_compiled_code_set_function_name (parser_context_t *context_p, /**< contex
  */
 void
 parser_raise_error (parser_context_t *context_p, /**< context */
-                    parser_error_t error) /**< error code */
+                    parser_error_msg_t error) /**< error code */
 {
   /* Must be compatible with the scanner because
    * the lexer might throws errors during prescanning. */

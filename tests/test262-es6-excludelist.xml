@@ -335,4 +335,7 @@
   <test id="language/expressions/assignment/fn-name-lhs-member.js"><reason>Outdated test, anonymous functions should now have a name property</reason></test>
   <test id="language/expressions/function/name.js"><reason>Outdated test, anonymous functions should now have a name property</reason></test>
   <test id="language/expressions/generators/name.js"><reason>Outdated test, anonymous functions should now have a name property</reason></test>
+  <test id="language/computed-property-names/class/static/method-number.js"><reason>ES12 15.7.14.15.d: The evaluation order has been changed</reason></test>
+  <test id="language/computed-property-names/class/static/method-string.js"><reason>ES12 15.7.14.15.d: The evaluation order has been changed</reason></test>
+  <test id="language/computed-property-names/class/static/method-symbol.js"><reason>ES12 15.7.14.15.d: The evaluation order has been changed</reason></test>
 </excludeList>

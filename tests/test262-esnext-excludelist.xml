@@ -61,9 +61,6 @@
   <test id="language/block-scope/syntax/redeclaration/generator-name-redeclaration-attempt-with-async-function.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/generator-name-redeclaration-attempt-with-function.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/generator-name-redeclaration-attempt-with-generator.js"><reason></reason></test>
-  <test id="language/computed-property-names/class/static/method-number.js"><reason></reason></test>
-  <test id="language/computed-property-names/class/static/method-string.js"><reason></reason></test>
-  <test id="language/computed-property-names/class/static/method-symbol.js"><reason></reason></test>
   <test id="language/eval-code/direct/non-definable-function-with-function.js"><reason></reason></test>
   <test id="language/eval-code/direct/non-definable-function-with-variable.js"><reason></reason></test>
   <test id="language/eval-code/direct/non-definable-global-function.js"><reason></reason></test>

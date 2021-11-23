@@ -78,6 +78,6 @@ let C3 = class C4 {
   static yy = this
 }
 
-assert(Reflect.ownKeys(C3).toString() === "length,prototype,f,name,xx,yy")
+assert(Reflect.ownKeys(C3).toString() === "length,name,prototype,f,xx,yy")
 check_property(C3, "xx", C3)
 check_property(C3, "yy", C3)

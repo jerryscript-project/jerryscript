@@ -2248,7 +2248,8 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_ESNEXT
-  if (!CBC_FUNCTION_HAS_PROTOTYPE (bytecode_data_p->status_flags))
+  if (!CBC_FUNCTION_HAS_PROTOTYPE (bytecode_data_p->status_flags)
+      || (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_CONSTRUCTOR))
   {
     return;
   }

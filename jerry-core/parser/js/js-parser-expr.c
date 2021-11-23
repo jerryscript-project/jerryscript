@@ -520,7 +520,8 @@ parser_is_constructor_literal (parser_context_t *context_p) /**< context */
  */
 static bool
 parser_parse_class_body (parser_context_t *context_p, /**< context */
-                         parser_class_literal_opts_t opts) /**< class literal parsing options */
+                         parser_class_literal_opts_t opts, /**< class literal parsing options */
+                         uint16_t class_name_index) /**< class literal index */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_LEFT_BRACE);
 
@@ -539,6 +540,11 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
   else
   {
     parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_IMPLICIT_CONSTRUCTOR);
+  }
+
+  if (class_name_index != PARSER_INVALID_LITERAL_INDEX)
+  {
+    parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_CLASS_NAME, class_name_index);
   }
 
   parser_emit_cbc_ext (context_p, CBC_EXT_INIT_CLASS);
@@ -1014,12 +1020,11 @@ parser_parse_class (parser_context_t *context_p, /**< context */
   }
 
   /* ClassDeclaration is parsed. Continue with class body. */
-  bool has_static_field = parser_parse_class_body (context_p, opts);
+  bool has_static_field = parser_parse_class_body (context_p, opts, class_name_index);
 
   if (class_name_index != PARSER_INVALID_LITERAL_INDEX)
   {
     parser_emit_cbc_ext_literal (context_p, CBC_EXT_FINALIZE_NAMED_CLASS, class_name_index);
-    parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_CLASS_NAME, class_name_index);
     PARSER_MINUS_EQUAL_U16 (context_p->scope_stack_top, 1);
   }
   else

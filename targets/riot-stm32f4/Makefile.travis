@@ -27,15 +27,14 @@ install-apt-get-deps:
 
 # Fetch RIOT OS repository.
 install-clone-riot:
-	git clone git://github.com/RIOT-OS/RIOT.git ../RIOT -b 2020.01
+	git clone git://github.com/RIOT-OS/RIOT.git ../RIOT -b 2021.10
 
 # Perform all the necessary (JerryScript-independent) installation steps.
 install-noapt: install-clone-riot
 install: install-apt-get-deps install-noapt
 
-
 ## Targets for building RIOT with JerryScript.
 
 # Build the firmware (RIOT with JerryScript).
 script:
-	$(MAKE) -f ./targets/riot-stm32f4/Makefile.riot
+	$(MAKE) -f ./targets/riot-stm32f4/Makefile

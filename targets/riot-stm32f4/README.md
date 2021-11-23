@@ -1,96 +1,116 @@
 ### About
 
-This folder contains files to run JerryScript on RIOT-OS with STM32F4-Discovery board.
+This folder contains files to run JerryScript on
+[STM32F4-Discovery board](https://www.st.com/en/evaluation-tools/stm32f4discovery.html) with
+[RIOT](https://www.riot-os.org/).
+The document had been validated on Ubuntu 20.04 operating system.
 
 ### How to build
 
-#### 1. Preface
+#### 1. Setup the build environment for STM32F4-Discovery board
 
-1, Directory structure
+Clone the necessary projects into a `jerry-riot` directory.
+The latest tested working version of RIOT is `2021.10`.
 
-Assume `harmony` as the path to the projects to build.
-The folder tree related would look like this.
+```sh
+# Create a base folder for all the projects.
+mkdir jerry-riot && cd jerry-riot
+
+git clone https://github.com/jerryscript-project/jerryscript.git
+git clone https://github.com/RIOT-OS/RIOT.git -b 2021.10
+```
+
+#### 2. Install dependencies of the projects
 
 ```
-harmony
+# Assuming you are in jerry-riot folder.
+jerryscript/tools/apt-get-install-deps.sh
+
+sudo apt install gcc-arm-none-eabi openocd minicom
+```
+
+The following directory structure has been created:
+
+```
+jerry-riot
   + jerryscript
   |  + targets
-  |      + riot-stm32f4
+  |     + riot-stm32f4
   + RIOT
 ```
 
-2, Target board
-
-Assume [STM32F4-Discovery with BB](http://www.st.com/web/en/catalog/tools/FM116/SC959/SS1532/LN1199/PF255417)
-as the target board.
-
-#### 2. Prepare RIOT-OS
-
-Follow [this](https://www.riot-os.org/#download) page to get the RIOT-OS source.
-
-Follow the [Inroduction](https://github.com/RIOT-OS/RIOT/wiki/Introduction) wiki site and also check that you can flash the stm32f4-board.
-
-
-#### 3. Build JerryScript for RIOT-OS
+#### 3. Build RIOT (with JerryScript)
 
 ```
-# assume you are in harmony folder
-cd jerryscript
-make -f ./targets/riot-stm32f4/Makefile.riot
+# Assuming you are in jerry-riot folder.
+make BOARD=stm32f4discovery -f jerryscript/targets/riot-stm32f4/Makefile
 ```
 
-This will generate the following libraries:
-```
-/build/bin/release.riotstm32f4/librelease.jerry-core.a
-/build/bin/release.riotstm32f4/librelease.jerry-math.lib.a
-```
+The created binary is a `riot_jerryscript.elf` named file located in `jerryscript/build/riot-stm32f4/bin/` folder.
 
-This will copy one library files to `targets/riot-stm32f4/bin` folder:
-```
-libjerrycore.a
-```
+#### 4. Flash the device
 
-This will create a hex file in the `targets/riot-stm32f4/bin` folder:
-```
-riot_jerry.elf
-```
-
-#### 4. Flashing
+Connect Mini-USB for charging and flashing the device.
 
 ```
-make -f ./targets/riot-stm32f4/Makefile.riot flash
+# Assuming you are in jerry-riot folder.
+make BOARD=stm32f4discovery -f jerryscript/targets/riot-stm32f4/Makefile flash
 ```
 
-For how to flash the image with other alternative way can be found here:
-[Alternative way to flash](https://github.com/RIOT-OS/RIOT/wiki/Board:-STM32F4discovery#alternative-way-to-flash)
+Note: `ST-LINK` also can be used that is described at [this page](https://github.com/RIOT-OS/RIOT/wiki/ST-LINK-tool).
 
-#### 5. Cleaning
+#### 5. Connect to the device
 
-To clean the build result:
+Use `USB To TTL Serial Converter` for serial communication. STM32F4-Discovery pins are mapped by RIOT as follows:
+
 ```
-make -f ./targets/riot-stm32f4/Makefile.riot clean
+  STM32f4-Discovery PA2 pin is configured for TX.
+  STM32f4-Discovery PA3 pin is configured for RX.
 ```
 
+* Connect `STM32f4-Discovery` **PA2** pin to **RX** pin of `USB To TTL Serial Converter`
+* Connect `STM32f4-Discovery` **PA3** pin to **TX** pin of `USB To TTL Serial Converter`
+* Connect `STM32f4-Discovery` **GND** pin to **GND** pin of `USB To TTL Serial Converter`
 
-### 5. Running JerryScript Hello World! example
+The device should be visible as `/dev/ttyUSB0`. Use `minicom` communication program with `115200`.
 
-You may have to press `RESET` on the board after the flash.
+* In `minicom`, set `Add Carriage Ret` to `off` in by `CTRL-A -> Z -> U` key combinations.
+* In `minicom`, set `Hardware Flow Control` to `no` by `CTRL-A -> Z -> O -> Serial port setup -> F` key combinations.
 
-You can use `minicom` for terminal program, and if the prompt shows like this:
+```sh
+sudo minicom --device=/dev/ttyUSB0 --baud=115200
 ```
-main(): This is RIOT! (Version: ****)
-                                     You are running RIOT on a(n) stm32f4discovery board.
-                                                                                         This board features a(n) stm32f4 MCU.
+
+RIOT prompt looks like as follows:
+
 ```
-please set `Add Carriage Ret` option by `CTRL-A` > `Z` > `U` at the console, if you're using `minicom`.
+main(): This is RIOT! (Version: 2021.10)
+You are running RIOT on a(n) stm32f4discovery board.
+This board features a(n) stm32 MCU.
+>
+```
 
+You may have to press `RESET` on the board and press `Enter` key on the console several times to make RIOT prompt visible.
 
-Help will provide a list of commands:
+#### 6. Run JerrySript
+
+Type `help` to list shell commands:
+
 ```
 > help
+Command              Description
+---------------------------------------
+test                 Jerryscript Hello World test
+reboot               Reboot the node
+version              Prints current RIOT_VERSION
+pm                   interact with layered PM subsystem
 ```
 
-The `test` command will run the test example, which contains the following script code:
+Type `test` to execute JerryScript:
+
 ```
-print ('Hello, World!');
+> test
+This test run the following script code: [print ('Hello, World!');]
+
+Hello, World!
 ```

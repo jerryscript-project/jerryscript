@@ -63,6 +63,7 @@ enum
   ECMA_OBJECT_ROUTINE_ASSIGN,
   ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTOR,
   ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTORS,
+  ECMA_OBJECT_ROUTINE_HAS_OWN,
   ECMA_OBJECT_ROUTINE_GET_PROTOTYPE_OF,
   ECMA_OBJECT_ROUTINE_FROM_ENTRIES,
   ECMA_OBJECT_ROUTINE_KEYS,
@@ -1491,6 +1492,20 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
         break;
       }
 #if JERRY_ESNEXT
+      case ECMA_OBJECT_ROUTINE_HAS_OWN:
+      {
+        ecma_string_t *prop_name_p = ecma_op_to_property_key (arg2);
+
+        if (prop_name_p == NULL)
+        {
+          result = ECMA_VALUE_ERROR;
+          break;
+        }
+
+        result = ecma_op_object_has_own_property (obj_p, prop_name_p);
+        ecma_deref_ecma_string (prop_name_p);
+        break;
+      }
       case ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTORS:
       {
         result = ecma_builtin_object_object_get_own_property_descriptors (obj_p);

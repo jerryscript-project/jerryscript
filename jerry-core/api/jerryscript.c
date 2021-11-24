@@ -3215,28 +3215,8 @@ jerry_object_has_own (const jerry_value_t object, /**< object value */
   ecma_object_t *obj_p = ecma_get_object_from_value (object);
   ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (key);
 
-#if JERRY_BUILTIN_PROXY
-  if (ECMA_OBJECT_IS_PROXY (obj_p))
-  {
-    ecma_property_descriptor_t prop_desc;
-
-    ecma_value_t status = ecma_proxy_object_get_own_property_descriptor (obj_p, prop_name_p, &prop_desc);
-
-    if (ecma_is_value_true (status))
-    {
-      ecma_free_property_descriptor (&prop_desc);
-    }
-
-    return jerry_return (status);
-  }
-#endif /* JERRY_BUILTIN_PROXY */
-
-#if JERRY_BUILTIN_TYPEDARRAY
-  return jerry_return (ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p));
-#else /* !JERRY_BUILTIN_TYPEDARRAY */
-  return ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p);
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
-} /* jerry_object_has_own */
+  return jerry_return (ecma_op_object_has_own_property (obj_p, prop_name_p));
+} /* jerry_has_own_property */
 
 /**
  * Checks whether the object has the given internal property.

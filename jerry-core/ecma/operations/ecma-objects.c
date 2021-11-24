@@ -3410,6 +3410,35 @@ ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, /**< the obje
   return ecma_make_boolean_value (ECMA_PROPERTY_IS_FOUND (property));
 } /* ecma_op_ordinary_object_has_own_property */
 
+/**
+ * Checks whether an object (excluding prototypes) has a named property. Handles proxy objects too.
+ *
+ * @return true - if property is found
+ *         false - otherwise
+ */
+ecma_value_t
+ecma_op_object_has_own_property (ecma_object_t *object_p, /**< the object */
+                                 ecma_string_t *property_name_p) /**< property name */
+{
+#if JERRY_BUILTIN_PROXY
+  if (ECMA_OBJECT_IS_PROXY (object_p))
+  {
+    ecma_property_descriptor_t prop_desc;
+
+    ecma_value_t status = ecma_proxy_object_get_own_property_descriptor (object_p, property_name_p, &prop_desc);
+
+    if (ecma_is_value_true (status))
+    {
+      ecma_free_property_descriptor (&prop_desc);
+    }
+
+    return status;
+  }
+#endif /* JERRY_BUILTIN_PROXY */
+
+  return ecma_op_ordinary_object_has_own_property (object_p, property_name_p);
+} /* ecma_op_object_has_own_property */
+
 #if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_CONTAINER
 
 /**

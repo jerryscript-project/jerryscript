@@ -118,6 +118,7 @@ typedef enum
   SCAN_STACK_FUNCTION_PARAMETERS, /**< function parameter initializer */
   SCAN_STACK_FOR_START_PATTERN, /**< possible assignment pattern for "for" iterator */
   SCAN_STACK_USE_ASYNC, /**< an "async" identifier is used */
+  SCAN_STACK_CLASS_STATIC_BLOCK, /**< class static block */
 #endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
   SCAN_STACK_EXPORT_DEFAULT, /**< scan primary expression after export default */

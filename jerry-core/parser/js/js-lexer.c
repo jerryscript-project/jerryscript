@@ -781,7 +781,7 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 #if JERRY_ESNEXT
             if (JERRY_UNLIKELY (keyword_p->type == LEXER_KEYW_AWAIT))
             {
-              if (!(context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+              if (!(context_p->status_flags & (PARSER_IS_ASYNC_FUNCTION | PARSER_IS_CLASS_STATIC_BLOCK))
                   && !(context_p->global_status_flags & ECMA_PARSE_MODULE))
               {
                 break;
@@ -2833,6 +2833,33 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
   return result_index;
 } /* lexer_construct_function_object */
 
+#if JERRY_ESNEXT
+/**
+ * Construct a class static block function literal object.
+ *
+ * @return function object literal index
+ */
+uint16_t
+lexer_construct_class_static_block_function (parser_context_t *context_p) /**< context */
+{
+  ecma_compiled_code_t *compiled_code_p;
+  lexer_literal_t *literal_p;
+  uint16_t result_index;
+
+  literal_p = lexer_construct_unused_literal (context_p);
+  result_index = context_p->literal_count;
+  context_p->literal_count++;
+
+  parser_flush_cbc (context_p);
+  compiled_code_p = parser_parse_class_static_block (context_p);
+
+  literal_p->u.bytecode_p = compiled_code_p;
+  literal_p->type = LEXER_FUNCTION_LITERAL;
+
+  return result_index;
+} /* lexer_construct_class_static_block_function */
+#endif /* JERRY_ESNEXT */
+
 /**
  * Construct a regular expression object.
  *
@@ -3244,6 +3271,17 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         break;
       }
 #endif /* JERRY_ESNEXT */
+      case LIT_CHAR_LEFT_BRACE:
+      {
+        if (ident_opts & (LEXER_OBJ_IDENT_CLASS_NO_STATIC | LEXER_OBJ_IDENT_CLASS_PRIVATE))
+        {
+          break;
+        }
+
+        context_p->token.type = LEXER_LEFT_BRACE;
+        lexer_consume_next_character (context_p);
+        return;
+      }
       case LIT_CHAR_RIGHT_BRACE:
       {
         if (ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS)

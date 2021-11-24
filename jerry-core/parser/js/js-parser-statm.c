@@ -3090,6 +3090,12 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         {
           parser_raise_error (context_p, PARSER_ERR_INVALID_RETURN);
         }
+#if JERRY_ESNEXT
+        if (context_p->status_flags & PARSER_IS_CLASS_STATIC_BLOCK)
+        {
+          parser_raise_error (context_p, PARSER_ERR_INVALID_RETURN);
+        }
+#endif /* JERRY_ESNEXT */
 
         lexer_next_token (context_p);
 

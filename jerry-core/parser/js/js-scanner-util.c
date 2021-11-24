@@ -2083,6 +2083,7 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
 #if JERRY_ESNEXT
       case SCANNER_TYPE_INITIALIZER:
       case SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END:
+      case SCANNER_TYPE_CLASS_STATIC_BLOCK_END:
 #endif /* JERRY_ESNEXT */
       {
         size = sizeof (scanner_location_info_t);

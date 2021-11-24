@@ -1920,6 +1920,20 @@ typedef struct
   ecma_stringbuilder_header_t *header_p; /**< pointer to header */
 } ecma_stringbuilder_t;
 
+#if JERRY_ERROR_MESSAGES
+
+/**
+ * Allocation block size shift for SyntaxError line info data.
+ */
+#define ECMA_SYNTAX_ERROR_ALLOCATION_UNIT_SHIFT 3
+
+/**
+ * Mask for extracting allocation size.
+ */
+#define ECMA_SYNTAX_ERROR_ALLOCATION_SIZE_MASK 0x3
+
+#endif /* JERRY_ERROR_MESSAGES */
+
 #ifndef JERRY_BUILTIN_BIGINT
 /**
  * BigInt type.

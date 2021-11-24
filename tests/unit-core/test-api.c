@@ -1007,34 +1007,7 @@ main (void)
   {
     jerry_init (JERRY_INIT_SHOW_OPCODES);
 
-    test_syntax_error ("b = 'hello';\nvar a = (;",
-                       NULL,
-                       "SyntaxError: Unexpected end of input [<anonymous>:2:10]",
-                       false);
-
-    parse_options.options = JERRY_PARSE_HAS_RESOURCE;
-    parse_options.resource_name = jerry_create_string ((const jerry_char_t *) "filename.js");
-
-    test_syntax_error ("b = 'hello';\nvar a = (;",
-                       &parse_options,
-                       "SyntaxError: Unexpected end of input [filename.js:2:10]",
-                       false);
-
-    test_syntax_error ("eval(\"var b;\\nfor (,); \");",
-                       &parse_options,
-                       "SyntaxError: Unexpected end of input [<eval>:2:6]",
-                       true);
-
-    parse_options.options |= JERRY_PARSE_HAS_START;
-    parse_options.start_line = 10;
-    parse_options.start_column = 20;
-
-    test_syntax_error ("for (var a in []",
-                       &parse_options,
-                       "SyntaxError: Expected ')' token [filename.js:10:36]",
-                       false);
-
-    jerry_release_value (parse_options.resource_name);
+    test_syntax_error ("b = 'hello';\nvar a = (;", NULL, "SyntaxError: Unexpected end of input", false);
     jerry_cleanup ();
   }
 

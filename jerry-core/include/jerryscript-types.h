@@ -818,6 +818,16 @@ typedef struct
 } jerry_source_info_t;
 
 /**
+ * Detailed location info for SyntaxErrors.
+ */
+typedef struct
+{
+  uint32_t line; /**< start line of the invalid token */
+  uint32_t column_start; /**< start column of the invalid token */
+  uint32_t column_end; /**< end column of the invalid token */
+} jerry_syntax_error_location_t;
+
+/**
  * Array buffer types.
  */
 

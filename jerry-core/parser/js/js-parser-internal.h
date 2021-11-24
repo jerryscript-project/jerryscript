@@ -572,6 +572,9 @@ typedef struct
   const uint8_t *source_end_p; /**< last source byte */
   parser_line_counter_t line; /**< current line */
   parser_line_counter_t column; /**< current column */
+#if JERRY_ERROR_MESSAGES
+  parser_line_counter_t token_end_column; /**< token end column for multiline tokens */
+#endif /* JERRY_ERROR_MESSAGES */
 
   /* Scanner members. */
   scanner_info_t *next_scanner_info_p; /**< next scanner info block */

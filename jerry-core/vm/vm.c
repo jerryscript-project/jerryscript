@@ -23,6 +23,7 @@
 #include "ecma-builtins.h"
 #include "ecma-comparison.h"
 #include "ecma-conversion.h"
+#include "ecma-errors.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -124,7 +125,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
     ecma_value_t error_value =
       ecma_raise_standard_error_with_format (JERRY_ERROR_TYPE, "Cannot read property '%' of %", property, object);
 #else /* !JERRY_ERROR_MESSAGES */
-    ecma_value_t error_value = ecma_raise_type_error (NULL);
+    ecma_value_t error_value = ecma_raise_type_error (ECMA_ERR_EMPTY);
 #endif /* JERRY_ERROR_MESSAGES */
     return error_value;
   }
@@ -168,7 +169,7 @@ vm_op_set_value (ecma_value_t base, /**< base object */
 #if JERRY_ERROR_MESSAGES
       result = ecma_raise_standard_error_with_format (JERRY_ERROR_TYPE, "Cannot set property '%' of %", property, base);
 #else /* !JERRY_ERROR_MESSAGES */
-      result = ecma_raise_type_error (NULL);
+      result = ecma_raise_type_error (ECMA_ERR_EMPTY);
 #endif /* JERRY_ERROR_MESSAGES */
       ecma_free_value (property);
       return result;
@@ -323,7 +324,7 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
       {
         ecma_bytecode_deref (bytecode_data_p);
         ecma_free_value (this_binding);
-        return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid scope chain index for eval"));
+        return ecma_raise_range_error (ECMA_ERR_INVALID_SCOPE_CHAIN_INDEX_FOR_EVAL);
       }
 
       lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
@@ -568,7 +569,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (!ecma_is_constructor (func_value))
   {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Value for class heritage is not a constructor"));
+    completion_value = ecma_raise_type_error (ECMA_ERR_VALUE_FOR_CLASS_HERITAGE_IS_NOT_A_CONSTRUCTOR);
   }
   else
   {
@@ -579,7 +580,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     if (!ECMA_IS_VALUE_ERROR (completion_value) && ecma_op_this_binding_is_initialized (environment_record_p))
     {
       ecma_free_value (completion_value);
-      completion_value = ecma_raise_reference_error (ECMA_ERR_MSG ("Super constructor may only be called once"));
+      completion_value = ecma_raise_reference_error (ECMA_ERR_SUPER_CONSTRUCTOR_MAY_ONLY_BE_CALLED_ONCE);
     }
   }
 
@@ -659,10 +660,10 @@ vm_spread_operation (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (frame_ctx_p->byte_code_p[1] == CBC_EXT_SPREAD_NEW)
   {
-    const char *constructor_message_p = ecma_check_constructor (func_value);
-    if (constructor_message_p != ECMA_IS_VALID_CONSTRUCTOR)
+    ecma_error_msg_t constructor_message_id = ecma_check_constructor (func_value);
+    if (constructor_message_id != ECMA_IS_VALID_CONSTRUCTOR)
     {
-      completion_value = ecma_raise_type_error (constructor_message_p);
+      completion_value = ecma_raise_type_error (constructor_message_id);
     }
     else
     {
@@ -680,7 +681,7 @@ vm_spread_operation (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
     if (!ecma_is_value_object (func_value) || !ecma_op_object_is_callable (ecma_get_object_from_value (func_value)))
     {
-      completion_value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
+      completion_value = ecma_raise_type_error (ECMA_ERR_EXPECTED_A_FUNCTION);
     }
     else
     {
@@ -831,10 +832,10 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t constructor_value = stack_top_p[-1];
   ecma_value_t completion_value;
 
-  const char *constructor_message_p = ecma_check_constructor (constructor_value);
-  if (constructor_message_p != ECMA_IS_VALID_CONSTRUCTOR)
+  ecma_error_msg_t constructor_message_id = ecma_check_constructor (constructor_value);
+  if (constructor_message_id != ECMA_IS_VALID_CONSTRUCTOR)
   {
-    completion_value = ecma_raise_type_error (constructor_message_p);
+    completion_value = ecma_raise_type_error (constructor_message_id);
   }
   else
   {
@@ -1591,7 +1592,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (binding_p != NULL)
           {
-            result = ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_local_variable_is_redeclared));
+            result = ecma_raise_syntax_error (ECMA_ERR_LOCAL_VARIABLE_IS_REDECLARED);
             goto error;
           }
 
@@ -1616,7 +1617,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               if (ecma_is_value_true (result))
               {
-                result = ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_local_variable_is_redeclared));
+                result = ecma_raise_syntax_error (ECMA_ERR_LOCAL_VARIABLE_IS_REDECLARED);
               }
 
               JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
@@ -1637,7 +1638,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (ecma_is_value_true (result))
           {
-            result = ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_local_variable_is_redeclared));
+            result = ecma_raise_syntax_error (ECMA_ERR_LOCAL_VARIABLE_IS_REDECLARED);
             goto error;
           }
 
@@ -1705,7 +1706,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_THROW_CONST_ERROR:
         {
-          result = ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned"));
+          result = ecma_raise_type_error (ECMA_ERR_CONSTANT_BINDINGS_CANNOT_BE_REASSIGNED);
           goto error;
         }
         case VM_OC_COPY_TO_GLOBAL:
@@ -1891,7 +1892,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
               && !(opcode_data & VM_OC_NON_STATIC_FLAG))
           {
-            result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_class_is_non_configurable));
+            result = ecma_raise_type_error (ECMA_ERR_CLASS_IS_NON_CONFIGURABLE);
             goto error;
           }
 
@@ -1924,7 +1925,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
               && !(opcode_data & VM_OC_NON_STATIC_FLAG))
           {
-            result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_class_is_non_configurable));
+            result = ecma_raise_type_error (ECMA_ERR_CLASS_IS_NON_CONFIGURABLE);
             goto error;
           }
 
@@ -3064,7 +3065,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_THROW_REFERENCE_ERROR:
         {
-          result = ecma_raise_reference_error (ECMA_ERR_MSG ("Undefined reference"));
+          result = ecma_raise_reference_error (ECMA_ERR_UNDEFINED_REFERENCE);
           goto error;
         }
         case VM_OC_EVAL:

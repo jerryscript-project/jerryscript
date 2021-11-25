@@ -110,18 +110,18 @@ ecma_op_raise_set_binding_error (ecma_property_t *property_p, /**< property */
 
     if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
     {
-      return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+      return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
     }
 
     JERRY_ASSERT (!ecma_is_property_writable (*property_p));
 
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned"));
+    return ecma_raise_type_error (ECMA_ERR_CONSTANT_BINDINGS_CANNOT_BE_REASSIGNED);
   }
 #endif /* JERRY_ESNEXT */
 
   if (is_strict)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set"));
+    return ecma_raise_type_error (ECMA_ERR_BINDING_CANNOT_SET);
   }
   return ECMA_VALUE_EMPTY;
 } /* ecma_op_raise_set_binding_error */
@@ -387,7 +387,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
     {
       if (is_strict)
       {
-        result = ecma_raise_reference_error (ECMA_ERR_MSG ("Binding does not exist or is uninitialised"));
+        result = ecma_raise_reference_error (ECMA_ERR_BINDING_NOT_EXIST_OR_UNINITIALIZED);
       }
       else
       {
@@ -636,8 +636,7 @@ ecma_op_get_this_binding (ecma_object_t *lex_env_p) /**< lexical environment */
 
   if (this_value == ECMA_VALUE_UNINITIALIZED)
   {
-    return ecma_raise_reference_error (ECMA_ERR_MSG ("Must call super constructor in derived class before "
-                                                     "accessing 'this' or returning from it"));
+    return ecma_raise_reference_error (ECMA_ERR_CALL_SUPER_CONSTRUCTOR_DERIVED_CLASS_BEFORE_THIS);
   }
 
   ecma_ref_object (ecma_get_object_from_value (this_value));

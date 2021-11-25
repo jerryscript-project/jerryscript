@@ -91,7 +91,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     /* 1. */
     if (arguments_number == 0 || !ecma_is_value_object (arguments_list[0]))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
+      return ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
     }
 
     /* 2. */
@@ -158,7 +158,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     /* 1. */
     if (arguments_number == 0 || !ecma_is_value_object (arguments_list[0]))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
+      return ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
     }
 
     ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
@@ -182,7 +182,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     /* 1. */
     if (arguments_number < 1 || !ecma_is_constructor (arguments_list[0]))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_target_is_not_a_constructor));
+      return ecma_raise_type_error (ECMA_ERR_TARGET_IS_NOT_A_CONSTRUCTOR);
     }
 
     ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
@@ -195,7 +195,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
       /* 3. */
       if (!ecma_is_constructor (arguments_list[2]))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_target_is_not_a_constructor));
+        return ecma_raise_type_error (ECMA_ERR_TARGET_IS_NOT_A_CONSTRUCTOR);
       }
 
       new_target_p = ecma_get_object_from_value (arguments_list[2]);
@@ -204,7 +204,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     /* 4. */
     if (arguments_number < 2)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Reflect.construct expects an object as second argument"));
+      return ecma_raise_type_error (ECMA_ERR_REFLECT_EXPECTS_AN_OBJECT_AS_SECOND_ARGUMENT);
     }
 
     ecma_collection_t *coll_p = ecma_op_create_list_from_array_like (arguments_list[1], false);
@@ -222,7 +222,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
 
   if (!ecma_is_value_object (arguments_list[0]))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
   }
 
   switch (builtin_routine_id)
@@ -235,7 +235,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     {
       if (!ecma_is_value_object (arguments_list[1]) && !ecma_is_value_null (arguments_list[1]))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Prototype is neither object nor null"));
+        return ecma_raise_type_error (ECMA_ERR_PROTOTYPE_IS_NEITHER_OBJECT_NOR_NULL);
       }
 
       ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
@@ -258,7 +258,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     {
       if (!ecma_op_is_callable (arguments_list[0]))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a function"));
+        return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_FUNCTION);
       }
 
       ecma_object_t *func_obj_p = ecma_get_object_from_value (arguments_list[0]);

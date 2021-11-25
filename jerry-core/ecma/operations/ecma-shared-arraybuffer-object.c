@@ -104,7 +104,7 @@ ecma_op_create_shared_arraybuffer_object (const ecma_value_t *arguments_list_p, 
     if (length_num <= -1.0 || length_num > (ecma_number_t) maximum_size_in_byte + 0.5)
     {
       ecma_deref_object (proto_p);
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Shared ArrayBuffer length"));
+      return ecma_raise_range_error (ECMA_ERR_INVALID_SHARED_ARRAYBUFFER_LENGTH);
     }
   }
 

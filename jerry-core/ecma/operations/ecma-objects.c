@@ -614,7 +614,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
             if (JERRY_UNLIKELY (prop_value_p->value == ECMA_VALUE_UNINITIALIZED))
             {
-              return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+              return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
             }
           }
 
@@ -1096,7 +1096,7 @@ ecma_op_get_method (ecma_value_t value, /**< ecma value */
   if (!ecma_op_is_callable (func))
   {
     ecma_free_value (func);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not callable"));
+    return ecma_raise_type_error (ECMA_ERR_ITERATOR_IS_NOT_CALLABLE);
   }
 
   /* 6. */
@@ -1219,7 +1219,7 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
   /* 5.b */
   if (!ecma_is_value_object (receiver))
   {
-    return ECMA_REJECT (is_throw, "Receiver must be an object");
+    return ECMA_REJECT (is_throw, ECMA_ERR_RECEIVER_MUST_BE_AN_OBJECT);
   }
 
   ecma_object_t *receiver_obj_p = ecma_get_object_from_value (receiver);
@@ -1257,7 +1257,7 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
 
       if (JERRY_UNLIKELY (ecma_is_value_false (result)))
       {
-        result = ECMA_REJECT (is_throw, "Proxy trap returned falsish");
+        result = ECMA_REJECT (is_throw, ECMA_ERR_PROXY_TRAP_RETURNED_FALSISH);
       }
     }
 
@@ -1279,7 +1279,7 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
 
     if (JERRY_UNLIKELY (ecma_is_value_false (ret_value)))
     {
-      ret_value = ECMA_REJECT (is_throw, "Proxy trap returned falsish");
+      ret_value = ECMA_REJECT (is_throw, ECMA_ERR_PROXY_TRAP_RETURNED_FALSISH);
     }
 
     return ret_value;
@@ -1906,7 +1906,7 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
 #if JERRY_MODULE_SYSTEM
       if (JERRY_UNLIKELY (property_ref.virtual_value == ECMA_VALUE_UNINITIALIZED))
       {
-        return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+        return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
       }
 #endif /* JERRY_MODULE_SYSTEM */
       prop_desc_p->value = property_ref.virtual_value;
@@ -1990,7 +1990,7 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     return ecma_op_function_has_instance (obj_p, value);
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function object"));
+  return ecma_raise_type_error (ECMA_ERR_EXPECTED_A_FUNCTION_OBJECT);
 } /* ecma_op_object_has_instance */
 
 /**
@@ -3131,7 +3131,7 @@ ecma_op_species_constructor (ecma_object_t *this_value, /**< This Value */
   if (!ecma_is_value_object (constructor))
   {
     ecma_free_value (constructor);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor must be an object"));
+    return ecma_raise_type_error (ECMA_ERR_CONSTRUCTOR_NOT_AN_OBJECT);
   }
 
   ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
@@ -3152,7 +3152,7 @@ ecma_op_species_constructor (ecma_object_t *this_value, /**< This Value */
   if (!ecma_is_constructor (species))
   {
     ecma_free_value (species);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Species must be a constructor"));
+    return ecma_raise_type_error (ECMA_ERR_SPECIES_MUST_BE_A_CONSTRUCTOR);
   }
 
   return species;

@@ -101,7 +101,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
   /* 2. */
   if (!ecma_is_value_object (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);

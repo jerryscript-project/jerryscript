@@ -76,7 +76,7 @@ ecma_builtin_arraybuffer_dispatch_call (const ecma_value_t *arguments_list_p, /*
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor ArrayBuffer requires 'new'"));
+  return ecma_raise_type_error (ECMA_ERR_CONSTRUCTOR_ARRAYBUFFER_REQUIRES_NEW);
 } /* ecma_builtin_arraybuffer_dispatch_call */
 
 /**

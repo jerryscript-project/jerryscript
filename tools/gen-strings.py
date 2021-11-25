@@ -34,6 +34,11 @@ from settings import FORMAT_SCRIPT, PROJECT_DIR
 MAGIC_STRINGS_INI = os.path.join(PROJECT_DIR, 'jerry-core', 'lit', 'lit-magic-strings.ini')
 MAGIC_STRINGS_INC_H = os.path.join(PROJECT_DIR, 'jerry-core', 'lit', 'lit-magic-strings.inc.h')
 
+ECMA_ERRORS_INI = os.path.join(PROJECT_DIR, 'jerry-core', 'ecma', 'base', 'ecma-error-messages.ini')
+ECMA_ERRORS_INC_H = os.path.join(PROJECT_DIR, 'jerry-core', 'ecma', 'base', 'ecma-error-messages.inc.h')
+
+LIMIT_MAGIC_STR_LENGTH = 255
+
 def debug_dump(obj):
     def deepcopy(obj):
         if isinstance(obj, (list, tuple)):
@@ -46,7 +51,7 @@ def debug_dump(obj):
     return json.dumps(deepcopy(obj), indent=4)
 
 
-def read_magic_string_defs(debug=False):
+def read_magic_string_defs(debug, ini_path, item_name):
     # Read the `jerry-core/lit/lit-magic-strings.ini` file and returns the magic
     # string definitions found therein in the form of
     #   [LIT_MAGIC_STRINGS]
@@ -57,11 +62,17 @@ def read_magic_string_defs(debug=False):
     # sorted by length and alpha.
     ini_parser = ConfigParser()
     ini_parser.optionxform = str # case sensitive options (magic string IDs)
-    ini_parser.read(MAGIC_STRINGS_INI)
+    ini_parser.read(ini_path)
 
     defs = [(str_ref, json.loads(str_value) if str_value != '' else '')
-            for str_ref, str_value in ini_parser.items('LIT_MAGIC_STRINGS')]
+            for str_ref, str_value in ini_parser.items(item_name)]
     defs = sorted(defs, key=lambda ref_value: (len(ref_value[1]), ref_value[1]))
+
+    if len(defs[-1][1]) > LIMIT_MAGIC_STR_LENGTH:
+        for str_ref, str_value in [x for x in defs if len(x[1]) > LIMIT_MAGIC_STR_LENGTH]:
+            print("error: The maximum allowed magic string size is {limit} but {str_ref} is {str_len} long.".format(
+                limit=LIMIT_MAGIC_STR_LENGTH, str_ref=str_ref, str_len=len(str_value)))
+        exit(1)
 
     if debug:
         print('debug: magic string definitions: {dump}'
@@ -70,25 +81,28 @@ def read_magic_string_defs(debug=False):
     return defs
 
 
-def extract_magic_string_refs(debug=False):
+def extract_magic_string_refs(debug, pattern, inc_h_filename):
     results = {}
 
-    def process_line(fname, lnum, line, guard_stack):
+    def process_line(fname, lnum, line, guard_stack, pattern):
         # Build `results` dictionary as
         #   results['LIT_MAGIC_STRING_xxx'][('!defined (CONFIG_DISABLE_yyy_BUILTIN)', ...)]
         #       = [('zzz.c', 123), ...]
         # meaning that the given literal is referenced under the given guards at
         # the listed (file, line number) locations.
-        for str_ref in re.findall('LIT_MAGIC_STRING_[a-zA-Z0-9_]+', line):
-            if str_ref in ['LIT_MAGIC_STRING_DEF',
-                           'LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE',
-                           'LIT_MAGIC_STRING_LENGTH_LIMIT',
-                           'LIT_MAGIC_STRING__COUNT']:
+        exception_list = ['%s_DEF' % pattern,
+                          '%s_FIRST_STRING_WITH_SIZE' % pattern,
+                          '%s_LENGTH_LIMIT' % pattern,
+                          '%s__COUNT' % pattern]
+
+        for str_ref in re.findall('%s_[a-zA-Z0-9_]+' % pattern, line):
+            if str_ref in exception_list:
                 continue
 
             guard_set = set()
             for guards in guard_stack:
                 guard_set.update(guards)
+
             guard_tuple = tuple(sorted(guard_set))
 
             if str_ref not in results:
@@ -111,7 +125,7 @@ def extract_magic_string_refs(debug=False):
             guard = guard.replace('def ', 'defined (', 1) + ')'
         return guard
 
-    def process_file(fname):
+    def process_file(fname, pattern):
         # Builds `guard_stack` list for each line of a file as
         #   [['!defined (CONFIG_DISABLE_yyy_BUILTIN)', ...], ...]
         # meaning that all the listed guards (conditionals) have to hold for the
@@ -136,7 +150,7 @@ def extract_magic_string_refs(debug=False):
                 guard_stack.pop()
 
             lnum = fileinput.filelineno()
-            process_line(fname, lnum, line, guard_stack)
+            process_line(fname, lnum, line, guard_stack, pattern)
 
         if guard_stack:
             print('warning: {fname}: unbalanced preprocessor conditional '
@@ -147,8 +161,8 @@ def extract_magic_string_refs(debug=False):
     for root, _, files in os.walk(os.path.join(PROJECT_DIR, 'jerry-core')):
         for fname in files:
             if (fname.endswith('.c') or fname.endswith('.h')) \
-               and fname != 'lit-magic-strings.inc.h':
-                process_file(os.path.join(root, fname))
+               and fname != inc_h_filename:
+                process_file(os.path.join(root, fname), pattern)
 
     if debug:
         print('debug: magic string references: {dump}'
@@ -202,7 +216,7 @@ def guards_to_str(guards):
                            for guard in sorted(guards))
 
 
-def generate_header(gen_file):
+def generate_header(gen_file, ini_path):
     header = \
 """/* Copyright JS Foundation and other contributors, http://js.foundation
  *
@@ -221,11 +235,11 @@ def generate_header(gen_file):
 
 /* This file is automatically generated by the %s script
  * from %s. Do not edit! */
-""" % (os.path.basename(__file__), os.path.basename(MAGIC_STRINGS_INI))
+""" % (os.path.basename(__file__), os.path.basename(ini_path))
     print(header, file=gen_file)
 
 
-def generate_magic_string_defs(gen_file, defs):
+def generate_magic_string_defs(gen_file, defs, def_macro):
     last_guards = set([()])
     for str_ref, str_value, guards in defs:
         if last_guards != guards:
@@ -234,8 +248,8 @@ def generate_magic_string_defs(gen_file, defs):
             if () not in guards:
                 print('#if {guards}'.format(guards=guards_to_str(guards)), file=gen_file)
 
-        print('LIT_MAGIC_STRING_DEF ({str_ref}, {str_value})'
-              .format(str_ref=str_ref, str_value=json.dumps(str_value)), file=gen_file)
+        print('{macro} ({str_ref}, {str_value})'
+              .format(macro=def_macro, str_ref=str_ref, str_value=json.dumps(str_value)), file=gen_file)
 
         last_guards = guards
 
@@ -243,7 +257,7 @@ def generate_magic_string_defs(gen_file, defs):
         print('#endif /* {guards} */'.format(guards=guards_to_str(last_guards)), file=gen_file)
 
 
-def generate_first_magic_strings(gen_file, defs):
+def generate_first_magic_strings(gen_file, defs, with_size_macro):
     print(file=gen_file) # empty line separator
 
     max_size = len(defs[-1][1])
@@ -260,8 +274,8 @@ def generate_first_magic_strings(gen_file, defs):
                 elif () in guards and () not in last_guards:
                     print('#else /* !({guards}) */'.format(guards=guards_to_str(last_guards)), file=gen_file)
 
-                print('LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE ({size}, {str_ref})'
-                      .format(size=size, str_ref=str_ref), file=gen_file)
+                print('{macro} ({size}, {str_ref})'
+                      .format(macro=with_size_macro, size=size, str_ref=str_ref), file=gen_file)
 
                 if () in guards:
                     break
@@ -271,20 +285,37 @@ def generate_first_magic_strings(gen_file, defs):
         if () not in last_guards:
             print('#endif /* {guards} */'.format(guards=guards_to_str(last_guards)), file=gen_file)
 
+def generate_magic_strings(args, ini_path, item_name, pattern, inc_h_path, def_macro, with_size_macro=None):
+    defs = read_magic_string_defs(args.debug, ini_path, item_name)
+    uses = extract_magic_string_refs(args.debug, pattern, os.path.basename(inc_h_path))
+
+    extended_defs = calculate_magic_string_guards(defs, uses, debug=args.debug)
+
+    with open(inc_h_path, 'w') as gen_file:
+        generate_header(gen_file, ini_path)
+        generate_magic_string_defs(gen_file, extended_defs, def_macro)
+        if with_size_macro:
+            generate_first_magic_strings(gen_file, extended_defs, with_size_macro)
+
 def main():
     parser = argparse.ArgumentParser(description='lit-magic-strings.inc.h generator')
     parser.add_argument('--debug', action='store_true', help='enable debug output')
     args = parser.parse_args()
 
-    defs = read_magic_string_defs(debug=args.debug)
-    uses = extract_magic_string_refs(debug=args.debug)
+    generate_magic_strings(args,
+                           MAGIC_STRINGS_INI,
+                           'LIT_MAGIC_STRINGS',
+                           'LIT_MAGIC_STRING',
+                           MAGIC_STRINGS_INC_H,
+                           'LIT_MAGIC_STRING_DEF',
+                           'LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE')
 
-    extended_defs = calculate_magic_string_guards(defs, uses, debug=args.debug)
-
-    with open(MAGIC_STRINGS_INC_H, 'w') as gen_file:
-        generate_header(gen_file)
-        generate_magic_string_defs(gen_file, extended_defs)
-        generate_first_magic_strings(gen_file, extended_defs)
+    generate_magic_strings(args,
+                           ECMA_ERRORS_INI,
+                           'ECMA_ERROR_MESSAGES',
+                           'ECMA_ERR',
+                           ECMA_ERRORS_INC_H,
+                           'ECMA_ERROR_DEF')
 
     subprocess.call([FORMAT_SCRIPT, '--fix'])
 

@@ -53,7 +53,7 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
   /* 2. */
   if (!ecma_is_value_object (typedarray))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   /* 3-4. */
@@ -65,7 +65,7 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
   {
     if (!(target_info.id == ECMA_BIGINT64_ARRAY || target_info.id == ECMA_INT32_ARRAY))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not supported"));
+      return ecma_raise_type_error (ECMA_ERR_ARGUMENT_NOT_SUPPORTED);
     }
   }
   else
@@ -73,7 +73,7 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
     if (target_info.id == ECMA_UINT8_CLAMPED_ARRAY || target_info.id == ECMA_FLOAT32_ARRAY
         || target_info.id == ECMA_FLOAT64_ARRAY)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not supported"));
+      return ecma_raise_type_error (ECMA_ERR_ARGUMENT_NOT_SUPPORTED);
     }
   }
 
@@ -85,7 +85,7 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
 
   if (!ecma_object_class_is (buffer, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not SharedArrayBuffer"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_NOT_SHARED_ARRAY_BUFFER);
   }
 
   return ecma_make_object_value (buffer);
@@ -124,7 +124,7 @@ ecma_validate_atomic_access (ecma_value_t typedarray, /**< typedArray argument *
   /* 5-6. */
   if (JERRY_UNLIKELY (access_index >= target_info.length))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length"));
+    return ecma_raise_range_error (ECMA_ERR_INVALID_LENGTH);
   }
 
   return ecma_make_number_value (access_index);

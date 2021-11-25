@@ -61,7 +61,7 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
 
   if (!ecma_is_constructor (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a constructor"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_CONSTRUCTOR);
   }
 
   ecma_value_t source;
@@ -70,7 +70,7 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
 
   if (arguments_list_len == 0)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("No source argument"));
+    return ecma_raise_type_error (ECMA_ERR_NO_SOURCE_ARGUMENT);
   }
 
   source = arguments_list_p[0];
@@ -81,7 +81,7 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
 
     if (!ecma_op_is_callable (map_fn))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("The 'mapfn' argument is not callable"));
+      return ecma_raise_type_error (ECMA_ERR_THE_MAPFN_ARGUMENT_IS_NOT_CALLABLE);
     }
 
     if (arguments_list_len > 2)
@@ -110,7 +110,7 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
 {
   if (!ecma_is_constructor (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a constructor"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_CONSTRUCTOR);
   }
 
   ecma_object_t *constructor_obj_p = ecma_get_object_from_value (this_arg);
@@ -166,7 +166,7 @@ ecma_builtin_typedarray_dispatch_call (const ecma_value_t *arguments_list_p, /**
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray intrinstic cannot be directly called"));
+  return ecma_raise_type_error (ECMA_ERR_TYPEDARRAY_INTRINSTIC_DIRECTLY_CALLED);
 } /* ecma_builtin_typedarray_dispatch_call */
 
 /**
@@ -183,7 +183,7 @@ ecma_builtin_typedarray_dispatch_construct (const ecma_value_t *arguments_list_p
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray intrinstic cannot be called by a 'new' expression"));
+  return ecma_raise_type_error (ECMA_ERR_TYPEDARRAY_INTRINSTIC_CALLED_BY_NEW_EXPRESSION);
 } /* ecma_builtin_typedarray_dispatch_construct */
 
 /**

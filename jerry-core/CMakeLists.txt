@@ -341,6 +341,7 @@ if(ENABLE_AMALGAM)
     api/jerry-snapshot.h
     debugger/debugger.h
     ecma/base/ecma-alloc.h
+    ecma/base/ecma-error-messages.inc.h
     ecma/base/ecma-errors.h
     ecma/base/ecma-gc.h
     ecma/base/ecma-globals.h

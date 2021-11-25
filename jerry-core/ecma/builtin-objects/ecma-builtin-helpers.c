@@ -368,7 +368,7 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array *
     /* 4 . */
     if ((ecma_number_t) (*length_p + arg_len) > ECMA_NUMBER_MAX_SAFE_INTEGER)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_invalid_array_length));
+      return ecma_raise_type_error (ECMA_ERR_INVALID_ARRAY_LENGTH);
     }
 #else /* !JERRY_ESNEXT */
     /* 5.b.ii */
@@ -591,7 +591,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
     if (regexp == ECMA_VALUE_TRUE)
     {
       JERRY_ASSERT (ECMA_STRING_LAST_INDEX_OF < mode && mode <= ECMA_STRING_ENDS_WITH);
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Search string can't be of type: RegExp"));
+      return ecma_raise_type_error (ECMA_ERR_SEARCH_STRING_CANNOT_BE_OF_TYPE_REGEXP);
     }
   }
 #endif /* JERRY_ESNEXT */

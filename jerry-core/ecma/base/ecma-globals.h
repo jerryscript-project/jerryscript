@@ -2272,14 +2272,14 @@ typedef struct
  * Check the current stack usage. If the limit is reached a RangeError is raised.
  * The macro argument specifies the return value which is usally ECMA_VALUE_ERROR or NULL.
  */
-#define ECMA_CHECK_STACK_USAGE_RETURN(RETURN_VALUE)                               \
-  do                                                                              \
-  {                                                                               \
-    if (ecma_get_current_stack_usage () > CONFIG_MEM_STACK_LIMIT)                 \
-    {                                                                             \
-      ecma_raise_range_error (ECMA_ERR_MSG ("Maximum call stack size exceeded")); \
-      return RETURN_VALUE;                                                        \
-    }                                                                             \
+#define ECMA_CHECK_STACK_USAGE_RETURN(RETURN_VALUE)               \
+  do                                                              \
+  {                                                               \
+    if (ecma_get_current_stack_usage () > CONFIG_MEM_STACK_LIMIT) \
+    {                                                             \
+      ecma_raise_maximum_callstack_error ();                      \
+      return RETURN_VALUE;                                        \
+    }                                                             \
   } while (0)
 
 /**

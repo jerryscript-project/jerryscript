@@ -53,7 +53,7 @@ ecma_builtin_uint8clampedarray_dispatch_call (const ecma_value_t *arguments_list
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor Uint8ClampedArray requires 'new'"));
+  return ecma_raise_type_error (ECMA_ERR_CONSTRUCTOR_UINT8_CLAMPED_ARRAY_REQUIRES_NEW);
 } /* ecma_builtin_uint8clampedarray_dispatch_call */
 
 /**

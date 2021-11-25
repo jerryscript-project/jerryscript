@@ -417,7 +417,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
             if (!is_object)
             {
-              result = ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' result is not object"));
+              result = ecma_raise_type_error (ECMA_ERR_ITERATOR_RETURN_RESULT_IS_NOT_OBJECT);
             }
           }
         }

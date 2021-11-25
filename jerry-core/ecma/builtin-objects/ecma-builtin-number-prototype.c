@@ -165,7 +165,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_number_t this_arg_number, /
 
     if (radix < 2 || radix > 36)
     {
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Radix must be between 2 and 36"));
+      return ecma_raise_range_error (ECMA_ERR_RADIX_IS_OUT_OF_RANGE);
     }
   }
 
@@ -451,7 +451,7 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a number or a Number object"));
+  return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_NUMBER);
 } /* ecma_builtin_number_prototype_object_value_of */
 
 /**
@@ -489,7 +489,7 @@ ecma_builtin_number_prototype_object_to_number_convert (ecma_number_t this_num, 
   /* Argument boundary check for toFixed method */
   if (mode == NUMBER_ROUTINE_TO_FIXED && (arg_num <= -1 || arg_num >= 101))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Fraction digits must be between 0 and 100"));
+    return ecma_raise_range_error (ECMA_ERR_FRACTION_DIGITS_OUT_OF_RANGE);
   }
 
   /* Handle NaN separately */
@@ -557,12 +557,12 @@ ecma_builtin_number_prototype_object_to_number_convert (ecma_number_t this_num, 
   if (mode == NUMBER_ROUTINE_TO_EXPONENTIAL && (arg_num <= -1 || arg_num >= 101))
   {
     ecma_stringbuilder_destroy (&builder);
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Fraction digits must be between 0 and 100"));
+    return ecma_raise_range_error (ECMA_ERR_FRACTION_DIGITS_OUT_OF_RANGE);
   }
   else if (mode == NUMBER_ROUTINE_TO_PRECISION && (arg_num < 1 || arg_num > 100))
   {
     ecma_stringbuilder_destroy (&builder);
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Precision digits must be between 1 and 100"));
+    return ecma_raise_range_error (ECMA_ERR_PRECISION_DIGITS_MUST_BE_BETWEEN_IN_RANGE);
   }
 
   num_of_digits = ecma_number_to_decimal (this_num, digits, &exponent);

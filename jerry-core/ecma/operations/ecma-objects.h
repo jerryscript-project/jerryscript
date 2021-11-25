@@ -47,7 +47,7 @@
 /**
  * Reject with TypeError depending on is_throw flags wit the given message
  */
-#define ECMA_REJECT(is_throw, msg)                  ((is_throw) ? ecma_raise_type_error (NULL) : ECMA_VALUE_FALSE)
+#define ECMA_REJECT(is_throw, msg)                  ((is_throw) ? ecma_raise_type_error (ECMA_ERR_EMPTY) : ECMA_VALUE_FALSE)
 #endif /* JERRY_ERROR_MESSAGES */
 
 ecma_value_t ecma_raise_property_redefinition (ecma_string_t *property_name_p, uint16_t flags);

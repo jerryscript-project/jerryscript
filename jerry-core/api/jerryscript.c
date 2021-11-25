@@ -29,6 +29,7 @@
 #include "ecma-comparison.h"
 #include "ecma-container-object.h"
 #include "ecma-dataview-object.h"
+#include "ecma-errors.h"
 #include "ecma-eval.h"
 #include "ecma-exceptions.h"
 #include "ecma-extended-info.h"
@@ -402,7 +403,7 @@ jerry_parse_common (void *source_p, /**< script source */
             && ((options_p->options & JERRY_PARSE_MODULE) || !ecma_is_value_string (options_p->argument_list)))
         || ((options_p->options & JERRY_PARSE_HAS_RESOURCE) && !ecma_is_value_string (options_p->resource_name)))
     {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
     }
   }
 
@@ -431,7 +432,7 @@ jerry_parse_common (void *source_p, /**< script source */
 #if JERRY_MODULE_SYSTEM
     JERRY_CONTEXT (module_current_p) = ecma_module_create ();
 #else /* !JERRY_MODULE_SYSTEM */
-    return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+    return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MODULE_NOT_SUPPORTED));
 #endif /* JERRY_MODULE_SYSTEM */
   }
 
@@ -510,7 +511,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   JERRY_UNUSED (source_size);
   JERRY_UNUSED (options_p);
 
-  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_parser_not_supported_p)));
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_PARSER_NOT_SUPPORTED));
 #endif /* JERRY_PARSER */
 } /* jerry_parse */
 
@@ -527,7 +528,7 @@ jerry_parse_value (const jerry_value_t source_value, /**< script source */
 #if JERRY_PARSER
   if (!ecma_is_value_string (source_value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_value_t source[1];
@@ -538,7 +539,7 @@ jerry_parse_value (const jerry_value_t source_value, /**< script source */
   JERRY_UNUSED (source_value);
   JERRY_UNUSED (options_p);
 
-  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_parser_not_supported_p)));
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_PARSER_NOT_SUPPORTED));
 #endif /* JERRY_PARSER */
 } /* jerry_parse_value */
 
@@ -558,14 +559,14 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
 
   if (!ecma_is_value_object (func_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_object_t *object_p = ecma_get_object_from_value (func_val);
 
   if (!ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_SCRIPT))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -597,7 +598,7 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
 
   if ((parse_opts & ~allowed_parse_options) != 0)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   parser_source_char_t source_char;
@@ -633,7 +634,7 @@ jerry_module_link (const jerry_value_t module_val, /**< root module */
 
   if (module_p == NULL)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_not_module_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_NOT_MODULE));
   }
 
   return jerry_return (ecma_module_link (module_p, callback, user_p));
@@ -642,7 +643,7 @@ jerry_module_link (const jerry_value_t module_val, /**< root module */
   JERRY_UNUSED (callback);
   JERRY_UNUSED (user_p);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_NOT_SUPPORTED));
 #endif /* JERRY_MODULE_SYSTEM */
 } /* jerry_module_link */
 
@@ -665,19 +666,19 @@ jerry_module_evaluate (const jerry_value_t module_val) /**< root module */
 
   if (module_p == NULL)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_not_module_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_NOT_MODULE));
   }
 
   if (module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_LINKED)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Module must be in linked state")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_MUST_BE_IN_LINKED_STATE));
   }
 
   return jerry_return (ecma_module_evaluate (module_p));
 #else /* !JERRY_MODULE_SYSTEM */
   JERRY_UNUSED (module_val);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_NOT_SUPPORTED));
 #endif /* JERRY_MODULE_SYSTEM */
 } /* jerry_module_evaluate */
 
@@ -801,7 +802,7 @@ jerry_module_get_request (const jerry_value_t module_val, /**< module */
 
   if (module_p == NULL)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_not_module_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_NOT_MODULE));
   }
 
   ecma_module_node_t *node_p = module_p->imports_p;
@@ -817,12 +818,12 @@ jerry_module_get_request (const jerry_value_t module_val, /**< module */
     node_p = node_p->next_p;
   }
 
-  return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("Request is not available")));
+  return jerry_throw (ecma_raise_range_error (ECMA_ERR_REQUEST_IS_NOT_AVAILABLE));
 #else /* !JERRY_MODULE_SYSTEM */
   JERRY_UNUSED (module_val);
   JERRY_UNUSED (request_index);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_NOT_SUPPORTED));
 #endif /* JERRY_MODULE_SYSTEM */
 } /* jerry_module_get_request */
 
@@ -845,13 +846,13 @@ jerry_module_get_namespace (const jerry_value_t module_val) /**< module */
 
   if (module_p == NULL)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_not_module_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_NOT_MODULE));
   }
 
   if (module_p->header.u.cls.u1.module_state < JERRY_MODULE_STATE_LINKED
       || module_p->header.u.cls.u1.module_state > JERRY_MODULE_STATE_EVALUATED)
   {
-    return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("Namespace object is not available")));
+    return jerry_throw (ecma_raise_range_error (ECMA_ERR_NAMESPACE_OBJECT_IS_NOT_AVAILABLE));
   }
 
   JERRY_ASSERT (module_p->namespace_object_p != NULL);
@@ -861,7 +862,7 @@ jerry_module_get_namespace (const jerry_value_t module_val) /**< module */
 #else /* !JERRY_MODULE_SYSTEM */
   JERRY_UNUSED (module_val);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_NOT_SUPPORTED));
 #endif /* JERRY_MODULE_SYSTEM */
 } /* jerry_module_get_namespace */
 
@@ -913,7 +914,7 @@ jerry_native_module_create (jerry_native_module_evaluate_callback_t callback, /*
     {
       ecma_deref_object (scope_p);
       ecma_module_release_module_names (local_exports_p);
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Module exports must be string values")));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_EXPORTS_MUST_BE_STRING_VALUES));
     }
 
     ecma_string_t *name_str_p = ecma_get_string_from_value (exports_p[i]);
@@ -957,7 +958,7 @@ jerry_native_module_create (jerry_native_module_evaluate_callback_t callback, /*
     {
       ecma_deref_object (scope_p);
       ecma_module_release_module_names (local_exports_p);
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Module exports must be valid identifiers")));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_EXPORTS_MUST_BE_VALID_IDENTIFIERS));
     }
 
     if (ecma_find_named_property (scope_p, name_str_p) != NULL)
@@ -996,7 +997,7 @@ jerry_native_module_create (jerry_native_module_evaluate_callback_t callback, /*
   JERRY_UNUSED (exports_p);
   JERRY_UNUSED (number_of_exports);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_NOT_SUPPORTED));
 #endif /* JERRY_MODULE_SYSTEM */
 } /* jerry_native_module_create */
 
@@ -1020,12 +1021,12 @@ jerry_native_module_get_export (const jerry_value_t native_module_val, /**< a na
 
   if (module_p == NULL)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_not_module_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_NOT_MODULE));
   }
 
   if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE) || !ecma_is_value_string (export_name_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_property_t *property_p =
@@ -1033,7 +1034,7 @@ jerry_native_module_get_export (const jerry_value_t native_module_val, /**< a na
 
   if (property_p == NULL)
   {
-    return jerry_throw (ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_unknown_export_p)));
+    return jerry_throw (ecma_raise_reference_error (ECMA_ERR_UNKNOWN_EXPORT));
   }
 
   return ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
@@ -1041,7 +1042,7 @@ jerry_native_module_get_export (const jerry_value_t native_module_val, /**< a na
   JERRY_UNUSED (native_module_val);
   JERRY_UNUSED (export_name_val);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_NOT_SUPPORTED));
 #endif /* JERRY_MODULE_SYSTEM */
 } /* jerry_native_module_get_export */
 
@@ -1066,13 +1067,13 @@ jerry_native_module_set_export (const jerry_value_t native_module_val, /**< a na
 
   if (module_p == NULL)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_not_module_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_NOT_MODULE));
   }
 
   if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE) || !ecma_is_value_string (export_name_val)
       || ecma_is_value_error_reference (value_to_set))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_property_t *property_p =
@@ -1080,7 +1081,7 @@ jerry_native_module_set_export (const jerry_value_t native_module_val, /**< a na
 
   if (property_p == NULL)
   {
-    return jerry_throw (ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_unknown_export_p)));
+    return jerry_throw (ecma_raise_reference_error (ECMA_ERR_UNKNOWN_EXPORT));
   }
 
   ecma_named_data_property_assign_value (module_p->scope_p, ECMA_PROPERTY_VALUE_PTR (property_p), value_to_set);
@@ -1090,7 +1091,7 @@ jerry_native_module_set_export (const jerry_value_t native_module_val, /**< a na
   JERRY_UNUSED (export_name_val);
   JERRY_UNUSED (value_to_set);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MODULE_NOT_SUPPORTED));
 #endif /* JERRY_MODULE_SYSTEM */
 } /* jerry_native_module_set_export */
 
@@ -1855,7 +1856,7 @@ jerry_binary_operation (jerry_binary_operation_t op, /**< operation */
 
   if (ecma_is_value_error_reference (lhs) || ecma_is_value_error_reference (rhs))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   switch (op)
@@ -1888,7 +1889,7 @@ jerry_binary_operation (jerry_binary_operation_t op, /**< operation */
     {
       if (!ecma_is_value_object (lhs) || !ecma_op_is_callable (rhs))
       {
-        return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
       }
 
       ecma_object_t *proto_obj_p = ecma_get_object_from_value (rhs);
@@ -1907,7 +1908,7 @@ jerry_binary_operation (jerry_binary_operation_t op, /**< operation */
     }
     default:
     {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Unsupported binary operation")));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_UNSUPPORTED_BINARY_OPERATION));
     }
   }
 } /* jerry_binary_operation */
@@ -2178,7 +2179,7 @@ jerry_value_to_number (const jerry_value_t value) /**< input value */
 
   if (ecma_is_value_error_reference (value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   ecma_number_t num;
@@ -2208,7 +2209,7 @@ jerry_value_to_object (const jerry_value_t value) /**< input value */
 
   if (ecma_is_value_error_reference (value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   return jerry_return (ecma_op_to_object (value));
@@ -2230,7 +2231,7 @@ jerry_value_to_primitive (const jerry_value_t value) /**< input value */
 
   if (ecma_is_value_error_reference (value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   return jerry_return (ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NO));
@@ -2252,7 +2253,7 @@ jerry_value_to_string (const jerry_value_t value) /**< input value */
 
   if (ecma_is_value_error_reference (value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   ecma_string_t *str_p = ecma_op_to_string (value);
@@ -2281,13 +2282,13 @@ jerry_value_to_bigint (const jerry_value_t value) /**< input value */
 #if JERRY_BUILTIN_BIGINT
   if (ecma_is_value_error_reference (value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   return jerry_return (ecma_bigint_to_bigint (value, true));
 #else /* !JERRY_BUILTIN_BIGINT */
   JERRY_UNUSED (value);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_bigint_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_BIGINT_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_BIGINT */
 } /* jerry_value_to_bigint */
 
@@ -2616,7 +2617,7 @@ jerry_create_promise (void)
 
   return promise_value;
 #else /* !JERRY_ESNEXT */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_promise_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_PROMISE_NOT_SUPPORTED));
 #endif /* JERRY_ESNEXT */
 } /* jerry_create_promise */
 
@@ -2636,14 +2637,14 @@ jerry_create_proxy (const jerry_value_t target, /**< target argument */
 
   if (ecma_is_value_error_reference (target) || ecma_is_value_error_reference (handler))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
 #if JERRY_BUILTIN_PROXY
   ecma_object_t *proxy_p = ecma_proxy_create (target, handler, 0);
   return jerry_return (proxy_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (proxy_p));
 #else /* !JERRY_BUILTIN_PROXY */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Proxy is not supported")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_PROXY_IS_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_PROXY */
 } /* jerry_create_proxy */
 
@@ -2671,7 +2672,7 @@ jerry_create_special_proxy (const jerry_value_t target, /**< target argument */
 
   if (ecma_is_value_error_reference (target) || ecma_is_value_error_reference (handler))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
 #if JERRY_BUILTIN_PROXY
@@ -2681,7 +2682,7 @@ jerry_create_special_proxy (const jerry_value_t target, /**< target argument */
   return jerry_return (proxy_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (proxy_p));
 #else /* !JERRY_BUILTIN_PROXY */
   JERRY_UNUSED (options);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Proxy is not supported")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_PROXY_IS_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_PROXY */
 } /* jerry_create_special_proxy */
 
@@ -2803,13 +2804,13 @@ jerry_create_symbol (const jerry_value_t value) /**< api value */
 
   if (ecma_is_value_error_reference (value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
 #if JERRY_ESNEXT
   return jerry_return (ecma_op_create_symbol (&value, 1));
 #else /* !JERRY_ESNEXT */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_symbol_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_SYMBOL_NOT_SUPPORTED));
 #endif /* JERRY_ESNEXT */
 } /* jerry_create_symbol */
 
@@ -2832,7 +2833,7 @@ jerry_create_bigint (const uint64_t *digits_p, /**< BigInt digits (lowest digit 
   JERRY_UNUSED (digits_p);
   JERRY_UNUSED (size);
   JERRY_UNUSED (sign);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_bigint_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_BIGINT_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_BIGINT */
 } /* jerry_create_bigint */
 
@@ -2863,7 +2864,7 @@ jerry_create_regexp_sz (const jerry_char_t *pattern_p, /**< zero-terminated UTF-
 #if JERRY_BUILTIN_REGEXP
   if (!lit_is_valid_utf8_string (pattern_p, pattern_size, true))
   {
-    return jerry_throw (ecma_raise_common_error (ECMA_ERR_MSG ("Input must be a valid utf8 string")));
+    return jerry_throw (ecma_raise_common_error (ECMA_ERR_INPUT_MUST_BE_A_VALID_UTF8_STRING));
   }
 
   ecma_object_t *regexp_obj_p = ecma_op_regexp_alloc (NULL);
@@ -2885,7 +2886,7 @@ jerry_create_regexp_sz (const jerry_char_t *pattern_p, /**< zero-terminated UTF-
   JERRY_UNUSED (pattern_size);
   JERRY_UNUSED (flags);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("RegExp is not supported")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_REGEXP_IS_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_REGEXP */
 } /* jerry_create_regexp_sz */
 
@@ -2903,7 +2904,7 @@ jerry_create_realm (void)
   ecma_global_object_t *global_object_p = ecma_builtin_create_global_object ();
   return ecma_make_object_value ((ecma_object_t *) global_object_p);
 #else /* !JERRY_BUILTIN_REALMS */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Realms are disabled")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_REALMS_ARE_DISABLED));
 #endif /* JERRY_BUILTIN_REALMS */
 } /* jerry_create_realm */
 
@@ -3437,7 +3438,7 @@ jerry_get_property (const jerry_value_t obj_val, /**< object value */
 
   if (!ecma_is_value_object (obj_val) || !ecma_is_value_prop_name (prop_name_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   jerry_value_t ret_value =
@@ -3462,7 +3463,7 @@ jerry_get_property_by_index (const jerry_value_t obj_val, /**< object value */
 
   if (!ecma_is_value_object (obj_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_value_t ret_value = ecma_op_object_get_by_index (ecma_get_object_from_value (obj_val), index);
@@ -3496,7 +3497,7 @@ jerry_get_own_property (const jerry_value_t obj_val, /**< object value */
   if (!ecma_is_value_object (obj_val) || !ecma_is_value_prop_name (prop_name_val)
       || !ecma_is_value_object (receiver_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
@@ -3547,7 +3548,7 @@ jerry_get_internal_property (const jerry_value_t obj_val, /**< object value */
 
   if (!ecma_is_value_object (obj_val) || !ecma_is_value_prop_name (prop_name_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
@@ -3596,7 +3597,7 @@ jerry_set_property (const jerry_value_t obj_val, /**< object value */
   if (ecma_is_value_error_reference (value_to_set) || !ecma_is_value_object (obj_val)
       || !ecma_is_value_prop_name (prop_name_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   return jerry_return (ecma_op_object_put (ecma_get_object_from_value (obj_val),
@@ -3623,7 +3624,7 @@ jerry_set_property_by_index (const jerry_value_t obj_val, /**< object value */
 
   if (ecma_is_value_error_reference (value_to_set) || !ecma_is_value_object (obj_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_value_t ret_value =
@@ -3864,7 +3865,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
  *         false value - otherwise
  */
 static jerry_value_t
-jerry_type_error_or_false (const char *msg_p, /**< message */
+jerry_type_error_or_false (ecma_error_msg_t msg, /**< message */
                            uint16_t flags) /**< property descriptor flags */
 {
   if (!(flags & JERRY_PROP_SHOULD_THROW))
@@ -3872,7 +3873,7 @@ jerry_type_error_or_false (const char *msg_p, /**< message */
     return ECMA_VALUE_FALSE;
   }
 
-  return jerry_throw (ecma_raise_type_error (msg_p));
+  return jerry_throw (ecma_raise_type_error (msg));
 } /* jerry_type_error_or_false */
 
 /**
@@ -3894,20 +3895,20 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
 
   if (!ecma_is_value_object (obj_val) || !ecma_is_value_prop_name (prop_name_val))
   {
-    return jerry_type_error_or_false (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p), prop_desc_p->flags);
+    return jerry_type_error_or_false (ECMA_ERR_WRONG_ARGS_MSG, prop_desc_p->flags);
   }
 
   if (prop_desc_p->flags & (JERRY_PROP_IS_WRITABLE_DEFINED | JERRY_PROP_IS_VALUE_DEFINED)
       && prop_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
   {
-    return jerry_type_error_or_false (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p), prop_desc_p->flags);
+    return jerry_type_error_or_false (ECMA_ERR_WRONG_ARGS_MSG, prop_desc_p->flags);
   }
 
   ecma_property_descriptor_t prop_desc = jerry_property_descriptor_to_ecma (prop_desc_p);
 
   if (ECMA_IS_VALUE_ERROR (prop_desc.value))
   {
-    return jerry_type_error_or_false (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p), prop_desc_p->flags);
+    return jerry_type_error_or_false (ECMA_ERR_WRONG_ARGS_MSG, prop_desc_p->flags);
   }
 
   return jerry_return (ecma_op_object_define_own_property (ecma_get_object_from_value (obj_val),
@@ -4034,14 +4035,14 @@ jerry_call_function (const jerry_value_t func_obj_val, /**< function object to c
 
   if (ecma_is_value_error_reference (this_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   for (jerry_size_t i = 0; i < args_count; i++)
   {
     if (ecma_is_value_error_reference (args_p[i]))
     {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
     }
   }
 
@@ -4067,14 +4068,14 @@ jerry_construct_object (const jerry_value_t func_obj_val, /**< function object t
 
   if (!jerry_value_is_constructor (func_obj_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   for (jerry_size_t i = 0; i < args_count; i++)
   {
     if (ecma_is_value_error_reference (args_p[i]))
     {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
     }
   }
 
@@ -4100,7 +4101,7 @@ jerry_get_object_keys (const jerry_value_t obj_val) /**< object value */
 
   if (!ecma_is_value_object (obj_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_collection_t *prop_names =
@@ -4132,7 +4133,7 @@ jerry_get_prototype (const jerry_value_t obj_val) /**< object value */
 
   if (!ecma_is_value_object (obj_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
@@ -4170,7 +4171,7 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
   if (!ecma_is_value_object (obj_val) || ecma_is_value_error_reference (proto_obj_val)
       || (!ecma_is_value_object (proto_obj_val) && !ecma_is_value_null (proto_obj_val)))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
 
@@ -4547,7 +4548,7 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
 
   if (!ecma_is_value_object (obj_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
@@ -4722,7 +4723,7 @@ jerry_from_property_descriptor (const jerry_property_descriptor_t *src_prop_desc
 
   if (ECMA_IS_VALUE_ERROR (prop_desc.value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_object_t *desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
@@ -4774,12 +4775,12 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
 #if JERRY_ESNEXT
   if (!ecma_is_value_object (promise) || !ecma_is_promise (ecma_get_object_from_value (promise)))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   if (ecma_is_value_error_reference (argument))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   if (is_resolve)
@@ -4793,7 +4794,7 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
   JERRY_UNUSED (argument);
   JERRY_UNUSED (is_resolve);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_promise_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_PROMISE_NOT_SUPPORTED));
 #endif /* JERRY_ESNEXT */
 } /* jerry_resolve_or_reject_promise */
 
@@ -4811,13 +4812,13 @@ jerry_get_promise_result (const jerry_value_t promise) /**< promise object to ge
 #if JERRY_ESNEXT
   if (!jerry_value_is_promise (promise))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   return ecma_promise_get_result (ecma_get_object_from_value (promise));
 #else /* !JERRY_ESNEXT */
   JERRY_UNUSED (promise);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_promise_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_PROMISE_NOT_SUPPORTED));
 #endif /* JERRY_ESNEXT */
 } /* jerry_get_promise_result */
 
@@ -4926,7 +4927,7 @@ jerry_get_symbol_description (const jerry_value_t symbol) /**< symbol value */
 #if JERRY_ESNEXT
   if (!ecma_is_value_symbol (symbol))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   /* Note: This operation cannot throw an error */
@@ -4934,7 +4935,7 @@ jerry_get_symbol_description (const jerry_value_t symbol) /**< symbol value */
 #else /* !JERRY_ESNEXT */
   JERRY_UNUSED (symbol);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_symbol_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_SYMBOL_NOT_SUPPORTED));
 #endif /* JERRY_ESNEXT */
 } /* jerry_get_symbol_description */
 
@@ -4955,7 +4956,7 @@ jerry_get_symbol_descriptive_string (const jerry_value_t symbol) /**< symbol val
 #if JERRY_ESNEXT
   if (!ecma_is_value_symbol (symbol))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   /* Note: This operation cannot throw an error */
@@ -4963,7 +4964,7 @@ jerry_get_symbol_descriptive_string (const jerry_value_t symbol) /**< symbol val
 #else /* !JERRY_ESNEXT */
   JERRY_UNUSED (symbol);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_symbol_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_SYMBOL_NOT_SUPPORTED));
 #endif /* JERRY_ESNEXT */
 } /* jerry_get_symbol_descriptive_string */
 
@@ -5052,7 +5053,7 @@ jerry_get_proxy_target (jerry_value_t proxy_value) /**< proxy value */
   JERRY_UNUSED (proxy_value);
 #endif /* JERRY_BUILTIN_PROXY */
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_a_proxy)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_A_PROXY));
 } /* jerry_get_proxy_target */
 
 /**
@@ -5086,7 +5087,7 @@ jerry_get_proxy_handler (jerry_value_t proxy_value) /**< proxy value */
   JERRY_UNUSED (proxy_value);
 #endif /* JERRY_BUILTIN_PROXY */
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_a_proxy)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_A_PROXY));
 } /* jerry_get_proxy_handler */
 
 /**
@@ -5675,10 +5676,10 @@ jerry_set_realm (jerry_value_t realm_value) /**< jerry api value */
     }
   }
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Passed argument is not a realm")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_PASSED_ARGUMENT_IS_NOT_A_REALM));
 #else /* !JERRY_BUILTIN_REALMS */
   JERRY_UNUSED (realm_value);
-  return jerry_throw (ecma_raise_reference_error (ECMA_ERR_MSG ("Realm is not available")));
+  return jerry_throw (ecma_raise_reference_error (ECMA_ERR_REALM_IS_NOT_AVAILABLE));
 #endif /* JERRY_BUILTIN_REALMS */
 } /* jerry_set_realm */
 
@@ -5717,7 +5718,7 @@ jerry_realm_get_this (jerry_value_t realm_value) /**< realm value */
   }
 #endif /* JERRY_BUILTIN_REALMS */
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Passed argument is not a realm")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_PASSED_ARGUMENT_IS_NOT_A_REALM));
 } /* jerry_realm_get_this */
 
 /**
@@ -5738,7 +5739,7 @@ jerry_realm_set_this (jerry_value_t realm_value, /**< realm value */
 #if JERRY_BUILTIN_REALMS
   if (!ecma_is_value_object (this_value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Second argument must be an object")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_SECOND_ARGUMENT_MUST_BE_AN_OBJECT));
   }
 
   if (ecma_is_value_object (realm_value))
@@ -5761,11 +5762,11 @@ jerry_realm_set_this (jerry_value_t realm_value, /**< realm value */
     }
   }
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("First argument is not a realm")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_FIRST_ARGUMENT_IS_NOT_A_REALM));
 #else /* !JERRY_BUILTIN_REALMS */
   JERRY_UNUSED (realm_value);
   JERRY_UNUSED (this_value);
-  return jerry_throw (ecma_raise_reference_error (ECMA_ERR_MSG ("Realm is not available")));
+  return jerry_throw (ecma_raise_reference_error (ECMA_ERR_REALM_IS_NOT_AVAILABLE));
 #endif /* JERRY_BUILTIN_REALMS */
 } /* jerry_realm_set_this */
 
@@ -5808,7 +5809,7 @@ jerry_create_arraybuffer (const jerry_length_t size) /**< size of the backing st
   return jerry_return (ecma_make_object_value (ecma_arraybuffer_new_object (size)));
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (size);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_TYPED_ARRAY_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_create_arraybuffer */
 
@@ -5856,7 +5857,7 @@ jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the b
   JERRY_UNUSED (size);
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (arraybuffer_user_p);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_TYPED_ARRAY_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_create_arraybuffer_external */
 
@@ -5894,7 +5895,7 @@ jerry_create_shared_arraybuffer (const jerry_length_t size) /**< size of the bac
   return jerry_return (ecma_make_object_value (ecma_shared_arraybuffer_new_object (size)));
 #else /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
   JERRY_UNUSED (size);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_shared_arraybuffer_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_SHARED_ARRAYBUFFER_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 } /* jerry_create_shared_arraybuffer */
 
@@ -5944,7 +5945,7 @@ jerry_create_shared_arraybuffer_external (const jerry_length_t size, /**< size o
   JERRY_UNUSED (size);
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (arraybuffer_user_p);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_shared_arraybuffer_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_SHARED_ARRAYBUFFER_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 } /* jerry_create_shared_arraybuffer_external */
 
@@ -6167,7 +6168,7 @@ jerry_is_arraybuffer_detachable (const jerry_value_t value) /**< ArrayBuffer */
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (value);
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expected an ArrayBuffer")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_EXPECTED_AN_ARRAYBUFFER));
 } /* jerry_is_arraybuffer_detachable */
 
 /**
@@ -6192,12 +6193,12 @@ jerry_detach_arraybuffer (const jerry_value_t value) /**< ArrayBuffer */
     {
       return ECMA_VALUE_NULL;
     }
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has already been detached")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_ARRAY_BUFFER_DETACHED));
   }
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (value);
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expected an ArrayBuffer")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_EXPECTED_AN_ARRAYBUFFER));
 } /* jerry_detach_arraybuffer */
 
 /**
@@ -6301,7 +6302,7 @@ jerry_create_dataview (const jerry_value_t array_buffer, /**< arraybuffer to cre
 #if JERRY_BUILTIN_DATAVIEW
   if (ecma_is_value_error_reference (array_buffer))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_value_t arguments_p[3] = { array_buffer,
@@ -6320,7 +6321,7 @@ jerry_create_dataview (const jerry_value_t array_buffer, /**< arraybuffer to cre
   JERRY_UNUSED (array_buffer);
   JERRY_UNUSED (byte_offset);
   JERRY_UNUSED (byte_length);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_data_view_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_DATA_VIEW_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_DATAVIEW */
 } /* jerry_create_dataview */
 
@@ -6365,7 +6366,7 @@ jerry_get_dataview_buffer (const jerry_value_t value, /**< DataView to get the a
 #if JERRY_BUILTIN_DATAVIEW
   if (ecma_is_value_error_reference (value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   ecma_dataview_object_t *dataview_p = ecma_op_dataview_get_object (value);
@@ -6393,7 +6394,7 @@ jerry_get_dataview_buffer (const jerry_value_t value, /**< DataView to get the a
   JERRY_UNUSED (value);
   JERRY_UNUSED (byte_offset);
   JERRY_UNUSED (byte_length);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_data_view_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_DATA_VIEW_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_DATAVIEW */
 } /* jerry_get_dataview_buffer */
 
@@ -6510,7 +6511,7 @@ jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedAr
 
   if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &id, &element_size_shift))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Incorrect type for TypedArray")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_INCORRECT_TYPE_FOR_TYPEDARRAY));
   }
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
@@ -6524,7 +6525,7 @@ jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedAr
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (type_name);
   JERRY_UNUSED (length);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_TYPED_ARRAY_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_create_typedarray */
 
@@ -6548,7 +6549,7 @@ jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /
 #if JERRY_BUILTIN_TYPEDARRAY
   if (ecma_is_value_error_reference (arraybuffer))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   ecma_builtin_id_t prototype_id = 0;
@@ -6557,12 +6558,12 @@ jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /
 
   if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &id, &element_size_shift))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Incorrect type for TypedArray")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_INCORRECT_TYPE_FOR_TYPEDARRAY));
   }
 
   if (!ecma_is_arraybuffer (arraybuffer))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an ArrayBuffer")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_ARGUMENT_NOT_ARRAY_BUFFER));
   }
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
@@ -6578,7 +6579,7 @@ jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /
   JERRY_UNUSED (arraybuffer);
   JERRY_UNUSED (byte_offset);
   JERRY_UNUSED (length);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_TYPED_ARRAY_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_create_typedarray_for_arraybuffer_sz */
 
@@ -6600,7 +6601,7 @@ jerry_create_typedarray_for_arraybuffer (jerry_typedarray_type_t type_name, /**<
 #if JERRY_BUILTIN_TYPEDARRAY
   if (ecma_is_value_error_reference (arraybuffer))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   jerry_length_t byteLength = jerry_get_arraybuffer_byte_length (arraybuffer);
@@ -6608,7 +6609,7 @@ jerry_create_typedarray_for_arraybuffer (jerry_typedarray_type_t type_name, /**<
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (type_name);
   JERRY_UNUSED (arraybuffer);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_TYPED_ARRAY_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_create_typedarray_for_arraybuffer */
 
@@ -6691,7 +6692,7 @@ jerry_get_typedarray_buffer (jerry_value_t value, /**< TypedArray to get the arr
 #if JERRY_BUILTIN_TYPEDARRAY
   if (!ecma_is_typedarray (value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Object is not a TypedArray")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_OBJECT_IS_NOT_A_TYPEDARRAY));
   }
 
   ecma_object_t *array_p = ecma_get_object_from_value (value);
@@ -6714,7 +6715,7 @@ jerry_get_typedarray_buffer (jerry_value_t value, /**< TypedArray to get the arr
   JERRY_UNUSED (value);
   JERRY_UNUSED (byte_length);
   JERRY_UNUSED (byte_offset);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_TYPED_ARRAY_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_get_typedarray_buffer */
 
@@ -6740,7 +6741,7 @@ jerry_json_parse (const jerry_char_t *string_p, /**< json string */
 
   if (ecma_is_value_undefined (ret_value))
   {
-    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON string parse error")));
+    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_JSON_STRING_PARSE_ERROR));
   }
 
   return jerry_return (ret_value);
@@ -6748,7 +6749,7 @@ jerry_json_parse (const jerry_char_t *string_p, /**< json string */
   JERRY_UNUSED (string_p);
   JERRY_UNUSED (string_size);
 
-  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_json_not_supported_p)));
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_JSON_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_JSON */
 } /* jerry_json_parse */
 
@@ -6770,21 +6771,21 @@ jerry_json_stringify (const jerry_value_t input_value) /**< a value to stringify
 #if JERRY_BUILTIN_JSON
   if (ecma_is_value_error_reference (input_value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
   }
 
   ecma_value_t ret_value = ecma_builtin_json_stringify_no_opts (input_value);
 
   if (ecma_is_value_undefined (ret_value))
   {
-    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON stringify error")));
+    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_JSON_STRINGIFY_ERROR));
   }
 
   return jerry_return (ret_value);
 #else /* JERRY_BUILTIN_JSON */
   JERRY_UNUSED (input_value);
 
-  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_json_not_supported_p)));
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_JSON_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_JSON */
 } /* jerry_json_stringify */
 
@@ -6809,7 +6810,7 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
   {
     if (ecma_is_value_error_reference (arguments_list_p[i]))
     {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_VALUE_MSG));
     }
   }
 
@@ -6849,7 +6850,7 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
     }
     default:
     {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Invalid container type")));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_INVALID_CONTAINER_TYPE));
     }
   }
   ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
@@ -6867,7 +6868,7 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
   JERRY_UNUSED (arguments_list_p);
   JERRY_UNUSED (arguments_list_len);
   JERRY_UNUSED (container_type);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_container_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_CONTAINER_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_CONTAINER */
 } /* jerry_create_container */
 
@@ -6936,18 +6937,16 @@ jerry_get_array_from_container (jerry_value_t value, /**< the container or itera
   jerry_assert_api_available ();
 
 #if JERRY_BUILTIN_CONTAINER
-  const char *container_needed = ECMA_ERR_MSG ("Value is not a Container or Iterator");
-
   if (!ecma_is_value_object (value))
   {
-    return jerry_throw (ecma_raise_type_error (container_needed));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_CONTAINER_NEEDED));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
   if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_CLASS)
   {
-    return jerry_throw (ecma_raise_type_error (container_needed));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_CONTAINER_NEEDED));
   }
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
@@ -7000,7 +6999,7 @@ jerry_get_array_from_container (jerry_value_t value, /**< the container or itera
   }
   else
   {
-    return jerry_throw (ecma_raise_type_error (container_needed));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_CONTAINER_NEEDED));
   }
 
   *is_key_value_p = (iterator_kind == ECMA_ITERATOR_ENTRIES);
@@ -7029,7 +7028,7 @@ jerry_get_array_from_container (jerry_value_t value, /**< the container or itera
 #else /* !JERRY_BUILTIN_CONTAINER */
   JERRY_UNUSED (value);
   JERRY_UNUSED (is_key_value_p);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_container_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_CONTAINER_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_CONTAINER */
 } /* jerry_get_array_from_container */
 
@@ -7049,14 +7048,14 @@ jerry_container_operation (jerry_container_operation_t operation, /**< container
 #if JERRY_BUILTIN_CONTAINER
   if (!ecma_is_value_object (container))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Container is not an object.")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_CONTAINER_IS_NOT_AN_OBJECT));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (container);
 
   if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_CLASS)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Container is not a container object.")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_CONTAINER_IS_NOT_A_CONTAINER_OBJECT));
   }
   uint16_t type = ((ecma_extended_object_t *) obj_p)->u.cls.u2.container_id;
   ecma_extended_object_t *container_object_p = ecma_op_container_get_object (container, type);
@@ -7075,7 +7074,7 @@ jerry_container_operation (jerry_container_operation_t operation, /**< container
     {
       if (arguments_number != 1 || ecma_is_value_error_reference (arguments[0]))
       {
-        return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
       }
       break;
     }
@@ -7084,7 +7083,7 @@ jerry_container_operation (jerry_container_operation_t operation, /**< container
       if (arguments_number != 2 || ecma_is_value_error_reference (arguments[0])
           || ecma_is_value_error_reference (arguments[1]))
       {
-        return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
       }
       break;
     }
@@ -7093,18 +7092,17 @@ jerry_container_operation (jerry_container_operation_t operation, /**< container
     {
       if (arguments_number != 0)
       {
-        return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
       }
       break;
     }
     default:
     {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_WRONG_ARGS_MSG));
     }
   }
 
   jerry_value_t result;
-  const char *incorrect_type_call = ECMA_ERR_MSG ("Operator called on incorrect container type");
 
   switch (operation)
   {
@@ -7112,7 +7110,7 @@ jerry_container_operation (jerry_container_operation_t operation, /**< container
     {
       if (type == LIT_MAGIC_STRING_MAP_UL || type == LIT_MAGIC_STRING_WEAKMAP_UL)
       {
-        return jerry_throw (ecma_raise_type_error (incorrect_type_call));
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_INCORRECT_TYPE_CALL));
       }
       result = ecma_op_container_set (container_object_p, arguments[0], arguments[0], type);
       break;
@@ -7121,7 +7119,7 @@ jerry_container_operation (jerry_container_operation_t operation, /**< container
     {
       if (type == LIT_MAGIC_STRING_SET_UL || type == LIT_MAGIC_STRING_WEAKSET_UL)
       {
-        return jerry_throw (ecma_raise_type_error (incorrect_type_call));
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_INCORRECT_TYPE_CALL));
       }
       result = ecma_op_container_get (container_object_p, arguments[0], type);
       break;
@@ -7130,7 +7128,7 @@ jerry_container_operation (jerry_container_operation_t operation, /**< container
     {
       if (type == LIT_MAGIC_STRING_SET_UL || type == LIT_MAGIC_STRING_WEAKSET_UL)
       {
-        return jerry_throw (ecma_raise_type_error (incorrect_type_call));
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_INCORRECT_TYPE_CALL));
       }
       result = ecma_op_container_set (container_object_p, arguments[0], arguments[1], type);
       break;
@@ -7159,14 +7157,14 @@ jerry_container_operation (jerry_container_operation_t operation, /**< container
     {
       if (type == LIT_MAGIC_STRING_WEAKSET_UL || type == LIT_MAGIC_STRING_WEAKMAP_UL)
       {
-        return jerry_throw (ecma_raise_type_error (incorrect_type_call));
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_INCORRECT_TYPE_CALL));
       }
       result = ecma_op_container_clear (container_object_p);
       break;
     }
     default:
     {
-      result = jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Unsupported container operation")));
+      result = jerry_throw (ecma_raise_type_error (ECMA_ERR_UNSUPPORTED_CONTAINER_OPERATION));
       break;
     }
   }
@@ -7176,7 +7174,7 @@ jerry_container_operation (jerry_container_operation_t operation, /**< container
   JERRY_UNUSED (container);
   JERRY_UNUSED (arguments);
   JERRY_UNUSED (arguments_number);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_container_not_supported_p)));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_CONTAINER_NOT_SUPPORTED));
 #endif /* JERRY_BUILTIN_CONTAINER */
 } /* jerry_container_operation */
 

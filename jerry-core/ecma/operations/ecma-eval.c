@@ -98,7 +98,7 @@ ecma_op_eval_chars_buffer (void *source_p, /**< source code */
   JERRY_UNUSED (code_buffer_size);
   JERRY_UNUSED (parse_opts);
 
-  return ecma_raise_syntax_error (ECMA_ERR_MSG ("Source code parsing is disabled"));
+  return ecma_raise_syntax_error (ECMA_ERR_PARSER_NOT_SUPPORTED);
 #endif /* JERRY_PARSER */
 } /* ecma_op_eval_chars_buffer */
 

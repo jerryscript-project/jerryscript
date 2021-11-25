@@ -190,14 +190,14 @@ ecma_arraybuffer_allocate_buffer_throw (ecma_object_t *arraybuffer_p)
 
   if (ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_DETACHED)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
   }
 
   uint8_t *buffer_p = ecma_arraybuffer_allocate_buffer (arraybuffer_p);
 
   if (buffer_p == NULL)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Cannot allocate memory for ArrayBuffer"));
+    return ecma_raise_range_error (ECMA_ERR_ALLOCATE_ARRAY_BUFFER);
   }
 
   return ECMA_VALUE_UNDEFINED;
@@ -290,7 +290,7 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
     if (length_num <= -1.0 || length_num > (ecma_number_t) maximum_size_in_byte + 0.5)
     {
       ecma_deref_object (proto_p);
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid ArrayBuffer length"));
+      return ecma_raise_range_error (ECMA_ERR_INVALID_ARRAYBUFFER_LENGTH);
     }
   }
 
@@ -491,28 +491,28 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg, const ecma_value_t *argum
   if (!(ecma_object_class_is (new_arraybuffer_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
         || ecma_object_is_shared_arraybuffer (new_arraybuffer_p)))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Return value is not an ArrayBuffer object"));
+    ret_value = ecma_raise_type_error (ECMA_ERR_RETURN_VALUE_IS_NOT_AN_ARRAYBUFFER_OBJECT);
     goto free_new_arraybuffer;
   }
 
   /* 14-15. */
   if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (new_arraybuffer_p))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Returned ArrayBuffer has been detached"));
+    ret_value = ecma_raise_type_error (ECMA_ERR_RETURNED_ARRAYBUFFER_HAS_BEEN_DETACHED);
     goto free_new_arraybuffer;
   }
 
   /* 16. */
   if (new_arraybuffer == this_arg)
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer subclass returned this from species constructor"));
+    ret_value = ecma_raise_type_error (ECMA_ERR_ARRAY_BUFFER_RETURNED_THIS_FROM_CONSTRUCTOR);
     goto free_new_arraybuffer;
   }
 
   /* 17. */
   if (ecma_arraybuffer_get_length (new_arraybuffer_p) < new_len)
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Derived ArrayBuffer constructor created a too small buffer"));
+    ret_value = ecma_raise_type_error (ECMA_ERR_DERIVED_ARRAY_BUFFER_CTOR_BUFFER_TOO_SMALL);
     goto free_new_arraybuffer;
   }
 

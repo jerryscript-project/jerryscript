@@ -228,7 +228,7 @@ re_check_quantifier (re_compiler_ctx_t *re_ctx_p)
   if (re_ctx_p->token.qmin > re_ctx_p->token.qmax)
   {
     /* ECMA-262 v5.1 15.10.2.5 */
-    return ecma_raise_syntax_error (ECMA_ERR_MSG ("Quantifier error: min > max"));
+    return ecma_raise_syntax_error (ECMA_ERR_MIN_GREATER_THAN_MAX);
   }
 
   return ECMA_VALUE_EMPTY;
@@ -432,7 +432,7 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
 #if JERRY_ESNEXT
     if (re_ctx_p->flags & RE_FLAG_UNICODE)
     {
-      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid escape sequence"));
+      return ecma_raise_syntax_error (ECMA_ERR_INVALID_ESCAPE_SEQUENCE);
     }
 #endif /* JERRY_ESNEXT */
 
@@ -534,7 +534,7 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
 #if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid control escape sequence"));
+        return ecma_raise_syntax_error (ECMA_ERR_INVALID_CONTROL_ESCAPE_SEQUENCE);
       }
 #endif /* JERRY_ESNEXT */
 
@@ -557,7 +557,7 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
 #if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid hex escape sequence"));
+        return ecma_raise_syntax_error (ECMA_ERR_INVALID_HEX_ESCAPE_SEQUENCE);
       }
 #endif /* JERRY_ESNEXT */
 
@@ -606,7 +606,7 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
 
             if (JERRY_UNLIKELY (cp > LIT_UNICODE_CODE_POINT_MAX))
             {
-              return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid unicode escape sequence"));
+              return ecma_raise_syntax_error (ECMA_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE);
             }
           }
 
@@ -618,7 +618,7 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
           }
         }
 
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid unicode escape sequence"));
+        return ecma_raise_syntax_error (ECMA_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE);
       }
 #endif /* JERRY_ESNEXT */
 
@@ -632,7 +632,7 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
       /* Must be '/', or one of SyntaxCharacter */
       if (re_ctx_p->flags & RE_FLAG_UNICODE && ch != LIT_CHAR_SLASH && !re_is_syntax_char (ch))
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid escape"));
+        return ecma_raise_syntax_error (ECMA_ERR_INVALID_ESCAPE);
       }
 #endif /* JERRY_ESNEXT */
       re_ctx_p->token.value = ch;
@@ -688,7 +688,7 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
     {
       if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid escape"));
+        return ecma_raise_syntax_error (ECMA_ERR_INVALID_ESCAPE);
       }
 
       /* DecimalEscape, Backreferences cannot start with a zero digit. */
@@ -741,7 +741,7 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
     {
       if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated group"));
+        return ecma_raise_syntax_error (ECMA_ERR_UNTERMINATED_GROUP);
       }
 
       if (*re_ctx_p->input_curr_p == LIT_CHAR_QUESTION)
@@ -749,7 +749,7 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
         re_ctx_p->input_curr_p++;
         if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid group"));
+          return ecma_raise_syntax_error (ECMA_ERR_INVALID_GROUP);
         }
 
         ch = *re_ctx_p->input_curr_p++;
@@ -770,7 +770,7 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
         }
         else
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid group"));
+          return ecma_raise_syntax_error (ECMA_ERR_INVALID_GROUP);
         }
       }
       else
@@ -792,7 +792,7 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
 
       if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated character class"));
+        return ecma_raise_syntax_error (ECMA_ERR_UNTERMINATED_CHARACTER_CLASS);
       }
 
       return ECMA_VALUE_EMPTY;
@@ -801,20 +801,20 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
     case LIT_CHAR_ASTERISK:
     case LIT_CHAR_PLUS:
     {
-      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid quantifier"));
+      return ecma_raise_syntax_error (ECMA_ERR_INVALID_QUANTIFIER);
     }
     case LIT_CHAR_LEFT_BRACE:
     {
       re_ctx_p->input_curr_p--;
       if (ecma_is_value_true (re_parse_quantifier (re_ctx_p)))
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Nothing to repeat"));
+        return ecma_raise_syntax_error (ECMA_ERR_NOTHING_TO_REPEAT);
       }
 
 #if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Lone quantifier bracket"));
+        return ecma_raise_syntax_error (ECMA_ERR_LONE_QUANTIFIER_BRACKET);
       }
 #endif /* JERRY_ESNEXT */
 
@@ -831,7 +831,7 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
     {
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Lone quantifier bracket"));
+        return ecma_raise_syntax_error (ECMA_ERR_LONE_QUANTIFIER_BRACKET);
       }
 
       /* FALLTHRU */
@@ -937,7 +937,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
   {
     if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
     {
-      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated character class"));
+      return ecma_raise_syntax_error (ECMA_ERR_UNTERMINATED_CHARACTER_CLASS);
     }
 
     if (*re_ctx_p->input_curr_p == LIT_CHAR_RIGHT_SQUARE)
@@ -966,7 +966,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
       re_ctx_p->input_curr_p++;
       if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid escape"));
+        return ecma_raise_syntax_error (ECMA_ERR_INVALID_ESCAPE);
       }
 
       if (*re_ctx_p->input_curr_p == LIT_CHAR_LOWERCASE_B)
@@ -1028,7 +1028,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
       {
         if (start > current)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Range out of order in character class"));
+          return ecma_raise_syntax_error (ECMA_ERR_RANGE_OUT_OF_ORDER_IN_CHARACTER_CLASS);
         }
 
         re_class_add_range (re_ctx_p, start, current);
@@ -1039,7 +1039,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
 #if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid character class"));
+        return ecma_raise_syntax_error (ECMA_ERR_INVALID_CHARACTER_CLASS);
       }
 #endif /* JERRY_ESNEXT */
 
@@ -1292,7 +1292,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       {
         if (expect_eof)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unmatched close bracket"));
+          return ecma_raise_syntax_error (ECMA_ERR_UNMATCHED_CLOSE_BRACKET);
         }
 
         if (!first_alternative)
@@ -1307,7 +1307,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       {
         if (!expect_eof)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexpected end of pattern"));
+          return ecma_raise_syntax_error (ECMA_ERR_UNEXPECTED_END_OF_PATTERN);
         }
 
         if (!first_alternative)

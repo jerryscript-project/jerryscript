@@ -18,6 +18,7 @@
 #include "ecma-alloc.h"
 #include "ecma-builtin-handlers.h"
 #include "ecma-builtin-helpers.h"
+#include "ecma-errors.h"
 #include "ecma-exceptions.h"
 #include "ecma-extended-info.h"
 #include "ecma-gc.h"
@@ -153,9 +154,9 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma value */
  *
  *
  * @return ECMA_IS_VALID_CONSTRUCTOR - if object is a valid for constructor call
- *         any other value - if object is not a valid constructor, the pointer contains the error message.
+ *         ecma_error_msg_t id of error - otherwise
  */
-char *
+ecma_error_msg_t
 ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
 {
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
@@ -164,7 +165,7 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
 
   if (JERRY_UNLIKELY (type < ECMA_OBJECT_TYPE_PROXY))
   {
-    return ECMA_ERR_MSG ("Invalid type for constructor call");
+    return ECMA_ERR_INVALID_TYPE_FOR_CONSTRUCTOR_CALL;
   }
 
   while (JERRY_UNLIKELY (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION))
@@ -189,40 +190,40 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
       {
         case CBC_FUNCTION_SCRIPT:
         {
-          return "Script (global) functions cannot be invoked with 'new'";
+          return ECMA_ERR_SCRIPT_GLOBAL_FUNCTIONS_INVOKE_WITH_NEW;
         }
         case CBC_FUNCTION_GENERATOR:
         {
-          return "Generator functions cannot be invoked with 'new'";
+          return ECMA_ERR_GENERATOR_FUNCTIONS_INVOKE_WITH_NEW;
         }
         case CBC_FUNCTION_ASYNC:
         {
-          return "Async functions cannot be invoked with 'new'";
+          return ECMA_ERR_ASYNC_FUNCTIONS_INVOKE_WITH_NEW;
         }
         case CBC_FUNCTION_ASYNC_GENERATOR:
         {
-          return "Async generator functions cannot be invoked with 'new'";
+          return ECMA_ERR_ASYNC_GENERATOR_FUNCTIONS_INVOKE_WITH_NEW;
         }
         case CBC_FUNCTION_ACCESSOR:
         {
-          return "Accessor functions cannot be invoked with 'new'";
+          return ECMA_ERR_ACCESSOR_FUNCTIONS_INVOKE_WITH_NEW;
         }
         case CBC_FUNCTION_METHOD:
         {
-          return "Methods cannot be invoked with 'new'";
+          return ECMA_ERR_METHODS_INVOKE_WITH_NEW;
         }
         case CBC_FUNCTION_ARROW:
         {
-          return "Arrow functions cannot be invoked with 'new'";
+          return ECMA_ERR_ARROW_FUNCTIONS_INVOKE_WITH_NEW;
         }
         default:
         {
           JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_ASYNC_ARROW);
-          return "Async arrow functions cannot be invoked with 'new'";
+          return ECMA_ERR_ASYNC_ARROW_FUNCTIONS_INVOKE_WITH_NEW;
         }
       }
 #else /* !JERRY_ERROR_MESSAGES */
-      return NULL;
+      return ECMA_ERR_EMPTY;
 #endif /* JERRY_ERROR_MESSAGES */
     }
 #endif /* JERRY_NEXT */
@@ -235,7 +236,7 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
   {
     if (!(obj_p->u2.prototype_cp & ECMA_PROXY_IS_CONSTRUCTABLE))
     {
-      return ECMA_ERR_MSG ("Proxy target is not a constructor");
+      return ECMA_ERR_PROXY_TARGET_IS_NOT_A_CONSTRUCTOR;
     }
 
     return ECMA_IS_VALID_CONSTRUCTOR;
@@ -249,7 +250,7 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
   {
     if (ecma_builtin_function_is_routine (obj_p))
     {
-      return ECMA_ERR_MSG ("Built-in routines have no constructor");
+      return ECMA_ERR_BULTIN_ROUTINES_HAVE_NO_CONSTRUCTOR;
     }
 
 #if JERRY_ESNEXT
@@ -264,14 +265,14 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
  * Implement IsConstructor abstract operation.
  *
  * @return ECMA_IS_VALID_CONSTRUCTOR - if the input value is a constructor.
- *         any other value - if the input value is not a valid constructor, the pointer contains the error message.
+ *         ecma_error_msg_t id of error - otherwise
  */
-extern inline char *JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_error_msg_t JERRY_ATTR_ALWAYS_INLINE
 ecma_check_constructor (ecma_value_t value) /**< ecma object */
 {
   if (!ecma_is_value_object (value))
   {
-    return ECMA_ERR_MSG ("Invalid type for constructor call");
+    return ECMA_ERR_INVALID_TYPE_FOR_CONSTRUCTOR_CALL;
   }
 
   return ecma_object_check_constructor (ecma_get_object_from_value (value));
@@ -824,7 +825,7 @@ ecma_op_function_get_function_realm (ecma_object_t *func_obj_p) /**< function ob
       ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) func_obj_p;
       if (ecma_is_value_null (proxy_obj_p->handler))
       {
-        ecma_raise_type_error (ECMA_ERR_MSG ("Prototype from revoked Proxy is invalid"));
+        ecma_raise_type_error (ECMA_ERR_PROTOTYPE_FROM_REVOKED_PROXY_IS_INVALID);
         return NULL;
       }
       func_obj_p = ecma_get_object_from_value (proxy_obj_p->target);
@@ -888,7 +889,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   if (!ecma_is_value_object (prototype_obj_value))
   {
     ecma_free_value (prototype_obj_value);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Object expected"));
+    return ecma_raise_type_error (ECMA_ERR_OBJECT_EXPECTED);
   }
 
   ecma_object_t *prototype_obj_p = ecma_get_object_from_value (prototype_obj_value);
@@ -959,7 +960,7 @@ ecma_op_function_get_super_constructor (ecma_object_t *func_obj_p) /**< function
     {
       ecma_deref_object (super_ctor_p);
     }
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Super binding must be a constructor"));
+    return ecma_raise_type_error (ECMA_ERR_SUPER_BINDING_MUST_BE_A_CONSTRUCTOR);
   }
 
   return ecma_make_object_value (super_ctor_p);
@@ -1002,7 +1003,7 @@ ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, /**< construc
       ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) ctor_obj_p;
       if (ecma_is_value_null (proxy_obj_p->handler))
       {
-        ecma_raise_type_error (ECMA_ERR_MSG ("Prototype from revoked Proxy is invalid"));
+        ecma_raise_type_error (ECMA_ERR_PROTOTYPE_FROM_REVOKED_PROXY_IS_INVALID);
         return NULL;
       }
     }
@@ -1042,7 +1043,7 @@ ecma_op_function_call_constructor (vm_frame_ctx_shared_args_t *shared_args_p, /*
 
   if (JERRY_CONTEXT (current_new_target_p) == NULL)
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor requires 'new'"));
+    ret_value = ecma_raise_type_error (ECMA_ERR_CLASS_CONSTRUCTOR_REQUIRES_NEW);
     goto exit;
   }
 
@@ -1073,7 +1074,7 @@ ecma_op_function_call_constructor (vm_frame_ctx_shared_args_t *shared_args_p, /*
       if (!ecma_is_value_undefined (ret_value))
       {
         ecma_free_value (ret_value);
-        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Derived constructors may only return object or undefined"));
+        ret_value = ecma_raise_type_error (ECMA_ERR_DERIVED_CTOR_RETURN_NOR_OBJECT_OR_UNDEFINED);
       }
       else
       {
@@ -1395,7 +1396,7 @@ ecma_op_function_validated_call (ecma_value_t callee, /**< callee */
 {
   if (!ecma_is_value_object (callee))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
+    return ecma_raise_type_error (ECMA_ERR_EXPECTED_A_FUNCTION);
   }
 
   return ecma_op_function_call (ecma_get_object_from_value (callee),
@@ -1453,7 +1454,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 #if JERRY_ESNEXT
     case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
     {
-      result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_class_constructor_new));
+      result = ecma_raise_type_error (ECMA_ERR_CLASS_CONSTRUCTOR_NEW);
       break;
     }
 #endif /* JERRY_ESNEXT */
@@ -1469,7 +1470,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     }
     default:
     {
-      result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
+      result = ecma_raise_type_error (ECMA_ERR_EXPECTED_A_FUNCTION);
       break;
     }
   }

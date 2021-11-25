@@ -63,7 +63,7 @@ ecma_builtin_weakref_prototype_object_deref (ecma_value_t this_arg) /**< this ar
 {
   if (!ecma_is_value_object (this_arg))
   {
-    return ecma_raise_type_error ("Target is not Object");
+    return ecma_raise_type_error (ECMA_ERR_TARGET_IS_NOT_OBJECT);
   }
 
   ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
@@ -71,7 +71,7 @@ ecma_builtin_weakref_prototype_object_deref (ecma_value_t this_arg) /**< this ar
 
   if (!ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_WEAKREF))
   {
-    return ecma_raise_type_error ("Target is not weakRef");
+    return ecma_raise_type_error (ECMA_ERR_TARGET_IS_NOT_WEAKREF);
   }
 
   return ecma_copy_value (this_ext_obj->u.cls.u3.target);

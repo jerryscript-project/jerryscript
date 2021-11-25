@@ -68,7 +68,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   /* 1 - 2. */
   if (!ecma_is_value_object (this_val))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
@@ -77,7 +77,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   /* 3. */
   if (!ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_STRING_ITERATOR))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator"));
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_ITERATOR);
   }
 
   ecma_value_t iterated_value = ext_obj_p->u.cls.u3.iterated_value;

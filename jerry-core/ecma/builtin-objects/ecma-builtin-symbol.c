@@ -76,7 +76,7 @@ ecma_builtin_symbol_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Symbol is not a constructor"));
+  return ecma_raise_type_error (ECMA_ERR_SYMBOL_IS_NOT_A_CONSTRUCTOR);
 } /* ecma_builtin_symbol_dispatch_construct */
 
 /**
@@ -241,7 +241,7 @@ ecma_builtin_symbol_key_for (ecma_value_t this_arg, /**< this argument */
   /* 1. */
   if (!ecma_is_value_symbol (symbol))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("The given argument is not a Symbol"));
+    return ecma_raise_type_error (ECMA_ERR_THE_GIVEN_ARGUMENT_IS_NOT_A_SYMBOL);
   }
 
   /* 2-4. */

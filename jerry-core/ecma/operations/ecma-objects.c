@@ -1008,7 +1008,7 @@ ecma_op_get_global_symbol (lit_magic_string_id_t property_id) /**< property symb
   ecma_string_t *descriptor_p = ecma_concat_ecma_strings (symbol_dot_p, name_p);
 
   ecma_string_t *symbol_p = ecma_new_symbol_from_descriptor_string (ecma_make_string_value (descriptor_p));
-  symbol_p->u.hash = (uint16_t) ((property_id << ECMA_GLOBAL_SYMBOL_SHIFT) | ECMA_GLOBAL_SYMBOL_FLAG);
+  symbol_p->u.hash = (uint16_t) ((property_id << ECMA_SYMBOL_FLAGS_SHIFT) | ECMA_SYMBOL_FLAG_GLOBAL);
 
   ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (global_symbols_cp)[symbol_index], symbol_p);
 
@@ -2410,7 +2410,10 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
 #if JERRY_ESNEXT
       else if (ecma_prop_name_is_symbol (name_p))
       {
-        symbol_named_props++;
+        if (!(name_p->u.hash & ECMA_SYMBOL_FLAG_PRIVATE_KEY))
+        {
+          symbol_named_props++;
+        }
       }
 #endif /* JERRY_ESNEXT */
       else
@@ -2514,7 +2517,7 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
 #if JERRY_ESNEXT
       else if (ecma_prop_name_is_symbol (name_p))
       {
-        if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS))
+        if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS) && !(name_p->u.hash & ECMA_SYMBOL_FLAG_PRIVATE_KEY))
         {
           *(--symbol_current_p) = ecma_make_symbol_value (name_p);
           continue;

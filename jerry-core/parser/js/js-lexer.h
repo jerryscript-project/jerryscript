@@ -31,6 +31,18 @@
  */
 
 /**
+ * Flags for lexer_parse_identifier.
+ */
+typedef enum
+{
+  LEXER_PARSE_NO_OPTS = 0, /**< no options */
+  LEXER_PARSE_CHECK_KEYWORDS = (1 << 0), /**< check keywords */
+  LEXER_PARSE_NO_STRICT_IDENT_ERROR = (1 << 1), /**< do not throw exception for strict mode keywords */
+  LEXER_PARSE_CHECK_START_AND_RETURN = (1 << 2), /**< check identifier start and return */
+  LEXER_PARSE_CHECK_PART_AND_RETURN = (1 << 3), /**< check identifier part and return */
+} lexer_parse_options_t;
+
+/**
  * Lexer token types.
  */
 typedef enum
@@ -161,6 +173,7 @@ typedef enum
   LEXER_COMMA, /**< "," */
 #if JERRY_ESNEXT
   LEXER_ARROW, /**< "=>" */
+  LEXER_HASHMARK, /**< "#" */
 #endif /* JERRY_ESNEXT */
 
   LEXER_KEYW_BREAK, /**< break */
@@ -203,6 +216,7 @@ typedef enum
   LEXER_ASSIGN_GROUP_EXPR, /**< indetifier for the assignment is located in a group expression */
   LEXER_ASSIGN_CONST, /**< a const binding is reassigned */
   LEXER_INVALID_PATTERN, /**< special value for invalid destructuring pattern */
+  LEXER_PRIVATE_PRIMARY_EXPR, /**< private field in primary expession position */
 #endif /* JERRY_ESNEXT */
 
 /* Keywords which are not keyword tokens. */
@@ -278,8 +292,9 @@ typedef enum
   LEXER_OBJ_IDENT_CLASS_IDENTIFIER = (1u << 1), /**< expect identifier inside a class body */
   LEXER_OBJ_IDENT_CLASS_NO_STATIC = (1u << 2), /**< static keyword was not present before the identifier */
   LEXER_OBJ_IDENT_OBJECT_PATTERN = (1u << 3), /**< parse "get"/"set" as string literal in object pattern */
+  LEXER_OBJ_IDENT_CLASS_PRIVATE = (1u << 4), /**< static keyword was not present before the identifier */
 #if JERRY_FUNCTION_TO_STRING
-  LEXER_OBJ_IDENT_SET_FUNCTION_START = (1u << 4), /**< set function start */
+  LEXER_OBJ_IDENT_SET_FUNCTION_START = (1u << 5), /**< set function start */
 #else /* !JERRY_FUNCTION_TO_STRING */
   LEXER_OBJ_IDENT_SET_FUNCTION_START = 0, /**< set function start (disabled) */
 #endif /* JERRY_FUNCTION_TO_STRING */

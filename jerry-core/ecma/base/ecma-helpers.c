@@ -306,7 +306,7 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
 #if JERRY_ESNEXT
   JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
                 || (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
-                    && (object_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) == 0));
+                    && !ECMA_LEX_ENV_CLASS_IS_MODULE (object_p)));
 #else /* !JERRY_ESNEXT */
   JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 #endif /* JERRY_ESNEXT */
@@ -593,7 +593,7 @@ ecma_create_named_reference_property (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
   JERRY_ASSERT ((ecma_is_lexical_environment (object_p)
                  && ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
-                 && (object_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA))
+                 && ECMA_LEX_ENV_CLASS_IS_MODULE (object_p))
                 || ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_MODULE_NAMESPACE));
 
   uint8_t type_and_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE;

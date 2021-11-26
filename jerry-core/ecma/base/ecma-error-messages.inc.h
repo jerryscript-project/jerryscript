@@ -298,6 +298,9 @@ ECMA_ERROR_DEF (ECMA_ERR_MODULE_MUST_BE_IN_LINKED_STATE, "Module must be in link
 ECMA_ERROR_DEF (ECMA_ERR_UNKNOWN_EXPORT, "Native module export not found")
 #endif /* JERRY_MODULE_SYSTEM */
 ECMA_ERROR_DEF (ECMA_ERR_PASSED_ARGUMENT_IS_NOT_A_REALM, "Passed argument is not a realm")
+#if JERRY_ESNEXT
+ECMA_ERROR_DEF (ECMA_ERR_PRIVATE_METHOD_IS_NOT_WRITABLE, "Private method is not writable")
+#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_BIGINT || JERRY_BUILTIN_NUMBER
 ECMA_ERROR_DEF (ECMA_ERR_RADIX_IS_OUT_OF_RANGE, "Radix must be between 2 and 36")
 #endif /* JERRY_BUILTIN_BIGINT \
@@ -548,6 +551,9 @@ ECMA_ERROR_DEF (ECMA_ERR_VALUE_RECEIVED_BY_YIELD_IS_NOT_OBJECT, "Value received 
 #if JERRY_BUILTIN_BOOLEAN
 ECMA_ERROR_DEF (ECMA_ERR_ARGUMENT_THIS_NOT_BOOLEAN_OBJECT, "Argument 'this' is not a Boolean object")
 #endif /* JERRY_BUILTIN_BOOLEAN */
+#if JERRY_ESNEXT
+ECMA_ERROR_DEF (ECMA_ERR_CANNOT_DECLARE_SAME_PRIVATE_FIELD_TWICE, "Cannot declare same private field twice")
+#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_TYPEDARRAY
 ECMA_ERROR_DEF (ECMA_ERR_CONSTRUCTOR_FLOAT32_ARRAY_REQUIRES_NEW, "Constructor Float32Array requires 'new'")
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
@@ -608,6 +614,8 @@ ECMA_ERROR_DEF (ECMA_ERR_CANNOT_CONVERT_TO_OBJECT, "Cannot convert undefined or 
 ECMA_ERROR_DEF (ECMA_ERR_PRECISION_DIGITS_MUST_BE_BETWEEN_IN_RANGE, "Precision digits must be between 1 and 100")
 #endif /* JERRY_BUILTIN_NUMBER */
 #if JERRY_ESNEXT
+ECMA_ERROR_DEF (ECMA_ERR_PRIVATE_FIELD_WAS_DEFINED_WITHOUT_A_GETTER, "Private field was defined without a getter")
+ECMA_ERROR_DEF (ECMA_ERR_PRIVATE_FIELD_WAS_DEFINED_WITHOUT_A_SETTER, "Private field was defined without a setter")
 ECMA_ERROR_DEF (ECMA_ERR_PROPERTY_NAME_IS_NEITHER_SYMBOL_NOR_STRING, "Property name is neither Symbol nor string")
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_BIGINT
@@ -818,8 +826,20 @@ ECMA_ERROR_DEF (ECMA_ERR_TARGET_NOT_EXTENSIBLE_DIFFERENT_PROTOTYPE_RETURNED,
                 "Target object is non-extensible and trap returned different prototype")
 ECMA_ERROR_DEF (ECMA_ERR_TRAP_TRUISH_ADDING_PROPERTY_NON_EXTENSIBLE_TARGET,
                 "Trap returned truish for adding property to the non-extensible target")
+#endif /* JERRY_BUILTIN_PROXY */
+#if JERRY_ESNEXT
+ECMA_ERROR_DEF (ECMA_ERR_CANNOT_READ_PRIVATE_MEMBER_TO_AN_OBJECT_WHOSE_CLASS_DID_NOT_DECLARE_IT,
+                "Cannot read private member to an object whose class did not declare it")
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_PROXY
 ECMA_ERROR_DEF (ECMA_ERR_GIVEN_PROPERTY_IS_A_NON_CONFIGURABLE,
                 "Given property is a non-configurable data property on the proxy target")
+#endif /* JERRY_BUILTIN_PROXY */
+#if JERRY_ESNEXT
+ECMA_ERROR_DEF (ECMA_ERR_CANNOT_WRITE_PRIVATE_MEMBER_TO_AN_OBJECT_WHOSE_CLASS_DID_NOT_DECLARE_IT,
+                "Cannot write private member to an object whose class did not declare it")
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_PROXY
 ECMA_ERROR_DEF (ECMA_ERR_TRAP_FALSISH_PROPERTY_TARGET_NOT_EXTENSIBLE,
                 "Trap returned falsish for property but the proxy target is not extensible")
 ECMA_ERROR_DEF (ECMA_ERR_PROXY_PROPERTY_NOT_CONFIGURABLE_NOT_HAVE_GETTER,

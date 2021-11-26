@@ -77,7 +77,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
       case ECMA_LEXICAL_ENVIRONMENT_CLASS:
       {
 #if JERRY_MODULE_SYSTEM
-        if (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA)
+        if (ECMA_LEX_ENV_CLASS_IS_MODULE (lex_env_p))
         {
           ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
@@ -237,7 +237,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 #if JERRY_ESNEXT
       case ECMA_LEXICAL_ENVIRONMENT_CLASS:
       {
-        if ((lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) == 0)
+        if (!ECMA_LEX_ENV_CLASS_IS_MODULE (lex_env_p))
         {
           break;
         }

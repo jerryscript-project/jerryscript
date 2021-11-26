@@ -332,6 +332,21 @@ scanner_release_switch_cases (scanner_case_info_t *case_p) /**< case list */
 } /* scanner_release_switch_cases */
 
 /**
+ * Release private fields.
+ */
+void
+scanner_release_private_fields (scanner_class_private_member_t *member_p) /**< private member list */
+{
+  while (member_p != NULL)
+  {
+    scanner_class_private_member_t *prev_p = member_p->prev_p;
+
+    jmem_heap_free_block (member_p, sizeof (scanner_class_private_member_t));
+    member_p = prev_p;
+  }
+} /* scanner_release_private_fields */
+
+/**
  * Seek to correct position in the scanner info list.
  */
 void
@@ -406,7 +421,7 @@ scanner_scope_find_lexical_declaration (parser_context_t *context_p, /**< contex
 
   if (JERRY_LIKELY (!(literal_p->status_flags & LEXER_LIT_LOCATION_HAS_ESCAPE)))
   {
-    name_p = parser_new_ecma_string_from_literal ((lexer_literal_t *) literal_p);
+    name_p = ecma_new_ecma_string_from_utf8 (literal_p->char_p, literal_p->length);
   }
   else
   {
@@ -414,7 +429,7 @@ scanner_scope_find_lexical_declaration (parser_context_t *context_p, /**< contex
 
     lexer_convert_ident_to_cesu8 (destination_p, literal_p->char_p, literal_p->length);
 
-    name_p = parser_new_ecma_string_from_literal ((lexer_literal_t *) literal_p);
+    name_p = ecma_new_ecma_string_from_utf8 (destination_p, literal_p->length);
 
     scanner_free (destination_p, literal_p->length);
   }
@@ -1536,6 +1551,46 @@ scanner_append_argument (parser_context_t *context_p, /**< context */
 } /* scanner_append_argument */
 
 /**
+ * Add private identifiers to private ident pool
+ */
+void
+scanner_add_private_identifier (parser_context_t *context_p, /**< context  */
+                                scanner_private_field_flags_t opts) /**< options */
+{
+  scan_stack_modes_t stack_top = (scan_stack_modes_t) context_p->stack_top_uint8;
+  parser_stack_pop_uint8 (context_p);
+  scanner_class_info_t *class_info_p;
+  parser_stack_pop (context_p, &class_info_p, sizeof (scanner_class_info_t *));
+
+  scanner_class_private_member_t *iter = class_info_p->members;
+
+  scanner_private_field_flags_t search_flag =
+    ((opts & SCANNER_PRIVATE_FIELD_PROPERTY) ? SCANNER_PRIVATE_FIELD_PROPERTY_GETTER_SETTER
+                                             : (opts & SCANNER_PRIVATE_FIELD_GETTER_SETTER));
+
+  while (iter != NULL)
+  {
+    if (lexer_compare_identifiers (context_p, &context_p->token.lit_location, &iter->loc)
+        && (iter->u8_arg & search_flag))
+    {
+      scanner_raise_error (context_p);
+    }
+
+    iter = iter->prev_p;
+  }
+
+  scanner_class_private_member_t *p_member;
+  p_member = (scanner_class_private_member_t *) scanner_malloc (context_p, sizeof (scanner_class_private_member_t));
+  p_member->loc = context_p->token.lit_location;
+  p_member->u8_arg = (uint8_t) opts;
+  p_member->prev_p = class_info_p->members;
+  class_info_p->members = p_member;
+
+  parser_stack_push (context_p, &class_info_p, sizeof (scanner_class_info_t *));
+  parser_stack_push_uint8 (context_p, (uint8_t) stack_top);
+} /* scanner_add_private_identifier */
+
+/**
  * Check whether an eval call is performed and update the status flags accordingly.
  */
 void
@@ -1729,6 +1784,15 @@ scanner_push_class_declaration (parser_context_t *context_p, /**< context */
   literal_pool_p->source_p = source_p;
   literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CLASS_NAME;
 
+  const uint8_t *class_source_p = scanner_context_p->active_literal_pool_p->source_p;
+  scanner_class_info_t *class_info_p =
+    (scanner_class_info_t *) scanner_insert_info (context_p, class_source_p, sizeof (scanner_class_info_t));
+
+  class_info_p->info.type = SCANNER_TYPE_CLASS_CONSTRUCTOR;
+  class_info_p->members = NULL;
+  class_info_p->info.u8_arg = SCANNER_CONSTRUCTOR_IMPLICIT;
+
+  parser_stack_push (context_p, &class_info_p, sizeof (scanner_class_info_t *));
   parser_stack_push_uint8 (context_p, SCAN_STACK_IMPLICIT_CLASS_CONSTRUCTOR);
   scanner_context_p->mode = SCAN_MODE_CLASS_DECLARATION;
 
@@ -1935,12 +1999,19 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
         size = sizeof (scanner_switch_info_t);
         break;
       }
+#if JERRY_ESNEXT
+      case SCANNER_TYPE_CLASS_CONSTRUCTOR:
+      {
+        scanner_release_private_fields (((scanner_class_info_t *) scanner_info_p)->members);
+        size = sizeof (scanner_class_info_t);
+        break;
+      }
+#endif /* JERRY_ESNEXT */
       default:
       {
 #if JERRY_ESNEXT
         JERRY_ASSERT (
           scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS || scanner_info_p->type == SCANNER_TYPE_LITERAL_FLAGS
-          || scanner_info_p->type == SCANNER_TYPE_CLASS_CONSTRUCTOR
           || scanner_info_p->type == SCANNER_TYPE_LET_EXPRESSION || scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED
           || scanner_info_p->type == SCANNER_TYPE_ERR_ASYNC_FUNCTION
           || scanner_info_p->type == SCANNER_TYPE_EXPORT_MODULE_SPECIFIER);

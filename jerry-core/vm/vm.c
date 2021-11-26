@@ -597,6 +597,9 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (ecma_is_value_object (completion_value))
   {
+    ecma_op_bind_this_value (environment_record_p, completion_value);
+    frame_ctx_p->this_binding = completion_value;
+
     ecma_value_t fields_value = opfunc_init_class_fields (vm_get_class_function (frame_ctx_p), completion_value);
 
     if (ECMA_IS_VALUE_ERROR (fields_value))
@@ -617,9 +620,6 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   }
   else
   {
-    ecma_op_bind_this_value (environment_record_p, completion_value);
-    frame_ctx_p->this_binding = completion_value;
-
     frame_ctx_p->byte_code_p = byte_code_p;
     uint32_t opcode_data = vm_decode_table[(CBC_END + 1) + opcode];
 
@@ -1652,7 +1652,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (literal_index >= register_end);
           JERRY_ASSERT (ecma_get_lex_env_type (frame_ctx_p->lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE
                         || (ecma_get_lex_env_type (frame_ctx_p->lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
-                            && (frame_ctx_p->lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA)));
+                            && ECMA_LEX_ENV_CLASS_IS_MODULE (frame_ctx_p->lex_env_p)));
 
           ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
           ecma_property_t *property_p = ecma_find_named_property (frame_ctx_p->lex_env_p, name_p);
@@ -1821,6 +1821,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           memmove (stack_top_p - 3, stack_top_p - 4, 3 * sizeof (ecma_value_t));
           stack_top_p[-4] = left_value;
+
+          ecma_object_t *class_object_p = ecma_get_object_from_value (stack_top_p[-2]);
+          ecma_object_t *initializer_func_p = ecma_get_object_from_value (left_value);
+          opfunc_bind_class_environment (frame_ctx_p->lex_env_p, class_object_p, class_object_p, initializer_func_p);
 
           if (!push_computed)
           {
@@ -1998,6 +2002,100 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = opfunc_create_implicit_class_constructor (opcode, frame_ctx_p->shared_p->bytecode_header_p);
           continue;
         }
+        case VM_OC_DEFINE_FIELD:
+        {
+          result = opfunc_define_field (frame_ctx_p->this_binding, right_value, left_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          goto free_both_values;
+        }
+        case VM_OC_ASSIGN_PRIVATE:
+        {
+          result = opfunc_private_set (stack_top_p[-3], stack_top_p[-2], stack_top_p[-1]);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          ecma_free_value (stack_top_p[-3]);
+          ecma_free_value (stack_top_p[-2]);
+          ecma_free_value (stack_top_p[-1]);
+          stack_top_p -= 3;
+
+          if (opcode_data & VM_OC_PUT_STACK)
+          {
+            *stack_top_p++ = result;
+          }
+          else if (opcode_data & VM_OC_PUT_BLOCK)
+          {
+            ecma_fast_free_value (VM_GET_REGISTER (frame_ctx_p, 0));
+            VM_GET_REGISTERS (frame_ctx_p)[0] = result;
+          }
+          else
+          {
+            ecma_free_value (result);
+          }
+
+          goto free_both_values;
+        }
+        case VM_OC_PRIVATE_FIELD_ADD:
+        {
+          result = opfunc_private_field_add (frame_ctx_p->this_binding, right_value, left_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          goto free_both_values;
+        }
+        case VM_OC_PRIVATE_PROP_GET:
+        {
+          result = opfunc_private_get (left_value, right_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          *stack_top_p++ = result;
+          goto free_both_values;
+        }
+        case VM_OC_PRIVATE_PROP_REFERENCE:
+        {
+          result = opfunc_private_get (stack_top_p[-1], left_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          *stack_top_p++ = left_value;
+          *stack_top_p++ = result;
+          continue;
+        }
+        case VM_OC_PRIVATE_IN:
+        {
+          result = opfunc_private_in (left_value, right_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          *stack_top_p++ = result;
+          goto free_both_values;
+        }
+        case VM_OC_COLLECT_PRIVATE_PROPERTY:
+        {
+          opfunc_collect_private_properties (stack_top_p[-2], left_value, right_value, opcode);
+          continue;
+        }
         case VM_OC_INIT_CLASS:
         {
           result = opfunc_init_class (frame_ctx_p, stack_top_p);
@@ -2025,14 +2123,18 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_SET_FIELD_INIT:
         {
           ecma_string_t *property_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_INIT);
-          ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[-2]);
+          ecma_object_t *proto_object_p = ecma_get_object_from_value (stack_top_p[-1]);
+          ecma_object_t *class_object_p = ecma_get_object_from_value (stack_top_p[-2]);
+          ecma_object_t *initializer_func_p = ecma_get_object_from_value (left_value);
+
+          opfunc_bind_class_environment (frame_ctx_p->lex_env_p, proto_object_p, class_object_p, initializer_func_p);
 
           ecma_property_value_t *property_value_p =
-            ecma_create_named_data_property (object_p, property_name_p, ECMA_PROPERTY_FIXED, NULL);
+            ecma_create_named_data_property (class_object_p, property_name_p, ECMA_PROPERTY_FIXED, NULL);
           property_value_p->value = left_value;
 
           property_name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
-          ecma_property_t *property_p = ecma_find_named_property (object_p, property_name_p);
+          ecma_property_t *property_p = ecma_find_named_property (class_object_p, property_name_p);
 
           if (property_p != NULL)
           {
@@ -2074,17 +2176,41 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_integer_value_t next_index = ecma_get_integer_from_value (stack_top_p[-2]) + 1;
           stack_top_p[-2] = ecma_make_integer_value (next_index);
-          stack_top_p++;
 
           JERRY_ASSERT (frame_ctx_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS);
 
           ecma_value_t *computed_class_fields_p = VM_GET_COMPUTED_CLASS_FIELDS (frame_ctx_p);
           JERRY_ASSERT ((ecma_value_t) next_index < ECMA_COMPACT_COLLECTION_GET_SIZE (computed_class_fields_p));
+          ecma_value_t prop_name = computed_class_fields_p[next_index];
 
-          result = stack_top_p[-2];
-          stack_top_p[-1] = ecma_copy_value (computed_class_fields_p[next_index]);
-          stack_top_p[-2] = ecma_copy_value (frame_ctx_p->this_binding);
-          break;
+          if (opcode == CBC_EXT_SET_NEXT_COMPUTED_FIELD_ANONYMOUS_FUNC)
+          {
+            ecma_object_t *func_obj_p = ecma_get_object_from_value (result);
+
+            JERRY_ASSERT (ecma_find_named_property (func_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_NAME)) == NULL);
+            ecma_property_value_t *value_p;
+            value_p = ecma_create_named_data_property (func_obj_p,
+                                                       ecma_get_magic_string (LIT_MAGIC_STRING_NAME),
+                                                       ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                                       NULL);
+
+            if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
+            {
+              ECMA_SET_SECOND_BIT_TO_POINTER_TAG (((ecma_extended_object_t *) func_obj_p)->u.function.scope_cp);
+            }
+
+            value_p->value = ecma_copy_value (prop_name);
+          }
+
+          result = opfunc_define_field (frame_ctx_p->this_binding, prop_name, stack_top_p[-1]);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          ecma_free_value (*(--stack_top_p));
+          continue;
         }
         case VM_OC_PUSH_SUPER_CONSTRUCTOR:
         {
@@ -4884,7 +5010,8 @@ vm_init_module_scope (ecma_module_t *module_p) /**< module without scope */
   uint16_t encoding_limit;
   uint16_t encoding_delta;
 
-  ((ecma_lexical_environment_class_t *) scope_p)->module_p = (ecma_object_t *) module_p;
+  ((ecma_lexical_environment_class_t *) scope_p)->object_p = (ecma_object_t *) module_p;
+  ((ecma_lexical_environment_class_t *) scope_p)->type = ECMA_LEX_ENV_CLASS_TYPE_MODULE;
 
   module_p->scope_p = scope_p;
   ecma_deref_object (scope_p);

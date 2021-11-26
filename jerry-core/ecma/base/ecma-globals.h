@@ -1185,14 +1185,30 @@ typedef struct
 } ecma_extended_built_in_object_t;
 
 /**
+ * Type of lexical environment with class
+ */
+typedef enum
+{
+  ECMA_LEX_ENV_CLASS_TYPE_MODULE, /**< module object reference */
+  ECMA_LEX_ENV_CLASS_TYPE_CLASS_ENV, /**< class constructor object reference */
+} ecma_lexical_environment_class_type_t;
+
+/**
  * Description of lexical environment with class
  */
 typedef struct
 {
   ecma_object_t lexical_env; /**< lexical environment header */
-
-  ecma_object_t *module_p; /**< module reference */
+  uint32_t type; /**< element of ecma_lexical_environment_class_type_t */
+  ecma_object_t *object_p; /**< object reference */
 } ecma_lexical_environment_class_t;
+
+/**
+ * Check whether the given lexical class environment is a module
+ */
+#define ECMA_LEX_ENV_CLASS_IS_MODULE(lex_env_p)                           \
+  (((lex_env_p)->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) \
+   && ((ecma_lexical_environment_class_t *) (lex_env_p))->type == ECMA_LEX_ENV_CLASS_TYPE_MODULE)
 
 /**
  * Description of native functions
@@ -1892,6 +1908,13 @@ typedef struct
   } u;
 } ecma_extended_string_t;
 
+#if JERRY_ESNEXT
+/**
+ * Required number of ecma values in a compact collection to represent PrivateElement
+ */
+#define ECMA_PRIVATE_ELEMENT_LIST_SIZE 3
+#endif /* JERRY_ESNEXT */
+
 /**
  * String builder header
  */
@@ -2248,24 +2271,23 @@ typedef struct
 } ecma_dataview_object_t;
 #endif /* JERRY_BUILTIN_DATAVIEW */
 
-/**
- * Flag for indicating whether the symbol is a well known symbol
- *
- * See also: 6.1.5.1
- */
-#define ECMA_GLOBAL_SYMBOL_FLAG 0x01
-
-/**
- * Bitshift index for indicating whether the symbol is a well known symbol
- *
- * See also: 6.1.5.1
- */
-#define ECMA_GLOBAL_SYMBOL_SHIFT 1
+typedef enum
+{
+  ECMA_SYMBOL_FLAG_NONE = 0, /**< no options */
+  ECMA_SYMBOL_FLAG_GLOBAL = (1 << 0), /**< symbol is a well known symbol, See also: 6.1.5.1 */
+  ECMA_SYMBOL_FLAG_PRIVATE_KEY = (1 << 1), /**< symbol is a private field */
+  ECMA_SYMBOL_FLAG_PRIVATE_INSTANCE_METHOD = (1 << 2), /**< symbol is a private method or accessor */
+} ecma_symbol_flags_t;
 
 /**
  * Bitshift index for the symbol hash property
  */
-#define ECMA_SYMBOL_HASH_SHIFT 2
+#define ECMA_SYMBOL_FLAGS_SHIFT 3
+
+/**
+ * Bitmask for symbol hash flags
+ */
+#define ECMA_SYMBOL_FLAGS_MASK ((1 << ECMA_SYMBOL_FLAGS_SHIFT) - 1)
 
 #if (JERRY_STACK_LIMIT != 0)
 /**
@@ -2481,6 +2503,28 @@ typedef struct
   ecma_extended_object_t header; /**< header part */
   ecma_value_t sync_next_method; /**< IteratorRecord [[NextMethod]] internal slot */
 } ecma_async_from_sync_iterator_object_t;
+
+/**
+ * Private method kind
+ */
+typedef enum
+{
+  ECMA_PRIVATE_FIELD = 0, /**< private field */
+  ECMA_PRIVATE_METHOD, /**< private method */
+  ECMA_PRIVATE_GETTER, /**< private setter */
+  ECMA_PRIVATE_SETTER, /**< private getter */
+} ecma_private_property_kind_t;
+
+/**
+ * Private static property flag
+ */
+#define ECMA_PRIVATE_PROPERTY_STATIC_FLAG (1 << 2)
+
+/*
+ * Get private property kind from a descriptor
+ */
+#define ECMA_PRIVATE_PROPERTY_KIND(prop) ((prop) & ((ECMA_PRIVATE_PROPERTY_STATIC_FLAG - 1)))
+
 #endif /* JERRY_ESNEXT */
 
 /**

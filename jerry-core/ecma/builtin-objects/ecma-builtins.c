@@ -937,9 +937,9 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
   lit_magic_string_id_t magic_string_id = ecma_get_string_magic (property_name_p);
 
 #if JERRY_ESNEXT
-  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)) && property_name_p->u.hash & ECMA_GLOBAL_SYMBOL_FLAG)
+  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)) && property_name_p->u.hash & ECMA_SYMBOL_FLAG_GLOBAL)
   {
-    magic_string_id = (property_name_p->u.hash >> ECMA_GLOBAL_SYMBOL_SHIFT);
+    magic_string_id = (property_name_p->u.hash >> ECMA_SYMBOL_FLAGS_SHIFT);
   }
 #endif /* JERRY_ESNEXT */
 
@@ -1254,9 +1254,9 @@ ecma_builtin_delete_built_in_property (ecma_object_t *object_p, /**< object */
 #if JERRY_ESNEXT
   if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
   {
-    if (property_name_p->u.hash & ECMA_GLOBAL_SYMBOL_FLAG)
+    if (property_name_p->u.hash & ECMA_SYMBOL_FLAG_GLOBAL)
     {
-      magic_string_id = (property_name_p->u.hash >> ECMA_GLOBAL_SYMBOL_SHIFT);
+      magic_string_id = (property_name_p->u.hash >> ECMA_SYMBOL_FLAGS_SHIFT);
     }
   }
 #endif /* JERRY_ESNEXT */

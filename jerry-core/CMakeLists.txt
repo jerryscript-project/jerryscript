@@ -317,6 +317,7 @@ set(SOURCE_CORE_FILES
   parser/js/js-scanner-ops.c
   parser/js/js-scanner-util.c
   parser/js/js-scanner.c
+  parser/js/parser-errors.c
   parser/regexp/re-bytecode.c
   parser/regexp/re-compiler.c
   parser/regexp/re-parser.c

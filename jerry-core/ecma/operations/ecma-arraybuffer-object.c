@@ -130,14 +130,19 @@ ecma_arraybuffer_new_object (uint32_t length) /**< length of the arraybuffer */
  * @return buffer pointer on success,
  *         NULL otherwise
  */
-uint8_t *
+ecma_value_t
 ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer object */
 {
   JERRY_ASSERT (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED));
-  JERRY_ASSERT (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_DETACHED));
-  JERRY_ASSERT (ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_HAS_POINTER);
 
   ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) arraybuffer_p;
+
+  if (ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_DETACHED)
+  {
+    extended_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+    return ECMA_VALUE_UNDEFINED;
+  }
+
   uint32_t arraybuffer_length = extended_object_p->u.cls.u3.length;
   ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) arraybuffer_p;
   jerry_arraybuffer_allocate_cb_t arraybuffer_allocate_callback = JERRY_CONTEXT (arraybuffer_allocate_callback);
@@ -166,15 +171,14 @@ ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer
 
   if (buffer_p == NULL)
   {
-    extended_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_DETACHED;
-    return NULL;
+    return ecma_raise_range_error (ECMA_ERR_ALLOCATE_ARRAY_BUFFER);
   }
 
   arraybuffer_pointer_p->buffer_p = buffer_p;
   extended_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
 
   memset (buffer_p, 0, arraybuffer_length);
-  return buffer_p;
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_arraybuffer_allocate_buffer */
 
 /**
@@ -183,24 +187,12 @@ ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer
  * @return ECMA_VALUE_UNDEFINED on success,
  *         ECMA_VALUE_ERROR otherwise
  */
-ecma_value_t
+extern inline ecma_value_t
 ecma_arraybuffer_allocate_buffer_throw (ecma_object_t *arraybuffer_p)
 {
   JERRY_ASSERT (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED));
 
-  if (ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_DETACHED)
-  {
-    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
-  }
-
-  uint8_t *buffer_p = ecma_arraybuffer_allocate_buffer (arraybuffer_p);
-
-  if (buffer_p == NULL)
-  {
-    return ecma_raise_range_error (ECMA_ERR_ALLOCATE_ARRAY_BUFFER);
-  }
-
-  return ECMA_VALUE_UNDEFINED;
+  return ecma_arraybuffer_allocate_buffer (arraybuffer_p);
 } /* ecma_arraybuffer_allocate_buffer_throw */
 
 /**
@@ -345,8 +337,6 @@ ecma_arraybuffer_get_buffer (ecma_object_t *object_p) /**< pointer to the ArrayB
   JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
                 || ecma_object_is_shared_arraybuffer (object_p));
 
-  JERRY_ASSERT (ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_ALLOCATED);
-
   if (!(ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_HAS_POINTER))
   {
     return (uint8_t *) object_p + sizeof (ecma_extended_object_t);
@@ -423,9 +413,14 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg, const ecma_value_t *argum
   ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
   /* 3-4. */
-  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (object_p))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (object_p))
   {
     return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_arraybuffer_is_detached (object_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
   }
 
   /* 5. */
@@ -496,9 +491,15 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg, const ecma_value_t *argum
   }
 
   /* 14-15. */
-  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (new_arraybuffer_p))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (new_arraybuffer_p))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_RETURNED_ARRAYBUFFER_HAS_BEEN_DETACHED);
+    ret_value = ECMA_VALUE_ERROR;
+    goto free_new_arraybuffer;
+  }
+
+  if (ecma_arraybuffer_is_detached (new_arraybuffer_p))
+  {
+    ret_value = ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
     goto free_new_arraybuffer;
   }
 

@@ -299,9 +299,16 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   /* GetViewValue 4., SetViewValue 6. */
   bool is_little_endian = ecma_op_to_boolean (is_little_endian_value);
 
-  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (buffer_p))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (buffer_p))
   {
+    ecma_free_value (value_to_set);
     return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_arraybuffer_is_detached (buffer_p))
+  {
+    ecma_free_value (value_to_set);
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
   }
 
   /* GetViewValue 7., SetViewValue 9. */
@@ -320,9 +327,16 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
     return ecma_raise_range_error (ECMA_ERR_START_OFFSET_IS_OUTSIDE_THE_BOUNDS_OF_THE_BUFFER);
   }
 
-  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (buffer_p))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (buffer_p))
   {
+    ecma_free_value (value_to_set);
     return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_arraybuffer_is_detached (buffer_p))
+  {
+    ecma_free_value (value_to_set);
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
   }
 
   /* GetViewValue 11., SetViewValue 13. */

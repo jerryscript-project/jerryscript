@@ -633,12 +633,17 @@ extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_get_typedarray_element (ecma_typedarray_info_t *info_p, /**< typedarray info */
                              uint32_t index) /**< element index */
 {
-  uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
-
-  if (JERRY_UNLIKELY (buffer_p == NULL))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info_p->array_buffer_p))
   {
     return ECMA_VALUE_ERROR;
   }
+
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
 
   if (index >= info_p->length)
   {
@@ -688,13 +693,19 @@ ecma_set_typedarray_element (ecma_typedarray_info_t *info_p, /**< typedarray inf
     }
   }
 
-  uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
-
-  if (JERRY_UNLIKELY (buffer_p == NULL))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info_p->array_buffer_p))
   {
     ecma_free_value (to_num);
     return ECMA_VALUE_ERROR;
   }
+
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    ecma_free_value (to_num);
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
+  uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
 
   if (index >= info_p->length)
   {
@@ -886,9 +897,14 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
   uint32_t array_length = ecma_typedarray_get_length (typedarray_p);
   ecma_object_t *src_arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
 
-  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (src_arraybuffer_p))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (src_arraybuffer_p))
   {
     return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_arraybuffer_is_detached (src_arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
   }
 
   ecma_value_t new_typedarray = ecma_typedarray_create_object_with_length (array_length,
@@ -905,9 +921,16 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
   ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
   ecma_object_t *dst_arraybuffer_p = ecma_typedarray_get_arraybuffer (new_typedarray_p);
 
-  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (dst_arraybuffer_p))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (dst_arraybuffer_p))
   {
+    ecma_deref_object (new_typedarray_p);
     return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_arraybuffer_is_detached (dst_arraybuffer_p))
+  {
+    ecma_deref_object (new_typedarray_p);
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
   }
 
   lit_utf8_byte_t *src_buf_p = ecma_arraybuffer_get_buffer (src_arraybuffer_p);
@@ -1094,34 +1117,44 @@ ecma_typedarray_create_object_with_object (ecma_value_t items_val, /**< the sour
     ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
     ecma_typedarray_info_t info = ecma_typedarray_get_info (new_typedarray_p);
     ecma_value_t *next_value_p = values_p->buffer_p;
-    uint8_t *buffer_p = ecma_typedarray_get_buffer (&info);
 
     ret_value = ECMA_VALUE_ERROR;
 
-    if (buffer_p != NULL)
+    if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info.array_buffer_p))
     {
-      ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
-      uint8_t *limit_p = buffer_p + (values_p->item_count << info.shift);
-
-      ret_value = ecma_make_object_value (new_typedarray_p);
-
-      /* 8.e */
-      while (buffer_p < limit_p)
-      {
-        ecma_value_t value = *next_value_p++;
-        ecma_value_t set_value = setter_cb (buffer_p, value);
-        ecma_free_value (value);
-
-        if (ECMA_IS_VALUE_ERROR (set_value))
-        {
-          ret_value = set_value;
-          break;
-        }
-
-        buffer_p += info.element_size;
-      }
+      goto free_collection;
     }
 
+    if (ecma_arraybuffer_is_detached (info.array_buffer_p))
+    {
+      ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+      goto free_collection;
+    }
+
+    uint8_t *buffer_p = ecma_typedarray_get_buffer (&info);
+
+    ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
+    uint8_t *limit_p = buffer_p + (values_p->item_count << info.shift);
+
+    ret_value = ecma_make_object_value (new_typedarray_p);
+
+    /* 8.e */
+    while (buffer_p < limit_p)
+    {
+      ecma_value_t value = *next_value_p++;
+      ecma_value_t set_value = setter_cb (buffer_p, value);
+      ecma_free_value (value);
+
+      if (ECMA_IS_VALUE_ERROR (set_value))
+      {
+        ret_value = set_value;
+        break;
+      }
+
+      buffer_p += info.element_size;
+    }
+
+free_collection:
     if (ECMA_IS_VALUE_ERROR (ret_value))
     {
       ecma_value_t *last_value_p = values_p->buffer_p + values_p->item_count;
@@ -1178,44 +1211,55 @@ ecma_typedarray_create_object_with_object (ecma_value_t items_val, /**< the sour
 
   ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (new_typedarray_p);
-  uint8_t *buffer_p = ecma_typedarray_get_buffer (&info);
+
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
-  if (buffer_p != NULL)
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info.array_buffer_p))
   {
-    ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
-
-    ret_value = ecma_make_object_value (new_typedarray_p);
-
-    /* 12 */
-    for (uint32_t index = 0; index < len; index++)
-    {
-      ecma_value_t value = ecma_op_object_find_by_index (arraylike_object_p, index);
-
-      if (ECMA_IS_VALUE_ERROR (value))
-      {
-        ret_value = value;
-        break;
-      }
-
-      if (!ecma_is_value_found (value))
-      {
-        value = ECMA_VALUE_UNDEFINED;
-      }
-
-      ecma_value_t set_value = setter_cb (buffer_p, value);
-      ecma_free_value (value);
-
-      if (ECMA_IS_VALUE_ERROR (set_value))
-      {
-        ret_value = set_value;
-        break;
-      }
-
-      buffer_p += info.element_size;
-    }
+    goto free_object;
   }
 
+  if (ecma_arraybuffer_is_detached (info.array_buffer_p))
+  {
+    ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+    goto free_object;
+  }
+
+  uint8_t *buffer_p = ecma_typedarray_get_buffer (&info);
+
+  ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
+
+  ret_value = ecma_make_object_value (new_typedarray_p);
+
+  /* 12 */
+  for (uint32_t index = 0; index < len; index++)
+  {
+    ecma_value_t value = ecma_op_object_find_by_index (arraylike_object_p, index);
+
+    if (ECMA_IS_VALUE_ERROR (value))
+    {
+      ret_value = value;
+      break;
+    }
+
+    if (!ecma_is_value_found (value))
+    {
+      value = ECMA_VALUE_UNDEFINED;
+    }
+
+    ecma_value_t set_value = setter_cb (buffer_p, value);
+    ecma_free_value (value);
+
+    if (ECMA_IS_VALUE_ERROR (set_value))
+    {
+      ret_value = set_value;
+      break;
+    }
+
+    buffer_p += info.element_size;
+  }
+
+free_object:
   ecma_deref_object (arraylike_object_p);
 
   if (ECMA_IS_VALUE_ERROR (ret_value))
@@ -1331,30 +1375,40 @@ ecma_op_typedarray_from (ecma_value_t this_val, /**< this value */
     ecma_typedarray_info_t info = ecma_typedarray_get_info (new_typedarray_p);
     ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
     ecma_value_t *next_value_p = values_p->buffer_p;
-    uint8_t *buffer_p = ecma_typedarray_get_buffer (&info);
 
     ret_value = ECMA_VALUE_ERROR;
 
-    if (buffer_p != NULL)
+    if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info.array_buffer_p))
     {
-      ret_value = ecma_make_object_value (new_typedarray_p);
-
-      /* 6.e */
-      for (uint32_t index = 0; index < values_p->item_count; index++)
-      {
-        ecma_value_t set_value =
-          ecma_op_typedarray_from_helper (this_arg, *next_value_p++, index, func_object_p, buffer_p, setter_cb);
-
-        if (ECMA_IS_VALUE_ERROR (set_value))
-        {
-          ret_value = set_value;
-          break;
-        }
-
-        buffer_p += info.element_size;
-      }
+      goto free_collection;
     }
 
+    if (ecma_arraybuffer_is_detached (info.array_buffer_p))
+    {
+      ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+      goto free_collection;
+    }
+
+    uint8_t *buffer_p = ecma_typedarray_get_buffer (&info);
+
+    ret_value = ecma_make_object_value (new_typedarray_p);
+
+    /* 6.e */
+    for (uint32_t index = 0; index < values_p->item_count; index++)
+    {
+      ecma_value_t set_value =
+        ecma_op_typedarray_from_helper (this_arg, *next_value_p++, index, func_object_p, buffer_p, setter_cb);
+
+      if (ECMA_IS_VALUE_ERROR (set_value))
+      {
+        ret_value = set_value;
+        break;
+      }
+
+      buffer_p += info.element_size;
+    }
+
+free_collection:
     if (ECMA_IS_VALUE_ERROR (ret_value))
     {
       ecma_value_t *last_value_p = values_p->buffer_p + values_p->item_count;
@@ -1413,44 +1467,55 @@ ecma_op_typedarray_from (ecma_value_t this_val, /**< this value */
 
   ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (new_typedarray_p);
-  uint8_t *buffer_p = ecma_typedarray_get_buffer (&info);
+
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
-  if (buffer_p != NULL)
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info.array_buffer_p))
   {
-    ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
-
-    ret_value = ecma_make_object_value (new_typedarray_p);
-
-    /* 12 */
-    for (uint32_t index = 0; index < len; index++)
-    {
-      ecma_value_t value = ecma_op_object_find_by_index (arraylike_object_p, index);
-
-      if (ECMA_IS_VALUE_ERROR (value))
-      {
-        ret_value = value;
-        break;
-      }
-
-      if (!ecma_is_value_found (value))
-      {
-        value = ECMA_VALUE_UNDEFINED;
-      }
-
-      ecma_value_t set_value =
-        ecma_op_typedarray_from_helper (this_arg, value, index, func_object_p, buffer_p, setter_cb);
-
-      if (ECMA_IS_VALUE_ERROR (set_value))
-      {
-        ret_value = set_value;
-        break;
-      }
-
-      buffer_p += info.element_size;
-    }
+    goto free_object;
   }
 
+  if (ecma_arraybuffer_is_detached (info.array_buffer_p))
+  {
+    ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+    goto free_object;
+  }
+
+  uint8_t *buffer_p = ecma_typedarray_get_buffer (&info);
+
+  ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
+
+  ret_value = ecma_make_object_value (new_typedarray_p);
+
+  /* 12 */
+  for (uint32_t index = 0; index < len; index++)
+  {
+    ecma_value_t value = ecma_op_object_find_by_index (arraylike_object_p, index);
+
+    if (ECMA_IS_VALUE_ERROR (value))
+    {
+      ret_value = value;
+      break;
+    }
+
+    if (!ecma_is_value_found (value))
+    {
+      value = ECMA_VALUE_UNDEFINED;
+    }
+
+    ecma_value_t set_value =
+      ecma_op_typedarray_from_helper (this_arg, value, index, func_object_p, buffer_p, setter_cb);
+
+    if (ECMA_IS_VALUE_ERROR (set_value))
+    {
+      ret_value = set_value;
+      break;
+    }
+
+    buffer_p += info.element_size;
+  }
+
+free_object:
   ecma_deref_object (arraylike_object_p);
 
   if (ECMA_IS_VALUE_ERROR (ret_value))
@@ -1558,17 +1623,10 @@ ecma_typedarray_get_offset (ecma_object_t *typedarray_p) /**< the pointer to the
  * @return pointer to the data buffer if successfull,
  *         NULL otherwise
  */
-uint8_t *
+extern inline uint8_t *
 ecma_typedarray_get_buffer (ecma_typedarray_info_t *info_p) /**< typedarray info */
 {
-  ecma_object_t *array_buffer_p = info_p->array_buffer_p;
-
-  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (array_buffer_p))
-  {
-    return NULL;
-  }
-
-  return ecma_arraybuffer_get_buffer (array_buffer_p) + info_p->offset;
+  return ecma_arraybuffer_get_buffer (info_p->array_buffer_p) + info_p->offset;
 } /* ecma_typedarray_get_buffer */
 
 /**
@@ -1756,6 +1814,20 @@ ecma_typedarray_iterators_helper (ecma_value_t this_arg, /**< this argument */
                                   ecma_iterator_kind_t kind) /**< iterator kind */
 {
   JERRY_ASSERT (ecma_is_typedarray (this_arg));
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info.array_buffer_p))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_arraybuffer_is_detached (info.array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
 
   return ecma_op_create_iterator_object (this_arg, prototype_obj_p, ECMA_OBJECT_CLASS_ARRAY_ITERATOR, kind);
@@ -1931,10 +2003,15 @@ ecma_typedarray_create (ecma_object_t *constructor_p, /**< constructor function 
   }
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (ret_val);
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
 
-  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (ecma_get_object_from_value (ret_val));
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info.array_buffer_p))
+  {
+    ecma_deref_object (typedarray_p);
+    return ECMA_VALUE_ERROR;
+  }
 
-  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  if (ecma_arraybuffer_is_detached (info.array_buffer_p))
   {
     ecma_deref_object (typedarray_p);
     return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
@@ -1943,7 +2020,6 @@ ecma_typedarray_create (ecma_object_t *constructor_p, /**< constructor function 
   if ((arguments_list_len == 1) && (ecma_is_value_number (arguments_list_p[0])))
   {
     ecma_number_t num = ecma_get_number_from_value (arguments_list_p[0]);
-    ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
 
     if (info.length < num)
     {

@@ -65,7 +65,7 @@ def get_arguments():
     elif args.esnext:
         args.test_dir = os.path.join(args.test_dir, 'esnext')
         args.test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
-        args.test262_git_hash = '281eb10b2844929a7c0ac04527f5b42ce56509fd'
+        args.test262_git_hash = '9f2814f00ff7612f74024c15c165853b6765c7ab'
         args.excludelist_path = os.path.join('tests', 'test262-esnext-excludelist.xml')
     else:
         args.test_dir = os.path.join(args.test_dir, 'es51')

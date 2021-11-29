@@ -130,6 +130,19 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
 {
   JERRY_ASSERT (mode < TYPEDARRAY_ROUTINE__COUNT);
 
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info.array_buffer_p))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_arraybuffer_is_detached (info.array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   ecma_typedarray_getter_fn_t typedarray_getter_cb = ecma_get_typedarray_getter_fn (info_p->id);
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
   uint8_t *buffer_p = ecma_arraybuffer_get_buffer (info_p->array_buffer_p) + info_p->offset;
@@ -210,6 +223,16 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this object *
 {
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
 
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (src_info_p->array_buffer_p))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_arraybuffer_is_detached (src_info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   // TODO: 22.2.3.18, 7-8.
   ecma_value_t len = ecma_make_number_value (src_info_p->length);
   ecma_value_t new_typedarray = ecma_typedarray_species_create (this_arg, &len, 1);
@@ -221,22 +244,24 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this object *
   }
 
   ecma_object_t *target_obj_p = ecma_get_object_from_value (new_typedarray);
+
   uint8_t *src_buffer_p = ecma_typedarray_get_buffer (src_info_p);
 
-  if (JERRY_UNLIKELY (src_buffer_p == NULL))
-  {
-    ecma_deref_object (target_obj_p);
-    return ECMA_VALUE_ERROR;
-  }
-
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (target_obj_p);
-  uint8_t *target_buffer_p = ecma_typedarray_get_buffer (&target_info);
 
-  if (JERRY_UNLIKELY (target_buffer_p == NULL))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (target_info.array_buffer_p))
   {
     ecma_deref_object (target_obj_p);
     return ECMA_VALUE_ERROR;
   }
+
+  if (ecma_arraybuffer_is_detached (target_info.array_buffer_p))
+  {
+    ecma_deref_object (target_obj_p);
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
+  uint8_t *target_buffer_p = ecma_typedarray_get_buffer (&target_info);
 
   ecma_typedarray_getter_fn_t src_typedarray_getter_cb = ecma_get_typedarray_getter_fn (src_info_p->id);
   ecma_typedarray_setter_fn_t target_typedarray_setter_cb = ecma_get_typedarray_setter_fn (target_info.id);
@@ -294,6 +319,11 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
                                                          uint32_t arguments_number, /**< length of arguments' list*/
                                                          bool is_right) /**< choose order, true is reduceRight */
 {
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info_p->id);
   uint32_t byte_pos;
 
@@ -411,6 +441,11 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this objec
                                           ecma_value_t cb_func_val, /**< callback function */
                                           ecma_value_t cb_this_arg) /**< 'this' of the callback function */
 {
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info_p->id);
 
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
@@ -478,13 +513,6 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this objec
 
     uint8_t *target_buffer_p = ecma_typedarray_get_buffer (&target_info);
 
-    if (JERRY_UNLIKELY (target_buffer_p == NULL))
-    {
-      ecma_deref_object (new_typedarray_p);
-      ret_value = ECMA_VALUE_ERROR;
-      goto cleanup;
-    }
-
     ecma_typedarray_setter_fn_t target_typedarray_setter_cb = ecma_get_typedarray_setter_fn (target_info.id);
 
     for (uint32_t idx = 0; idx < collected_p->item_count; idx++)
@@ -521,6 +549,11 @@ static ecma_value_t
 ecma_builtin_typedarray_prototype_reverse (ecma_value_t this_arg, /**< this argument */
                                            ecma_typedarray_info_t *info_p) /**< object info */
 {
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   uint8_t *buffer_p = ecma_arraybuffer_get_buffer (info_p->array_buffer_p) + info_p->offset;
   uint32_t middle = (info_p->length / 2) << info_p->shift;
   uint32_t buffer_last = (info_p->length << info_p->shift) - info_p->element_size;
@@ -568,21 +601,33 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
 
   ecma_object_t *target_typedarray_p = ecma_get_object_from_value (this_arg);
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (target_typedarray_p);
-  uint8_t *target_buffer_p = ecma_typedarray_get_buffer (&target_info);
 
-  if (JERRY_UNLIKELY (target_buffer_p == NULL))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (target_info.array_buffer_p))
   {
     return ECMA_VALUE_ERROR;
   }
+
+  if (ecma_arraybuffer_is_detached (target_info.array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
+  uint8_t *target_buffer_p = ecma_typedarray_get_buffer (&target_info);
 
   ecma_object_t *src_typedarray_p = ecma_get_object_from_value (arr_val);
   ecma_typedarray_info_t src_info = ecma_typedarray_get_info (src_typedarray_p);
-  uint8_t *src_buffer_p = ecma_typedarray_get_buffer (&src_info);
 
-  if (JERRY_UNLIKELY (src_buffer_p == NULL))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (src_info.array_buffer_p))
   {
     return ECMA_VALUE_ERROR;
   }
+
+  if (ecma_arraybuffer_is_detached (src_info.array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
+  uint8_t *src_buffer_p = ecma_typedarray_get_buffer (&src_info);
 
   uint32_t target_offset_uint32 = ecma_number_to_uint32 (target_offset_num);
 
@@ -670,12 +715,18 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
   /* 11. ~ 15. */
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
-  uint8_t *target_buffer_p = ecma_typedarray_get_buffer (&target_info);
 
-  if (JERRY_UNLIKELY (target_buffer_p == NULL))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (target_info.array_buffer_p))
   {
     return ECMA_VALUE_ERROR;
   }
+
+  if (ecma_arraybuffer_is_detached (target_info.array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
+  uint8_t *target_buffer_p = ecma_typedarray_get_buffer (&target_info);
 
   /* 16.~ 17. */
   ecma_value_t source_obj = ecma_op_to_object (arr_val);
@@ -846,6 +897,13 @@ static ecma_value_t
 ecma_builtin_typedarray_prototype_join (ecma_object_t *obj_p, /**< this object */
                                         ecma_value_t separator_arg) /**< separator argument */
 {
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
+
+  if (ecma_arraybuffer_is_detached (info.array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   /* 2. */
   uint32_t length = ecma_typedarray_get_length (obj_p);
   ecma_string_t *separator_string_p = ecma_op_typedarray_get_separator_string (separator_arg);
@@ -975,6 +1033,11 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this object 
 {
   ecma_value_t value_to_set;
 
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
 #if JERRY_BUILTIN_BIGINT
   if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info_p->id))
   {
@@ -1027,12 +1090,12 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this object 
     subarray_length = end_index_uint32 - begin_index_uint32;
   }
 
-  uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
-
-  if (JERRY_UNLIKELY (buffer_p == NULL))
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
   {
-    return ECMA_VALUE_ERROR;
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
   }
+
+  uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
 
   buffer_p += begin_index_uint32 << info_p->shift;
 
@@ -1171,6 +1234,11 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
   JERRY_ASSERT (ecma_is_typedarray (this_arg));
   JERRY_ASSERT (ecma_is_value_undefined (compare_func) || ecma_op_is_callable (compare_func));
 
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   if (!info_p->length)
   {
     return ecma_copy_value (this_arg);
@@ -1269,6 +1337,11 @@ ecma_builtin_typedarray_prototype_find_helper (ecma_value_t this_arg, /**< this 
                                                bool is_find) /**< true - find routine
                                                               *   false - findIndex routine */
 {
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   JERRY_ASSERT (ecma_is_value_object (predicate));
   ecma_object_t *func_object_p = ecma_get_object_from_value (predicate);
   uint8_t *buffer_p = ecma_arraybuffer_get_buffer (info_p->array_buffer_p) + info_p->offset;
@@ -1364,6 +1437,11 @@ ecma_builtin_typedarray_prototype_index_of (ecma_typedarray_info_t *info_p, /**<
                                             const ecma_value_t args[], /**< arguments list */
                                             uint32_t args_number) /**< number of arguments */
 {
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
 #if JERRY_BUILTIN_BIGINT
   bool is_bigint = ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info_p->id);
 #else /* !JERRY_BUILTIN_BIGINT */
@@ -1390,11 +1468,6 @@ ecma_builtin_typedarray_prototype_index_of (ecma_typedarray_info_t *info_p, /**<
   }
 
   uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
-
-  if (JERRY_UNLIKELY (buffer_p == NULL))
-  {
-    return ECMA_VALUE_ERROR;
-  }
 
   uint8_t *limit_p = buffer_p + (info_p->length << info_p->shift);
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info_p->id);
@@ -1435,6 +1508,11 @@ ecma_builtin_typedarray_prototype_last_index_of (ecma_typedarray_info_t *info_p,
                                                  const ecma_value_t args[], /**< arguments list */
                                                  uint32_t args_number) /**< number of arguments */
 {
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
 #if JERRY_BUILTIN_BIGINT
   bool is_bigint = ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info_p->id);
 #else /* !JERRY_BUILTIN_BIGINT */
@@ -1514,6 +1592,11 @@ ecma_builtin_typedarray_prototype_copy_within (ecma_value_t this_arg, /**< this 
                                                const ecma_value_t args[], /**< arguments list */
                                                uint32_t args_number) /**< number of arguments */
 {
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   uint32_t relative_target = 0;
   uint32_t relative_start = 0;
   uint32_t relative_end = info_p->length;
@@ -1547,12 +1630,12 @@ ecma_builtin_typedarray_prototype_copy_within (ecma_value_t this_arg, /**< this 
     return ecma_copy_value (this_arg);
   }
 
-  uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
-
-  if (JERRY_UNLIKELY (buffer_p == NULL))
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
   {
-    return ECMA_VALUE_ERROR;
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
   }
+
+  uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
 
   uint32_t distance = relative_end - relative_start;
   uint32_t offset = info_p->length - relative_target;
@@ -1583,6 +1666,11 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
   uint32_t relative_start = 0;
   uint32_t relative_end = info_p->length;
 
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   if (args_number > 0)
   {
     if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (args[0], info_p->length, &relative_start)))
@@ -1596,6 +1684,8 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
       return ECMA_VALUE_ERROR;
     }
   }
+
+  uint8_t *src_buffer_p = ecma_typedarray_get_buffer (info_p);
 
   int32_t distance = (int32_t) (relative_end - relative_start);
   uint32_t count = distance > 0 ? (uint32_t) distance : 0;
@@ -1611,22 +1701,15 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
   }
 
   ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
-  uint8_t *src_buffer_p = ecma_typedarray_get_buffer (info_p);
-
-  if (JERRY_UNLIKELY (src_buffer_p == NULL))
-  {
-    ecma_deref_object (new_typedarray_p);
-    return ECMA_VALUE_ERROR;
-  }
-
   ecma_typedarray_info_t new_typedarray_info = ecma_typedarray_get_info (new_typedarray_p);
-  uint8_t *dst_buffer_p = ecma_typedarray_get_buffer (&new_typedarray_info);
 
-  if (JERRY_UNLIKELY (dst_buffer_p == NULL))
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
   {
     ecma_deref_object (new_typedarray_p);
-    return ECMA_VALUE_ERROR;
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
   }
+
+  uint8_t *dst_buffer_p = ecma_typedarray_get_buffer (&new_typedarray_info);
 
   JERRY_ASSERT (new_typedarray_info.offset == 0);
 
@@ -1677,6 +1760,11 @@ ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_typedarray_info_
                                                            uint32_t index) /** array index */
 {
   ecma_value_t element_value = ecma_get_typedarray_element (info_p, index);
+
+  if (ECMA_IS_VALUE_ERROR (element_value))
+  {
+    return element_value;
+  }
 
   ecma_value_t call_value = ecma_op_invoke_by_magic_id (element_value, LIT_MAGIC_STRING_TO_LOCALE_STRING_UL, NULL, 0);
 
@@ -1763,6 +1851,11 @@ ecma_builtin_typedarray_prototype_includes (ecma_typedarray_info_t *info_p, /**<
   bool is_bigint = false;
 #endif /* JERRRY_BUILTIN_BIGINT */
 
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
   if (args_number == 0 || (!ecma_is_value_number (args[0]) && !is_bigint) || info_p->length == 0)
   {
     return ECMA_VALUE_FALSE;
@@ -1779,11 +1872,6 @@ ecma_builtin_typedarray_prototype_includes (ecma_typedarray_info_t *info_p, /**<
   }
 
   uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
-
-  if (JERRY_UNLIKELY (buffer_p == NULL))
-  {
-    return ECMA_VALUE_ERROR;
-  }
 
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info_p->id);
   uint8_t *limit_p = buffer_p + (info_p->length << info_p->shift);
@@ -1838,7 +1926,7 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint8_t builtin_routine_id, 
     info = ecma_typedarray_get_info (typedarray_p);
 
     if (builtin_routine_id != ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_SUBARRAY
-        && ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (info.array_buffer_p))
+        && ECMA_ARRAYBUFFER_LAZY_ALLOC (info.array_buffer_p))
     {
       return ECMA_VALUE_ERROR;
     }

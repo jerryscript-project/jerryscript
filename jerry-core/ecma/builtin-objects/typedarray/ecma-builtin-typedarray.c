@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-arraybuffer-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -127,13 +128,20 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
   ecma_object_t *ret_obj_p = ecma_get_object_from_value (ret_val);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (ret_obj_p);
   ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
-  lit_utf8_byte_t *buffer_p = ecma_typedarray_get_buffer (&info);
 
-  if (JERRY_UNLIKELY (buffer_p == NULL))
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (info.array_buffer_p))
   {
     ecma_deref_object (ret_obj_p);
     return ECMA_VALUE_ERROR;
   }
+
+  if (ecma_arraybuffer_is_detached (info.array_buffer_p))
+  {
+    ecma_deref_object (ret_obj_p);
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
+  lit_utf8_byte_t *buffer_p = ecma_typedarray_get_buffer (&info);
 
   while (k < arguments_list_len)
   {

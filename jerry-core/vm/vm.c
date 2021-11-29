@@ -2185,7 +2185,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (opcode == CBC_EXT_SET_NEXT_COMPUTED_FIELD_ANONYMOUS_FUNC)
           {
-            ecma_object_t *func_obj_p = ecma_get_object_from_value (result);
+            ecma_object_t *func_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
 
             JERRY_ASSERT (ecma_find_named_property (func_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_NAME)) == NULL);
             ecma_property_value_t *value_p;

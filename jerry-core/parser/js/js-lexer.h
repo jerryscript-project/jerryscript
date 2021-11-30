@@ -171,6 +171,7 @@ typedef enum
   LEXER_RIGHT_PAREN, /**< ")" */
   LEXER_RIGHT_SQUARE, /**< "]" */
   LEXER_DOT, /**< "." */
+  LEXER_QUESTION_MARK_DOT, /**< "?." */
   LEXER_SEMICOLON, /**< ";" */
   LEXER_COLON, /**< ":" */
   LEXER_COMMA, /**< "," */

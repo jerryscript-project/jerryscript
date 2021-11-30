@@ -166,6 +166,7 @@ typedef enum
   VM_OC_JUMP, /**< jump */
 #if JERRY_ESNEXT
   VM_OC_BRANCH_IF_NULLISH, /** branch if undefined or null */
+  VM_OC_BRANCH_OPTIONAL_CHAIN, /** branch if undefined or null and adjust stack */
   VM_OC_POP_REFERENCE, /** prop identifier or property reference from the stack */
 #endif /* JERRY_ESNEXT */
   VM_OC_BRANCH_IF_STRICT_EQUAL, /**< branch if strict equal */
@@ -327,6 +328,7 @@ typedef enum
 #if !JERRY_ESNEXT
   VM_OC_EXP = VM_OC_NONE, /**< exponentiation */
   VM_OC_BRANCH_IF_NULLISH = VM_OC_NONE, /** branch if undefined or null */
+  VM_OC_BRANCH_OPTIONAL_CHAIN = VM_OC_NONE, /** branch if undefined or null and adjust stack */
   VM_OC_POP_REFERENCE = VM_OC_NONE, /** prop identifier or property reference from the stack */
 #endif /* !JERRY_ESNEXT */
 #if !JERRY_DEBUGGER

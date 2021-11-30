@@ -123,6 +123,9 @@ typedef enum
   LEXER_ASSIGN_MODULO, /**< "%=" (prec: 3) */
 #if JERRY_ESNEXT
   LEXER_ASSIGN_EXPONENTIATION, /**< "**=" (prec: 3) */
+  LEXER_ASSIGN_NULLISH_COALESCING, /**< "??=" (prec: 3) */
+  LEXER_ASSIGN_LOGICAL_OR, /**< "||=" (prec: 3) */
+  LEXER_ASSIGN_LOGICAL_AND, /**< "&&=" (prec: 3) */
 #endif /* JERRY_ESNEXT */
   LEXER_ASSIGN_LEFT_SHIFT, /**< "<<=" (prec: 3) */
   LEXER_ASSIGN_RIGHT_SHIFT, /**< ">>=" (prec: 3) */
@@ -217,6 +220,7 @@ typedef enum
   LEXER_ASSIGN_CONST, /**< a const binding is reassigned */
   LEXER_INVALID_PATTERN, /**< special value for invalid destructuring pattern */
   LEXER_PRIVATE_PRIMARY_EXPR, /**< private field in primary expession position */
+  LEXER_ASSIGN_REFERENCE, /**< special value for reference assignment */
 #endif /* JERRY_ESNEXT */
 
 /* Keywords which are not keyword tokens. */

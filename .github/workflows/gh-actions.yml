@@ -259,7 +259,7 @@ jobs:
       - run: make -f ./targets/mbedos5/Makefile.travis install
       - run: make -f ./targets/mbedos5/Makefile.travis script
 
-  Zephyr_Qemu_x86_Build_Test:
+  Zephyr_STM32F4_Build_Test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

@@ -23,16 +23,16 @@ all:
 
 # Install tools via apt.
 install-apt-get-deps:
-	sudo apt-get install -q -y gperf dfu-util device-tree-compiler
+	sudo apt-get install -q -y gperf dfu-util device-tree-compiler gcc-arm-none-eabi
 
 # Install Zephyr SDK.
-install-zephyr-sdk:
-	wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.13.0/zephyr-sdk-0.13.0-linux-x86_64-setup.run -O ../zephyr-sdk-0.13.0-linux-x86_64-setup.run
-	sh ../zephyr-sdk-0.13.0-linux-x86_64-setup.run -- -y -d $(CURDIR)/../zephyr-sdk-0.13.0
+install-zephyr-toolchain:
+	wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.13.2/zephyr-toolchain-arm-0.13.2-linux-x86_64-setup.run -O ../zephyr-toolchain-arm-0.13.2-linux-x86_64-setup.run
+	sh ../zephyr-toolchain-arm-0.13.2-linux-x86_64-setup.run -- -y -d $(CURDIR)/../zephyr-toolchain-0.13.2
 
 # Fetch Zephyr Project repository and install python dependencies.
 install-zephyr:
-	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v2.5-branch
+	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v2.7.0
 	pip3 install -U pip
 	pip3 install -U setuptools
 	pip3 install -r ../zephyr/scripts/requirements.txt
@@ -43,16 +43,21 @@ install-cmake:
 	cmake --version
 
 # Perform all the necessary (JerryScript-independent) installation steps.
-install-noapt: install-zephyr-sdk install-zephyr install-cmake
+install-noapt: install-zephyr-toolchain install-zephyr install-cmake
 install: install-apt-get-deps install-noapt
 
 
 ## Targets for building Zephyr with JerryScript.
 
+# Initialize west meta-tool
+init-west:
+	west init -l $(CURDIR)/../zephyr
+	west update hal_stm32 cmsis
+	west zephyr-export
+
 # Build the firmware (Zephyr with JerryScript).
 SHELL=bash
-script:
+script: init-west
 	export ZEPHYR_TOOLCHAIN_VARIANT=zephyr && \
-	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-sdk-0.13.0 && \
-	source ../zephyr/zephyr-env.sh && \
-	$(MAKE) -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_x86
+	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-toolchain-0.13.2 && \
+	west build -d $(CURDIR)/../build -p auto -b stm32f4_disco targets/zephyr/ -- -G'Unix Makefiles'

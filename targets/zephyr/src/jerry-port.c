@@ -13,12 +13,32 @@
  * limitations under the License.
  */
 
-#include <stdarg.h>
-
 #include <zephyr.h>
+#include <stdarg.h>
+#include <stdlib.h>
 
 #include "jerryscript-port.h"
 
+/**
+ * JerryScript log level
+ */
+static jerry_log_level_t jerry_log_level = JERRY_LOG_LEVEL_ERROR;
+
+/**
+ * Sets log level.
+ */
+void set_log_level (jerry_log_level_t level)
+{
+  jerry_log_level = level;
+} /* set_log_level */
+
+/**
+ * Aborts the program.
+ */
+void jerry_port_fatal (jerry_fatal_code_t code)
+{
+  exit (1);
+} /* jerry_port_fatal */
 
 /**
  * Provide log message implementation for the engine.
@@ -28,35 +48,81 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
                 const char *format, /**< format string */
                 ...)  /**< parameters */
 {
-  (void) level; /* ignore log level */
-
-  va_list args;
-  va_start (args, format);
-  vfprintf (stderr, format, args);
-  va_end (args);
+  if (level <= jerry_log_level)
+  {
+    va_list args;
+    va_start (args, format);
+    vfprintf (stderr, format, args);
+    va_end (args);
+  }
 } /* jerry_port_log */
 
+/**
+ * Determines the size of the given file.
+ * @return size of the file
+ */
+static size_t
+jerry_port_get_file_size (FILE *file_p) /**< opened file */
+{
+  fseek (file_p, 0, SEEK_END);
+  long size = ftell (file_p);
+  fseek (file_p, 0, SEEK_SET);
+
+  return (size_t) size;
+} /* jerry_port_get_file_size */
 
 /**
- * Provide fatal message implementation for the engine.
+ * Opens file with the given path and reads its source.
+ * @return the source of the file
  */
-void jerry_port_fatal (jerry_fatal_code_t code)
+uint8_t *
+jerry_port_read_source (const char *file_name_p, /**< file name */
+                        size_t *out_size_p) /**< [out] read bytes */
 {
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Jerry Fatal Error!\n");
-  while (true);
-} /* jerry_port_fatal */
+  FILE *file_p = fopen (file_name_p, "rb");
+
+  if (file_p == NULL)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file: %s\n", file_name_p);
+    return NULL;
+  }
+
+  size_t file_size = jerry_port_get_file_size (file_p);
+  uint8_t *buffer_p = (uint8_t *) malloc (file_size);
+
+  if (buffer_p == NULL)
+  {
+    fclose (file_p);
+
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to allocate memory for module");
+    return NULL;
+  }
+
+  size_t bytes_read = fread (buffer_p, 1u, file_size, file_p);
+
+  if (!bytes_read)
+  {
+    fclose (file_p);
+    free (buffer_p);
+
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to read file: %s\n", file_name_p);
+    return NULL;
+  }
+
+  fclose (file_p);
+  *out_size_p = bytes_read;
+
+  return buffer_p;
+} /* jerry_port_read_source */
 
 /**
- * Implementation of jerry_port_get_current_time.
- *
- * @return current timer's counter value in milliseconds
+ * Release the previously opened file's content.
  */
-double
-jerry_port_get_current_time (void)
+void
+jerry_port_release_source (uint8_t *buffer_p) /**< buffer to free */
 {
-  int64_t ms = k_uptime_get();
-  return (double) ms;
-} /* jerry_port_get_current_time */
+  free (buffer_p);
+} /* jerry_port_release_source */
 
 /**
  * Dummy function to get the time zone adjustment.
@@ -71,6 +137,18 @@ jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
 } /* jerry_port_get_local_time_zone_adjustment */
 
 /**
+ * Dummy function to get the current time.
+ *
+ * @return 0
+ */
+double
+jerry_port_get_current_time (void)
+{
+  int64_t ms = k_uptime_get();
+  return (double) ms;
+} /* jerry_port_get_current_time */
+
+/**
  * Provide the implementation of jerry_port_print_char.
  * Uses 'printf' to print a single character to standard output.
  */
@@ -79,3 +157,36 @@ jerry_port_print_char (char c) /**< the character to print */
 {
   printf ("%c", c);
 } /* jerry_port_print_char */
+
+/**
+ * Provide implementation of jerry_port_sleep.
+ */
+void jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
+{
+  k_usleep ((useconds_t) sleep_time * 1000);
+} /* jerry_port_sleep */
+
+/**
+ * Pointer to the current context.
+ */
+static jerry_context_t *current_context_p = NULL;
+
+/**
+ * Set the current_context_p as the passed pointer.
+ */
+void
+jerry_port_default_set_current_context (jerry_context_t *context_p) /**< points to the created context */
+{
+  current_context_p = context_p;
+} /* jerry_port_default_set_current_context */
+
+/**
+ * Get the current context.
+ *
+ * @return the pointer to the current context
+ */
+jerry_context_t *
+jerry_port_get_current_context (void)
+{
+  return current_context_p;
+} /* jerry_port_get_current_context */

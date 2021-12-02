@@ -11,38 +11,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-cmake_minimum_required(VERSION 3.8)
 
-include($ENV{ZEPHYR_BASE}/cmake/app/boilerplate.cmake NO_POLICY_SCOPE)
+cmake_minimum_required(VERSION 3.20.0)
+
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(NONE)
 
-target_sources(app PRIVATE src/main-zephyr.c src/jerry-port.c src/getline-zephyr.c)
+set(JERRY_BASE ${CMAKE_SOURCE_DIR}/../..)
 
+# Build JerryScript
+execute_process(COMMAND ${JERRY_BASE}/tools/build.py
+                            --clean
+                            --lto=OFF
+                            --jerry-cmdline=OFF
+                            --jerry-math=ON
+                            --amalgam=ON
+                            --mem-heap=70
+                            --profile=es.next
+                            --compile-flag=--sysroot=${ZEPHYR_BASE}
+                            --toolchain=${JERRY_BASE}/cmake/toolchain_mcu_stm32f4.cmake)
+
+# Define library targets
 add_library(jerry-core STATIC IMPORTED)
 add_library(jerry-ext STATIC IMPORTED)
-set_target_properties(jerry-core PROPERTIES IMPORTED_LOCATION
-                      ${CMAKE_CURRENT_BINARY_DIR}/../obj/lib/libjerry-core.a)
-set_target_properties(jerry-core PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                      ${CMAKE_CURRENT_SOURCE_DIR}/../../jerry-core/include)
-set_target_properties(jerry-ext PROPERTIES IMPORTED_LOCATION
-                      ${CMAKE_CURRENT_BINARY_DIR}/../obj/lib/libjerry-ext.a)
-set_target_properties(jerry-ext PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                      ${CMAKE_CURRENT_SOURCE_DIR}/../../jerry-ext/include)
+
+# Define include directories and archives
+set_target_properties(jerry-core PROPERTIES IMPORTED_LOCATION ${JERRY_BASE}/build/lib/libjerry-core.a)
+set_target_properties(jerry-core PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${JERRY_BASE}/jerry-core/include)
+set_target_properties(jerry-ext PROPERTIES IMPORTED_LOCATION ${JERRY_BASE}/build/lib/libjerry-ext.a)
+set_target_properties(jerry-ext PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${JERRY_BASE}/jerry-ext/include)
+
+target_sources(app PRIVATE src/main-zephyr.c src/getline-zephyr.c src/jerry-port.c src/jerry-module.c)
 target_link_libraries(app PUBLIC jerry-core jerry-ext)
-
-zephyr_get_include_directories_for_lang_as_string(C includes)
-zephyr_get_system_include_directories_for_lang_as_string(C system_includes)
-zephyr_get_compile_definitions_for_lang_as_string(C definitions)
-zephyr_get_compile_options_for_lang_as_string(C options)
-
-add_custom_target(
-  outputexports
-  COMMAND echo CC="${CMAKE_C_COMPILER}"
-  COMMAND echo Z_CFLAGS=${system_includes} ${includes} ${definitions} ${options}
-  COMMAND echo NOSTDINC_FLAGS=${system_includes}
-  COMMAND echo ZEPHYRINCLUDE=${includes}
-  COMMAND echo KBUILD_CFLAGS=${definitions} ${options}
-  VERBATIM
-  USES_TERMINAL
-)
-

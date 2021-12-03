@@ -124,33 +124,23 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
                                   uint32_t args_number) /**< number of arguments */
 {
   ecma_number_t result_num = ecma_number_make_infinity (is_max);
-  bool nan_found = false;
 
   while (args_number > 0)
   {
     ecma_number_t arg_num;
+    ecma_value_t value = ecma_op_to_number (*arg, &arg_num);
 
-    if (ecma_is_value_number (*arg))
+    if (ECMA_IS_VALUE_ERROR (value))
     {
-      arg_num = ecma_get_number_from_value (*arg);
-    }
-    else
-    {
-      ecma_value_t value = ecma_op_to_number (*arg, &arg_num);
-
-      if (ECMA_IS_VALUE_ERROR (value))
-      {
-        return value;
-      }
+      return value;
     }
 
     arg++;
     args_number--;
 
-    if (JERRY_UNLIKELY (nan_found || ecma_number_is_nan (arg_num)))
+    if (ecma_number_is_nan (arg_num))
     {
-      nan_found = true;
-      continue;
+      result_num = arg_num;
     }
 
     if (ecma_number_is_zero (arg_num) && ecma_number_is_zero (result_num))
@@ -169,11 +159,6 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
         result_num = arg_num;
       }
     }
-  }
-
-  if (JERRY_UNLIKELY (nan_found))
-  {
-    result_num = ecma_number_make_nan ();
   }
 
   return ecma_make_number_value (result_num);
@@ -198,52 +183,35 @@ ecma_builtin_math_object_hypot (const ecma_value_t *arg, /**< arguments list */
     return ecma_make_number_value (0.0);
   }
 
-  bool nan_found = false;
-  bool inf_found = false;
   ecma_number_t result_num = 0;
+  bool inf = false;
 
   while (args_number > 0)
   {
     ecma_number_t arg_num;
-    if (ecma_is_value_number (*arg))
+    ecma_value_t value = ecma_op_to_number (*arg, &arg_num);
+    if (ECMA_IS_VALUE_ERROR (value))
     {
-      arg_num = ecma_get_number_from_value (*arg);
-    }
-    else
-    {
-      ecma_value_t value = ecma_op_to_number (*arg, &arg_num);
-      if (ECMA_IS_VALUE_ERROR (value))
-      {
-        return value;
-      }
+      return value;
     }
 
     arg++;
     args_number--;
 
-    if (JERRY_UNLIKELY (inf_found || ecma_number_is_infinity (arg_num)))
+    if (ecma_number_is_nan (arg_num) && !inf)
     {
-      inf_found = true;
+      result_num = arg_num;
       continue;
     }
 
-    if (JERRY_UNLIKELY (nan_found || ecma_number_is_nan (arg_num)))
+    if (ecma_number_is_infinity (arg_num))
     {
-      nan_found = true;
+      inf = true;
+      result_num = ecma_number_make_infinity (false);
       continue;
     }
 
     result_num += arg_num * arg_num;
-  }
-
-  if (JERRY_UNLIKELY (inf_found))
-  {
-    return ecma_make_number_value (ecma_number_make_infinity (false));
-  }
-
-  if (JERRY_UNLIKELY (nan_found))
-  {
-    return ecma_make_nan_value ();
   }
 
   return ecma_make_number_value (sqrt (result_num));
@@ -344,18 +312,11 @@ ecma_builtin_math_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
 
     if (arguments_number >= 1)
     {
-      if (ecma_is_value_number (arguments_list[0]))
-      {
-        x = ecma_get_number_from_value (arguments_list[0]);
-      }
-      else
-      {
-        ecma_value_t value = ecma_op_to_number (arguments_list[0], &x);
+      ecma_value_t value = ecma_op_to_number (arguments_list[0], &x);
 
-        if (ECMA_IS_VALUE_ERROR (value))
-        {
-          return value;
-        }
+      if (ECMA_IS_VALUE_ERROR (value))
+      {
+        return value;
       }
     }
 

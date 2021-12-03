@@ -20,6 +20,7 @@
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
+#include "ecma-helpers-number.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 

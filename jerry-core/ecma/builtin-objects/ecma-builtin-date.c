@@ -677,7 +677,7 @@ ecma_builtin_date_utc (const ecma_value_t args[], /**< arguments list */
 
   if (args_number < required_args_number)
   {
-    return ecma_make_number_value (ecma_number_make_nan ());
+    return ecma_make_nan_value ();
   }
 
   ecma_number_t tv;
@@ -868,7 +868,7 @@ ecma_builtin_date_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
     {
       if (arguments_number < 1)
       {
-        return ecma_make_number_value (ecma_number_make_nan ());
+        return ecma_make_nan_value ();
       }
 
       ecma_string_t *str_p = ecma_op_to_string (arguments_list_p[0]);

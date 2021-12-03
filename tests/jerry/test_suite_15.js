@@ -1175,7 +1175,7 @@
 
 (function tc_15_07_04_02__001() {
   var a = Number(0.1);
-  assert(a.toString(36) === "0.3llllllllllqsn8td1p464unmi");
+  assert(a.toString(36) === "0.3lllllllllm");
 })();
 
 (function tc_15_07_04_02__013() {

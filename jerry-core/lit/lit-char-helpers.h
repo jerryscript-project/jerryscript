@@ -229,6 +229,7 @@ bool lit_char_is_hex_digit (ecma_char_t c);
 #if JERRY_ESNEXT
 bool lit_char_is_binary_digit (ecma_char_t c);
 #endif /* JERRY_ESNEXT */
+uint8_t lit_char_to_radix (lit_utf8_byte_t c);
 void lit_char_unicode_escape (ecma_stringbuilder_t *builder_p, ecma_char_t c);
 uint32_t lit_char_hex_to_int (ecma_char_t c);
 size_t lit_code_point_to_cesu8_bytes (uint8_t *dst_p, lit_code_point_t code_point);

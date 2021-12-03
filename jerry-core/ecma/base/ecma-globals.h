@@ -1386,112 +1386,34 @@ typedef struct
 #define ECMA_PROPERTY_FLAGS_MASK \
   ((uint16_t) (JERRY_PROP_IS_CONFIGURABLE | JERRY_PROP_IS_ENUMERABLE | JERRY_PROP_IS_WRITABLE))
 
-#if !JERRY_NUMBER_TYPE_FLOAT64
 /**
  * Description of an ecma-number
  */
-typedef float ecma_number_t;
-
-/**
- * It makes possible to read/write an ecma_number_t as uint32_t without strict aliasing rule violation.
- */
-typedef union
-{
-  ecma_number_t as_ecma_number_t;
-  uint32_t as_uint32_t;
-} ecma_number_accessor_t;
-
-#define DOUBLE_TO_ECMA_NUMBER_T(value) (ecma_number_t) (value)
-
-/**
- * Maximum number of significant digits that ecma-number can store
- */
-#define ECMA_NUMBER_MAX_DIGITS (9)
-
-/**
- * Width of sign field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_SIGN_WIDTH (1)
-
-/**
- * Width of biased exponent field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_BIASED_EXP_WIDTH (8)
-
-/**
- * Width of fraction field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_FRACTION_WIDTH (23)
-#elif JERRY_NUMBER_TYPE_FLOAT64
-/**
- * Description of an ecma-number
- */
+#if JERRY_NUMBER_TYPE_FLOAT64
 typedef double ecma_number_t;
-
-/**
- * It makes possible to read/write an ecma_number_t as uint64_t without strict aliasing rule violation.
- */
-typedef union
-{
-  ecma_number_t as_ecma_number_t;
-  uint64_t as_uint64_t;
-} ecma_number_accessor_t;
-
-#define DOUBLE_TO_ECMA_NUMBER_T(value) value
-
-/**
- * Maximum number of significant digits that ecma-number can store
- */
-#define ECMA_NUMBER_MAX_DIGITS         (19)
-
-/**
- * Width of sign field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_SIGN_WIDTH         (1)
-
-/**
- * Width of biased exponent field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_BIASED_EXP_WIDTH   (11)
-
-/**
- * Width of fraction field
- *
- * See also:
- *          IEEE-754 2008, 3.6, Table 3.5
- */
-#define ECMA_NUMBER_FRACTION_WIDTH     (52)
+#else /* !JERRY_NUMBER_TYPE_FLOAT64 */
+typedef float ecma_number_t;
 #endif /* !JERRY_NUMBER_TYPE_FLOAT64 */
+
+/**
+ * Convert double to an ecma-number.
+ */
+#define DOUBLE_TO_ECMA_NUMBER_T(value) ((ecma_number_t) (value))
 
 /**
  * Value '0' of ecma_number_t
  */
-#define ECMA_NUMBER_ZERO ((ecma_number_t) 0)
+#define ECMA_NUMBER_ZERO ((ecma_number_t) 0.0f)
 
 /**
  * Value '1' of ecma_number_t
  */
-#define ECMA_NUMBER_ONE ((ecma_number_t) 1)
+#define ECMA_NUMBER_ONE ((ecma_number_t) 1.0f)
 
 /**
  * Value '2' of ecma_number_t
  */
-#define ECMA_NUMBER_TWO ((ecma_number_t) 2)
+#define ECMA_NUMBER_TWO ((ecma_number_t) 2.0f)
 
 /**
  * Value '0.5' of ecma_number_t
@@ -1501,117 +1423,7 @@ typedef union
 /**
  * Value '-1' of ecma_number_t
  */
-#define ECMA_NUMBER_MINUS_ONE ((ecma_number_t) -1)
-
-#if !JERRY_NUMBER_TYPE_FLOAT64
-/**
- * Number.MIN_VALUE (i.e., the smallest positive value of ecma-number)
- *
- * See also: ECMA_262 v5, 15.7.3.3
- */
-#define ECMA_NUMBER_MIN_VALUE (FLT_MIN)
-/**
- * Number.MAX_VALUE (i.e., the maximum value of ecma-number)
- *
- * See also: ECMA_262 v5, 15.7.3.2
- */
-#define ECMA_NUMBER_MAX_VALUE (FLT_MAX)
-/**
- * Number.EPSILON
- *
- * See also: ECMA_262 v6, 20.1.2.1
- */
-#define ECMA_NUMBER_EPSILON ((ecma_number_t) 1.1920928955078125e-7)
-
-/**
- * Number.MAX_SAFE_INTEGER
- *
- * See also: ECMA_262 v6, 20.1.2.6
- */
-#define ECMA_NUMBER_MAX_SAFE_INTEGER ((ecma_number_t) 0xFFFFFF)
-
-/**
- * Number.MIN_SAFE_INTEGER
- *
- * See also: ECMA_262 v6, 20.1.2.8
- */
-#define ECMA_NUMBER_MIN_SAFE_INTEGER ((ecma_number_t) -0xFFFFFF)
-#elif JERRY_NUMBER_TYPE_FLOAT64
-/**
- * Number.MAX_VALUE (i.e., the maximum value of ecma-number)
- *
- * See also: ECMA_262 v5, 15.7.3.2
- */
-#define ECMA_NUMBER_MAX_VALUE        ((ecma_number_t) 1.7976931348623157e+308)
-
-/**
- * Number.MIN_VALUE (i.e., the smallest positive value of ecma-number)
- *
- * See also: ECMA_262 v5, 15.7.3.3
- */
-#define ECMA_NUMBER_MIN_VALUE        ((ecma_number_t) 5e-324)
-
-/**
- * Number.EPSILON
- *
- * See also: ECMA_262 v6, 20.1.2.1
- */
-#define ECMA_NUMBER_EPSILON          ((ecma_number_t) 2.2204460492503130808472633361816e-16)
-
-/**
- * Number.MAX_SAFE_INTEGER
- *
- * See also: ECMA_262 v6, 20.1.2.6
- */
-#define ECMA_NUMBER_MAX_SAFE_INTEGER ((ecma_number_t) 0x1FFFFFFFFFFFFF)
-
-/**
- * Number.MIN_SAFE_INTEGER
- *
- * See also: ECMA_262 v6, 20.1.2.8
- */
-#define ECMA_NUMBER_MIN_SAFE_INTEGER ((ecma_number_t) -0x1FFFFFFFFFFFFF)
-#endif /* !JERRY_NUMBER_TYPE_FLOAT64 */
-
-/**
- * Euler number
- */
-#define ECMA_NUMBER_E ((ecma_number_t) 2.7182818284590452354)
-
-/**
- * Natural logarithm of 10
- */
-#define ECMA_NUMBER_LN10 ((ecma_number_t) 2.302585092994046)
-
-/**
- * Natural logarithm of 2
- */
-#define ECMA_NUMBER_LN2 ((ecma_number_t) 0.6931471805599453)
-
-/**
- * Logarithm base 2 of the Euler number
- */
-#define ECMA_NUMBER_LOG2E ((ecma_number_t) 1.4426950408889634)
-
-/**
- * Logarithm base 10 of the Euler number
- */
-#define ECMA_NUMBER_LOG10E ((ecma_number_t) 0.4342944819032518)
-
-/**
- * Pi number
- */
-#define ECMA_NUMBER_PI ((ecma_number_t) 3.1415926535897932)
-
-/**
- * Square root of 0.5
- */
-#define ECMA_NUMBER_SQRT_1_2 ((ecma_number_t) 0.7071067811865476)
-
-/**
- * Square root of 2
- */
-#define ECMA_NUMBER_SQRT2 ((ecma_number_t) 1.4142135623730951)
+#define ECMA_NUMBER_MINUS_ONE ((ecma_number_t) -1.0f)
 
 /**
  * Maximum number of characters in string representation of ecma-number

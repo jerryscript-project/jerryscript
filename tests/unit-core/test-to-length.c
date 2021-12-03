@@ -20,6 +20,7 @@
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
+#include "ecma-helpers-number.h"
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
 

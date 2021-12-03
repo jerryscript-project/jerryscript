@@ -17,6 +17,7 @@
 
 #include "ecma-big-uint.h"
 #include "ecma-exceptions.h"
+#include "ecma-helpers-number.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 
@@ -85,21 +86,10 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
 
   if (size >= 3 && string_p[0] == LIT_CHAR_0)
   {
-    if (string_p[1] == LIT_CHAR_LOWERCASE_X || string_p[1] == LIT_CHAR_UPPERCASE_X)
+    radix = lit_char_to_radix (string_p[1]);
+
+    if (radix != 10)
     {
-      radix = 16;
-      string_p += 2;
-      size -= 2;
-    }
-    else if (string_p[1] == LIT_CHAR_LOWERCASE_O || string_p[1] == LIT_CHAR_UPPERCASE_O)
-    {
-      radix = 8;
-      string_p += 2;
-      size -= 2;
-    }
-    else if (string_p[1] == LIT_CHAR_LOWERCASE_B || string_p[1] == LIT_CHAR_UPPERCASE_B)
-    {
-      radix = 2;
       string_p += 2;
       size -= 2;
     }
@@ -292,16 +282,14 @@ static uint32_t
 ecma_bigint_number_to_digits (ecma_number_t number, /**< ecma number */
                               ecma_bigint_digit_t *digits_p) /**< [out] BigInt digits */
 {
-  uint32_t biased_exp;
-  uint64_t fraction;
-
-  ecma_number_unpack (number, NULL, &biased_exp, &fraction);
-
-  if (biased_exp == 0 && fraction == 0)
+  if (ecma_number_is_zero (number))
   {
-    /* Number is zero. */
     return ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (0);
   }
+
+  ecma_binary_num_t binary = ecma_number_to_binary (number);
+  uint32_t biased_exp = ecma_number_biased_exp (binary);
+  uint64_t fraction = ecma_number_fraction (binary);
 
   if (biased_exp < ((1 << (ECMA_NUMBER_BIASED_EXP_WIDTH - 1)) - 1))
   {
@@ -618,7 +606,7 @@ ecma_bigint_to_number (ecma_value_t value) /**< BigInt value */
 
   if (biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
   {
-    result = ecma_number_pack (sign, biased_exp, fraction);
+    result = ecma_number_create (sign, biased_exp, fraction);
   }
   else
   {

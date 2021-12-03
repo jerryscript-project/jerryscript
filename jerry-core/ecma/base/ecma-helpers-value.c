@@ -18,6 +18,7 @@
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
+#include "ecma-helpers-number.h"
 #include "ecma-helpers.h"
 
 #include "jrt-bit-fields.h"
@@ -536,7 +537,7 @@ ecma_make_float_value (ecma_number_t *ecma_num_p) /**< pointer to the float numb
  *
  * @return ecma-value
  */
-extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE JERRY_ATTR_CONST
 ecma_make_nan_value (void)
 {
   return ecma_create_float_number (ecma_number_make_nan ());
@@ -550,13 +551,7 @@ ecma_make_nan_value (void)
 static inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_is_number_equal_to_positive_zero (ecma_number_t ecma_number) /**< number */
 {
-  ecma_number_accessor_t u;
-  u.as_ecma_number_t = ecma_number;
-#if !JERRY_NUMBER_TYPE_FLOAT64
-  return u.as_uint32_t == 0;
-#else /* JERRY_NUMBER_TYPE_FLOAT64 */
-  return u.as_uint64_t == 0;
-#endif /* !JERRY_NUMBER_TYPE_FLOAT64 */
+  return ecma_number_to_binary (ecma_number) == ECMA_NUMBER_BINARY_ZERO;
 } /* ecma_is_number_equal_to_positive_zero */
 
 /**

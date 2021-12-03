@@ -42,8 +42,8 @@ assert((-0.03125).toString(2) === "-0.00001");
 assert((-0.03125).toString(16) === "-0.08");
 assert((-0.0001).toString(4) === "-0.000000122031232023223013010030231")
 assert((-0).toString(16) === "0");
-assert((1e+73).toString(35) === "2nx1mg1l0w4ujlpt449c5qfrkkmtpgpsfsc2prlaqtnjbli2")
-assert((-1e+73).toString(35) === "-2nx1mg1l0w4ujlpt449c5qfrkkmtpgpsfsc2prlaqtnjbli2")
+assert((1e+73).toString(35) === "2nx1mg1l0w6b000000000000000000000000000000000000")
+assert((-1e+73).toString(35) === "-2nx1mg1l0w6b000000000000000000000000000000000000")
 assert((1).toString(undefined) === "1")
 
 assert((123400).toString(2) === "11110001000001000");
@@ -90,7 +90,7 @@ assert ((-0x100000000000061).toString(16) === "-100000000000060");
 
 assert((123400).toString(new Number(16)) === "1e208");
 
-assert(65535.9.toString(3) === "10022220020.2200220022002200220022102110122000001102212");
+assert(65535.9.toString(3) === "10022220020.220022002200220022002201");
 
 var digit_chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',

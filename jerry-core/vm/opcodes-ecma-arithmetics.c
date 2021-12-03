@@ -18,7 +18,6 @@
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
-#include "ecma-number-arithmetic.h"
 #include "ecma-objects.h"
 
 #include "jrt-libc-includes.h"
@@ -89,7 +88,21 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
       }
       case NUMBER_ARITHMETIC_REMAINDER:
       {
-        result = ecma_op_number_remainder (left_number, right_number);
+        if (ecma_number_is_nan (left_number) || ecma_number_is_nan (right_number)
+            || ecma_number_is_infinity (left_number) || ecma_number_is_zero (right_number))
+        {
+          result = ecma_number_make_nan ();
+          break;
+        }
+
+        if (ecma_number_is_infinity (right_number)
+            || (ecma_number_is_zero (left_number) && !ecma_number_is_zero (right_number)))
+        {
+          result = left_number;
+          break;
+        }
+
+        result = ecma_number_remainder (left_number, right_number);
         break;
       }
 #if JERRY_ESNEXT

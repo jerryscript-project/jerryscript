@@ -104,7 +104,7 @@ def get_arguments():
                          help='build jerry-ext (%(choices)s)')
     compgrp.add_argument('--jerry-math', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='build and use jerry-math (%(choices)s)')
-    compgrp.add_argument('--jerry-port-default', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+    compgrp.add_argument('--jerry-port', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='build default jerry port implementation (%(choices)s)')
     compgrp.add_argument('--unittests', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('build unittests (%(choices)s)'))
@@ -201,7 +201,7 @@ def generate_build_options(arguments):
     build_options_append('JERRY_LIBFUZZER', arguments.libfuzzer)
     build_options_append('JERRY_EXT', arguments.jerry_ext)
     build_options_append('JERRY_MATH', arguments.jerry_math)
-    build_options_append('JERRY_PORT_DEFAULT', arguments.jerry_port_default)
+    build_options_append('JERRY_PORT', arguments.jerry_port)
     build_options_append('UNITTESTS', arguments.unittests)
 
     # jerry-core options

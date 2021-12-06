@@ -91,9 +91,9 @@ void JERRY_ATTR_NORETURN jerry_unreachable (const char *file, const char *functi
 /*
  * Logging
  */
-#define JERRYX_ERROR_MSG(...)   jerry_port_log (JERRY_LOG_LEVEL_ERROR, __VA_ARGS__)
-#define JERRYX_WARNING_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_WARNING, __VA_ARGS__)
-#define JERRYX_DEBUG_MSG(...)   jerry_port_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__)
-#define JERRYX_TRACE_MSG(...)   jerry_port_log (JERRY_LOG_LEVEL_TRACE, __VA_ARGS__)
+#define JERRYX_ERROR_MSG(...)   jerry_log (JERRY_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define JERRYX_WARNING_MSG(...) jerry_log (JERRY_LOG_LEVEL_WARNING, __VA_ARGS__)
+#define JERRYX_DEBUG_MSG(...)   jerry_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define JERRYX_TRACE_MSG(...)   jerry_log (JERRY_LOG_LEVEL_TRACE, __VA_ARGS__)
 
 #endif /* !JEXT_COMMON_H */

@@ -748,7 +748,7 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
   /* Poor man's carry flag check: it is impossible to allocate this large string. */
   if (new_size < (cesu8_string1_size | cesu8_string2_size))
   {
-    jerry_fatal (ERR_OUT_OF_MEMORY);
+    jerry_fatal (JERRY_FATAL_OUT_OF_MEMORY);
   }
 
   lit_magic_string_id_t magic_string_id;
@@ -880,7 +880,7 @@ ecma_ref_ecma_string_non_direct (ecma_string_t *string_p) /**< string descriptor
   }
   else
   {
-    jerry_fatal (ERR_REF_COUNT_LIMIT);
+    jerry_fatal (JERRY_FATAL_REF_COUNT_LIMIT);
   }
 } /* ecma_ref_ecma_string_non_direct */
 

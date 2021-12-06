@@ -14,7 +14,7 @@ Non-negative integer number expected, 0 turns off this function
 Stopped at breakpoint:1 tests/debugger/do_display.js:15 (in a() at line:15, col:1)
 (jerry-debugger) display 2
 (jerry-debugger) c
-out: hi
+hi
 Stopped at breakpoint:2 tests/debugger/do_display.js:16 (in b() at line:16, col:1)
 Source: tests/debugger/do_display.js
   15   function a() { print("hi"); }
@@ -22,7 +22,7 @@ Source: tests/debugger/do_display.js
   17   function c() { print("hello"); }
 (jerry-debugger) display 5435
 (jerry-debugger) c
-out: welcome
+welcome
 Stopped at breakpoint:3 tests/debugger/do_display.js:17 (in c() at line:17, col:1)
 Source: tests/debugger/do_display.js
    1   // Copyright JS Foundation and other contributors, http://js.foundation
@@ -50,7 +50,7 @@ Source: tests/debugger/do_display.js
   23   d();
 (jerry-debugger) display 0
 (jerry-debugger) c
-out: hello
+hello
 Stopped at breakpoint:4 tests/debugger/do_display.js:18 (in d() at line:18, col:1)
 (jerry-debugger) c
-out: goodbye
+goodbye

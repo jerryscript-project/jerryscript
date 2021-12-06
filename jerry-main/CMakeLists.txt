@@ -58,25 +58,25 @@ endmacro()
 
 # Jerry with libfuzzer support
 if(JERRY_LIBFUZZER)
-  jerry_create_executable("jerry-libfuzzer" "libfuzzer.c")
-  target_link_libraries("jerry-libfuzzer" jerry-port-default -fsanitize=fuzzer)
+  jerry_create_executable("jerry-libfuzzer" "main-libfuzzer.c")
+  target_link_libraries("jerry-libfuzzer" jerry-port-fsanitize=fuzzer)
 endif()
 
 # Jerry standalones
 if(JERRY_CMDLINE)
-  jerry_create_executable("jerry" "main-jerry.c" "main-utils.c" "main-options.c" "cli.c")
-  target_link_libraries("jerry" jerry-ext jerry-port-default)
+  jerry_create_executable("jerry" "main-desktop.c" "arguments/options.c" "arguments/cli.c")
+  target_link_libraries("jerry" jerry-ext jerry-port)
 endif()
 
 if(JERRY_CMDLINE_TEST)
-  jerry_create_executable("jerry-test" "main-jerry-test.c" "benchmarking.c")
-  target_link_libraries("jerry-test" jerry-port-default)
+  jerry_create_executable("jerry-test" "benchmark/main-benchmark.c" "benchmark/stubs.c")
+  target_link_libraries("jerry-test" jerry-port)
   if (JERRY_TEST_STACK_MEASURE)
     target_compile_definitions("jerry-test" PRIVATE -DJERRY_TEST_STACK_MEASURE=1)
   endif()
 endif()
 
 if(JERRY_CMDLINE_SNAPSHOT)
-  jerry_create_executable("jerry-snapshot" "main-jerry-snapshot.c" "cli.c")
-  target_link_libraries("jerry-snapshot" jerry-port-default)
+  jerry_create_executable("jerry-snapshot" "main-snapshot.c" "arguments/cli.c")
+  target_link_libraries("jerry-snapshot" jerry-port)
 endif()

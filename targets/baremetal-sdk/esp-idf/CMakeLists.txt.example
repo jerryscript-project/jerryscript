@@ -1,4 +1,4 @@
-# assumes there is a component with this the following 
+# assumes there is a component with this the following
 # - set the JERRY_DIR wherever the jerryscript source code (the include files) is
 # - a "lib" directory with the 2 libraries below
 

@@ -45,12 +45,13 @@ set(SOURCE_EXT
   debugger/debugger-ws.c
   handle-scope/handle-scope-allocator.c
   handle-scope/handle-scope.c
-  handler/handler-assert.c
-  handler/handler-gc.c
-  handler/handler-print.c
-  handler/handler-register.c
-  handler/handler-source-name.c
   module/module.c
+  util/handlers.c
+  util/print.c
+  util/properties.c
+  util/repl.c
+  util/sources.c
+  util/test262.c
 )
 
 add_library(${JERRY_EXT_NAME} ${SOURCE_EXT})

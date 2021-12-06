@@ -25,7 +25,7 @@ main (void)
 
   if (!jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "ES.next support is disabled\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "ES.next support is disabled\n");
     jerry_cleanup ();
     return 0;
   }

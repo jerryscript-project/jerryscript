@@ -16,6 +16,7 @@
 #include "jerryscript.h"
 
 #include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "jerryscript-debugger-transport.h"
@@ -54,6 +55,7 @@
 #include "debugger.h"
 #include "jcontext.h"
 #include "jmem.h"
+#include "jrt.h"
 #include "js-parser.h"
 #include "lit-char-helpers.h"
 #include "opcodes.h"
@@ -166,13 +168,24 @@ jerry_return (const jerry_value_t value) /**< return value */
 void
 jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 {
-  /* This function cannot be called twice unless jerry_cleanup is called. */
-  JERRY_ASSERT (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_ENABLED));
+#if JERRY_EXTERNAL_CONTEXT
+  size_t total_size = jerry_port_context_alloc (sizeof (jerry_context_t));
+  JERRY_UNUSED (total_size);
+#endif /* JERRY_EXTERNAL_CONTEXT */
 
-  /* Zero out all non-external members. */
-  memset ((char *) &JERRY_CONTEXT_STRUCT + offsetof (jerry_context_t, JERRY_CONTEXT_FIRST_MEMBER),
-          0,
-          sizeof (jerry_context_t) - offsetof (jerry_context_t, JERRY_CONTEXT_FIRST_MEMBER));
+  jerry_context_t *context_p = &JERRY_CONTEXT_STRUCT;
+  memset (context_p, 0, sizeof (jerry_context_t));
+
+#if JERRY_EXTERNAL_CONTEXT && !JERRY_SYSTEM_ALLOCATOR
+  uint32_t heap_start_offset = JERRY_ALIGNUP (sizeof (jerry_context_t), JMEM_ALIGNMENT);
+  uint8_t *heap_p = ((uint8_t *) context_p) + heap_start_offset;
+  uint32_t heap_size = JERRY_ALIGNDOWN (total_size - heap_start_offset, JMEM_ALIGNMENT);
+
+  JERRY_ASSERT (heap_p + heap_size <= ((uint8_t *) context_p) + total_size);
+
+  context_p->heap_p = (jmem_heap_t *) heap_p;
+  context_p->heap_size = heap_size;
+#endif /* JERRY_EXTERNAL_CONTEXT && !JERRY_SYSTEM_ALLOCATOR */
 
   JERRY_CONTEXT (jerry_init_flags) = flags;
 
@@ -218,15 +231,20 @@ jerry_cleanup (void)
        this_p = next_p)
   {
     next_p = this_p->next_p;
+
     if (this_p->manager_p->finalize_cb)
     {
       void *data = (this_p->manager_p->bytes_needed > 0) ? JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p) : NULL;
       this_p->manager_p->finalize_cb (data);
     }
+
     jmem_heap_free_block (this_p, sizeof (jerry_context_data_header_t) + this_p->manager_p->bytes_needed);
   }
 
   jmem_finalize ();
+#if JERRY_EXTERNAL_CONTEXT
+  jerry_port_context_free ();
+#endif /* JERRY_EXTERNAL_CONTEXT */
 } /* jerry_cleanup */
 
 /**
@@ -574,7 +592,7 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
 jerry_value_t
 jerry_module_link (const jerry_value_t module, /**< root module */
                    jerry_module_resolve_cb_t callback, /**< resolve module callback, uses
-                                                        *   jerry_port_module_resolve when NULL is passed */
+                                                        *   jerry_module_resolve when NULL is passed */
                    void *user_p) /**< pointer passed to the resolve callback */
 {
   jerry_assert_api_enabled ();
@@ -582,7 +600,7 @@ jerry_module_link (const jerry_value_t module, /**< root module */
 #if JERRY_MODULE_SYSTEM
   if (callback == NULL)
   {
-    callback = jerry_port_module_resolve;
+    callback = jerry_module_resolve;
   }
 
   ecma_module_t *module_p = ecma_module_get_resolved_module (module);
@@ -3010,7 +3028,7 @@ jerry_string_substr (const jerry_value_t value, jerry_length_t start, jerry_leng
 } /* jerry_string_substr */
 
 /**
- * Iterate over the input string value in the specified encoding, visiting each byte of the encoded string once. If
+ * Iterate over the input string value in the specified encoding, visiting each unit of the encoded string once. If
  * the input value is not a string, the function will do nothing.
  *
  * @param value     the input string value
@@ -3079,45 +3097,6 @@ jerry_string_iterate (const jerry_value_t value,
   }
   ECMA_FINALIZE_UTF8_STRING (buffer_p, buffer_size);
 } /* jerry_string_iterate */
-
-/**
- * Print char wrapper that casts the argument to an unsigned type
- *
- * @param byte    encoded byte value
- * @param user_p  user pointer
- */
-static void
-jerry_print_char_wrapper (uint8_t byte, void *user_p)
-{
-  JERRY_UNUSED (user_p);
-  static const char *const null_str_p = "\\u0000";
-
-  if (JERRY_UNLIKELY (byte == '\0'))
-  {
-    const char *curr_p = null_str_p;
-
-    while (*curr_p != '\0')
-    {
-      jerry_port_print_char (*curr_p++);
-    }
-
-    return;
-  }
-
-  jerry_port_print_char ((char) byte);
-} /* jerry_print_char_wrapper */
-
-/**
- * Print the argument string in utf8 encoding using jerry_port_print_char.
- * If the argument is not a string, the function does nothing.
- *
- * @param value  the input string value
- */
-void
-jerry_string_print (const jerry_value_t value)
-{
-  jerry_string_iterate (value, JERRY_ENCODING_UTF8, &jerry_print_char_wrapper, NULL);
-} /* jerry_string_print */
 
 /**
  * Sets the global callback which is called when an external string is freed.
@@ -3196,6 +3175,25 @@ jerry_object_has (const jerry_value_t object, /**< object value */
 } /* jerry_object_has */
 
 /**
+ * Checks whether the object or it's prototype objects have the given property.
+ *
+ * @return raised error - if the operation fail
+ *         true/false API value  - depend on whether the property exists
+ */
+jerry_value_t
+jerry_object_has_sz (const jerry_value_t object, /**< object value */
+                     const char *key_p) /**< property key */
+{
+  jerry_assert_api_enabled ();
+
+  jerry_value_t key_str = jerry_string_sz (key_p);
+  jerry_value_t result = jerry_object_has (object, key_str);
+  ecma_free_value (key_str);
+
+  return result;
+} /* jerry_object_has */
+
+/**
  * Checks whether the object has the given property.
  *
  * @return ECMA_VALUE_ERROR - if the operation raises error
@@ -3264,7 +3262,7 @@ jerry_object_has_internal (const jerry_value_t object, /**< object value */
  *         exception - otherwise
  */
 jerry_value_t
-jerry_object_delete (const jerry_value_t object, /**< object value */
+jerry_object_delete (jerry_value_t object, /**< object value */
                      const jerry_value_t key) /**< property name (string value) */
 {
   jerry_assert_api_enabled ();
@@ -3278,13 +3276,32 @@ jerry_object_delete (const jerry_value_t object, /**< object value */
 } /* jerry_object_delete */
 
 /**
+ * Delete a property from an object.
+ *
+ * @return boolean value - wether the property was deleted successfully
+ *         exception - otherwise
+ */
+jerry_value_t
+jerry_object_delete_sz (jerry_value_t object, /**< object value */
+                        const char *key_p) /**< property key */
+{
+  jerry_assert_api_enabled ();
+
+  jerry_value_t key_str = jerry_string_sz (key_p);
+  jerry_value_t result = jerry_object_delete (object, key_str);
+  ecma_free_value (key_str);
+
+  return result;
+} /* jerry_object_delete */
+
+/**
  * Delete indexed property from the specified object.
  *
  * @return boolean value - wether the property was deleted successfully
  *         false - otherwise
  */
 jerry_value_t
-jerry_object_delete_index (const jerry_value_t object, /**< object value */
+jerry_object_delete_index (jerry_value_t object, /**< object value */
                            uint32_t index) /**< index to be written */
 {
   jerry_assert_api_enabled ();
@@ -3308,7 +3325,7 @@ jerry_object_delete_index (const jerry_value_t object, /**< object value */
  *         false - otherwise
  */
 bool
-jerry_object_delete_internal (const jerry_value_t object, /**< object value */
+jerry_object_delete_internal (jerry_value_t object, /**< object value */
                               const jerry_value_t key) /**< property name value */
 {
   jerry_assert_api_enabled ();
@@ -3370,6 +3387,28 @@ jerry_object_get (const jerry_value_t object, /**< object value */
   jerry_value_t ret_value =
     ecma_op_object_get (ecma_get_object_from_value (object), ecma_get_prop_name_from_value (key));
   return jerry_return (ret_value);
+} /* jerry_object_get */
+
+/**
+ * Get value of a property to the specified object with the given name.
+ *
+ * Note:
+ *      returned value must be freed with jerry_value_free, when it is no longer needed.
+ *
+ * @return value of the property - if success
+ *         value marked with error flag - otherwise
+ */
+jerry_value_t
+jerry_object_get_sz (const jerry_value_t object, /**< object value */
+                     const char *key_p) /**< property key */
+{
+  jerry_assert_api_enabled ();
+
+  jerry_value_t key_str = jerry_string_sz (key_p);
+  jerry_value_t result = jerry_object_get (object, key_str);
+  ecma_free_value (key_str);
+
+  return result;
 } /* jerry_object_get */
 
 /**
@@ -3513,7 +3552,7 @@ jerry_object_get_internal (const jerry_value_t object, /**< object value */
  *         value marked with error flag - otherwise
  */
 jerry_value_t
-jerry_object_set (const jerry_value_t object, /**< object value */
+jerry_object_set (jerry_value_t object, /**< object value */
                   const jerry_value_t key, /**< property name (string value) */
                   const jerry_value_t value) /**< value to set */
 {
@@ -3529,6 +3568,29 @@ jerry_object_set (const jerry_value_t object, /**< object value */
 } /* jerry_object_set */
 
 /**
+ * Set a property to the specified object with the given name.
+ *
+ * Note:
+ *      returned value must be freed with jerry_value_free, when it is no longer needed.
+ *
+ * @return true value - if the operation was successful
+ *         value marked with error flag - otherwise
+ */
+jerry_value_t
+jerry_object_set_sz (jerry_value_t object, /**< object value */
+                     const char *key_p, /**< property key */
+                     const jerry_value_t value) /**< value to set */
+{
+  jerry_assert_api_enabled ();
+
+  jerry_value_t key_str = jerry_string_sz (key_p);
+  jerry_value_t result = jerry_object_set (object, key_str, value);
+  ecma_free_value (key_str);
+
+  return result;
+} /* jerry_object_set */
+
+/**
  * Set indexed value in the specified object
  *
  * Note:
@@ -3538,7 +3600,7 @@ jerry_object_set (const jerry_value_t object, /**< object value */
  *         value marked with error flag - otherwise
  */
 jerry_value_t
-jerry_object_set_index (const jerry_value_t object, /**< object value */
+jerry_object_set_index (jerry_value_t object, /**< object value */
                         uint32_t index, /**< index to be written */
                         const jerry_value_t value) /**< value to set */
 {
@@ -3565,7 +3627,7 @@ jerry_object_set_index (const jerry_value_t object, /**< object value */
  *         value marked with error flag - otherwise
  */
 bool
-jerry_object_set_internal (const jerry_value_t object, /**< object value */
+jerry_object_set_internal (jerry_value_t object, /**< object value */
                            const jerry_value_t key, /**< property name value */
                            const jerry_value_t value) /**< value to set */
 {
@@ -3807,7 +3869,7 @@ jerry_type_error_or_false (ecma_error_msg_t msg, /**< message */
  *         value marked with error flag - otherwise
  */
 jerry_value_t
-jerry_object_define_own_prop (const jerry_value_t object, /**< object value */
+jerry_object_define_own_prop (jerry_value_t object, /**< object value */
                               const jerry_value_t key, /**< property name (string value) */
                               const jerry_property_descriptor_t *prop_desc_p) /**< property descriptor */
 {
@@ -4083,7 +4145,7 @@ jerry_object_proto (const jerry_value_t object) /**< object value */
  *         value marked with error flag - otherwise
  */
 jerry_value_t
-jerry_object_set_proto (const jerry_value_t object, /**< object value */
+jerry_object_set_proto (jerry_value_t object, /**< object value */
                         const jerry_value_t proto) /**< prototype object value */
 {
   jerry_assert_api_enabled ();
@@ -4259,7 +4321,7 @@ jerry_object_get_native_ptr (const jerry_value_t object, /**< object to get nati
  *      a NULL value deletes the current type info.
  */
 void
-jerry_object_set_native_ptr (const jerry_value_t object, /**< object to set native pointer in */
+jerry_object_set_native_ptr (jerry_value_t object, /**< object to set native pointer in */
                              const jerry_object_native_info_t *native_info_p, /**< object's native type info */
                              void *native_pointer_p) /**< native pointer */
 {
@@ -4310,7 +4372,7 @@ jerry_object_has_native_ptr (const jerry_value_t object, /**< object to set nati
  *         false - otherwise
  */
 bool
-jerry_object_delete_native_ptr (const jerry_value_t object, /**< object to delete native pointer from */
+jerry_object_delete_native_ptr (jerry_value_t object, /**< object to delete native pointer from */
                                 const jerry_object_native_info_t *native_info_p) /**< object's native type info */
 {
   jerry_assert_api_enabled ();
@@ -4388,7 +4450,7 @@ jerry_native_ptr_free (void *native_pointer_p, /**< a valid non-NULL pointer to 
 void
 jerry_native_ptr_set (jerry_value_t *reference_p, /**< a valid non-NULL pointer to
                                                    *   a reference in a native buffer. */
-                      jerry_value_t value) /**< new value of the reference */
+                      const jerry_value_t value) /**< new value of the reference */
 {
   jerry_assert_api_enabled ();
 
@@ -4397,12 +4459,14 @@ jerry_native_ptr_set (jerry_value_t *reference_p, /**< a valid non-NULL pointer 
     return;
   }
 
+  ecma_free_value_if_not_object (*reference_p);
+
   if (ecma_is_value_exception (value))
   {
-    value = ECMA_VALUE_UNDEFINED;
+    *reference_p = ECMA_VALUE_UNDEFINED;
+    return;
   }
 
-  ecma_free_value_if_not_object (*reference_p);
   *reference_p = ecma_copy_value_if_not_object (value);
 } /* jerry_native_ptr_set */
 
@@ -4957,7 +5021,7 @@ jerry_bigint_digit_count (const jerry_value_t value) /**< BigInt value */
  * Get the uint64 digits of a BigInt value (lowest digit first)
  */
 void
-jerry_bigint_to_digits (jerry_value_t value, /**< BigInt value */
+jerry_bigint_to_digits (const jerry_value_t value, /**< BigInt value */
                         uint64_t *digits_p, /**< [out] buffer for digits */
                         uint32_t digit_count, /**< buffer size in digits */
                         bool *sign_p) /**< [out] sign of BigInt */
@@ -5081,6 +5145,150 @@ jerry_validate_string (const jerry_char_t *buffer_p, /**< string buffer */
 } /* jerry_validate_string */
 
 /**
+ * Set the log level of the engine.
+ *
+ * Log messages with lower significance than the current log level will be ignored by `jerry_log`.
+ *
+ * @param level: requested log level
+ */
+void
+jerry_log_set_level (jerry_log_level_t level)
+{
+  JERRY_CONTEXT (log_level) = level;
+} /* jerry_log_set_level */
+
+/**
+ * Log buffer size
+ */
+#define JERRY_LOG_BUFFER_SIZE 64
+
+/**
+ * Log a zero-terminated string message.
+ *
+ * @param str_p: message
+ */
+static void
+jerry_log_string (const char *str_p)
+{
+  jerry_port_log (str_p);
+
+#if JERRY_DEBUGGER
+  if (jerry_debugger_is_connected ())
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
+                                JERRY_DEBUGGER_OUTPUT_LOG,
+                                (const uint8_t *) str_p,
+                                strlen (str_p));
+  }
+#endif /* JERRY_DEBUGGER */
+} /* jerry_log_string */
+
+/**
+ * Log an unsigned number.
+ *
+ * @param num: number
+ * @param buffer_p: buffer used to construct the number string
+ */
+static void
+jerry_log_unsigned (unsigned int num, char *buffer_p)
+{
+  char *cursor_p = buffer_p + JERRY_LOG_BUFFER_SIZE;
+  *(--cursor_p) = '\0';
+
+  while (num > 0)
+  {
+    *(--cursor_p) = (char) ((num % 10) + '0');
+    num /= 10;
+  }
+
+  jerry_log_string (cursor_p);
+} /* jerry_log_unsigned */
+
+/**
+ * Log a zero-terminated formatted message with the specified log level.
+ *
+ * Supported format specifiers:
+ *   %s: zero-terminated string
+ *   %c: character
+ *   %u: unsigned int
+ *
+ * @param format_p: format string
+ * @param level: message log level
+ */
+void
+jerry_log (jerry_log_level_t level, const char *format_p, ...)
+{
+  if (level > JERRY_CONTEXT (log_level))
+  {
+    return;
+  }
+
+  va_list vl;
+  char buffer_p[JERRY_LOG_BUFFER_SIZE];
+  uint32_t buffer_index = 0;
+  const char *cursor_p = format_p;
+  va_start (vl, format_p);
+
+  while (*cursor_p != '\0')
+  {
+    if (*cursor_p == '%' || buffer_index > JERRY_LOG_BUFFER_SIZE - 2)
+    {
+      buffer_p[buffer_index] = '\0';
+      jerry_log_string (buffer_p);
+      buffer_index = 0;
+    }
+
+    if (*cursor_p != '%')
+    {
+      buffer_p[buffer_index++] = *cursor_p++;
+      continue;
+    }
+
+    ++cursor_p;
+
+    if (*cursor_p == '\0')
+    {
+      buffer_p[buffer_index++] = '%';
+      break;
+    }
+
+    switch (*cursor_p++)
+    {
+      case 's':
+      {
+        jerry_log_string (va_arg (vl, char *));
+        break;
+      }
+      case 'c':
+      {
+        /* Arguments of types narrower than int are promoted to int for variadic functions */
+        buffer_p[buffer_index++] = (char) va_arg (vl, int);
+        break;
+      }
+      case 'u':
+      {
+        /* The buffer is always flushed before a substitution, and can be reused to print the number. */
+        jerry_log_unsigned (va_arg (vl, unsigned int), buffer_p);
+        break;
+      }
+      default:
+      {
+        buffer_p[buffer_index++] = '%';
+        break;
+      }
+    }
+  }
+
+  if (buffer_index > 0)
+  {
+    buffer_p[buffer_index] = '\0';
+    jerry_log_string (buffer_p);
+  }
+
+  va_end (vl);
+} /* jerry_log */
+
+/**
  * Allocate memory on the engine's heap.
  *
  * Note:
@@ -5110,71 +5318,6 @@ jerry_heap_free (void *mem_p, /**< value returned by jerry_heap_alloc */
 
   jmem_heap_free_block (mem_p, size);
 } /* jerry_heap_free */
-
-/**
- * Create an external engine context.
- *
- * @return the pointer to the context.
- */
-jerry_context_t *
-jerry_context_alloc (jerry_size_t heap_size, /**< the size of heap */
-                     jerry_context_alloc_cb_t alloc, /**< the alloc function */
-                     void *cb_data_p) /**< the cb_data for alloc function */
-{
-  JERRY_UNUSED (heap_size);
-
-#if JERRY_EXTERNAL_CONTEXT
-
-  size_t total_size = sizeof (jerry_context_t) + JMEM_ALIGNMENT;
-
-#if !JERRY_SYSTEM_ALLOCATOR
-  heap_size = JERRY_ALIGNUP (heap_size, JMEM_ALIGNMENT);
-
-  /* Minimum heap size is 1Kbyte. */
-  if (heap_size < 1024)
-  {
-    return NULL;
-  }
-
-  total_size += heap_size;
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
-
-  total_size = JERRY_ALIGNUP (total_size, JMEM_ALIGNMENT);
-
-  jerry_context_t *context_p = (jerry_context_t *) alloc (total_size, cb_data_p);
-
-  if (context_p == NULL)
-  {
-    return NULL;
-  }
-
-  memset (context_p, 0, total_size);
-
-  uintptr_t context_ptr = ((uintptr_t) context_p) + sizeof (jerry_context_t);
-  context_ptr = JERRY_ALIGNUP (context_ptr, (uintptr_t) JMEM_ALIGNMENT);
-
-  uint8_t *byte_p = (uint8_t *) context_ptr;
-
-#if !JERRY_SYSTEM_ALLOCATOR
-  context_p->heap_p = (jmem_heap_t *) byte_p;
-  context_p->heap_size = heap_size;
-  byte_p += heap_size;
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
-
-  JERRY_ASSERT (byte_p <= ((uint8_t *) context_p) + total_size);
-
-  JERRY_UNUSED (byte_p);
-  return context_p;
-
-#else /* !JERRY_EXTERNAL_CONTEXT */
-
-  JERRY_UNUSED (alloc);
-  JERRY_UNUSED (cb_data_p);
-
-  return NULL;
-
-#endif /* JERRY_EXTERNAL_CONTEXT */
-} /* jerry_context_alloc */
 
 /**
  * When JERRY_VM_HALT is enabled, the callback passed to this function
@@ -5790,7 +5933,7 @@ jerry_arraybuffer (const jerry_length_t size) /**< size of the backing store all
  */
 jerry_value_t
 jerry_arraybuffer_external (uint8_t *buffer_p, /**< the backing store used by the array buffer object */
-                            const jerry_length_t size, /**< size of the buffer in bytes */
+                            jerry_length_t size, /**< size of the buffer in bytes */
                             void *user_p) /**< user pointer assigned to the array buffer object */
 {
   jerry_assert_api_enabled ();
@@ -5850,8 +5993,8 @@ jerry_value_is_shared_arraybuffer (const jerry_value_t value) /**< value to chec
  * @return value of the constructed SharedArrayBuffer object
  */
 jerry_value_t
-jerry_shared_arraybuffer (const jerry_length_t size) /**< size of the backing store allocated
-                                                      *   for the shared array buffer in bytes */
+jerry_shared_arraybuffer (jerry_length_t size) /**< size of the backing store allocated
+                                                *   for the shared array buffer in bytes */
 {
   jerry_assert_api_enabled ();
 
@@ -5877,7 +6020,7 @@ jerry_shared_arraybuffer (const jerry_length_t size) /**< size of the backing st
 jerry_value_t
 jerry_shared_arraybuffer_external (uint8_t *buffer_p, /**< the backing store used by the
                                                        *   shared array buffer object */
-                                   const jerry_length_t size, /**< size of the buffer in bytes */
+                                   jerry_length_t size, /**< size of the buffer in bytes */
                                    void *user_p) /**< user pointer assigned to the
                                                   *   shared array buffer object */
 {
@@ -5945,7 +6088,7 @@ jerry_arraybuffer_allocate_buffer_no_throw (ecma_object_t *arraybuffer_p) /**< A
  * @return number of bytes copied into the ArrayBuffer or SharedArrayBuffer.
  */
 jerry_length_t
-jerry_arraybuffer_write (const jerry_value_t value, /**< target ArrayBuffer or SharedArrayBuffer */
+jerry_arraybuffer_write (jerry_value_t value, /**< target ArrayBuffer or SharedArrayBuffer */
                          jerry_length_t offset, /**< start offset of the ArrayBuffer */
                          const uint8_t *buf_p, /**< buffer to copy from */
                          jerry_length_t buf_size) /**< number of bytes to copy from the buffer */
@@ -6145,7 +6288,7 @@ jerry_arraybuffer_is_detachable (const jerry_value_t value) /**< ArrayBuffer */
  *         value marked with error flag - otherwise
  */
 jerry_value_t
-jerry_arraybuffer_detach (const jerry_value_t value) /**< ArrayBuffer */
+jerry_arraybuffer_detach (jerry_value_t value) /**< ArrayBuffer */
 {
   jerry_assert_api_enabled ();
 
@@ -6207,8 +6350,8 @@ jerry_arraybuffer_has_buffer (const jerry_value_t value) /**< array buffer or ty
  * are not called for these array buffers. The default limit is 256 bytes.
  */
 void
-jerry_arraybuffer_heap_allocation_limit (const jerry_length_t allocation_limit) /**< maximum size of
-                                                                                 *   compact allocation */
+jerry_arraybuffer_heap_allocation_limit (jerry_length_t allocation_limit) /**< maximum size of
+                                                                           *   compact allocation */
 {
   jerry_assert_api_enabled ();
 
@@ -6258,8 +6401,8 @@ jerry_arraybuffer_allocator (jerry_arraybuffer_allocate_cb_t allocate_callback, 
  */
 jerry_value_t
 jerry_dataview (const jerry_value_t array_buffer, /**< arraybuffer to create DataView from */
-                const jerry_length_t byte_offset, /**< offset in bytes, to the first byte in the buffer */
-                const jerry_length_t byte_length) /**< number of elements in the byte array */
+                jerry_length_t byte_offset, /**< offset in bytes, to the first byte in the buffer */
+                jerry_length_t byte_length) /**< number of elements in the byte array */
 {
   jerry_assert_api_enabled ();
 
@@ -6373,7 +6516,7 @@ jerry_dataview_buffer (const jerry_value_t value, /**< DataView to get the array
  *         false - otherwise
  */
 bool
-jerry_value_is_typedarray (jerry_value_t value) /**< value to check if it is a TypedArray */
+jerry_value_is_typedarray (const jerry_value_t value) /**< value to check if it is a TypedArray */
 {
   jerry_assert_api_enabled ();
 
@@ -6584,7 +6727,7 @@ jerry_typedarray_with_buffer (jerry_typedarray_type_t type, /**< type of TypedAr
  *         - JERRY_TYPEDARRAY_INVALID if the argument is not a TypedArray
  */
 jerry_typedarray_type_t
-jerry_typedarray_type (jerry_value_t value) /**< object to get the TypedArray type */
+jerry_typedarray_type (const jerry_value_t value) /**< object to get the TypedArray type */
 {
   jerry_assert_api_enabled ();
 
@@ -6617,7 +6760,7 @@ jerry_typedarray_type (jerry_value_t value) /**< object to get the TypedArray ty
  * @return length of the TypedArray.
  */
 jerry_length_t
-jerry_typedarray_length (jerry_value_t value) /**< TypedArray to query */
+jerry_typedarray_length (const jerry_value_t value) /**< TypedArray to query */
 {
   jerry_assert_api_enabled ();
 
@@ -6647,7 +6790,7 @@ jerry_typedarray_length (jerry_value_t value) /**< TypedArray to query */
  *         TypeError if the object is not a TypedArray.
  */
 jerry_value_t
-jerry_typedarray_buffer (jerry_value_t value, /**< TypedArray to get the arraybuffer from */
+jerry_typedarray_buffer (const jerry_value_t value, /**< TypedArray to get the arraybuffer from */
                          jerry_length_t *byte_offset, /**< [out] byteOffset property */
                          jerry_length_t *byte_length) /**< [out] byteLength property */
 {
@@ -6892,7 +7035,7 @@ jerry_container_type (const jerry_value_t value) /**< the container object */
  * @return an array of items for maps/sets or their iterators, error otherwise
  */
 jerry_value_t
-jerry_container_to_array (jerry_value_t value, /**< the container or iterator object */
+jerry_container_to_array (const jerry_value_t value, /**< the container or iterator object */
                           bool *is_key_value_p) /**< [out] is key-value structure */
 {
   jerry_assert_api_enabled ();

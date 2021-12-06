@@ -1167,7 +1167,7 @@ opfunc_create_implicit_class_constructor (uint8_t opcode, /**< current cbc opcod
 
   if (JERRY_UNLIKELY (script_p->refs_and_type >= CBC_SCRIPT_REF_MAX))
   {
-    jerry_fatal (ERR_REF_COUNT_LIMIT);
+    jerry_fatal (JERRY_FATAL_REF_COUNT_LIMIT);
   }
 
   ecma_object_t *function_object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),

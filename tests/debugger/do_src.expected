@@ -5,7 +5,7 @@ Breakpoint 1 at tests/debugger/do_src.js:16 (in f() at line:15, col:1)
 (jerry-debugger) n
 Stopped at breakpoint:1 tests/debugger/do_src.js:16 (in f() at line:15, col:1)
 (jerry-debugger) next
-out: F1
+F1
 Stopped at tests/debugger/do_src.js:20
 (jerry-debugger) s
 Stopped at <unknown>:1
@@ -20,4 +20,4 @@ Stopped at <unknown>:2 (in f() at line:1, col:5)
    1   f = function f() {
    2 > print('F2') }
 (jerry-debugger) c
-out: F2
+F2

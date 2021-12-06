@@ -282,7 +282,7 @@ main (void)
 
   if (!jerry_feature_enabled (JERRY_FEATURE_MODULE))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Module is disabled!\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "Module is disabled!\n");
     jerry_cleanup ();
     return 0;
   }

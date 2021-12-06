@@ -125,7 +125,7 @@ main (void)
 
   if (!jerry_feature_enabled (JERRY_FEATURE_PROMISE))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Promise is disabled!\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "Promise is disabled!\n");
     return 0;
   }
 

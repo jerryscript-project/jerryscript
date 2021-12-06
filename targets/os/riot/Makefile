@@ -44,7 +44,7 @@ INCLUDES += -I$(JERRYDIR)/jerry-ext/include
 
 ARCHIVES += $(JERRYDIR)/build/lib/libjerry-core.a
 ARCHIVES += $(JERRYDIR)/build/lib/libjerry-ext.a
-ARCHIVES += $(JERRYDIR)/build/lib/libjerry-port-default.a
+ARCHIVES += $(JERRYDIR)/build/lib/libjerry-port.a
 
 USEMODULE += shell
 USEMODULE += shell_commands

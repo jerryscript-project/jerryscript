@@ -60,6 +60,7 @@ script-configure-usbnsh:
 # Configure and build the firmware (NuttX with JerryScript).
 script: script-add-jerryscript-app script-configure-usbnsh
 	echo 'CONFIG_ARCH_FPU=y' >> ../nuttx/.config
+	echo 'CONFIG_SCHED_ONEXIT=y' >> ../nuttx/.config
 	echo 'CONFIG_INTERPRETERS_JERRYSCRIPT=y'>> ../nuttx/.config
 	PATH=$(LOCAL_INSTALL)/bin:$$PATH $(MAKE) -C ../nuttx olddefconfig
 	PATH=$(LOCAL_INSTALL)/bin:$$PATH $(MAKE) -C ../nuttx

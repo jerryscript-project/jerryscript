@@ -39,7 +39,7 @@ main (void)
 
   if (!jerry_feature_enabled (JERRY_FEATURE_LINE_INFO))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Line info support is disabled!\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "Line info support is disabled!\n");
     return 0;
   }
 

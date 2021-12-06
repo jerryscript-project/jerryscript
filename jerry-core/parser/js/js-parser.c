@@ -648,7 +648,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   if (JERRY_UNLIKELY (context_p->script_p->refs_and_type >= CBC_SCRIPT_REF_MAX))
   {
     /* This is probably never happens in practice. */
-    jerry_fatal (ERR_REF_COUNT_LIMIT);
+    jerry_fatal (JERRY_FATAL_REF_COUNT_LIMIT);
   }
 
   context_p->script_p->refs_and_type += CBC_SCRIPT_REF_ONE;

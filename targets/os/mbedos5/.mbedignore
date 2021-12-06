@@ -2,7 +2,6 @@ cmake/*
 docs/*
 jerry-main/*
 jerry-math/*
-jerry-port/*
 targets/*
 tests/*
 third-party/*

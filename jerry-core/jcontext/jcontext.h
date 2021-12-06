@@ -103,11 +103,6 @@ typedef struct jerry_context_data_header
 #define JERRY_CONTEXT_DATA_HEADER_USER_DATA(item_p) ((uint8_t *) (item_p + 1))
 
 /**
- * First non-external member of the jerry context
- */
-#define JERRY_CONTEXT_FIRST_MEMBER global_object_p
-
-/**
  * JerryScript context
  *
  * The purpose of this header is storing
@@ -123,7 +118,6 @@ struct jerry_context_t
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 #endif /* JERRY_EXTERNAL_CONTEXT */
 
-  /* Update JERRY_CONTEXT_FIRST_MEMBER if the first non-external member changes */
   ecma_global_object_t *global_object_p; /**< current global object */
   jmem_heap_free_t *jmem_heap_list_skip_p; /**< improves deallocation performance */
   jmem_pools_chunk_t *jmem_free_8_byte_chunk_p; /**< list of free eight byte pool chunks */
@@ -175,6 +169,8 @@ struct jerry_context_t
   uint32_t lit_magic_string_ex_count; /**< external magic strings count */
   uint32_t jerry_init_flags; /**< run-time configuration flags */
   uint32_t status_flags; /**< run-time flags (the top 8 bits are used for passing class parsing options) */
+  jerry_log_level_t log_level; /**< current log level */
+
 #if (JERRY_GC_MARK_LIMIT != 0)
   uint32_t ecma_gc_mark_recursion_limit; /**< GC mark recursion limit */
 #endif /* (JERRY_GC_MARK_LIMIT != 0) */
@@ -268,8 +264,8 @@ struct jerry_context_t
  * This part is for JerryScript which uses external context.
  */
 
-#define JERRY_CONTEXT_STRUCT (*jerry_port_get_current_context ())
-#define JERRY_CONTEXT(field) (jerry_port_get_current_context ()->field)
+#define JERRY_CONTEXT_STRUCT (*jerry_port_context_get ())
+#define JERRY_CONTEXT(field) (jerry_port_context_get ()->field)
 
 #if !JERRY_SYSTEM_ALLOCATOR
 

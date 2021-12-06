@@ -13,29 +13,21 @@
  * limitations under the License.
  */
 
-
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <sys/time.h>
 
-#include "esp_common.h"
-
 #include "jerryscript-port.h"
+
+#include "esp_common.h"
 
 /**
  * Provide log message implementation for the engine.
  */
 void
-jerry_port_log (jerry_log_level_t level, /**< log level */
-                const char *format, /**< format string */
-                ...)  /**< parameters */
+jerry_port_log (const char *message_p) /**< message */
 {
-  (void) level; /* ignore log level */
-
-  va_list args;
-  va_start (args, format);
-  vfprintf (stderr, format, args);
-  va_end (args);
+  fputs (message_p, stderr);
 } /* jerry_port_log */
 
 /**
@@ -44,30 +36,37 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
 void
 jerry_port_fatal (jerry_fatal_code_t code)
 {
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Jerry Fatal Error!\n");
-  while (true);
+  (void) code;
+
+  jerry_port_log ("Jerry Fatal Error!\n");
+
+  while (true)
+  {
+  }
 } /* jerry_port_fatal */
 
 /**
- * Implementation of jerry_port_get_current_time.
+ * Implementation of jerry_port_current_time.
  *
  * @return current timer's counter value in milliseconds
  */
 double
-jerry_port_get_current_time (void)
+jerry_port_current_time (void)
 {
-  uint32_t rtc_time = system_rtc_clock_cali_proc();
+  uint32_t rtc_time = system_rtc_clock_cali_proc ();
   return (double) rtc_time;
-} /* jerry_port_get_current_time */
+} /* jerry_port_current_time */
 
 /**
  * Dummy function to get the time zone adjustment.
  *
  * @return 0
  */
-double
-jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
+int32_t
+jerry_port_local_tza (double unix_ms)
 {
+  (void) unix_ms;
+
   /* We live in UTC. */
   return 0;
-} /* jerry_port_get_local_time_zone_adjustment */
+} /* jerry_port_local_tza */

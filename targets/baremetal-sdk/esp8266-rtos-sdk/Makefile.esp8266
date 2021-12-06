@@ -56,8 +56,9 @@ jerry:
 	 -DEXTERNAL_COMPILE_FLAGS="$(ESP_CFLAGS)" \
 	 -DJERRY_GLOBAL_HEAP_SIZE=$(JERRYHEAP)
 
-	make -C$(BUILD_DIR) jerry-core jerry-math
+	make -C$(BUILD_DIR) jerry-core jerry-ext jerry-math
 	cp $(BUILD_DIR)/lib/libjerry-core.a $(COPYTARGET)/
+	cp $(BUILD_DIR)/lib/libjerry-ext.a $(COPYTARGET)/
 	cp $(BUILD_DIR)/lib/libjerry-math.a $(COPYTARGET)/
 
 js2c:

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include "jerryscript-port-default.h"
 #include "jerryscript-port.h"
 #include "jerryscript.h"
 
@@ -48,18 +47,9 @@ static const jerry_object_native_info_t native_info = {
   .offset_of_references = 0,
 };
 
-static void *
-context_alloc_fn (size_t size, void *cb_data)
-{
-  (void) cb_data;
-  return malloc (size);
-} /* context_alloc_fn */
-
 int
 main (void)
 {
-  jerry_context_t *ctx_p = jerry_context_alloc (1024, context_alloc_fn, NULL);
-  jerry_port_default_set_current_context (ctx_p);
   jerry_init (JERRY_INIT_EMPTY);
 
   jerry_value_t obj = jerry_object ();
@@ -68,6 +58,5 @@ main (void)
   jerry_value_free (obj);
 
   jerry_cleanup ();
-  free (ctx_p);
   return 0;
 } /* main */

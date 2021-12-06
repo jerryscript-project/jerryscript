@@ -19,8 +19,6 @@
 
 #include "byte-code.h"
 
-#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -118,7 +116,6 @@ ecma_compiled_code_resolve_extended_info (const ecma_compiled_code_t *bytecode_h
 
   ecma_value_t *base_p = ecma_compiled_code_resolve_arguments_start (bytecode_header_p);
 
-#if JERRY_ESNEXT
   if (CBC_FUNCTION_GET_TYPE (bytecode_header_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR)
   {
     base_p--;
@@ -128,7 +125,6 @@ ecma_compiled_code_resolve_extended_info (const ecma_compiled_code_t *bytecode_h
   {
     base_p--;
   }
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_LINE_INFO
   if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_LINE_INFO)
@@ -141,8 +137,6 @@ ecma_compiled_code_resolve_extended_info (const ecma_compiled_code_t *bytecode_h
 
   return ((uint8_t *) base_p) - 1;
 } /* ecma_compiled_code_resolve_extended_info */
-
-#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
 
 /**
  * @}

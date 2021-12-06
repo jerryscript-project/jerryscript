@@ -19,8 +19,6 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_ESNEXT
-
 /* Object properties:
  *  (property name, object pointer getter) */
 
@@ -35,7 +33,5 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR, ECMA_BUILTIN_ID_GENERATOR, ECMA_PROP
 ROUTINE (LIT_MAGIC_STRING_NEXT, ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_RETURN, ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_THROW, ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW, 1, 1)
-
-#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

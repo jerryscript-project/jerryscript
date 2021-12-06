@@ -32,8 +32,6 @@
 #include "vm-stack.h"
 #include "vm.h"
 
-#if JERRY_ESNEXT
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -126,6 +124,9 @@ ecma_async_yield_call (ecma_value_t function, /**< function (takes reference) */
 
 /**
  * Perform an exception throw and call the approprite handler
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
 ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< async generator */
@@ -515,8 +516,6 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
     }
   }
 } /* ecma_await_continue */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

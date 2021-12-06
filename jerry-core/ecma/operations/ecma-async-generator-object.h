@@ -20,8 +20,6 @@
 
 #include "vm-defines.h"
 
-#if JERRY_ESNEXT
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -81,8 +79,6 @@ ecma_value_t ecma_async_generator_run (vm_executable_object_t *async_generator_o
 void ecma_async_generator_finalize (vm_executable_object_t *async_generator_object_p, ecma_value_t value);
 
 ecma_value_t ecma_await_continue (vm_executable_object_t *async_generator_object_p, ecma_value_t value);
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

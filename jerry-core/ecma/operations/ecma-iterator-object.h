@@ -18,8 +18,6 @@
 
 #include "ecma-globals.h"
 
-#if JERRY_ESNEXT
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -77,8 +75,6 @@ ecma_value_t ecma_op_create_async_from_sync_iterator (ecma_value_t sync_iterator
 ecma_value_t ecma_async_from_sync_iterator_unwrap_cb (ecma_object_t *function_obj_p,
                                                       const ecma_value_t args_p[],
                                                       const uint32_t args_count);
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

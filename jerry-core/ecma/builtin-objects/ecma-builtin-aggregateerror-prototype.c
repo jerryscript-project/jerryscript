@@ -25,13 +25,9 @@
 
 #include "jrt.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-aggregateerror-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID  aggregate_error_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
-
-#endif /* JERRY_ESNEXT */

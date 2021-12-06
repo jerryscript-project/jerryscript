@@ -85,18 +85,15 @@ main (void)
     jerry_value_free (entries[idx].value);
   }
 
-  if (jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
-  {
-    jerry_value_t symbol_desc_value = jerry_string_sz ("foo");
-    jerry_value_t symbol_value = jerry_symbol_with_description (symbol_desc_value);
-    jerry_type_t type_info = jerry_value_type (symbol_value);
+  jerry_value_t symbol_desc_value = jerry_string_sz ("foo");
+  jerry_value_t symbol_value = jerry_symbol_with_description (symbol_desc_value);
+  jerry_type_t type_info = jerry_value_type (symbol_value);
 
-    TEST_ASSERT (type_info != JERRY_TYPE_NONE);
-    TEST_ASSERT (type_info == JERRY_TYPE_SYMBOL);
+  TEST_ASSERT (type_info != JERRY_TYPE_NONE);
+  TEST_ASSERT (type_info == JERRY_TYPE_SYMBOL);
 
-    jerry_value_free (symbol_value);
-    jerry_value_free (symbol_desc_value);
-  }
+  jerry_value_free (symbol_value);
+  jerry_value_free (symbol_desc_value);
 
   if (jerry_feature_enabled (JERRY_FEATURE_BIGINT))
   {

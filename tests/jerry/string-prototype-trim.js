@@ -89,3 +89,19 @@ assert("\u000A\u000D\u2028\u202911\u000A\u000D\u2028\u2029".trim() === "11");
 assert ("\u200B".trim() === '\u200B')
 assert ("\u200A".trim() === '')
 assert ("\u00A0".trim() === '')
+
+var test = "  asd  ";
+assert(test.trimStart() === "asd  ")
+assert(test.trimStart().length === 5)
+assert(test.trimLeft() === "asd  ")
+assert(test.trimLeft().length === 5)
+assert(String.prototype.trimStart === String.prototype.trimLeft)
+
+assert(test.trimEnd() === "  asd")
+assert(test.trimEnd().length === 5)
+assert(test.trimRight() === "  asd")
+assert(test.trimRight().length === 5)
+assert(String.prototype.trimEnd === String.prototype.trimRight)
+
+assert(test.trim() === "asd")
+assert(test.trim().length === 3)

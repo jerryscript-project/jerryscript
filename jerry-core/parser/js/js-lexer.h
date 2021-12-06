@@ -55,10 +55,8 @@ typedef enum
   LEXER_LIT_TRUE, /**< true (not a keyword!) */
   LEXER_LIT_FALSE, /**< false (not a keyword!) */
   LEXER_LIT_NULL, /**< null (not a keyword!) */
-#if JERRY_ESNEXT
   LEXER_TEMPLATE_LITERAL, /**< multi segment template literal */
   LEXER_THREE_DOTS, /**< ... (rest or spread operator) */
-#endif /* JERRY_ESNEXT */
 
 /* Unary operators
  * IMPORTANT: update CBC_UNARY_OP_TOKEN_TO_OPCODE and
@@ -72,9 +70,7 @@ typedef enum
   LEXER_BIT_NOT, /**< "~" */
   LEXER_KEYW_VOID, /**< void */
   LEXER_KEYW_TYPEOF, /**< typeof */
-#if JERRY_ESNEXT
   LEXER_KEYW_AWAIT, /**< await */
-#endif /* JERRY_ESNEXT */
   LEXER_KEYW_DELETE, /**< delete */
   LEXER_INCREASE, /**< "++" */
   LEXER_DECREASE, /**< "--" */
@@ -87,17 +83,11 @@ typedef enum
  * Index of first binary operation opcode.
  */
 #define LEXER_FIRST_BINARY_OP LEXER_ASSIGN
-#if JERRY_ESNEXT
+
 /**
  * Index of last binary operation opcode.
  */
 #define LEXER_LAST_BINARY_OP LEXER_EXPONENTIATION
-#else /* !JERRY_ESNEXT */
-/**
- * Index of last binary operation opcode.
- */
-#define LEXER_LAST_BINARY_OP LEXER_MODULO
-#endif /* JERRY_ESNEXT */
 
 /**
  * Checks whether the token is a binary operation token.
@@ -121,12 +111,10 @@ typedef enum
   LEXER_ASSIGN_MULTIPLY, /**< "*=" (prec: 3) */
   LEXER_ASSIGN_DIVIDE, /**< "/=" (prec: 3) */
   LEXER_ASSIGN_MODULO, /**< "%=" (prec: 3) */
-#if JERRY_ESNEXT
   LEXER_ASSIGN_EXPONENTIATION, /**< "**=" (prec: 3) */
   LEXER_ASSIGN_NULLISH_COALESCING, /**< "??=" (prec: 3) */
   LEXER_ASSIGN_LOGICAL_OR, /**< "||=" (prec: 3) */
   LEXER_ASSIGN_LOGICAL_AND, /**< "&&=" (prec: 3) */
-#endif /* JERRY_ESNEXT */
   LEXER_ASSIGN_LEFT_SHIFT, /**< "<<=" (prec: 3) */
   LEXER_ASSIGN_RIGHT_SHIFT, /**< ">>=" (prec: 3) */
   LEXER_ASSIGN_UNS_RIGHT_SHIFT, /**< ">>>=" (prec: 3) */
@@ -134,9 +122,7 @@ typedef enum
   LEXER_ASSIGN_BIT_OR, /**< "|=" (prec: 3) */
   LEXER_ASSIGN_BIT_XOR, /**< "^=" (prec: 3) */
   LEXER_QUESTION_MARK, /**< "?" (prec: 4) */
-#if JERRY_ESNEXT
   LEXER_NULLISH_COALESCING, /**< "??" (prec: 5) */
-#endif /* JERRY_ESNEXT */
   LEXER_LOGICAL_OR, /**< "||" (prec: 6) */
   LEXER_LOGICAL_AND, /**< "&&" (prec: 7) */
   LEXER_BIT_OR, /**< "|" (prec: 8) */
@@ -160,10 +146,7 @@ typedef enum
   LEXER_MULTIPLY, /**< "*" (prec: 15) */
   LEXER_DIVIDE, /**< "/" (prec: 15) */
   LEXER_MODULO, /**< "%" (prec: 15) */
-#if JERRY_ESNEXT
   LEXER_EXPONENTIATION, /**< "**" (prec: 16) */
-#endif /* JERRY_ESNEXT */
-
   LEXER_LEFT_BRACE, /**< "{" */
   LEXER_LEFT_PAREN, /**< "(" */
   LEXER_LEFT_SQUARE, /**< "[" */
@@ -174,10 +157,8 @@ typedef enum
   LEXER_SEMICOLON, /**< ";" */
   LEXER_COLON, /**< ":" */
   LEXER_COMMA, /**< "," */
-#if JERRY_ESNEXT
   LEXER_ARROW, /**< "=>" */
   LEXER_HASHMARK, /**< "#" */
-#endif /* JERRY_ESNEXT */
 
   LEXER_KEYW_BREAK, /**< break */
   LEXER_KEYW_DO, /**< do */
@@ -215,18 +196,14 @@ typedef enum
   LEXER_PROPERTY_GETTER, /**< property getter function */
   LEXER_PROPERTY_SETTER, /**< property setter function */
   LEXER_COMMA_SEP_LIST, /**< comma separated bracketed expression list */
-#if JERRY_ESNEXT
   LEXER_ASSIGN_GROUP_EXPR, /**< indetifier for the assignment is located in a group expression */
   LEXER_ASSIGN_CONST, /**< a const binding is reassigned */
   LEXER_INVALID_PATTERN, /**< special value for invalid destructuring pattern */
   LEXER_PRIVATE_PRIMARY_EXPR, /**< private field in primary expession position */
   LEXER_ASSIGN_REFERENCE, /**< special value for reference assignment */
-#endif /* JERRY_ESNEXT */
 
-/* Keywords which are not keyword tokens. */
-#if JERRY_ESNEXT
+  /* Keywords which are not keyword tokens. */
   LEXER_KEYW_ASYNC, /**< async */
-#endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
   LEXER_KEYW_META, /**< meta */
 #endif /* JERRY_MODULE_SYSTEM */

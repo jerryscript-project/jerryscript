@@ -164,10 +164,7 @@ typedef struct
   ecma_value_t iterated_string; /**< [[IteratedString]] internal slot */
 } ecma_regexp_string_iterator_t;
 
-#if JERRY_ESNEXT
 lit_code_point_t ecma_regexp_unicode_advance (const lit_utf8_byte_t **str_p, const lit_utf8_byte_t *end_p);
-#endif /* JERRY_ESNEXT */
-
 ecma_object_t *ecma_op_regexp_alloc (ecma_object_t *new_target_obj_p);
 ecma_value_t ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, ecma_string_t *input_string_p);
 ecma_string_t *ecma_regexp_read_pattern_str_helper (ecma_value_t pattern_arg);

@@ -184,13 +184,6 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
                    ecma_value_t property, /**< property name */
                    bool is_strict) /**< strict mode */
 {
-#if !JERRY_ESNEXT
-  if (ecma_is_value_undefined (object))
-  {
-    return ECMA_VALUE_TRUE;
-  }
-#endif /* !JERRY_ESNEXT */
-
   if (!ecma_op_require_object_coercible (object))
   {
     return ECMA_VALUE_ERROR;
@@ -215,12 +208,10 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
   ecma_deref_object (obj_p);
   ecma_deref_ecma_string (name_string_p);
 
-#if JERRY_ESNEXT
   if (is_strict && ecma_is_value_false (delete_op_ret))
   {
     return ecma_raise_type_error (ECMA_ERR_OPERATOR_DELETE_RETURNED_FALSE_IN_STRICT_MODE);
   }
-#endif /* JERRY_ESNEXT */
 
   return delete_op_ret;
 } /* vm_op_delete_prop */
@@ -296,14 +287,12 @@ opfunc_for_in (ecma_value_t iterable_value, /**< ideally an iterable value */
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
   ecma_collection_t *prop_names_p = ecma_op_object_enumerate (obj_p);
 
-#if JERRY_ESNEXT
   if (JERRY_UNLIKELY (prop_names_p == NULL))
   {
     ecma_deref_object (obj_p);
     *result_obj_p = ECMA_VALUE_ERROR;
     return NULL;
   }
-#endif /* JERRY_ESNEXT */
 
   if (prop_names_p->item_count != 0)
   {
@@ -316,8 +305,6 @@ opfunc_for_in (ecma_value_t iterable_value, /**< ideally an iterable value */
 
   return NULL;
 } /* opfunc_for_in */
-
-#if JERRY_ESNEXT
 
 /**
  * 'VM_OC_APPEND_ARRAY' opcode handler specialized for spread objects
@@ -498,8 +485,6 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
   return buff_p;
 } /* opfunc_spread_arguments */
 
-#endif /* JERRY_ESNEXT */
-
 /**
  * 'VM_OC_APPEND_ARRAY' opcode handler, for setting array object properties
  *
@@ -511,12 +496,10 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
                      uint16_t values_length) /**< number of elements to set
                                               *   with potential OPFUNC_HAS_SPREAD_ELEMENT flag */
 {
-#if JERRY_ESNEXT
   if (values_length >= OPFUNC_HAS_SPREAD_ELEMENT)
   {
     return opfunc_append_to_spread_array (stack_top_p, (uint16_t) (values_length & ~OPFUNC_HAS_SPREAD_ELEMENT));
   }
-#endif /* JERRY_ESNEXT */
 
   ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
   JERRY_ASSERT (ecma_get_object_type (array_obj_p) == ECMA_OBJECT_TYPE_ARRAY);
@@ -573,8 +556,6 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
 
   return ECMA_VALUE_EMPTY;
 } /* opfunc_append_array */
-
-#if JERRY_ESNEXT
 
 /**
  * Create an executable object using the current frame context
@@ -905,7 +886,7 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
 static ecma_value_t
 opfunc_private_method_or_accessor_add (ecma_object_t *class_object_p, /**< the function itself */
                                        ecma_object_t *this_obj_p, /**< this object */
-                                       uint32_t static_flag)
+                                       uint32_t static_flag) /**< static_flag */
 {
   ecma_string_t *internal_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS);
   ecma_property_t *prop_p = ecma_find_named_property (class_object_p, internal_string_p);
@@ -985,7 +966,9 @@ opfunc_private_method_or_accessor_add (ecma_object_t *class_object_p, /**< the f
  *         ECMA_VALUE_{TRUE/FALSE} - otherwise
  */
 ecma_value_t
-opfunc_define_field (ecma_value_t base, ecma_value_t property, ecma_value_t value)
+opfunc_define_field (ecma_value_t base, /**< base */
+                     ecma_value_t property, /**< property */
+                     ecma_value_t value) /**< value */
 {
   ecma_string_t *property_key_p = ecma_op_to_property_key (property);
 
@@ -1216,6 +1199,8 @@ opfunc_set_home_object (ecma_object_t *func_p, /**< function object */
 
 /**
  * Make private key from descriptor
+ *
+ * @return pointer to private key
  */
 ecma_string_t *
 opfunc_make_private_key (ecma_value_t descriptor) /**< descriptor */
@@ -1228,6 +1213,9 @@ opfunc_make_private_key (ecma_value_t descriptor) /**< descriptor */
 
 /**
  * Find a private property in the private elements internal property given the key
+ *
+ * @return pointer to the private property - if it is found,
+ *         NULL - othervise
  */
 static ecma_property_t *
 opfunc_find_private_key (ecma_object_t *class_object_p, /**< class environment */
@@ -1291,7 +1279,7 @@ static ecma_property_t *
 opfunc_find_private_element (ecma_object_t *obj_p, /**< object */
                              ecma_string_t *key_p, /**< key */
                              ecma_string_t **private_key_p, /**< [out] private key */
-                             bool allow_heritage)
+                             bool allow_heritage) /**< heritage flag */
 {
   JERRY_ASSERT (private_key_p != NULL);
   JERRY_ASSERT (*private_key_p == NULL);
@@ -1342,7 +1330,8 @@ opfunc_find_private_element (ecma_object_t *obj_p, /**< object */
  *           ECMA_VALUE_FALSE - otherwise
  */
 ecma_value_t
-opfunc_private_in (ecma_value_t base, ecma_value_t property)
+opfunc_private_in (ecma_value_t base, /**< base */
+                   ecma_value_t property) /**< property */
 {
   if (!ecma_is_value_object (base))
   {
@@ -1514,11 +1503,13 @@ opfunc_private_get (ecma_value_t base, /**< this object */
 
 /**
  * Find the private property in the object who's private key descriptor matches the given key
+ *
+ * @return pointer to private key
  */
 static ecma_string_t *
-opfunc_create_private_key (ecma_value_t *collection_p, /**< TODO */
+opfunc_create_private_key (ecma_value_t *collection_p, /**< collection of private properties */
                            ecma_value_t search_key, /**< key */
-                           ecma_private_property_kind_t search_kind)
+                           ecma_private_property_kind_t search_kind) /**< kind of the property */
 {
   if (search_kind < ECMA_PRIVATE_GETTER)
   {
@@ -1561,7 +1552,10 @@ opfunc_create_private_key (ecma_value_t *collection_p, /**< TODO */
  * Collect private members for PrivateMethodOrAccessorAdd and PrivateFieldAdd abstract operations
  */
 void
-opfunc_collect_private_properties (ecma_value_t constructor, ecma_value_t prop_name, ecma_value_t value, uint8_t opcode)
+opfunc_collect_private_properties (ecma_value_t constructor, /**< constructor */
+                                   ecma_value_t prop_name, /**< property name */
+                                   ecma_value_t value, /**< value */
+                                   uint8_t opcode) /**< opcode */
 {
   ecma_private_property_kind_t kind = ECMA_PRIVATE_FIELD;
   bool is_static = false;
@@ -2302,8 +2296,6 @@ opfunc_lexical_scope_has_restricted_binding (vm_frame_ctx_t *frame_ctx_p, /**< f
   return ecma_make_boolean_value (property != ECMA_PROPERTY_TYPE_NOT_FOUND
                                   && !ecma_is_property_configurable (property));
 } /* opfunc_lexical_scope_has_restricted_binding */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

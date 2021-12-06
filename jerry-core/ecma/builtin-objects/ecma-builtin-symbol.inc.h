@@ -19,8 +19,6 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_ESNEXT
-
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
@@ -78,7 +76,5 @@ SYMBOL_VALUE (LIT_MAGIC_STRING_MATCH_ALL, LIT_GLOBAL_SYMBOL_MATCH_ALL)
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_FOR, ecma_builtin_symbol_for, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_KEY_FOR, ecma_builtin_symbol_key_for, 1, 1)
-
-#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

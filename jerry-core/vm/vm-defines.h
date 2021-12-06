@@ -45,13 +45,11 @@ typedef enum
   VM_FRAME_CTX_SHARED_DIRECT_EVAL = (1 << 1), /**< direct eval call */
   VM_FRAME_CTX_SHARED_FREE_THIS = (1 << 2), /**< free this binding */
   VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV = (1 << 3), /**< free local environment */
-#if JERRY_ESNEXT
   VM_FRAME_CTX_SHARED_NON_ARROW_FUNC = (1 << 4), /**< non-arrow function */
   VM_FRAME_CTX_SHARED_HERITAGE_PRESENT = (1 << 5), /**< class heritage present */
   VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS = (1 << 6), /**< has class fields */
   VM_FRAME_CTX_SHARED_EXECUTABLE = (1 << 7), /**< frame is an executable object constructed
                                               *   with opfunc_create_executable_object */
-#endif /* JERRY_ESNEXT */
 } vm_frame_ctx_shared_flags_t;
 
 /**
@@ -74,8 +72,6 @@ typedef struct
   uint32_t arg_list_len; /**< arguments list length */
 } vm_frame_ctx_shared_args_t;
 
-#if JERRY_ESNEXT
-
 /**
  * Shared data extended with computed class fields
  */
@@ -90,8 +86,6 @@ typedef struct
  */
 #define VM_GET_COMPUTED_CLASS_FIELDS(frame_ctx_p) \
   (((vm_frame_ctx_shared_class_fields_t *) ((frame_ctx_p)->shared_p))->computed_class_fields_p)
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * Flag bits of vm_frame_ctx_t

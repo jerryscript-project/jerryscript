@@ -19,8 +19,6 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_ESNEXT
-
 /* Object properties:
  *  (property name, object pointer getter) */
 
@@ -35,6 +33,5 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG, LIT_MAGIC_STRING_SYMBOL_UL, ECMA_
 
 /* ECMA-262, v11, 19.4.3.2 */
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_DESCRIPTION, ECMA_SYMBOL_PROTOTYPE_DESCRIPTION, ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

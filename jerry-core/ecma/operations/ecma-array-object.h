@@ -88,11 +88,9 @@ ecma_collection_t *ecma_fast_array_object_own_property_keys (ecma_object_t *obje
 
 void ecma_fast_array_convert_to_normal (ecma_object_t *object_p);
 
-#if JERRY_ESNEXT
 ecma_object_t *ecma_op_array_species_create (ecma_object_t *original_array_p, ecma_length_t length);
 
 ecma_value_t ecma_op_create_array_iterator (ecma_object_t *obj_p, ecma_iterator_kind_t kind);
-#endif /* JERRY_ESNEXT */
 
 ecma_value_t ecma_op_array_object_set_length (ecma_object_t *object_p, ecma_value_t new_value, uint16_t flags);
 

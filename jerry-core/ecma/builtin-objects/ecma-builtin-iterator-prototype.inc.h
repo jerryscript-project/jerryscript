@@ -19,12 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_ESNEXT
-
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ECMA_BUILTIN_ITERATOR_PROTOTYPE_OBJECT_ITERATOR, 0, 0)
-
-#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

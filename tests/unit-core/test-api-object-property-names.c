@@ -80,11 +80,6 @@ define_property (const jerry_value_t object,
 int
 main (void)
 {
-  if (!jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
-  {
-    return 0;
-  }
-
   TEST_INIT ();
   jerry_init (JERRY_INIT_EMPTY);
 

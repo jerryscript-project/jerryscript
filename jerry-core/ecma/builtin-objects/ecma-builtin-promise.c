@@ -27,8 +27,6 @@
 
 #include "jcontext.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -527,5 +525,3 @@ ecma_builtin_promise_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

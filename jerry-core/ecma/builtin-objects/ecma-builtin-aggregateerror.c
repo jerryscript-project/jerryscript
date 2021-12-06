@@ -29,8 +29,6 @@
 #include "jcontext.h"
 #include "jrt.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -109,5 +107,3 @@ ecma_builtin_aggregate_error_dispatch_construct (const ecma_value_t *arguments_l
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

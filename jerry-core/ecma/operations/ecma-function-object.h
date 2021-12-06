@@ -29,9 +29,7 @@
  * @{
  */
 
-#if JERRY_ESNEXT
 ecma_value_t ecma_op_function_form_name (ecma_string_t *prop_name_p, char *prefix_p, lit_utf8_size_t prefix_size);
-#endif /* JERRY_ESNEXT */
 
 bool ecma_op_is_callable (ecma_value_t value);
 #if JERRY_BUILTIN_PROXY
@@ -67,7 +65,6 @@ ecma_value_t ecma_op_create_dynamic_function (const ecma_value_t *arguments_list
                                               uint32_t arguments_list_len,
                                               ecma_parse_opts_t opts);
 
-#if JERRY_ESNEXT
 ecma_value_t ecma_op_function_get_super_constructor (ecma_object_t *func_obj_p);
 
 ecma_object_t *ecma_op_create_any_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p);
@@ -77,8 +74,6 @@ ecma_object_t *ecma_op_create_arrow_function_object (ecma_object_t *scope_p,
                                                      ecma_value_t this_binding);
 
 ecma_object_t *ecma_op_create_native_handler (ecma_native_handler_id_t id, size_t object_size);
-
-#endif /* JERRY_ESNEXT */
 
 ecma_object_t *ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, ecma_builtin_id_t default_proto_id);
 
@@ -108,11 +103,9 @@ ecma_property_t *ecma_op_external_function_try_to_lazy_instantiate_property (ecm
 ecma_property_t *ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p,
                                                                           ecma_string_t *property_name_p);
 
-#if JERRY_ESNEXT
 void ecma_op_function_delete_built_in_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
 
 void ecma_op_bound_function_delete_built_in_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-#endif /* JERRY_ESNEXT */
 
 void ecma_op_function_list_lazy_property_names (ecma_object_t *object_p,
                                                 ecma_collection_t *prop_names_p,

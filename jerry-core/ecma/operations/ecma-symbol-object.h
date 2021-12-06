@@ -18,8 +18,6 @@
 
 #include "ecma-globals.h"
 
-#if JERRY_ESNEXT
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -39,7 +37,6 @@ ecma_value_t ecma_symbol_this_value (ecma_value_t this_arg);
 
 ecma_value_t ecma_get_symbol_descriptive_string (ecma_value_t symbol_value);
 
-#endif /* JERRY_ESNEXT */
 /**
  * @}
  * @}

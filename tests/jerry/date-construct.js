@@ -75,3 +75,55 @@ catch (e)
 
 assert (typeof Date (2015) == "string");
 assert (typeof Date() != typeof (new Date ()));
+
+var sym = Symbol();
+var date;
+
+try {
+  date = new Date(sym, 11, 17, 3, 24, 0);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  date = new Date(1997, sym, 17, 3, 24, 0);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  date = new Date(1997, 11, sym, 3, 24, 0);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  date = new Date(1997, 11, 17, sym, 24, 0);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  date = new Date(1997, 11, 17, 3, sym, 0);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  date = new Date(1997, 11, 17, 3, 24, sym);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  date = new Date(1997, 11, 17, 3, 24, 0, sym);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

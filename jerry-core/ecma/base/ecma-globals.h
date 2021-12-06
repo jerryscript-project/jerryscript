@@ -111,17 +111,13 @@ typedef enum
                                              *   and the first value is the source code */
   ECMA_PARSE_HAS_ARGUMENT_LIST_VALUE = (1u << 12), /**< source_p points to a value list
                                                     *   and the second value is the argument list */
-#if JERRY_ESNEXT
   ECMA_PARSE_GENERATOR_FUNCTION = (1u << 13), /**< generator function is parsed */
   ECMA_PARSE_ASYNC_FUNCTION = (1u << 14), /**< async function is parsed */
-#endif /* JERRY_ESNEXT */
 
   /* These flags are internally used by the parser. */
   ECMA_PARSE_INTERNAL_FREE_SOURCE = (1u << 15), /**< free source_p data */
   ECMA_PARSE_INTERNAL_FREE_ARG_LIST = (1u << 16), /**< free arg_list_p data */
-#if JERRY_ESNEXT
   ECMA_PARSE_INTERNAL_PRE_SCANNING = (1u << 17), /**< the parser is in pre-scanning mode */
-#endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
   ECMA_PARSE_INTERNAL_HAS_IMPORT_META = (1u << 18), /**< module has import.meta expression */
 #endif /* JERRY_MODULE_SYSTEM */
@@ -215,10 +211,8 @@ enum
                                                      *   or function call argument list */
   /* Other values */
   ECMA_VALUE_ARGUMENT_NO_TRACK = ECMA_MAKE_VALUE (12), /**< represents not-tracked arguments formal parameter */
-#if JERRY_ESNEXT
   ECMA_VALUE_SYNC_ITERATOR = ECMA_MAKE_VALUE (13), /**< option for ecma_op_get_iterator: sync iterator is requested */
   ECMA_VALUE_ASYNC_ITERATOR = ECMA_MAKE_VALUE (14), /**< option for ecma_op_get_iterator: async iterator is requested */
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_GLOBAL_THIS
   ECMA_VALUE_GLOBAL_THIS = ECMA_MAKE_VALUE (15), /**< globalThis built-in */
 #endif /* JERRY_BUILTIN_GLOBAL_THIS */
@@ -322,8 +316,6 @@ typedef struct ecma_native_pointer_chain_t
   struct ecma_native_pointer_chain_t *next_p; /**< next in the list */
 } ecma_native_pointer_chain_t;
 
-#if JERRY_ESNEXT
-
 /**
  * Representation for class constructor environment record.
  */
@@ -332,8 +324,6 @@ typedef struct
   ecma_value_t this_binding; /**< this binding */
   ecma_value_t function_object; /**< function object */
 } ecma_environment_record_t;
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * Property list:
@@ -357,10 +347,8 @@ typedef enum
                                        *   that are not indices */
   ECMA_LIST_ENUMERABLE = (1 << 1), /**< exclude non-enumerable properties */
   ECMA_LIST_PROTOTYPE = (1 << 2), /**< list properties from prototype chain */
-#if JERRY_ESNEXT
   ECMA_LIST_SYMBOLS = (1 << 3), /**< list symbol properties */
   ECMA_LIST_SYMBOLS_ONLY = (1 << 4), /**< list symbol properties only */
-#endif /* JERRY_ESNEXT */
   ECMA_LIST_CONVERT_FAST_ARRAYS = (1 << 5), /**< after listing the properties convert
                                              *   the fast access mode array back to normal array */
 } ecma_list_properties_options_t;
@@ -395,9 +383,7 @@ typedef enum
   ECMA_PROPERTY_FLAG_BUILT_IN = (1u << 3), /**< property is defined by the ECMAScript standard */
   ECMA_FAST_ARRAY_FLAG = (1u << 3), /**< array is fast array */
   ECMA_PROPERTY_FLAG_LCACHED = (1u << 4), /**< property is lcached */
-#if JERRY_ESNEXT
   ECMA_ARRAY_TEMPLATE_LITERAL = (1u << 4), /**< array is a template literal constructed by the parser */
-#endif /* JERRY_ESNEXT */
   ECMA_PROPERTY_FLAG_DATA = (1u << 5), /**< property contains data */
   /* The last two bits contains an ECMA_DIRECT_STRING value. */
 } ecma_property_flags_t;
@@ -463,11 +449,7 @@ typedef enum
 /**
  * Default flag of length property.
  */
-#if JERRY_ESNEXT
 #define ECMA_PROPERTY_FLAG_DEFAULT_LENGTH ECMA_PROPERTY_FLAG_CONFIGURABLE
-#else /* !JERRY_ESNEXT */
-#define ECMA_PROPERTY_FLAG_DEFAULT_LENGTH ECMA_PROPERTY_FIXED
-#endif /* JERRY_ESNEXT */
 
 /**
  * Shift for property name part.
@@ -743,8 +725,7 @@ typedef enum
   ECMA_OBJECT_CLASS_MODULE_NAMESPACE, /**< Module Namespace (ECMAScript v11, 9.4.6) */
 #endif /* JERRY_MODULE_SYSTEM */
 
-/* These objects are marked by Garbage Collector. */
-#if JERRY_ESNEXT
+  /* These objects are marked by Garbage Collector. */
   ECMA_OBJECT_CLASS_GENERATOR, /**< Generator object (ECMAScript v6, 25.2) */
   ECMA_OBJECT_CLASS_ASYNC_GENERATOR, /**< Async generator object (ECMAScript v11, 25.3) */
   ECMA_OBJECT_CLASS_ARRAY_ITERATOR, /**< Array iterator object (ECMAScript v6, 22.1.5.1) */
@@ -753,15 +734,12 @@ typedef enum
 #if JERRY_BUILTIN_REGEXP
   ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR, /** RegExp string iterator object (ECMAScript v11, 21.2.7) */
 #endif /* JERRY_BUILTIN_REGEXP */
-#endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
   ECMA_OBJECT_CLASS_MODULE, /**< Module (ECMAScript v6, 15.2) */
 #endif /* JERRY_MODULE_SYSTEM */
-#if JERRY_ESNEXT
   ECMA_OBJECT_CLASS_PROMISE, /**< Promise (ECMAScript v6, 25.4) */
   ECMA_OBJECT_CLASS_PROMISE_CAPABILITY, /**< Promise capability (ECMAScript v6, 25.4.1.1) */
   ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR, /**< AsyncFromSyncIterator (ECMAScript v11, 25.1.4) */
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_DATAVIEW
   ECMA_OBJECT_CLASS_DATAVIEW, /**< DataView (ECMAScript v6, 24.2) */
 #endif /* JERRY_BUILTIN_DATAVIEW */
@@ -783,10 +761,8 @@ typedef enum
 #if JERRY_BUILTIN_REGEXP
   ECMA_OBJECT_CLASS_REGEXP, /**< RegExp Object (ECMAScript v5.1, 15.10) */
 #endif /* JERRY_BUILTIN_REGEXP */
-#if JERRY_ESNEXT
   ECMA_OBJECT_CLASS_SYMBOL, /**< Symbol object (ECMAScript v6, 4.3.27) */
   ECMA_OBJECT_CLASS_STRING_ITERATOR, /**< String iterator object (ECMAScript v6, 22.1.5.1) */
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_TYPEDARRAY
   ECMA_OBJECT_CLASS_ARRAY_BUFFER, /**< Array Buffer (ECMAScript v6, 24.1) */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
@@ -810,17 +786,13 @@ typedef enum
 {
   /* Types between 0 - 12 are ecma_object_type_t. */
   ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 13, /**< declarative lexical environment */
-#if JERRY_ESNEXT
   ECMA_LEXICAL_ENVIRONMENT_CLASS = 14, /**< lexical environment with class */
-#endif /* JERRY_ESNEXT */
   ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 15, /**< object-bound lexical environment */
 
   ECMA_LEXICAL_ENVIRONMENT_TYPE_START = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< first lexical
                                                                                *   environment type */
   ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND /**< maximum value */
 } ecma_lexical_environment_type_t;
-
-#if JERRY_ESNEXT
 
 /**
  * Types of array iterators.
@@ -832,8 +804,6 @@ typedef enum
   ECMA_ITERATOR_ENTRIES, /**< entries iterator */
   ECMA_ITERATOR__COUNT, /**< number of iterator kinds */
 } ecma_iterator_kind_t;
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * Offset for JERRY_CONTEXT (status_flags) top 8 bits.
@@ -1063,11 +1033,9 @@ typedef struct
 #if JERRY_MODULE_SYSTEM
         uint8_t module_state; /**< Module state */
 #endif /* JERRY_MODULE_SYSTEM */
-#if JERRY_ESNEXT
         uint8_t iterator_kind; /**< type of iterator */
         uint8_t regexp_string_iterator_flags; /**< flags for RegExp string iterator */
         uint8_t promise_flags; /**< Promise object flags */
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_CONTAINER
         uint8_t container_flags; /**< container object flags */
 #endif /* JERRY_BUILTIN_CONTAINER */
@@ -1085,10 +1053,8 @@ typedef struct
 #if JERRY_MODULE_SYSTEM
         uint16_t module_flags; /**< Module flags */
 #endif /* JERRY_MODULE_SYSTEM */
-#if JERRY_ESNEXT
         uint16_t iterator_index; /**< for %Iterator%: [[%Iterator%NextIndex]] property */
         uint16_t executable_obj_flags; /**< executable object flags */
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_CONTAINER
         uint16_t container_id; /**< magic string id of a container */
 #endif /* JERRY_BUILTIN_CONTAINER */
@@ -1102,21 +1068,16 @@ typedef struct
       union
       {
         ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
-#if !JERRY_ESNEXT
-        ecma_value_t date; /**< Date object [[DateValue]] internal property */
-#endif /* !JERRY_ESNEXT */
         ecma_value_t target; /**< [[ProxyTarget]] or [[WeakRefTarget]] internal property */
 #if JERRY_BUILTIN_TYPEDARRAY
         ecma_value_t arraybuffer; /**< for typedarray: ArrayBuffer reference */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
-#if JERRY_ESNEXT
         ecma_value_t head; /**< points to the async generator task queue head item */
         ecma_value_t iterated_value; /**< for %Iterator%: [[IteratedObject]] property */
         ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
         ecma_value_t sync_iterator; /**< IteratorRecord [[Iterator]] internal slot for AsyncFromSyncIterator */
         ecma_value_t spread_value; /**< for spread object: spreaded element */
         int32_t tza; /**< TimeZone adjustment for date objects */
-#endif /* JERRY_ESNEXT */
         uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
         uint32_t arguments_number; /**< for arguments: arguments number */
 #if JERRY_MODULE_SYSTEM
@@ -1153,7 +1114,6 @@ typedef struct
       ecma_value_t args_len_or_this; /**< length of arguments or this value */
     } bound_function;
 
-#if JERRY_ESNEXT
     /**
      * Description of implicit class constructor function.
      */
@@ -1162,7 +1122,6 @@ typedef struct
       ecma_value_t script_value; /**< script value */
       uint8_t flags; /**< constructor flags */
     } constructor_function;
-#endif /* JERRY_ESNEXT */
   } u;
 } ecma_extended_object_t;
 
@@ -1245,9 +1204,7 @@ typedef struct
 typedef struct
 {
   ecma_extended_object_t header; /**< extended object header */
-#if JERRY_ESNEXT
   ecma_value_t target_length; /**< length of target function */
-#endif /* JERRY_ESNEXT */
 } ecma_bound_function_t;
 
 #if JERRY_SNAPSHOT_EXEC
@@ -1262,8 +1219,6 @@ typedef struct
 } ecma_static_function_t;
 
 #endif /* JERRY_SNAPSHOT_EXEC */
-
-#if JERRY_ESNEXT
 
 /**
  * Description of arrow function objects.
@@ -1287,8 +1242,6 @@ typedef struct
 } ecma_static_arrow_function_t;
 
 #endif /* JERRY_SNAPSHOT_EXEC */
-
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_CONTAINER
 /**
@@ -1711,12 +1664,10 @@ typedef struct
   } u;
 } ecma_extended_string_t;
 
-#if JERRY_ESNEXT
 /**
  * Required number of ecma values in a compact collection to represent PrivateElement
  */
 #define ECMA_PRIVATE_ELEMENT_LIST_SIZE 3
-#endif /* JERRY_ESNEXT */
 
 /**
  * String builder header
@@ -1943,8 +1894,6 @@ typedef struct
 #endif /* JERRY_BUILTIN_BIGINT */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 
-#if JERRY_ESNEXT
-
 /**
  * Executable (e.g. generator, async) object flags.
  */
@@ -2060,8 +2009,6 @@ typedef enum
   ECMA_PROMISE_ANY_REJECT, /**< promise.any reject */
 } ecma_promise_executor_type_t;
 
-#endif /* JERRY_ESNEXT */
-
 #if JERRY_BUILTIN_DATAVIEW
 /**
  * Description of DataView objects.
@@ -2174,21 +2121,12 @@ typedef struct
 } ecma_revocable_proxy_object_t;
 #endif /* JERRY_BUILTIN_PROXY */
 
-#if JERRY_ESNEXT
 /**
  * Type to repesent the maximum property index
  *
  * For ES6+ the maximum valid property index is 2**53 - 1
  */
 typedef uint64_t ecma_length_t;
-#else /* !JERRY_ESNEXT */
-/**
- * Type to repesent the maximum property index
- *
- * For ES5+ the maximum valid property index is 2**32 - 1
- */
-typedef uint32_t ecma_length_t;
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_BIGINT
 
@@ -2270,8 +2208,6 @@ typedef struct
   } u;
 } ecma_mapped_arguments_t;
 
-#if JERRY_ESNEXT
-
 /**
  * Date object descriptor flags
  */
@@ -2327,8 +2263,6 @@ typedef enum
  * Get private property kind from a descriptor
  */
 #define ECMA_PRIVATE_PROPERTY_KIND(prop) ((prop) & ((ECMA_PRIVATE_PROPERTY_STATIC_FLAG - 1)))
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

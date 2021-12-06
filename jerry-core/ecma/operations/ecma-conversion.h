@@ -62,10 +62,8 @@ ecma_value_t ecma_op_to_object (ecma_value_t value);
 bool ecma_op_is_integer (ecma_number_t value);
 ecma_value_t ecma_op_to_integer (ecma_value_t value, ecma_number_t *number_p);
 ecma_value_t ecma_op_to_length (ecma_value_t value, ecma_length_t *length);
-#if JERRY_ESNEXT
 ecma_value_t ecma_op_to_index (ecma_value_t value, ecma_number_t *index);
 ecma_collection_t *ecma_op_create_list_from_array_like (ecma_value_t arr, bool prop_names_only);
-#endif /* JERRY_ESNEXT */
 
 ecma_object_t *ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_desc_p);
 ecma_value_t ecma_op_to_property_descriptor (ecma_value_t obj_value, ecma_property_descriptor_t *out_prop_desc_p);

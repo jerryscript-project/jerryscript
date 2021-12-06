@@ -20,8 +20,6 @@
 #include "ecma-iterator-object.h"
 #include "ecma-objects.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -184,5 +182,3 @@ free_variables:
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

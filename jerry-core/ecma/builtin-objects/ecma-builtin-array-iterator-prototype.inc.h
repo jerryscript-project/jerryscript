@@ -19,14 +19,10 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_ESNEXT
-
 STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG, LIT_MAGIC_STRING_ARRAY_ITERATOR_UL, ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_NEXT, ECMA_ARRAY_ITERATOR_PROTOTYPE_OBJECT_NEXT, 0, 0)
-
-#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

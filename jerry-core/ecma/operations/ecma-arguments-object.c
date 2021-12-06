@@ -297,25 +297,6 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
     return prop_p;
   }
 
-#if !JERRY_ESNEXT
-  if (property_name_p == ecma_get_magic_string (LIT_MAGIC_STRING_CALLER))
-  {
-    if (arguments_p->header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
-    {
-      return NULL;
-    }
-
-    ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
-
-    ecma_create_named_accessor_property (object_p,
-                                         ecma_get_magic_string (LIT_MAGIC_STRING_CALLER),
-                                         thrower_p,
-                                         thrower_p,
-                                         ECMA_PROPERTY_BUILT_IN_FIXED,
-                                         &prop_p);
-    return prop_p;
-  }
-#else /* JERRY_ESNEXT */
   if (ecma_op_compare_string_to_global_symbol (property_name_p, LIT_GLOBAL_SYMBOL_ITERATOR)
       && !(flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED))
   {
@@ -331,7 +312,6 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
     ecma_deref_object (ecma_get_object_from_value (prop_value_p->value));
     return prop_p;
   }
-#endif /* !JERRY_ESNEXT */
 
   return NULL;
 } /* ecma_op_arguments_object_try_to_lazy_instantiate_property */
@@ -362,7 +342,6 @@ ecma_op_arguments_delete_built_in_property (ecma_object_t *object_p, /**< the ob
     return;
   }
 
-#if JERRY_ESNEXT
   if (ecma_prop_name_is_symbol (property_name_p))
   {
     JERRY_ASSERT (!(arguments_p->header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED));
@@ -371,7 +350,6 @@ ecma_op_arguments_delete_built_in_property (ecma_object_t *object_p, /**< the ob
     arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED;
     return;
   }
-#endif /* JERRY_ESNEXT */
 
   uint32_t index = ecma_string_get_array_index (property_name_p);
 
@@ -436,24 +414,14 @@ ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< ar
       ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLEE));
       prop_counter_p->string_named_props++;
     }
-
-#if !JERRY_ESNEXT
-    if (!(flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
-    {
-      ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER));
-      prop_counter_p->string_named_props++;
-    }
-#endif /* !JERRY_ESNEXT */
   }
 
-#if JERRY_ESNEXT
   if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS) && !(flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED))
   {
     ecma_string_t *symbol_p = ecma_op_get_global_symbol (LIT_GLOBAL_SYMBOL_ITERATOR);
     ecma_collection_push_back (prop_names_p, ecma_make_symbol_value (symbol_p));
     prop_counter_p->symbol_named_props++;
   }
-#endif /* JERRY_ESNEXT */
 } /* ecma_op_arguments_object_list_lazy_property_names */
 
 /**

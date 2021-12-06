@@ -123,12 +123,6 @@ main (void)
 {
   TEST_INIT ();
 
-  if (!jerry_feature_enabled (JERRY_FEATURE_PROMISE))
-  {
-    jerry_log (JERRY_LOG_LEVEL_ERROR, "Promise is disabled!\n");
-    return 0;
-  }
-
   /* The test system enables this feature when Promises are enabled. */
   TEST_ASSERT (jerry_feature_enabled (JERRY_FEATURE_PROMISE_CALLBACK));
 

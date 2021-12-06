@@ -347,7 +347,6 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
     JERRY_DEBUG_MSG (",no_lexical_env");
   }
 
-#if JERRY_ESNEXT
   switch (CBC_FUNCTION_GET_TYPE (compiled_code_p->status_flags))
   {
     case CBC_FUNCTION_CONSTRUCTOR:
@@ -386,7 +385,6 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
       break;
     }
   }
-#endif /* JERRY_ESNEXT */
 
   JERRY_DEBUG_MSG ("]\n");
 
@@ -396,7 +394,6 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
   JERRY_DEBUG_MSG ("  Const literal range end: %d\n", (int) const_literal_end);
   JERRY_DEBUG_MSG ("  Literal range end: %d\n\n", (int) literal_end);
 
-#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
   {
     uint8_t *extended_info_p = ecma_compiled_code_resolve_extended_info (compiled_code_p);
@@ -420,7 +417,6 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
 
     size -= (size_t) (extended_info_start_p - extended_info_p);
   }
-#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
 
   byte_code_start_p = (uint8_t *) compiled_code_p;
 

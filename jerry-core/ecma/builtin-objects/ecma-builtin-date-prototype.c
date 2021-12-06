@@ -92,9 +92,6 @@ enum
 
   ECMA_DATE_PROTOTYPE_TO_STRING, /* ECMA-262 v5, 15.9.5.2 */
   ECMA_DATE_PROTOTYPE_TO_DATE_STRING, /* ECMA-262 v5, 15.9.5.3 */
-#if !JERRY_ESNEXT
-  ECMA_DATE_PROTOTYPE_TO_UTC_STRING, /* ECMA-262 v5, 15.9.5.42 */
-#endif /* JERRY_ESNEXT */
   ECMA_DATE_PROTOTYPE_TO_TIME_STRING, /* ECMA-262 v5, 15.9.5.4 */
   ECMA_DATE_PROTOTYPE_TO_ISO_STRING, /* ECMA-262 v5, 15.9.5.43 */
 
@@ -102,9 +99,7 @@ enum
   ECMA_DATE_PROTOTYPE_SET_TIME, /* ECMA-262 v5, 15.9.5.27 */
   ECMA_DATE_PROTOTYPE_TO_JSON, /* ECMA-262 v5, 15.9.5.44 */
 
-#if JERRY_ESNEXT
   ECMA_DATE_PROTOTYPE_TO_PRIMITIVE, /*  ECMA-262 v6 20.3.4.45 */
-#endif /* JERRY_ESNEXT */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-date-prototype.inc.h"
@@ -178,7 +173,6 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
   return ret_value;
 } /* ecma_builtin_date_prototype_to_json */
 
-#if JERRY_ESNEXT
 /**
  * The Date.prototype object's toPrimitive routine
  *
@@ -216,7 +210,6 @@ ecma_builtin_date_prototype_to_primitive (ecma_value_t this_arg, /**< this argum
 
   return ecma_raise_type_error (ECMA_ERR_INVALID_ARGUMENT_TYPE_IN_TOPRIMITIVE);
 } /* ecma_builtin_date_prototype_to_primitive */
-#endif /* JERRY_ESNEXT */
 
 /**
  * Dispatch get date functions
@@ -400,28 +393,20 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
     }
   }
 
-#if JERRY_ESNEXT
   ecma_date_object_t *date_object_p = (ecma_date_object_t *) object_p;
   ecma_number_t *date_value_p = &date_object_p->date_value;
-#else /* !JERRY_ESNEXT */
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.cls.u3.date);
-#endif /* JERRY_ESNEXT */
-
   ecma_number_t date_value = *date_value_p;
 
   if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
   {
     ecma_number_t local_tza;
 
-#if JERRY_ESNEXT
     if (date_object_p->header.u.cls.u1.date_flags & ECMA_DATE_TZA_SET)
     {
       local_tza = date_object_p->header.u.cls.u3.tza;
       JERRY_ASSERT (local_tza == ecma_date_local_time_zone_adjustment (date_value));
     }
     else
-#endif /* JERRY_ESNEXT */
     {
       local_tza = ecma_date_local_time_zone_adjustment (date_value);
     }
@@ -472,9 +457,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
         if (ecma_number_is_nan (converted_number[0]))
         {
           *date_value_p = converted_number[0];
-#if JERRY_ESNEXT
           date_object_p->header.u.cls.u1.date_flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
-#endif /* JERRY_ESNEXT */
           return ecma_make_number_value (converted_number[0]);
         }
 
@@ -603,9 +586,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
 
   *date_value_p = full_date;
 
-#if JERRY_ESNEXT
   date_object_p->header.u.cls.u1.date_flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
-#endif /* JERRY_ESNEXT */
 
   return ecma_make_number_value (full_date);
 } /* ecma_builtin_date_prototype_dispatch_set */
@@ -631,12 +612,10 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
     return ecma_builtin_date_prototype_to_json (this_arg);
   }
 
-#if JERRY_ESNEXT
   if (JERRY_UNLIKELY (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_PRIMITIVE))
   {
     return ecma_builtin_date_prototype_to_primitive (this_arg, arguments_list[0]);
   }
-#endif /* JERRY_ESNEXT */
 
   if (!ecma_is_value_object (this_arg)
       || !ecma_object_class_is (ecma_get_object_from_value (this_arg), ECMA_OBJECT_CLASS_DATE))
@@ -646,14 +625,8 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
 
   ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
 
-#if JERRY_ESNEXT
   ecma_date_object_t *date_object_p = (ecma_date_object_t *) this_obj_p;
   ecma_number_t *date_value_p = &date_object_p->date_value;
-#else /* JERRY_ESNEXT */
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) this_obj_p;
-  ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.cls.u3.date);
-#endif /* JERRY_ESNEXT */
-
   ecma_number_t date_value = *date_value_p;
 
   if (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_TIME)
@@ -671,9 +644,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
     }
 
     *date_value_p = ecma_date_time_clip (time_num);
-#if JERRY_ESNEXT
     date_object_p->header.u.cls.u1.date_flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
-#endif /* JERRY_ESNEXT */
 
     return ecma_make_number_value (*date_value_p);
   }
@@ -685,7 +656,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
       if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
       {
         ecma_number_t local_tza;
-#if JERRY_ESNEXT
+
         if (date_object_p->header.u.cls.u1.date_flags & ECMA_DATE_TZA_SET)
         {
           local_tza = date_object_p->header.u.cls.u3.tza;
@@ -693,14 +664,11 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
         }
         else
         {
-#endif /* JERRY_ESNEXT */
           local_tza = ecma_date_local_time_zone_adjustment (date_value);
-#if JERRY_ESNEXT
           JERRY_ASSERT (local_tza <= INT32_MAX && local_tza >= INT32_MIN);
           date_object_p->header.u.cls.u3.tza = (int32_t) local_tza;
           date_object_p->header.u.cls.u1.date_flags |= ECMA_DATE_TZA_SET;
         }
-#endif /* JERRY_ESNEXT */
 
         date_value += local_tza;
       }
@@ -736,12 +704,6 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
     {
       return ecma_date_value_to_date_string (date_value);
     }
-#if !JERRY_ESNEXT
-    case ECMA_DATE_PROTOTYPE_TO_UTC_STRING:
-    {
-      return ecma_date_value_to_utc_string (date_value);
-    }
-#endif /* JERRY_ESNEXT */
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_TIME_STRING);

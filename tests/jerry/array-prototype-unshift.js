@@ -123,3 +123,7 @@ try {
 } catch (e) {
   assert(e instanceof TypeError);
 }
+
+var arrayLike = {get 5() { throw "shouldn't throw"; }};
+arrayLike.length = 10;
+Array.prototype.unshift.call(arrayLike);

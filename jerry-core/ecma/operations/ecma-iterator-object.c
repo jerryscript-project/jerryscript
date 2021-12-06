@@ -36,8 +36,6 @@
  * @{
  */
 
-#if JERRY_ESNEXT
-
 /**
  * Implementation of 'CreateArrayFromList' specialized for iterators
  *
@@ -714,8 +712,6 @@ ecma_async_from_sync_iterator_unwrap_cb (ecma_object_t *function_obj_p, /**< fun
 
   return ecma_create_iter_result_object (arg, done);
 } /* ecma_async_from_sync_iterator_unwrap_cb */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

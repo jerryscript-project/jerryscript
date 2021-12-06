@@ -18,8 +18,6 @@
 
 #include "ecma-globals.h"
 
-#if JERRY_ESNEXT
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -46,8 +44,8 @@ typedef enum
  */
 typedef struct
 {
-  ecma_extended_object_t header;
-  ecma_value_t promise;
+  ecma_extended_object_t header; /**< extended object part */
+  ecma_value_t promise; /**< [[Promise]] internal slot */
 } ecma_promise_resolver_t;
 
 /**
@@ -145,5 +143,4 @@ ecma_value_t ecma_promise_perform_then (ecma_value_t promise,
  * @}
  */
 
-#endif /* JERRY_ESNEXT */
 #endif /* !ECMA_PROMISE_OBJECT_H */

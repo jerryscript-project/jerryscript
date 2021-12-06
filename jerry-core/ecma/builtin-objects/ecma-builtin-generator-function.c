@@ -15,8 +15,6 @@
 
 #include "ecma-globals.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 #include "ecma-function-object.h"
@@ -31,7 +29,7 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup generator ECMA GeneratorFunction object built-in
+ * \addtogroup generatorfunction ECMA GeneratorFunction object built-in
  * @{
  */
 
@@ -68,5 +66,3 @@ ecma_builtin_generator_function_dispatch_construct (const ecma_value_t *argument
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

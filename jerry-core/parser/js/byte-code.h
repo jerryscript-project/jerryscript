@@ -63,19 +63,12 @@
 
 #define CBC_HAS_POP_STACK_BYTE_ARG (CBC_HAS_BYTE_ARG | CBC_POP_STACK_BYTE_ARG)
 
-#if JERRY_ESNEXT
 /**
  * CBC_NO_RESULT_OPERATION for ext opcodes
  */
 #define CBC_EXT_NO_RESULT_OPERATION(opcode)                \
   ((opcode) >= PARSER_TO_EXT_OPCODE (CBC_EXT_ASSIGN_SUPER) \
    && (opcode) <= PARSER_TO_EXT_OPCODE (CBC_EXT_SPREAD_CALL_PROP_BLOCK))
-#else /* !JERRY_ESNEXT */
-/**
- * CBC_NO_RESULT_OPERATION for ext opcodes
- */
-#define CBC_EXT_NO_RESULT_OPERATION(opcode) false
-#endif /* JERRY_ESNEXT */
 
 /* Debug macro. */
 #define CBC_ARGS_EQ(op, types) ((cbc_flags[op] & CBC_ARG_TYPES) == (types))

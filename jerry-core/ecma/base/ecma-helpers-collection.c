@@ -80,8 +80,6 @@ ecma_collection_free_objects (ecma_collection_t *collection_p) /**< value collec
   ecma_collection_destroy (collection_p);
 } /* ecma_collection_free_objects */
 
-#if JERRY_ESNEXT
-
 /**
  * Free the template literal objects and deallocate the collection
  */
@@ -117,8 +115,6 @@ ecma_collection_free_template_literal (ecma_collection_t *collection_p) /**< val
 
   ecma_collection_destroy (collection_p);
 } /* ecma_collection_free_template_literal */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * Free the non-object collection elements and deallocate the collection

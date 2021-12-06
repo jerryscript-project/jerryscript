@@ -56,8 +56,10 @@ In JerryScript all of the features are enabled by default, so an empty profile f
 The defines can have a value of `0` or `1`. If for whatever reason one of them are not defined, it is treated as if it were
 defined to `1`.
 
-#### ES 5.1 features
+#### Built-ins
 
+* `JERRY_BUILTINS`:
+  Enables or disable all of the Built-in objects
 * `JERRY_BUILTIN_ANNEXB`:
   Enables or disables the [Annex B](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-B) of the ECMA5.1 standard.
 * `JERRY_BUILTIN_ARRAY`:
@@ -79,23 +81,6 @@ defined to `1`.
   Enables or disables the [RegExp](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.10) built-in.
 * `JERRY_BUILTIN_STRING`:
   Enables or disables the [String](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.5) built-in.
-* `JERRY_BUILTINS`:
-  Enables or disable all of the [Standard Built-in ECMAScript 5.1 Objects](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15)
-  This option is evaluated first, any other `JERRY_BUILTIN_<name>` defines will override that specific builtin config.
-  Equivalent with setting the following defines to the `JERRY_BUILTINS` value:
-    * `JERRY_BUILTIN_ANNEXB`
-    * `JERRY_BUILTIN_ARRAY`
-    * `JERRY_BUILTIN_BOOLEAN`
-    * `JERRY_BUILTIN_DATE`
-    * `JERRY_BUILTIN_ERRORS`
-    * `JERRY_BUILTIN_JSON`
-    * `JERRY_BUILTIN_MATH`
-    * `JERRY_BUILTIN_NUMBER`
-    * `JERRY_BUILTIN_REGEXP`
-    * `JERRY_BUILTIN_STRING`
-
-#### ES2015+ features
-
 * `JERRY_BUILTIN_BIGINT`:
   Enables or disables the [BigInt](https://262.ecma-international.org/11.0/#sec-ecmascript-language-types-bigint-type) syntax and built-in.
 * `JERRY_BUILTIN_CONTAINER`:
@@ -120,36 +105,4 @@ defined to `1`.
   Enables or disables the [WeakRef](https://tc39.es/ecma262/#sec-weak-ref-constructor) built-in.
 * `JERRY_MODULE_SYSTEM`:
   Enables or disable the [module system](http://www.ecma-international.org/ecma-262/6.0/#sec-modules) language element.
-* `JERRY_ESNEXT`: Enables or disables all of the implemented [ECMAScript2015+ features](http://www.ecma-international.org/ecma-262/10.0/) above.
-  * [arrow functions](http://www.ecma-international.org/ecma-262/6.0/#sec-arrow-function-definitions) language element.
-  * [async functions](https://262.ecma-international.org/11.0/#sec-async-function-definitions) language element.
-  * [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
-  * [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
-  * [destructuring assignment](http://www.ecma-international.org/ecma-262/6.0/#sec-destructuring-assignment) language element.
-  * [destructuring binding pattern](http://www.ecma-international.org/ecma-262/6.0/#sec-destructuring-binding-patterns) declarations.
-  * [enhanced object initializer](http://www.ecma-international.org/ecma-262/6.0/#sec-object-initializer) language element.
-  * [for-of](https://www.ecma-international.org/ecma-262/6.0/#sec-for-in-and-for-of-statements) language element.
-  * [for-await-of](https://262.ecma-international.org/11.0/#sec-for-in-and-for-of-statements) language element.
-  * [generator functions](http://www.ecma-international.org/ecma-262/6.0/#sec-generator-function-definitions) language element.
-  * [iterator](https://www.ecma-international.org/ecma-262/6.0/#sec-iterator-interface) built-in.
-  * [nullish coalescing](https://262.ecma-international.org/11.0/#prod-CoalesceExpression) built-in.
-  * [numeric separator](https://github.com/tc39/proposal-numeric-separator) language element.
-  * [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
-  * [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) language element.
-  * [rest operator with object destructuring](https://262.ecma-international.org/11.0/#prod-ObjectBindingPattern) language element.
-  * [spread](https://262.ecma-international.org/11.0/#prod-SpreadElement) syntax.
-  * [symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) language element.
-  * [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings) language element.
 
-  Furthermore all builtins follow the latest ECMAScript specification including those which behave differently in ES5.1.
-  This option is evaluated first, any other `JERRY_<name>` defines will override that specific entry.
-  Equivalent with setting the following defines to the `JERRY_ESNEXT` value:
-    * `JERRY_BUILTIN_BIGINT`
-    * `JERRY_BUILTIN_CONTAINER`
-    * `JERRY_BUILTIN_DATAVIEW`
-    * `JERRY_BUILTIN_GLOBAL_THIS`
-    * `JERRY_BUILTIN_PROXY`
-    * `JERRY_BUILTIN_REALMS`
-    * `JERRY_BUILTIN_REFLECT`
-    * `JERRY_BUILTIN_TYPEDARRAY`
-    * `JERRY_MODULE_SYSTEM`

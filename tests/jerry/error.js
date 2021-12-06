@@ -198,3 +198,12 @@ assert (URIError.prototype.constructor === URIError);
 assert (URIError.prototype.name === "URIError");
 assert (URIError.prototype.message === "");
 assert (URIError.prototype.toString() === "URIError");
+
+/* Prototype of NativeErrors should be Error */
+assert(Object.getPrototypeOf(EvalError) === Error);
+assert(Object.getPrototypeOf(RangeError) === Error);
+assert(Object.getPrototypeOf(ReferenceError) === Error);
+assert(Object.getPrototypeOf(SyntaxError) === Error);
+assert(Object.getPrototypeOf(TypeError) === Error);
+assert(Object.getPrototypeOf(URIError) === Error);
+assert(Object.getPrototypeOf(AggregateError) === Error);

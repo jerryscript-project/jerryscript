@@ -34,7 +34,6 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
-#if JERRY_ESNEXT
 /**
  * This object has a custom dispatch function.
  */
@@ -51,7 +50,6 @@ enum
   ECMA_NUMBER_OBJECT_ROUTINE_IS_INTEGER,
   ECMA_NUMBER_OBJECT_ROUTINE_IS_SAFE_INTEGER
 };
-#endif /* JERRY_ESNEXT */
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-number.inc.h"
 #define BUILTIN_UNDERSCORED_ID  number
@@ -155,7 +153,6 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 #endif /* JERRY_BUILTIN_BIGINT */
 } /* ecma_builtin_number_dispatch_construct */
 
-#if JERRY_ESNEXT
 /**
  * The Number object 'isInteger' and 'isSafeInteger' routine
  *
@@ -239,8 +236,6 @@ ecma_builtin_number_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
     }
   }
 } /* ecma_builtin_number_dispatch_routine */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

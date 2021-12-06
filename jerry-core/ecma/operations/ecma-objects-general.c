@@ -131,7 +131,6 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
 
   if (property & ECMA_PROPERTY_FLAG_BUILT_IN)
   {
-#if JERRY_ESNEXT
     switch (type)
     {
       case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
@@ -172,17 +171,6 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
         break;
       }
     }
-#else /* !JERRY_ESNEXT */
-    if (type == ECMA_OBJECT_TYPE_CLASS)
-    {
-      JERRY_ASSERT (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_ARGUMENTS));
-      ecma_op_arguments_delete_built_in_property (obj_p, property_name_p);
-    }
-    else
-    {
-      ecma_builtin_delete_built_in_property (obj_p, property_name_p);
-    }
-#endif /* JERRY_ESNEXT */
   }
 
   /* b. */
@@ -205,7 +193,6 @@ static const lit_magic_string_id_t to_primitive_non_string_hint_method_names[2] 
   LIT_MAGIC_STRING_TO_STRING_UL, /**< toString operation */
 };
 
-#if JERRY_ESNEXT
 /**
  * Hints for the ecma general object's toPrimitve operation
  */
@@ -214,7 +201,6 @@ static const lit_magic_string_id_t hints[3] = {
   LIT_MAGIC_STRING_NUMBER, /**< "number" hint */
   LIT_MAGIC_STRING_STRING, /**< "string" hint */
 };
-#endif /* JERRY_ESNEXT */
 
 /**
  * [[DefaultValue]] ecma general object's operation
@@ -232,7 +218,6 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 {
   JERRY_ASSERT (obj_p != NULL && !ecma_is_lexical_environment (obj_p));
 
-#if JERRY_ESNEXT
   ecma_value_t obj_value = ecma_make_object_value (obj_p);
 
   ecma_value_t exotic_to_prim = ecma_op_get_method_by_symbol_id (obj_value, LIT_GLOBAL_SYMBOL_TO_PRIMITIVE);
@@ -267,19 +252,6 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
   {
     hint = ECMA_PREFERRED_TYPE_NUMBER;
   }
-#else /* !JERRY_ESNEXT */
-  if (hint == ECMA_PREFERRED_TYPE_NO)
-  {
-    hint = ECMA_PREFERRED_TYPE_NUMBER;
-
-#if JERRY_BUILTIN_DATE
-    if (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_DATE))
-    {
-      hint = ECMA_PREFERRED_TYPE_STRING;
-    }
-#endif /* JERRY_BUILTIN_DATE */
-  }
-#endif /* JERRY_ESNEXT */
 
   return ecma_op_general_object_ordinary_value (obj_p, hint);
 } /* ecma_op_general_object_default_value */
@@ -637,7 +609,6 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
   return ECMA_VALUE_TRUE;
 } /* ecma_op_general_object_define_own_property */
 
-#if JERRY_ESNEXT
 /**
  * The IsCompatiblePropertyDescriptor method for Proxy object internal methods
  *
@@ -775,7 +746,6 @@ ecma_op_to_complete_property_descriptor (ecma_property_descriptor_t *desc_p) /**
     desc_p->flags |= (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED);
   }
 } /* ecma_op_to_complete_property_descriptor */
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

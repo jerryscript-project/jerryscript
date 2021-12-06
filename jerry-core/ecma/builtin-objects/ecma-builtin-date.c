@@ -669,13 +669,7 @@ static ecma_value_t
 ecma_builtin_date_utc (const ecma_value_t args[], /**< arguments list */
                        uint32_t args_number) /**< number of arguments */
 {
-#if JERRY_ESNEXT
-  const uint32_t required_args_number = 1;
-#else /* !JERRY_ESNEXT */
-  const uint32_t required_args_number = 2;
-#endif /* JERRY_ESNEXT */
-
-  if (args_number < required_args_number)
+  if (args_number < 1)
   {
     return ecma_make_nan_value ();
   }
@@ -712,7 +706,6 @@ ecma_builtin_date_now_helper (void)
 static ecma_value_t
 ecma_builtin_date_create (ecma_number_t tv)
 {
-#if JERRY_ESNEXT
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target_p) != NULL);
 
   ecma_object_t *prototype_obj_p =
@@ -731,17 +724,6 @@ ecma_builtin_date_create (ecma_number_t tv)
   date_object_p->header.u.cls.u1.date_flags = ECMA_DATE_TZA_NONE;
   date_object_p->header.u.cls.u3.tza = 0;
   date_object_p->date_value = tv;
-#else /* !JERRY_ESNEXT */
-  ecma_number_t *date_value_p = ecma_alloc_number ();
-  *date_value_p = tv;
-
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
-  ecma_object_t *obj_p = ecma_create_object (prototype_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
-
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_DATE;
-  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.date, date_value_p);
-#endif /* JERRY_ESNEXT */
 
   return ecma_make_object_value (obj_p);
 } /* ecma_builtin_date_create */
@@ -793,14 +775,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
     if (ecma_is_value_object (argument)
         && ecma_object_class_is (ecma_get_object_from_value (argument), ECMA_OBJECT_CLASS_DATE))
     {
-#if JERRY_ESNEXT
-      tv = ((ecma_date_object_t *) ecma_get_object_from_value (argument))->date_value;
-#else /* !JERRY_ESNEXT */
-      ecma_extended_object_t *arg_ext_object_p = (ecma_extended_object_t *) ecma_get_object_from_value (argument);
-      tv = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, arg_ext_object_p->u.cls.u3.date);
-#endif /* JERRY_ESNEXT */
-
-      return ecma_builtin_date_create (tv);
+      return ecma_builtin_date_create (((ecma_date_object_t *) ecma_get_object_from_value (argument))->date_value);
     }
     /* 4.b */
     ecma_value_t primitive = ecma_op_to_primitive (argument, ECMA_PREFERRED_TYPE_NO);

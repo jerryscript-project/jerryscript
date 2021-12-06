@@ -2460,3 +2460,9 @@
   var a = new Array(1, 2, 5);
   assert(a.length === 3);
 })();
+
+(function tc_15_03_04_02__001() {
+  assert(Function.prototype.toString.hasOwnProperty('length'));
+  assert(delete Function.prototype.toString.length);
+  assert(!Function.prototype.toString.hasOwnProperty('length'));
+})();

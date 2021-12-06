@@ -75,18 +75,11 @@ jobs:
       - run: sudo apt install gcc-multilib
       - run: $RUNNER --buildoption-test
 
-  Conformance_Tests_ES5_1:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: $RUNNER --test262
-      - run: $RUNNER --test262 --build-debug
-
   Conformance_Tests_ESNext:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: $RUNNER --test262-esnext=update
+      - run: $RUNNER --test262 update
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:
@@ -98,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: $RUNNER --test262-esnext=update --build-debug --test262-test-list=built-ins,annexB,harness,intl402
+      - run: $RUNNER --test262 update --build-debug --test262-test-list=built-ins,annexB,harness,intl402
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:
@@ -110,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: $RUNNER --test262-esnext=update --build-debug --test262-test-list=language
+      - run: $RUNNER --test262 update --build-debug --test262-test-list=language
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:

@@ -25,7 +25,6 @@
 #define STRING_VALUE(name, magic_string_id, prop_attributes)
 #endif /* !STRING_VALUE */
 
-#if JERRY_ESNEXT
 #ifndef SYMBOL_VALUE
 #define SYMBOL_VALUE(symbol, desc_magic_string_id)
 #endif /* !SYMBOL_VALUE */
@@ -37,7 +36,6 @@
 #ifndef ACCESSOR_BUILTIN_FUNCTION_OBJECT
 #define ACCESSOR_BUILTIN_FUNCTION_OBJECT(name, getter_builtin_id, setter_builtin_id, prop_attributes)
 #endif /* !ACCESSOR_BUILTIN_FUNCTION_OBJECT */
-#endif /* JERRY_ESNEXT */
 
 #ifndef OBJECT_VALUE
 #define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)

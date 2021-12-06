@@ -36,9 +36,7 @@ typedef enum
   NUMBER_ARITHMETIC_MULTIPLICATION, /**< multiplication */
   NUMBER_ARITHMETIC_DIVISION, /**< division */
   NUMBER_ARITHMETIC_REMAINDER, /**< remainder calculation */
-#if JERRY_ESNEXT
   NUMBER_ARITHMETIC_EXPONENTIATION, /**< exponentiation */
-#endif /* JERRY_ESNEXT */
 } number_arithmetic_op;
 
 /**
@@ -54,8 +52,6 @@ typedef enum
   NUMBER_BITWISE_SHIFT_URIGHT, /**< bitwise UNSIGNED RIGHT SHIFT calculation */
 } number_bitwise_logic_op;
 
-#if JERRY_ESNEXT
-
 /**
  * Types for opfunc_create_executable_object.
  */
@@ -64,8 +60,6 @@ typedef enum
   VM_CREATE_EXECUTABLE_OBJECT_GENERATOR, /**< create a generator function */
   VM_CREATE_EXECUTABLE_OBJECT_ASYNC, /**< create an async function */
 } vm_create_executable_object_type_t;
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * The stack contains spread object during the upcoming APPEND_ARRAY operation
@@ -102,13 +96,9 @@ ecma_value_t vm_op_delete_var (ecma_value_t name_literal, ecma_object_t *lex_env
 
 ecma_collection_t *opfunc_for_in (ecma_value_t left_value, ecma_value_t *result_obj_p);
 
-#if JERRY_ESNEXT
 ecma_collection_t *opfunc_spread_arguments (ecma_value_t *stack_top_p, uint8_t argument_list_len);
-#endif /* JERRY_ESNEXT */
 
 ecma_value_t opfunc_append_array (ecma_value_t *stack_top_p, uint16_t values_length);
-
-#if JERRY_ESNEXT
 
 vm_executable_object_t *opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p,
                                                          vm_create_executable_object_type_t type);
@@ -174,7 +164,6 @@ ecma_value_t
 opfunc_copy_data_properties (ecma_value_t target_object, ecma_value_t source_object, ecma_value_t filter_array);
 
 ecma_value_t opfunc_lexical_scope_has_restricted_binding (vm_frame_ctx_t *vm_frame_ctx_p, ecma_string_t *name_p);
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

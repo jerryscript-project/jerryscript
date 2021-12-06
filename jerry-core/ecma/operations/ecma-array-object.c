@@ -152,13 +152,11 @@ ecma_op_new_array_object (uint32_t length) /**< length of the new array */
 ecma_object_t *
 ecma_op_new_array_object_from_length (ecma_length_t length) /**< length of the new array */
 {
-#if JERRY_ESNEXT
   if (length > UINT32_MAX)
   {
     ecma_raise_range_error (ECMA_ERR_INVALID_ARRAY_LENGTH);
     return NULL;
   }
-#endif /* JERRY_ESNEXT */
 
   return ecma_op_new_array_object ((uint32_t) length);
 } /* ecma_op_new_array_object_from_length */
@@ -663,7 +661,6 @@ ecma_fast_array_object_own_property_keys (ecma_object_t *object_p, /**< fast acc
   return ret_p;
 } /* ecma_fast_array_object_own_property_keys */
 
-#if JERRY_ESNEXT
 /**
  * Array object creation with custom prototype.
  *
@@ -783,7 +780,6 @@ ecma_op_create_array_iterator (ecma_object_t *obj_p, /**< array object */
                                          ECMA_OBJECT_CLASS_ARRAY_ITERATOR,
                                          kind);
 } /* ecma_op_create_array_iterator */
-#endif /* JERRY_ESNEXT */
 
 /**
  * Low level delete of array items from new_length to old_length

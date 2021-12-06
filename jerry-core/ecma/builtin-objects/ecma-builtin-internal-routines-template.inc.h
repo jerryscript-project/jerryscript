@@ -141,7 +141,6 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] = {
   { name, ECMA_BUILTIN_PROPERTY_NUMBER, (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, number_value },
 #define STRING_VALUE(name, magic_string_id, prop_attributes) \
   { name, ECMA_BUILTIN_PROPERTY_STRING, (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, magic_string_id },
-#if JERRY_ESNEXT
 #define SYMBOL_VALUE(name, symbol) { name, ECMA_BUILTIN_PROPERTY_SYMBOL, ECMA_PROPERTY_BUILT_IN_FIXED, symbol },
 #define INTRINSIC_PROPERTY(name, magic_string_id, prop_attributes) \
   { name, ECMA_BUILTIN_PROPERTY_INTRINSIC_PROPERTY, (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, magic_string_id },
@@ -150,7 +149,6 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] = {
     ECMA_BUILTIN_PROPERTY_ACCESSOR_BUILTIN_FUNCTION,                                           \
     (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN,                                           \
     ECMA_ACCESSOR_READ_WRITE (getter_builtin_id, setter_builtin_id) },
-#endif /* JERRY_ESNEXT */
 #include BUILTIN_INC_HEADER_NAME
   { LIT_MAGIC_STRING__COUNT, ECMA_BUILTIN_PROPERTY_END, 0, 0 }
 };

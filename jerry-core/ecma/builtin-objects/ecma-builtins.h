@@ -38,8 +38,6 @@ typedef enum
   ECMA_BUILTIN_ID__COUNT /**< number of built-in objects */
 } ecma_builtin_id_t;
 
-#if JERRY_ESNEXT
-
 /**
  * Special id for handlers (handlers are not regular built-ins, but
  * they use the same ecma_built_in_props_t structure as other built-ins)
@@ -50,8 +48,6 @@ typedef enum
  * Number of global symbols
  */
 #define ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT (LIT_GLOBAL_SYMBOL__LAST - LIT_GLOBAL_SYMBOL__FIRST + 1)
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * Construct a routine value
@@ -100,9 +96,7 @@ typedef struct
   ecma_value_t this_binding; /**< 'this' binding of this global object */
 #endif /* JERRY_BUILTIN_REALMS */
   jmem_cpointer_t global_env_cp; /**< global lexical environment */
-#if JERRY_ESNEXT
   jmem_cpointer_t global_scope_cp; /**< global lexical scope */
-#endif /* JERRY_ESNEXT */
   jmem_cpointer_t builtin_objects[ECMA_BUILTIN_OBJECTS_COUNT]; /**< pointer to instances of built-in objects */
 } ecma_global_object_t;
 
@@ -120,9 +114,7 @@ ecma_value_t ecma_builtin_dispatch_construct (ecma_object_t *obj_p,
 ecma_property_t *ecma_builtin_routine_try_to_instantiate_property (ecma_object_t *object_p,
                                                                    ecma_string_t *property_name_p);
 ecma_property_t *ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-#if JERRY_ESNEXT
 void ecma_builtin_routine_delete_built_in_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-#endif /* JERRY_ESNEXT */
 void ecma_builtin_delete_built_in_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
 void ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p,
                                                     ecma_collection_t *prop_names_p,

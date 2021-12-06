@@ -18,7 +18,6 @@ from __future__ import print_function
 import argparse
 import os
 import re
-import shutil
 import subprocess
 import sys
 
@@ -42,28 +41,19 @@ def get_arguments():
     parser.add_argument('--test-dir', metavar='DIR', required=True,
                         help='Directory contains test262 test suite')
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--es51', action='store_true',
-                       help='Run test262 ES5.1 version')
-    group.add_argument('--esnext', default=False, const='default',
-                       nargs='?', choices=['default', 'all', 'update'],
-                       help='Run test262 - ES.next. default: all tests except excludelist, ' +
-                       'all: all tests, update: all tests and update excludelist')
     parser.add_argument('--test262-test-list', metavar='LIST',
                         help='Add a comma separated list of tests or directories to run in test262 test suite')
+    group.add_argument('--mode', default=False, const='default',
+                       nargs='?', choices=['default', 'all', 'update'],
+                       help='Run test262 - default: all tests except excludelist, ' +
+                       'all: all tests, update: all tests and update excludelist')
 
     args = parser.parse_args()
 
-    if args.esnext:
-        args.test_dir = os.path.join(args.test_dir, 'esnext')
-        args.test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
-        args.test262_git_hash = '00f682e7467bd5cb0e5b1f02a7d26420f450aee0'
-        args.excludelist_path = os.path.join('tests', 'test262-esnext-excludelist.xml')
-    else:
-        args.test_dir = os.path.join(args.test_dir, 'es51')
-        args.test262_harness_dir = args.test_dir
-        args.test262_git_hash = 'es5-tests'
-
-    args.mode = args.esnext
+    args.test_dir = os.path.join(args.test_dir, 'esnext')
+    args.test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
+    args.test262_git_hash = '00f682e7467bd5cb0e5b1f02a7d26420f450aee0'
+    args.excludelist_path = os.path.join('tests', 'test262-excludelist.xml')
 
     return args
 
@@ -81,17 +71,7 @@ def prepare_test262_test_suite(args):
     return_code = subprocess.call(['git', 'checkout', args.test262_git_hash], cwd=args.test_dir)
     assert not return_code, 'Cloning test262 repository failed - invalid git revision.'
 
-    if args.es51:
-        path_to_remove = os.path.join(args.test_dir, 'test', 'suite', 'bestPractice')
-        if os.path.isdir(path_to_remove):
-            shutil.rmtree(path_to_remove)
-
-        path_to_remove = os.path.join(args.test_dir, 'test', 'suite', 'intl402')
-        if os.path.isdir(path_to_remove):
-            shutil.rmtree(path_to_remove)
-
     return 0
-
 
 def update_exclude_list(args):
     print("=== Summary - updating excludelist ===\n")
@@ -173,10 +153,7 @@ def main(args):
     if sys.version_info.major >= 3:
         kwargs['errors'] = 'ignore'
 
-    if args.es51:
-        test262_harness_path = os.path.join(args.test262_harness_dir, 'tools/packaging/test262.py')
-    else:
-        test262_harness_path = os.path.join(args.test262_harness_dir, 'test262-harness.py')
+    test262_harness_path = os.path.join(args.test262_harness_dir, 'test262-harness.py')
 
     test262_command = get_platform_cmd_prefix() + \
                       [test262_harness_path,

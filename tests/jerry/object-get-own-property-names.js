@@ -62,3 +62,12 @@ assert (props.indexOf("prop") !== -1);
 assert (props.indexOf("method") !== -1);
 
 assert (props.length === 2);
+
+// Check that Object.getOwnPropertyNames does NOT include Symbols by default.
+var asd = Symbol ("asd");
+var foo = Symbol ("foo");
+var bar = Symbol ("bar");
+var result = Object.getOwnPropertyNames ({1: 5, "a": 6, [foo]: 7, [asd]: 8, [bar]: 9});
+assert (!Object.hasOwnProperty (result, foo));
+assert (!Object.hasOwnProperty (result, asd));
+assert (!Object.hasOwnProperty (result, bar));

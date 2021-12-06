@@ -251,7 +251,7 @@ register_callback (jerry_external_handler_t handler_p, /**< callback function */
 } /* register_callback */
 
 static jerry_value_t
-run (const char *source_name_p, /**< resource name */
+run (const char *source_name_p, /**< source name */
      const char *source_p) /**< source code */
 {
   jerry_parse_options_t parse_options;

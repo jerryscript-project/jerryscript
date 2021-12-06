@@ -47,10 +47,10 @@ main (void)
 
   jerry_value_t global = jerry_current_realm ();
 
-  /* Register the "resourceName" method. */
+  /* Register the "sourceName" method. */
   {
     jerry_value_t func = jerry_function_external (source_name_handler);
-    jerry_value_t name = jerry_string_sz ("resourceName");
+    jerry_value_t name = jerry_string_sz ("sourceName");
     jerry_value_t result = jerry_object_set (global, name, func);
     jerry_value_free (result);
     jerry_value_free (name);
@@ -63,9 +63,9 @@ main (void)
   parse_options.options = JERRY_PARSE_HAS_SOURCE_NAME;
 
   const char *source_1 = ("function f1 () {\n"
-                          "  if (resourceName() !== 'demo1.js') return false; \n"
-                          "  if (resourceName(f1) !== 'demo1.js') return false; \n"
-                          "  if (resourceName(5) !== '<anonymous>') return false; \n"
+                          "  if (sourceName() !== 'demo1.js') return false; \n"
+                          "  if (sourceName(f1) !== 'demo1.js') return false; \n"
+                          "  if (sourceName(5) !== '<anonymous>') return false; \n"
                           "  return f1; \n"
                           "} \n"
                           "f1();");
@@ -79,23 +79,24 @@ main (void)
   TEST_ASSERT (!jerry_value_is_exception (run_result));
   TEST_ASSERT (jerry_value_is_object (run_result));
 
-  jerry_value_t resource_value = jerry_source_name (run_result);
-  jerry_value_t compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.source_name);
+  jerry_value_t source_name_value = jerry_source_name (run_result);
+  jerry_value_t compare_result =
+    jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, source_name_value, parse_options.source_name);
   TEST_ASSERT (jerry_value_is_true (compare_result));
 
   jerry_value_free (compare_result);
-  jerry_value_free (resource_value);
+  jerry_value_free (source_name_value);
   jerry_value_free (parse_options.source_name);
 
   jerry_value_free (run_result);
   jerry_value_free (program);
 
   const char *source_2 = ("function f2 () { \n"
-                          "  if (resourceName() !== 'demo2.js') return false; \n"
-                          "  if (resourceName(f2) !== 'demo2.js') return false; \n"
-                          "  if (resourceName(f1) !== 'demo1.js') return false; \n"
-                          "  if (resourceName(Object.prototype) !== '<anonymous>') return false; \n"
-                          "  if (resourceName(Function) !== '<anonymous>') return false; \n"
+                          "  if (sourceName() !== 'demo2.js') return false; \n"
+                          "  if (sourceName(f2) !== 'demo2.js') return false; \n"
+                          "  if (sourceName(f1) !== 'demo1.js') return false; \n"
+                          "  if (sourceName(Object.prototype) !== '<anonymous>') return false; \n"
+                          "  if (sourceName(Function) !== '<anonymous>') return false; \n"
                           "  return f2; \n"
                           "} \n"
                           "f2(); \n");
@@ -109,12 +110,12 @@ main (void)
   TEST_ASSERT (!jerry_value_is_exception (run_result));
   TEST_ASSERT (jerry_value_is_object (run_result));
 
-  resource_value = jerry_source_name (run_result);
-  compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.source_name);
+  source_name_value = jerry_source_name (run_result);
+  compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, source_name_value, parse_options.source_name);
   TEST_ASSERT (jerry_value_is_true (compare_result));
 
   jerry_value_free (compare_result);
-  jerry_value_free (resource_value);
+  jerry_value_free (source_name_value);
   jerry_value_free (parse_options.source_name);
 
   jerry_value_free (run_result);
@@ -130,33 +131,33 @@ main (void)
     program = jerry_parse ((const jerry_char_t *) source_3, strlen (source_3), &parse_options);
     TEST_ASSERT (!jerry_value_is_exception (program));
 
-    resource_value = jerry_source_name (program);
-    compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.source_name);
+    source_name_value = jerry_source_name (program);
+    compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, source_name_value, parse_options.source_name);
     TEST_ASSERT (jerry_value_is_true (compare_result));
 
     jerry_value_free (compare_result);
-    jerry_value_free (resource_value);
+    jerry_value_free (source_name_value);
 
     run_result = jerry_module_link (program, NULL, NULL);
     TEST_ASSERT (!jerry_value_is_exception (run_result));
 
-    resource_value = jerry_source_name (run_result);
-    compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, resource_value, anon);
+    source_name_value = jerry_source_name (run_result);
+    compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, source_name_value, anon);
     TEST_ASSERT (jerry_value_is_true (compare_result));
 
     jerry_value_free (compare_result);
-    jerry_value_free (resource_value);
+    jerry_value_free (source_name_value);
     jerry_value_free (run_result);
 
     run_result = jerry_module_evaluate (program);
     TEST_ASSERT (!jerry_value_is_exception (run_result));
 
-    resource_value = jerry_source_name (run_result);
-    compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, resource_value, anon);
+    source_name_value = jerry_source_name (run_result);
+    compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, source_name_value, anon);
     TEST_ASSERT (jerry_value_is_true (compare_result));
 
     jerry_value_free (compare_result);
-    jerry_value_free (resource_value);
+    jerry_value_free (source_name_value);
     jerry_value_free (run_result);
     jerry_value_free (program);
     jerry_value_free (parse_options.source_name);
@@ -174,12 +175,12 @@ main (void)
   TEST_ASSERT (!jerry_value_is_exception (run_result));
   TEST_ASSERT (jerry_value_is_object (run_result));
 
-  resource_value = jerry_source_name (run_result);
-  compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.source_name);
+  source_name_value = jerry_source_name (run_result);
+  compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, source_name_value, parse_options.source_name);
   TEST_ASSERT (jerry_value_is_true (compare_result));
   jerry_value_free (compare_result);
 
-  jerry_value_free (resource_value);
+  jerry_value_free (source_name_value);
   jerry_value_free (parse_options.source_name);
   jerry_value_free (run_result);
   jerry_value_free (program);
@@ -193,11 +194,11 @@ main (void)
   program = jerry_parse ((const jerry_char_t *) source_5, strlen (source_5), &parse_options);
   TEST_ASSERT (!jerry_value_is_exception (program));
 
-  resource_value = jerry_source_name (program);
-  compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.source_name);
+  source_name_value = jerry_source_name (program);
+  compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, source_name_value, parse_options.source_name);
   TEST_ASSERT (jerry_value_is_true (compare_result));
 
-  jerry_value_free (resource_value);
+  jerry_value_free (source_name_value);
   jerry_value_free (compare_result);
   jerry_value_free (parse_options.user_value);
   jerry_value_free (parse_options.source_name);
@@ -211,11 +212,11 @@ main (void)
   program = jerry_parse ((const jerry_char_t *) source_6, strlen (source_6), &parse_options);
   if (!jerry_value_is_exception (program))
   {
-    resource_value = jerry_source_name (program);
-    compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.source_name);
+    source_name_value = jerry_source_name (program);
+    compare_result = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, source_name_value, parse_options.source_name);
     TEST_ASSERT (jerry_value_is_true (compare_result));
 
-    jerry_value_free (resource_value);
+    jerry_value_free (source_name_value);
     jerry_value_free (compare_result);
   }
 

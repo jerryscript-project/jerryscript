@@ -47,7 +47,7 @@
  *
  * See also: ECMAScript v6, 9.2.1.1
  *
- * @return resource name as ecma-string
+ * @return source name as ecma-string
  */
 ecma_value_t
 ecma_op_function_form_name (ecma_string_t *prop_name_p, /**< property name */

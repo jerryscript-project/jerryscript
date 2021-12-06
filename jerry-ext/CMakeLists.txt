@@ -49,7 +49,7 @@ set(SOURCE_EXT
   handler/handler-gc.c
   handler/handler-print.c
   handler/handler-register.c
-  handler/handler-resource-name.c
+  handler/handler-source-name.c
   module/module.c
 )
 

@@ -716,12 +716,12 @@
 #endif /* JERRY_PROMISE_CALLBACK && !JERRY_ESNEXT */
 
 /**
- * Resource name related types into a single guard
+ * Source name related types into a single guard
  */
 #if JERRY_LINE_INFO || JERRY_ERROR_MESSAGES || JERRY_MODULE_SYSTEM
-#define JERRY_RESOURCE_NAME 1
+#define JERRY_SOURCE_NAME 1
 #else /* !(JERRY_LINE_INFO || JERRY_ERROR_MESSAGES || JERRY_MODULE_SYSTEM) */
-#define JERRY_RESOURCE_NAME 0
+#define JERRY_SOURCE_NAME 0
 #endif /* JERRY_LINE_INFO || JERRY_ERROR_MESSAGES || JERRY_MODULE_SYSTEM */
 
 #endif /* !JERRYSCRIPT_CONFIG_H */

@@ -3112,15 +3112,9 @@
   <test id="built-ins/AsyncGeneratorFunction/instance-yield-expr-in-param.js"><reason></reason></test>
   <test id="built-ins/AsyncGeneratorPrototype/next/request-queue-await-order.js"><reason></reason></test>
   <test id="built-ins/AsyncGeneratorPrototype/next/request-queue-promise-resolve-order.js"><reason></reason></test>
-  <test id="built-ins/AsyncGeneratorPrototype/next/this-val-not-async-generator.js"><reason></reason></test>
-  <test id="built-ins/AsyncGeneratorPrototype/next/this-val-not-object.js"><reason></reason></test>
   <test id="built-ins/AsyncGeneratorPrototype/return/return-state-completed.js"><reason></reason></test>
   <test id="built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-promise.js"><reason></reason></test>
   <test id="built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-promise.js"><reason></reason></test>
-  <test id="built-ins/AsyncGeneratorPrototype/return/this-val-not-async-generator.js"><reason></reason></test>
-  <test id="built-ins/AsyncGeneratorPrototype/return/this-val-not-object.js"><reason></reason></test>
-  <test id="built-ins/AsyncGeneratorPrototype/throw/this-val-not-async-generator.js"><reason></reason></test>
-  <test id="built-ins/AsyncGeneratorPrototype/throw/this-val-not-object.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/prototype/cleanupSome/return-undefined-with-gc.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/prototype/cleanupSome/return-undefined.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-generator.js"><reason></reason></test>

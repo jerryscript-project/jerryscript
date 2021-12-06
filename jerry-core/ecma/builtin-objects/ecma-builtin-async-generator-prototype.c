@@ -111,9 +111,9 @@ ecma_builtin_async_generator_prototype_dispatch_routine (uint8_t builtin_routine
 
   if (executable_object_p == NULL)
   {
-    const lit_utf8_byte_t *msg_p = ecma_get_error_utf8 (ECMA_ERR_ARGUMENT_THIS_NOT_ASYNC_GENERATOR);
+    const char *msg_p = ecma_get_error_msg (ECMA_ERR_ARGUMENT_THIS_NOT_ASYNC_GENERATOR);
     lit_utf8_size_t msg_size = ecma_get_error_size (ECMA_ERR_ARGUMENT_THIS_NOT_ASYNC_GENERATOR);
-    ecma_string_t *error_msg_p = ecma_new_ecma_string_from_ascii (msg_p, msg_size);
+    ecma_string_t *error_msg_p = ecma_new_ecma_string_from_ascii ((const lit_utf8_byte_t *) msg_p, msg_size);
 
     ecma_object_t *type_error_obj_p = ecma_new_standard_error (JERRY_ERROR_TYPE, error_msg_p);
     ecma_deref_ecma_string (error_msg_p);

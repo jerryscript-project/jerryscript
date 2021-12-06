@@ -20,7 +20,7 @@
 
 #ifdef __GNUC__
 /*
- * Calls jerry_release_value (*value).
+ * Calls jerry_value_free (*value).
  * The GCC __cleanup__ function must take a pointer to the variable to clean up.
  *
  * @return void
@@ -28,7 +28,7 @@
 static inline void
 jerryx_autorelease_cleanup (const jerry_value_t *value) /**< jerry value */
 {
-  jerry_release_value (*value);
+  jerry_value_free (*value);
 } /* jerryx_autorelease_cleanup */
 
 #define __JERRYX_AR_VALUE_T_IMPL const jerry_value_t __attribute__ ((__cleanup__ (jerryx_autorelease_cleanup)))

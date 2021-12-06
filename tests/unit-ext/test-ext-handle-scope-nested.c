@@ -51,8 +51,8 @@ create_object_nested (int times)
   jerry_value_t obj;
   if (times == 0)
   {
-    obj = jerryx_create_handle (jerry_create_object ());
-    jerry_set_object_native_pointer (obj, NULL, &native_info);
+    obj = jerryx_create_handle (jerry_object ());
+    jerry_object_set_native_ptr (obj, &native_info, NULL);
   }
   else
   {
@@ -85,7 +85,7 @@ test_handle_scope_val (void)
 
   TEST_ASSERT (jerryx_handle_scope_get_current () == scope);
 
-  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 0);
 
   jerryx_close_handle_scope (scope);
@@ -99,7 +99,7 @@ main (void)
   native_free_cb_call_count = 0;
   test_handle_scope_val ();
 
-  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 2);
 
   jerry_cleanup ();

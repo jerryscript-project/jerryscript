@@ -103,7 +103,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
                                        void *user_p, /**< user pointer passed to the callback */
                                        jerry_value_t *return_value) /**< [out] parse and run return value */
 {
-  *return_value = jerry_create_undefined ();
+  *return_value = jerry_undefined ();
 
 #if JERRY_DEBUGGER
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
@@ -146,13 +146,13 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
         {
           JERRY_ASSERT (client_source_data_p != NULL);
 
-          jerry_char_t *resource_name_p = (jerry_char_t *) (client_source_data_p + 1);
-          size_t resource_name_size = strlen ((const char *) resource_name_p);
+          jerry_char_t *source_name_p = (jerry_char_t *) (client_source_data_p + 1);
+          size_t source_name_size = strlen ((const char *) source_name_p);
 
-          *return_value = callback_p (resource_name_p,
-                                      resource_name_size,
-                                      resource_name_p + resource_name_size + 1,
-                                      client_source_data_p->uint8_size - resource_name_size - 1,
+          *return_value = callback_p (source_name_p,
+                                      source_name_size,
+                                      source_name_p + source_name_size + 1,
+                                      client_source_data_p->uint8_size - source_name_size - 1,
                                       user_p);
 
           ret_type = JERRY_DEBUGGER_SOURCE_RECEIVED;

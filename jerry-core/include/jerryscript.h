@@ -16,6 +16,21 @@
 #ifndef JERRYSCRIPT_H
 #define JERRYSCRIPT_H
 
+/**
+ * Major version of JerryScript API.
+ */
+#define JERRY_API_MAJOR_VERSION 3
+
+/**
+ * Minor version of JerryScript API.
+ */
+#define JERRY_API_MINOR_VERSION 0
+
+/**
+ * Patch version of JerryScript API.
+ */
+#define JERRY_API_PATCH_VERSION 0
+
 #include "jerryscript-core.h"
 #include "jerryscript-debugger.h"
 #include "jerryscript-snapshot.h"

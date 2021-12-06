@@ -649,7 +649,7 @@ ecma_builtin_global_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
 
   JMEM_DEFINE_LOCAL_ARRAY (input_start_p, input_size + 1, lit_utf8_byte_t);
 
-  ecma_string_to_utf8_bytes (str_p, input_start_p, input_size);
+  ecma_string_to_cesu8_bytes (str_p, input_start_p, input_size);
 
   input_start_p[input_size] = LIT_BYTE_NULL;
 

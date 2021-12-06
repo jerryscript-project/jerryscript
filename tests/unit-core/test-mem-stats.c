@@ -20,7 +20,7 @@
 int
 main (void)
 {
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_MEM_STATS))
+  if (!jerry_feature_enabled (JERRY_FEATURE_HEAP_STATS))
   {
     return 0;
   }
@@ -30,22 +30,22 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
   jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
-  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
 
   jerry_value_t res = jerry_run (parsed_code_val);
-  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (!jerry_value_is_exception (res));
 
   jerry_heap_stats_t stats;
   memset (&stats, 0, sizeof (stats));
-  bool get_stats_ret = jerry_get_memory_stats (&stats);
+  bool get_stats_ret = jerry_heap_stats (&stats);
   TEST_ASSERT (get_stats_ret);
   TEST_ASSERT (stats.version == 1);
   TEST_ASSERT (stats.size == 524280);
 
-  TEST_ASSERT (!jerry_get_memory_stats (NULL));
+  TEST_ASSERT (!jerry_heap_stats (NULL));
 
-  jerry_release_value (res);
-  jerry_release_value (parsed_code_val);
+  jerry_value_free (res);
+  jerry_value_free (parsed_code_val);
 
   jerry_cleanup ();
 

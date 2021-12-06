@@ -44,24 +44,24 @@ static int load_javascript() {
 
         jerry_value_t parsed_code = jerry_parse(code, length, NULL);
 
-        if (jerry_value_is_error(parsed_code)) {
+        if (jerry_value_is_exception(parsed_code)) {
             LOG_PRINT_ALWAYS("jerry_parse failed [%s]\r\n", js_codes[src].name);
-            jerry_release_value(parsed_code);
+            jerry_value_free(parsed_code);
             jsmbed_js_exit();
             return -1;
         }
 
         jerry_value_t returned_value = jerry_run(parsed_code);
-        jerry_release_value(parsed_code);
+        jerry_value_free(parsed_code);
 
-        if (jerry_value_is_error(returned_value)) {
+        if (jerry_value_is_exception(returned_value)) {
             LOG_PRINT_ALWAYS("jerry_run failed [%s]\r\n", js_codes[src].name);
-            jerry_release_value(returned_value);
+            jerry_value_free(returned_value);
             jsmbed_js_exit();
             return -1;
         }
 
-        jerry_release_value(returned_value);
+        jerry_value_free(returned_value);
     }
 
     return 0;

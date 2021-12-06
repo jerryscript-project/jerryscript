@@ -1254,7 +1254,7 @@ ecma_ref_extended_primitive (ecma_extended_primitive_t *primitve_p) /**< extende
  * Decrease ref count of an error reference.
  */
 void
-ecma_deref_error_reference (ecma_extended_primitive_t *error_ref_p) /**< error reference */
+ecma_deref_exception (ecma_extended_primitive_t *error_ref_p) /**< error reference */
 {
   JERRY_ASSERT (error_ref_p->refs_and_type >= ECMA_EXTENDED_PRIMITIVE_REF_ONE);
 
@@ -1265,7 +1265,7 @@ ecma_deref_error_reference (ecma_extended_primitive_t *error_ref_p) /**< error r
     ecma_free_value (error_ref_p->u.value);
     jmem_pools_free (error_ref_p, sizeof (ecma_extended_primitive_t));
   }
-} /* ecma_deref_error_reference */
+} /* ecma_deref_exception */
 
 #if JERRY_BUILTIN_BIGINT
 
@@ -1303,8 +1303,8 @@ ecma_deref_bigint (ecma_extended_primitive_t *bigint_p) /**< bigint value */
  * @return error reference value
  */
 ecma_value_t
-ecma_create_error_reference (ecma_value_t value, /**< referenced value */
-                             uint32_t options) /**< ECMA_ERROR_API_* options */
+ecma_create_exception (ecma_value_t value, /**< referenced value */
+                       uint32_t options) /**< ECMA_ERROR_API_* options */
 {
   ecma_extended_primitive_t *error_ref_p;
   error_ref_p = (ecma_extended_primitive_t *) jmem_pools_alloc (sizeof (ecma_extended_primitive_t));
@@ -1312,7 +1312,7 @@ ecma_create_error_reference (ecma_value_t value, /**< referenced value */
   error_ref_p->refs_and_type = ECMA_EXTENDED_PRIMITIVE_REF_ONE | options;
   error_ref_p->u.value = value;
   return ecma_make_extended_primitive_value (error_ref_p, ECMA_TYPE_ERROR);
-} /* ecma_create_error_reference */
+} /* ecma_create_exception */
 
 /**
  * Create an error reference from the currently thrown error value.
@@ -1320,47 +1320,47 @@ ecma_create_error_reference (ecma_value_t value, /**< referenced value */
  * @return error reference value
  */
 ecma_value_t
-ecma_create_error_reference_from_context (void)
+ecma_create_exception_from_context (void)
 {
   uint32_t options = 0;
   uint32_t status_flags = JERRY_CONTEXT (status_flags);
 
   if (status_flags & ECMA_STATUS_ABORT)
   {
-    options |= ECMA_ERROR_API_ABORT;
+    options |= ECMA_ERROR_API_FLAG_ABORT;
   }
 
 #if JERRY_VM_THROW
   if (status_flags & ECMA_STATUS_ERROR_THROWN)
   {
-    options |= ECMA_ERROR_API_THROW_CAPTURED;
+    options |= ECMA_ERROR_API_FLAG_THROW_CAPTURED;
   }
 #endif /* JERRY_VM_THROW */
 
-  return ecma_create_error_reference (jcontext_take_exception (), options);
-} /* ecma_create_error_reference_from_context */
+  return ecma_create_exception (jcontext_take_exception (), options);
+} /* ecma_create_exception_from_context */
 
 /**
- * Create an error reference from a given object.
+ * Create an exception from a given object.
  *
  * Note:
- *   Reference of the value is taken.
+ *   Reference of the object is taken.
  *
- * @return error reference value
+ * @return exception value
  */
 extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
-ecma_create_error_object_reference (ecma_object_t *object_p) /**< referenced object */
+ecma_create_exception_from_object (ecma_object_t *object_p) /**< referenced object */
 {
-  return ecma_create_error_reference (ecma_make_object_value (object_p), 0);
-} /* ecma_create_error_object_reference */
+  return ecma_create_exception (ecma_make_object_value (object_p), 0);
+} /* ecma_create_exception_from_object */
 
 /**
- * Raise error from the given error reference.
+ * Raise a new exception from the argument exception value.
  *
- * Note: the error reference's ref count is also decreased
+ * Note: the argument exceptions reference count is decreased
  */
 void
-ecma_raise_error_from_error_reference (ecma_value_t value) /**< error reference */
+ecma_throw_exception (ecma_value_t value) /**< error reference */
 {
   JERRY_ASSERT (!jcontext_has_pending_exception () && !jcontext_has_pending_abort ());
   ecma_extended_primitive_t *error_ref_p = ecma_get_extended_primitive_from_value (value);
@@ -1376,13 +1376,13 @@ ecma_raise_error_from_error_reference (ecma_value_t value) /**< error reference 
 #endif /* JERRY_VM_THROW */
                    | ECMA_STATUS_ABORT);
 
-  if (!(error_ref_p->refs_and_type & ECMA_ERROR_API_ABORT))
+  if (!(error_ref_p->refs_and_type & ECMA_ERROR_API_FLAG_ABORT))
   {
     status_flags &= ~(uint32_t) ECMA_STATUS_ABORT;
   }
 
 #if JERRY_VM_THROW
-  if (!(error_ref_p->refs_and_type & ECMA_ERROR_API_THROW_CAPTURED))
+  if (!(error_ref_p->refs_and_type & ECMA_ERROR_API_FLAG_THROW_CAPTURED))
   {
     status_flags &= ~(uint32_t) ECMA_STATUS_ERROR_THROWN;
   }
@@ -1401,7 +1401,7 @@ ecma_raise_error_from_error_reference (ecma_value_t value) /**< error reference 
   }
 
   JERRY_CONTEXT (error_value) = referenced_value;
-} /* ecma_raise_error_from_error_reference */
+} /* ecma_throw_exception */
 
 /**
  * Decrease the reference counter of a script value.
@@ -1434,7 +1434,7 @@ ecma_script_deref (ecma_value_t script_value) /**< script value */
   }
 
 #if JERRY_RESOURCE_NAME
-  ecma_deref_ecma_string (ecma_get_string_from_value (script_p->resource_name));
+  ecma_deref_ecma_string (ecma_get_string_from_value (script_p->source_name));
 #endif /* JERRY_RESOURCE_NAME */
 
 #if JERRY_MODULE_SYSTEM
@@ -1778,7 +1778,7 @@ ecma_compiled_code_get_line_info (const ecma_compiled_code_t *bytecode_header_p)
  * @return resource name value
  */
 ecma_value_t
-ecma_get_resource_name (const ecma_compiled_code_t *bytecode_p) /**< compiled code */
+ecma_get_source_name (const ecma_compiled_code_t *bytecode_p) /**< compiled code */
 {
 #if JERRY_RESOURCE_NAME
 #if JERRY_SNAPSHOT_EXEC
@@ -1789,12 +1789,12 @@ ecma_get_resource_name (const ecma_compiled_code_t *bytecode_p) /**< compiled co
 #endif /* JERRY_SNAPSHOT_EXEC */
 
   ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
-  return ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value)->resource_name;
+  return ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value)->source_name;
 #else /* !JERRY_RESOURCE_NAME */
   JERRY_UNUSED (bytecode_p);
   return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
 #endif /* !JERRY_RESOURCE_NAME */
-} /* ecma_get_resource_name */
+} /* ecma_get_source_name */
 
 #if (JERRY_STACK_LIMIT != 0)
 /**

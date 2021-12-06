@@ -22,12 +22,12 @@
 static void
 native_cb2 (void)
 {
-  jerry_value_t array = jerry_create_array (100);
-  jerry_release_value (array);
+  jerry_value_t array = jerry_array (100);
+  jerry_value_free (array);
 } /* native_cb2 */
 
 static const jerry_object_native_info_t native_info2 = {
-  .free_cb = (jerry_object_native_free_callback_t) native_cb2,
+  .free_cb = (jerry_object_native_free_cb_t) native_cb2,
   .number_of_references = 0,
   .offset_of_references = 0,
 };
@@ -35,15 +35,15 @@ static const jerry_object_native_info_t native_info2 = {
 static void
 native_cb (void)
 {
-  jerry_value_t array = jerry_create_array (100);
+  jerry_value_t array = jerry_array (100);
 
-  jerry_set_object_native_pointer (array, NULL, &native_info2);
+  jerry_object_set_native_ptr (array, &native_info2, NULL);
 
-  jerry_release_value (array);
+  jerry_value_free (array);
 } /* native_cb */
 
 static const jerry_object_native_info_t native_info = {
-  .free_cb = (jerry_object_native_free_callback_t) native_cb,
+  .free_cb = (jerry_object_native_free_cb_t) native_cb,
   .number_of_references = 0,
   .offset_of_references = 0,
 };
@@ -58,14 +58,14 @@ context_alloc_fn (size_t size, void *cb_data)
 int
 main (void)
 {
-  jerry_context_t *ctx_p = jerry_create_context (1024, context_alloc_fn, NULL);
+  jerry_context_t *ctx_p = jerry_context_alloc (1024, context_alloc_fn, NULL);
   jerry_port_default_set_current_context (ctx_p);
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_value_t obj = jerry_create_object ();
+  jerry_value_t obj = jerry_object ();
 
-  jerry_set_object_native_pointer (obj, NULL, &native_info);
-  jerry_release_value (obj);
+  jerry_object_set_native_ptr (obj, &native_info, NULL);
+  jerry_value_free (obj);
 
   jerry_cleanup ();
   free (ctx_p);

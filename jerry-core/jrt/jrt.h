@@ -211,10 +211,10 @@ void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_code_t code);
 #define JERRY_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__("")
 #else /* !defined(__clang__) && !defined(__GNUC__) */
 /* On GCC 10.x this version also works. */
-#define JERRY_BLOCK_TAIL_CALL_OPTIMIZATION()                   \
-  do                                                           \
-  {                                                            \
-    JERRY_CONTEXT (status_flags) |= ECMA_STATUS_API_AVAILABLE; \
+#define JERRY_BLOCK_TAIL_CALL_OPTIMIZATION()                 \
+  do                                                         \
+  {                                                          \
+    JERRY_CONTEXT (status_flags) |= ECMA_STATUS_API_ENABLED; \
   } while (0)
 #endif /* defined(__clang__) || defined (__GNUC__) */
 

@@ -47,8 +47,8 @@ typedef enum
  *
  * @return this value is passed back by jerry_debugger_wait_and_run_client_source
  */
-typedef jerry_value_t (*jerry_debugger_wait_for_source_callback_t) (const jerry_char_t *resource_name_p,
-                                                                    size_t resource_name_size,
+typedef jerry_value_t (*jerry_debugger_wait_for_source_callback_t) (const jerry_char_t *source_name_p,
+                                                                    size_t source_name_size,
                                                                     const jerry_char_t *source_p,
                                                                     size_t source_size,
                                                                     void *user_p);

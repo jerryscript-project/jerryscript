@@ -116,7 +116,7 @@ ecma_line_info_free (uint8_t *line_info_p) /**< line info buffer */
 void
 ecma_line_info_get (uint8_t *line_info_p, /**< line info buffer */
                     uint32_t offset, /**< byte code offset */
-                    jerry_backtrace_location_t *location_p) /**< [out] location */
+                    jerry_frame_location_t *location_p) /**< [out] location */
 {
   uint32_t line = 1;
   uint32_t column = ECMA_LINE_INFO_COLUMN_DEFAULT;

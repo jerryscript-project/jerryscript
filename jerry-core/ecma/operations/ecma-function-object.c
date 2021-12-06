@@ -1287,9 +1287,9 @@ ecma_op_function_call_native (ecma_object_t *func_obj_p, /**< Function object */
   JERRY_CONTEXT (global_object_p) = saved_global_object_p;
 #endif /* JERRY_BUILTIN_REALMS */
 
-  if (JERRY_UNLIKELY (ecma_is_value_error_reference (ret_value)))
+  if (JERRY_UNLIKELY (ecma_is_value_exception (ret_value)))
   {
-    ecma_raise_error_from_error_reference (ret_value);
+    ecma_throw_exception (ret_value);
     return ECMA_VALUE_ERROR;
   }
 

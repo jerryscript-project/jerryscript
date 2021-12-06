@@ -14,12 +14,12 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#include "jerryscript.h"
 #include "jerryscript-port.h"
+#include "jerryscript.h"
 
 /**
  * Computes the end of the directory part of a path.
@@ -102,8 +102,7 @@ typedef struct jerry_port_module_t
 /**
  * Native info descriptor for modules.
  */
-static const jerry_object_native_info_t jerry_port_module_native_info =
-{
+static const jerry_object_native_info_t jerry_port_module_native_info = {
   .free_cb = NULL,
 };
 
@@ -136,8 +135,8 @@ jerry_port_module_free (jerry_port_module_manager_t *manager_p, /**< module mana
     if (release_all || module_p->realm == realm)
     {
       free (module_p->path_p);
-      jerry_release_value (module_p->realm);
-      jerry_release_value (module_p->module);
+      jerry_value_free (module_p->realm);
+      jerry_value_free (module_p->module);
 
       free (module_p);
 
@@ -174,20 +173,18 @@ jerry_port_module_manager_init (void *user_data_p)
 static void
 jerry_port_module_manager_deinit (void *user_data_p) /**< context pointer to deinitialize */
 {
-  jerry_value_t undef = jerry_create_undefined ();
+  jerry_value_t undef = jerry_undefined ();
   jerry_port_module_free ((jerry_port_module_manager_t *) user_data_p, undef);
-  jerry_release_value (undef);
+  jerry_value_free (undef);
 } /* jerry_port_module_manager_deinit */
 
 /**
  * Declare the context data manager for modules.
  */
-static const jerry_context_data_manager_t jerry_port_module_manager =
-{
-  .init_cb = jerry_port_module_manager_init,
-  .deinit_cb = jerry_port_module_manager_deinit,
-  .bytes_needed = sizeof (jerry_port_module_manager_t)
-};
+static const jerry_context_data_manager_t jerry_port_module_manager = { .init_cb = jerry_port_module_manager_init,
+                                                                        .deinit_cb = jerry_port_module_manager_deinit,
+                                                                        .bytes_needed =
+                                                                          sizeof (jerry_port_module_manager_t) };
 
 /**
  * Default module resolver.
@@ -201,44 +198,43 @@ jerry_port_module_resolve (const jerry_value_t specifier, /**< module specifier 
 {
   (void) user_p;
 
-  jerry_port_module_t *module_p;
+  jerry_port_module_t *module_p = jerry_object_get_native_ptr (referrer, &jerry_port_module_native_info);
   const jerry_char_t *base_path_p = NULL;
   size_t base_path_length = 0;
 
-  if (jerry_get_object_native_pointer (referrer, (void **) &module_p, &jerry_port_module_native_info))
+  if (module_p != NULL)
   {
     base_path_p = module_p->path_p;
     base_path_length = module_p->base_path_length;
   }
 
-  jerry_size_t in_path_length = jerry_get_utf8_string_size (specifier);
+  jerry_size_t in_path_length = jerry_string_size (specifier, JERRY_ENCODING_UTF8);
   jerry_char_t *in_path_p = (jerry_char_t *) malloc (in_path_length + 1);
-  jerry_string_to_utf8_char_buffer (specifier, in_path_p, in_path_length);
+  jerry_string_to_buffer (specifier, JERRY_ENCODING_UTF8, in_path_p, in_path_length);
   in_path_p[in_path_length] = '\0';
 
   jerry_char_t *path_p = jerry_port_normalize_path (in_path_p, in_path_length, base_path_p, base_path_length);
 
   if (path_p == NULL)
   {
-    return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Out of memory");
+    return jerry_throw_sz (JERRY_ERROR_COMMON, "Out of memory");
   }
 
-  jerry_value_t realm = jerry_get_global_object ();
+  jerry_value_t realm = jerry_current_realm ();
 
   jerry_port_module_manager_t *manager_p;
-  manager_p = (jerry_port_module_manager_t *) jerry_get_context_data (&jerry_port_module_manager);
+  manager_p = (jerry_port_module_manager_t *) jerry_context_data (&jerry_port_module_manager);
 
   module_p = manager_p->module_head_p;
 
   while (module_p != NULL)
   {
-    if (module_p->realm == realm
-        && strcmp ((const char *) module_p->path_p, (const char *) path_p) == 0)
+    if (module_p->realm == realm && strcmp ((const char *) module_p->path_p, (const char *) path_p) == 0)
     {
       free (path_p);
       free (in_path_p);
-      jerry_release_value (realm);
-      return jerry_acquire_value (module_p->module);
+      jerry_value_free (realm);
+      return jerry_value_copy (module_p->module);
     }
 
     module_p = module_p->next_p;
@@ -251,28 +247,24 @@ jerry_port_module_resolve (const jerry_value_t specifier, /**< module specifier 
   {
     free (path_p);
     free (in_path_p);
-    jerry_release_value (realm);
-    /* TODO: This is incorrect, but makes test262 module tests pass
-     * (they should throw SyntaxError, but not because the module cannot be found). */
-    return jerry_create_error (JERRY_ERROR_SYNTAX, (const jerry_char_t *) "Module file not found");
+    jerry_value_free (realm);
+    return jerry_throw_sz (JERRY_ERROR_SYNTAX, "Module file not found");
   }
 
   jerry_parse_options_t parse_options;
-  parse_options.options = JERRY_PARSE_MODULE | JERRY_PARSE_HAS_RESOURCE;
-  parse_options.resource_name = jerry_create_string_sz ((const jerry_char_t *) in_path_p, in_path_length);
+  parse_options.options = JERRY_PARSE_MODULE | JERRY_PARSE_HAS_SOURCE_NAME;
+  parse_options.source_name = jerry_string ((const jerry_char_t *) in_path_p, in_path_length, JERRY_ENCODING_UTF8);
 
-  jerry_value_t ret_value = jerry_parse (source_p,
-                                         source_size,
-                                         &parse_options);
+  jerry_value_t ret_value = jerry_parse (source_p, source_size, &parse_options);
 
-  jerry_release_value (parse_options.resource_name);
+  jerry_value_free (parse_options.source_name);
   jerry_port_release_source (source_p);
   free (in_path_p);
 
-  if (jerry_value_is_error (ret_value))
+  if (jerry_value_is_exception (ret_value))
   {
     free (path_p);
-    jerry_release_value (realm);
+    jerry_value_free (realm);
     return ret_value;
   }
 
@@ -282,9 +274,9 @@ jerry_port_module_resolve (const jerry_value_t specifier, /**< module specifier 
   module_p->path_p = path_p;
   module_p->base_path_length = jerry_port_get_directory_end (module_p->path_p);
   module_p->realm = realm;
-  module_p->module = jerry_acquire_value (ret_value);
+  module_p->module = jerry_value_copy (ret_value);
 
-  jerry_set_object_native_pointer (ret_value, module_p, &jerry_port_module_native_info);
+  jerry_object_set_native_ptr (ret_value, &jerry_port_module_native_info, module_p);
   manager_p->module_head_p = module_p;
 
   return ret_value;
@@ -297,6 +289,5 @@ void
 jerry_port_module_release (const jerry_value_t realm) /**< if this argument is object, release only those modules,
                                                        *   which realm value is equal to this argument. */
 {
-  jerry_port_module_free ((jerry_port_module_manager_t *) jerry_get_context_data (&jerry_port_module_manager),
-                          realm);
+  jerry_port_module_free ((jerry_port_module_manager_t *) jerry_context_data (&jerry_port_module_manager), realm);
 } /* jerry_port_module_release */

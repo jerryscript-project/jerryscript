@@ -227,7 +227,7 @@ bool JERRY_ATTR_CONST ecma_is_value_prop_name (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_non_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_object (ecma_value_t value);
-bool JERRY_ATTR_CONST ecma_is_value_error_reference (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_exception (ecma_value_t value);
 ecma_value_t ecma_is_value_array (ecma_value_t arg);
 
 void ecma_check_value_type_is_spec_defined (ecma_value_t value);
@@ -316,24 +316,12 @@ void ecma_destroy_ecma_string (ecma_string_t *string_p);
 ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
 uint32_t ecma_string_get_array_index (const ecma_string_t *str_p);
 
-lit_utf8_size_t JERRY_ATTR_WARN_UNUSED_RESULT ecma_string_copy_to_cesu8_buffer (const ecma_string_t *string_desc_p,
-                                                                                lit_utf8_byte_t *buffer_p,
-                                                                                lit_utf8_size_t buffer_size);
-lit_utf8_size_t JERRY_ATTR_WARN_UNUSED_RESULT ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p,
-                                                                               lit_utf8_byte_t *buffer_p,
-                                                                               lit_utf8_size_t buffer_size);
-lit_utf8_size_t ecma_substring_copy_to_cesu8_buffer (const ecma_string_t *string_desc_p,
-                                                     lit_utf8_size_t start_pos,
-                                                     lit_utf8_size_t end_pos,
-                                                     lit_utf8_byte_t *buffer_p,
-                                                     lit_utf8_size_t buffer_size);
-lit_utf8_size_t ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p,
-                                                    lit_utf8_size_t start_pos,
-                                                    lit_utf8_size_t end_pos,
-                                                    lit_utf8_byte_t *buffer_p,
-                                                    lit_utf8_size_t buffer_size);
+lit_utf8_size_t JERRY_ATTR_WARN_UNUSED_RESULT ecma_string_copy_to_buffer (const ecma_string_t *string_desc_p,
+                                                                          lit_utf8_byte_t *buffer_p,
+                                                                          lit_utf8_size_t buffer_size,
+                                                                          jerry_encoding_t encoding);
 void
-ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, lit_utf8_byte_t *buffer_p, lit_utf8_size_t buffer_size);
+ecma_string_to_cesu8_bytes (const ecma_string_t *string_desc_p, lit_utf8_byte_t *buffer_p, lit_utf8_size_t buffer_size);
 const lit_utf8_byte_t *ecma_string_get_chars (const ecma_string_t *string_p,
                                               lit_utf8_size_t *size_p,
                                               lit_utf8_size_t *length_p,
@@ -498,15 +486,15 @@ ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);
 
 void ecma_ref_extended_primitive (ecma_extended_primitive_t *primitve_p);
-void ecma_deref_error_reference (ecma_extended_primitive_t *error_ref_p);
+void ecma_deref_exception (ecma_extended_primitive_t *exception_p);
 #if JERRY_BUILTIN_BIGINT
 void ecma_deref_bigint (ecma_extended_primitive_t *bigint_p);
 #endif /* JERRY_BUILTIN_BIGINT */
 
-ecma_value_t ecma_create_error_reference (ecma_value_t value, uint32_t options);
-ecma_value_t ecma_create_error_reference_from_context (void);
-ecma_value_t ecma_create_error_object_reference (ecma_object_t *object_p);
-void ecma_raise_error_from_error_reference (ecma_value_t value);
+ecma_value_t ecma_create_exception (ecma_value_t value, uint32_t options);
+ecma_value_t ecma_create_exception_from_context (void);
+ecma_value_t ecma_create_exception_from_object (ecma_object_t *object_p);
+void ecma_throw_exception (ecma_value_t value);
 
 void ecma_script_deref (ecma_value_t script_value);
 void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
@@ -520,7 +508,7 @@ ecma_collection_t *ecma_compiled_code_get_tagged_template_collection (const ecma
 #if JERRY_LINE_INFO
 uint8_t *ecma_compiled_code_get_line_info (const ecma_compiled_code_t *bytecode_header_p);
 #endif /* JERRY_LINE_INFO */
-ecma_value_t ecma_get_resource_name (const ecma_compiled_code_t *bytecode_p);
+ecma_value_t ecma_get_source_name (const ecma_compiled_code_t *bytecode_p);
 #if (JERRY_STACK_LIMIT != 0)
 uintptr_t ecma_get_current_stack_usage (void);
 #endif /* (JERRY_STACK_LIMIT != 0) */

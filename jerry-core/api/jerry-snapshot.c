@@ -34,23 +34,6 @@
 #if JERRY_SNAPSHOT_SAVE || JERRY_SNAPSHOT_EXEC
 
 /**
- * Create an error object
- *
- * Note:
- *      - returned value must be freed with jerry_release_value, when it is no longer needed
- *      - the error flag is set for the returned value
- *
- * @return value of the constructed error object
- */
-static jerry_value_t
-jerry_create_error_from_id (jerry_error_t error_type, /**< type of error */
-                            ecma_error_msg_t msg) /**< ecma_error_msg id of value of 'message' property
-                                                   *   of constructed error object */
-{
-  return jerry_create_error (error_type, (jerry_char_t *) ecma_get_error_utf8 (msg));
-} /* jerry_create_error_from_id */
-
-/**
  * Get snapshot configuration flags.
  *
  * @return configuration flags
@@ -159,7 +142,7 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
                             size_t snapshot_buffer_size, /**< snapshot buffer size */
                             snapshot_globals_t *globals_p) /**< snapshot globals */
 {
-  const jerry_char_t *error_buffer_too_small_p = (const jerry_char_t *) "Snapshot buffer too small";
+  const char *error_buffer_too_small_p = "Snapshot buffer too small";
 
   if (!ecma_is_value_empty (globals_p->snapshot_error))
   {
@@ -170,7 +153,7 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
 
   if (globals_p->snapshot_buffer_write_offset > JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    globals_p->snapshot_error = jerry_create_error_from_id (JERRY_ERROR_RANGE, ECMA_ERR_MAXIMUM_SNAPSHOT_SIZE);
+    globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, ecma_get_error_msg (ECMA_ERR_MAXIMUM_SNAPSHOT_SIZE));
     return 0;
   }
 
@@ -184,7 +167,8 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
 #if JERRY_ESNEXT
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
   {
-    globals_p->snapshot_error = jerry_create_error_from_id (JERRY_ERROR_RANGE, ECMA_ERR_TAGGED_TEMPLATE_LITERALS);
+    globals_p->snapshot_error =
+      jerry_throw_sz (JERRY_ERROR_RANGE, ecma_get_error_msg (ECMA_ERR_TAGGED_TEMPLATE_LITERALS));
     return 0;
   }
 
@@ -200,8 +184,7 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
     /* Regular expression. */
     if (globals_p->snapshot_buffer_write_offset + sizeof (ecma_compiled_code_t) > snapshot_buffer_size)
     {
-      globals_p->snapshot_error =
-        jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_buffer_too_small_p);
+      globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, error_buffer_too_small_p);
       return 0;
     }
 
@@ -222,8 +205,7 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
                                              buffer_p,
                                              buffer_size))
     {
-      globals_p->snapshot_error =
-        jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_buffer_too_small_p);
+      globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, error_buffer_too_small_p);
       /* cannot return inside ECMA_FINALIZE_UTF8_STRING */
     }
 
@@ -257,7 +239,7 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
                                            compiled_code_p,
                                            ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
-    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_buffer_too_small_p);
+    globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, error_buffer_too_small_p);
     return 0;
   }
 
@@ -331,7 +313,7 @@ static_snapshot_error_unsupported_literal (snapshot_globals_t *globals_p, /**< s
 
   ecma_object_t *error_object_p = ecma_new_standard_error (JERRY_ERROR_RANGE, ecma_stringbuilder_finalize (&builder));
 
-  globals_p->snapshot_error = ecma_create_error_object_reference (error_object_p);
+  globals_p->snapshot_error = ecma_create_exception_from_object (error_object_p);
 } /* static_snapshot_error_unsupported_literal */
 
 /**
@@ -354,7 +336,7 @@ static_snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, 
 
   if (globals_p->snapshot_buffer_write_offset >= JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    globals_p->snapshot_error = jerry_create_error_from_id (JERRY_ERROR_RANGE, ECMA_ERR_MAXIMUM_SNAPSHOT_SIZE);
+    globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, ecma_get_error_msg (ECMA_ERR_MAXIMUM_SNAPSHOT_SIZE));
     return 0;
   }
 
@@ -369,7 +351,7 @@ static_snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, 
   {
     /* Regular expression literals are not supported. */
     globals_p->snapshot_error =
-      jerry_create_error_from_id (JERRY_ERROR_RANGE, ECMA_ERR_REGULAR_EXPRESSION_NOT_SUPPORTED);
+      jerry_throw_sz (JERRY_ERROR_RANGE, ecma_get_error_msg (ECMA_ERR_REGULAR_EXPRESSION_NOT_SUPPORTED));
     return 0;
   }
 
@@ -379,7 +361,7 @@ static_snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, 
                                            compiled_code_p,
                                            ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
-    globals_p->snapshot_error = jerry_create_error_from_id (JERRY_ERROR_RANGE, ECMA_ERR_SNAPSHOT_BUFFER_SMALL);
+    globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, ecma_get_error_msg (ECMA_ERR_SNAPSHOT_BUFFER_SMALL));
     return 0;
   }
 
@@ -766,7 +748,7 @@ jerry_generate_snapshot (jerry_value_t compiled_code, /**< parsed script or func
 
   if ((generate_snapshot_opts & ~allowed_options) != 0)
   {
-    return jerry_create_error_from_id (JERRY_ERROR_RANGE, ECMA_ERR_SNAPSHOT_FLAG_NOT_SUPPORTED);
+    return jerry_throw_sz (JERRY_ERROR_RANGE, ecma_get_error_msg (ECMA_ERR_SNAPSHOT_FLAG_NOT_SUPPORTED));
   }
 
   const ecma_compiled_code_t *bytecode_data_p = NULL;
@@ -798,7 +780,7 @@ jerry_generate_snapshot (jerry_value_t compiled_code, /**< parsed script or func
 
   if (JERRY_UNLIKELY (bytecode_data_p == NULL))
   {
-    return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) "Unsupported compiled code");
+    return jerry_throw_sz (JERRY_ERROR_RANGE, ecma_get_error_msg (ECMA_ERR_SNAPSHOT_UNSUPPORTED_COMPILED_CODE));
   }
 
   snapshot_globals_t globals;
@@ -848,7 +830,7 @@ jerry_generate_snapshot (jerry_value_t compiled_code, /**< parsed script or func
                                           &literals_num))
     {
       JERRY_ASSERT (lit_map_p == NULL);
-      return jerry_create_error_from_id (JERRY_ERROR_COMMON, ECMA_ERR_CANNOT_ALLOCATE_MEMORY_LITERALS);
+      return jerry_throw_sz (JERRY_ERROR_COMMON, ecma_get_error_msg (ECMA_ERR_CANNOT_ALLOCATE_MEMORY_LITERALS));
     }
 
     jerry_snapshot_set_offsets (buffer_p + (aligned_header_size / sizeof (uint32_t)),
@@ -872,7 +854,7 @@ jerry_generate_snapshot (jerry_value_t compiled_code, /**< parsed script or func
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (buffer_size);
 
-  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot save is not supported");
+  return jerry_throw_sz (JERRY_ERROR_COMMON, ecma_get_error_msg (ECMA_ERR_SNAPSHOT_SAVE_DISABLED));
 #endif /* JERRY_SNAPSHOT_SAVE */
 } /* jerry_generate_snapshot */
 
@@ -880,7 +862,7 @@ jerry_generate_snapshot (jerry_value_t compiled_code, /**< parsed script or func
  * Execute/load snapshot from specified buffer
  *
  * Note:
- *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *      returned value must be freed with jerry_value_free, when it is no longer needed.
  *
  * @return result of bytecode - if run was successful
  *         thrown error - otherwise
@@ -902,16 +884,15 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
 
   if ((exec_snapshot_opts & ~(allowed_opts)) != 0)
   {
-    ecma_raise_range_error (ECMA_ERR_UNSUPPORTED_SNAPSHOT_EXEC_FLAGS_ARE_SPECIFIED);
-    return ecma_create_error_reference_from_context ();
+    return jerry_throw_sz (JERRY_ERROR_RANGE,
+                           ecma_get_error_msg (ECMA_ERR_UNSUPPORTED_SNAPSHOT_EXEC_FLAGS_ARE_SPECIFIED));
   }
 
   const uint8_t *snapshot_data_p = (uint8_t *) snapshot_p;
 
   if (snapshot_size <= sizeof (jerry_snapshot_header_t))
   {
-    ecma_raise_type_error (ECMA_ERR_INVALID_SNAPSHOT_FORMAT);
-    return ecma_create_error_reference_from_context ();
+    return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_INVALID_SNAPSHOT_FORMAT));
   }
 
   const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) snapshot_data_p;
@@ -919,20 +900,17 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   if (header_p->magic != JERRY_SNAPSHOT_MAGIC || header_p->version != JERRY_SNAPSHOT_VERSION
       || !snapshot_check_global_flags (header_p->global_flags))
   {
-    ecma_raise_type_error (ECMA_ERR_INVALID_SNAPSHOT_VERSION_OR_FEATURES);
-    return ecma_create_error_reference_from_context ();
+    return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_INVALID_SNAPSHOT_VERSION_OR_FEATURES));
   }
 
   if (header_p->lit_table_offset > snapshot_size)
   {
-    ecma_raise_type_error (ECMA_ERR_INVALID_SNAPSHOT_VERSION_OR_FEATURES);
-    return ecma_create_error_reference_from_context ();
+    return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_INVALID_SNAPSHOT_VERSION_OR_FEATURES));
   }
 
   if (func_index >= header_p->number_of_funcs)
   {
-    ecma_raise_range_error (ECMA_ERR_FUNCTION_INDEX_IS_HIGHER_THAN_MAXIMUM);
-    return ecma_create_error_reference_from_context ();
+    return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_FUNCTION_INDEX_IS_HIGHER_THAN_MAXIMUM));
   }
 
   JERRY_ASSERT ((header_p->lit_table_offset % sizeof (uint32_t)) == 0);
@@ -944,14 +922,13 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   {
     if (!(exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_ALLOW_STATIC))
     {
-      ecma_raise_common_error (ECMA_ERR_STATIC_SNAPSHOTS_ARE_NOT_ENABLED);
-      return ecma_create_error_reference_from_context ();
+      return jerry_throw_sz (JERRY_ERROR_COMMON, ecma_get_error_msg (ECMA_ERR_STATIC_SNAPSHOTS_ARE_NOT_ENABLED));
     }
 
     if (exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_COPY_DATA)
     {
-      ecma_raise_common_error (ECMA_ERR_STATIC_SNAPSHOTS_CANNOT_BE_COPIED_INTO_MEMORY);
-      return ecma_create_error_reference_from_context ();
+      return jerry_throw_sz (JERRY_ERROR_COMMON,
+                             ecma_get_error_msg (ECMA_ERR_STATIC_SNAPSHOTS_CANNOT_BE_COPIED_INTO_MEMORY));
     }
   }
   else
@@ -979,16 +956,16 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
 #endif /* JERRY_BUILTIN_REALMS */
 
 #if JERRY_RESOURCE_NAME
-    ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+    ecma_value_t source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
 
     if ((exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_HAS_RESOURCE) && option_values_p != NULL
-        && ecma_is_value_string (option_values_p->resource_name) > 0)
+        && ecma_is_value_string (option_values_p->source_name) > 0)
     {
-      ecma_ref_ecma_string (ecma_get_string_from_value (option_values_p->resource_name));
-      resource_name = option_values_p->resource_name;
+      ecma_ref_ecma_string (ecma_get_string_from_value (option_values_p->source_name));
+      source_name = option_values_p->source_name;
     }
 
-    script_p->resource_name = resource_name;
+    script_p->source_name = source_name;
 #endif /* JERRY_RESOURCE_NAME */
 
 #if JERRY_FUNCTION_TO_STRING
@@ -1061,7 +1038,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
 
   if (ECMA_IS_VALUE_ERROR (ret_val))
   {
-    return ecma_create_error_reference_from_context ();
+    return ecma_create_exception_from_context ();
   }
 
   return ret_val;
@@ -1072,7 +1049,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   JERRY_UNUSED (exec_snapshot_opts);
   JERRY_UNUSED (option_values_p);
 
-  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot execution is not supported");
+  return jerry_throw_sz (JERRY_ERROR_COMMON, ecma_get_error_msg (ECMA_ERR_SNAPSHOT_EXEC_DISABLED));
 #endif /* JERRY_SNAPSHOT_EXEC */
 } /* jerry_exec_snapshot */
 

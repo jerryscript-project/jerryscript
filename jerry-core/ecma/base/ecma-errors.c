@@ -21,15 +21,15 @@
  */
 typedef struct
 {
-  lit_utf8_byte_t *text; /* Text of ecma error message. */
+  char *text; /* Text of ecma error message. */
   uint8_t size; /* Size of ecma error message. */
 } ecma_error_message_t;
 
 /* Error message texts with size. */
 static ecma_error_message_t ecma_error_messages[] JERRY_ATTR_CONST_DATA = {
-  { (lit_utf8_byte_t *) "", 0 }, /* ECMA_ERR_EMPTY */
+  { "", 0 }, /* ECMA_ERR_EMPTY */
 /** @cond doxygen_suppress */
-#define ECMA_ERROR_DEF(id, utf8_string) { (lit_utf8_byte_t *) utf8_string, sizeof (utf8_string) - 1 },
+#define ECMA_ERROR_DEF(id, string) { string, sizeof (string) - 1 },
 #include "ecma-error-messages.inc.h"
 #undef ECMA_ERROR_DEF
   /** @endcond */
@@ -41,8 +41,8 @@ static ecma_error_message_t ecma_error_messages[] JERRY_ATTR_CONST_DATA = {
  *
  * @return pointer to zero-terminated ecma error
  */
-const lit_utf8_byte_t *
-ecma_get_error_utf8 (uint32_t id) /**< ecma error id */
+const char *
+ecma_get_error_msg (ecma_error_msg_t id) /**< ecma error id */
 {
   JERRY_ASSERT (id != ECMA_IS_VALID_CONSTRUCTOR);
 
@@ -51,7 +51,7 @@ ecma_get_error_utf8 (uint32_t id) /**< ecma error id */
 #else /* !JERRY_ERROR_MESSAGES */
   return NULL;
 #endif /* JERRY_ERROR_MESSAGES */
-} /* ecma_get_error_utf8 */
+} /* ecma_get_error_msg */
 
 /**
  * Get size of specified ecma error
@@ -59,7 +59,7 @@ ecma_get_error_utf8 (uint32_t id) /**< ecma error id */
  * @return size in bytes
  */
 lit_utf8_size_t
-ecma_get_error_size (uint32_t id) /**< ecma error id */
+ecma_get_error_size (ecma_error_msg_t id) /**< ecma error id */
 {
   JERRY_ASSERT (id != ECMA_IS_VALID_CONSTRUCTOR);
 

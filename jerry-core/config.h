@@ -454,9 +454,9 @@
  *  0: Disable vm exec stop callback support.
  *  1: Enable vm exec stop callback support.
  */
-#ifndef JERRY_VM_EXEC_STOP
-#define JERRY_VM_EXEC_STOP 0
-#endif /* !defined (JERRY_VM_EXEC_STOP) */
+#ifndef JERRY_VM_HALT
+#define JERRY_VM_HALT 0
+#endif /* !defined (JERRY_VM_HALT) */
 
 /**
  * Enable/Disable the vm throw callback function.
@@ -690,9 +690,9 @@
 #if (JERRY_VALGRIND != 0) && (JERRY_VALGRIND != 1)
 #error "Invalid value for 'JERRY_VALGRIND' macro."
 #endif /* (JERRY_VALGRIND != 0) && (JERRY_VALGRIND != 1) */
-#if (JERRY_VM_EXEC_STOP != 0) && (JERRY_VM_EXEC_STOP != 1)
-#error "Invalid value for 'JERRY_VM_EXEC_STOP' macro."
-#endif /* (JERRY_VM_EXEC_STOP != 0) && (JERRY_VM_EXEC_STOP != 1) */
+#if (JERRY_VM_HALT != 0) && (JERRY_VM_HALT != 1)
+#error "Invalid value for 'JERRY_VM_HALT' macro."
+#endif /* (JERRY_VM_HALT != 0) && (JERRY_VM_HALT != 1) */
 #if (JERRY_VM_THROW != 0) && (JERRY_VM_THROW != 1)
 #error "Invalid value for 'JERRY_VM_THROW' macro."
 #endif /* (JERRY_VM_THROW != 0) && (JERRY_VM_THROW != 1) */

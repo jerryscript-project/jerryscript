@@ -38,52 +38,41 @@ jerryx_handler_assert_fatal (const jerry_call_info_t *call_info_p, /**< call inf
 
   if (args_cnt == 1 && jerry_value_is_true (args_p[0]))
   {
-    return jerry_create_boolean (true);
+    return jerry_boolean (true);
   }
 
   /* Assert failed, print a bit of JS backtrace */
   jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: assertion failed\n");
 
-  if (jerry_is_feature_enabled (JERRY_FEATURE_LINE_INFO))
+  if (jerry_feature_enabled (JERRY_FEATURE_LINE_INFO))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script backtrace (top 5):\n");
 
     /* If the line info feature is disabled an empty array will be returned. */
-    jerry_value_t backtrace_array = jerry_get_backtrace (5);
-    uint32_t array_length = jerry_get_array_length (backtrace_array);
+    jerry_value_t backtrace_array = jerry_backtrace (5);
+    uint32_t array_length = jerry_array_length (backtrace_array);
 
     for (uint32_t idx = 0; idx < array_length; idx++)
     {
-      jerry_value_t property = jerry_get_property_by_index (backtrace_array, idx);
-
-      jerry_length_t total_size = jerry_get_utf8_string_size (property);
-      jerry_length_t current_size = 0;
-      jerry_char_t string_buffer[64];
-      const jerry_length_t copy_size = (jerry_length_t) (sizeof (string_buffer) - 1);
+      jerry_value_t property = jerry_object_get_index (backtrace_array, idx);
 
       /* On some systems the uint32_t values can't be printed with "%u" and
        * on some systems it can be printed. To avoid differences in the uint32_t typdef
        * The "PRIu32" macro is used to correctly add the formatter.
        */
       jerry_port_log (JERRY_LOG_LEVEL_ERROR, " %" PRIu32 ": ", idx);
-      do
-      {
-        jerry_size_t copied_bytes = jerry_substring_to_utf8_char_buffer (property,
-                                                                         current_size,
-                                                                         current_size + copy_size,
-                                                                         string_buffer,
-                                                                         copy_size);
-        string_buffer[copied_bytes] = '\0';
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%s", string_buffer);
 
-        current_size += copied_bytes;
-      } while (total_size != current_size);
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
+      jerry_char_t string_buffer[256];
+      const jerry_length_t buffer_size = (jerry_length_t) (sizeof (string_buffer) - 1);
 
-      jerry_release_value (property);
+      jerry_size_t copied_bytes = jerry_string_to_buffer (property, JERRY_ENCODING_UTF8, string_buffer, buffer_size);
+      string_buffer[copied_bytes] = '\0';
+
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%s\n", string_buffer);
+      jerry_value_free (property);
     }
 
-    jerry_release_value (backtrace_array);
+    jerry_value_free (backtrace_array);
   }
 
   jerry_port_fatal (ERR_FAILED_INTERNAL_ASSERTION);
@@ -104,10 +93,10 @@ jerryx_handler_assert_throw (const jerry_call_info_t *call_info_p, /**< call inf
 
   if (args_cnt == 1 && jerry_value_is_true (args_p[0]))
   {
-    return jerry_create_boolean (true);
+    return jerry_boolean (true);
   }
 
-  return jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "assertion failed");
+  return jerry_throw_sz (JERRY_ERROR_COMMON, "assertion failed");
 } /* jerryx_handler_assert_throw */
 
 /**

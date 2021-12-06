@@ -23,20 +23,22 @@ LLVMFuzzerTestOneInput (const uint8_t *data, size_t size)
   srand (0);
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (jerry_is_valid_utf8_string ((jerry_char_t *) data, (jerry_size_t) size))
+  if (jerry_validate_string ((jerry_char_t *) data, (jerry_size_t) size, JERRY_ENCODING_UTF8))
   {
-    jerry_value_t parse_value = jerry_parse (NULL, 0, (jerry_char_t *) data, size, JERRY_PARSE_NO_OPTS);
+    jerry_parse_options_t parse_options;
+    parse_options.options = JERRY_PARSE_NO_OPTS;
+    jerry_value_t parse_value = jerry_parse ((jerry_char_t *) data, size, &parse_options);
 
-    if (!jerry_value_is_error (parse_value))
+    if (!jerry_value_is_exception (parse_value))
     {
       jerry_value_t run_value = jerry_run (parse_value);
-      jerry_release_value (run_value);
+      jerry_value_free (run_value);
 
-      jerry_value_t run_queue_value = jerry_run_all_enqueued_jobs ();
-      jerry_release_value (run_queue_value);
+      run_value = jerry_run_jobs ();
+      jerry_value_free (run_value);
     }
 
-    jerry_release_value (parse_value);
+    jerry_value_free (parse_value);
   }
 
   jerry_cleanup ();

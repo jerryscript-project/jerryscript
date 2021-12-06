@@ -48,7 +48,7 @@ static const jerry_char_t *magic_string_items[JERRY_LITERAL_LENGTH];
 
 #if defined(JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
 /**
- * The alloc function passed to jerry_create_context
+ * The alloc function passed to jerry_context_create
  */
 static void *
 context_alloc (size_t size, void *cb_data_p)
@@ -63,7 +63,7 @@ context_alloc (size_t size, void *cb_data_p)
 static void
 context_init (void)
 {
-  jerry_context_t *context_p = jerry_create_context (JERRY_GLOBAL_HEAP_SIZE * 1024, context_alloc, NULL);
+  jerry_context_t *context_p = jerry_context_alloc (JERRY_GLOBAL_HEAP_SIZE * 1024, context_alloc, NULL);
   jerry_port_default_set_current_context (context_p);
 } /* context_init */
 
@@ -79,7 +79,7 @@ static bool
 check_feature (jerry_feature_t feature, /**< feature to check */
                const char *option) /**< command line option that triggered this check */
 {
-  if (!jerry_is_feature_enabled (feature))
+  if (!jerry_feature_enabled (feature))
   {
     jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
     jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Ignoring '%s' option because this feature is disabled!\n", option);
@@ -159,34 +159,24 @@ read_file (uint8_t *input_pos_p, /**< next position in the input buffer */
 static void
 print_unhandled_exception (jerry_value_t error_value) /**< error value */
 {
-  assert (!jerry_value_is_error (error_value));
+  assert (!jerry_value_is_exception (error_value));
 
   jerry_value_t err_str_val = jerry_value_to_string (error_value);
 
-  if (jerry_value_is_error (err_str_val))
+  if (jerry_value_is_exception (err_str_val))
   {
     /* Avoid recursive error throws. */
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Snapshot error: [value cannot be converted to string]\n");
-    jerry_release_value (err_str_val);
-    return;
-  }
-
-  jerry_size_t err_str_size = jerry_get_utf8_string_size (err_str_val);
-
-  if (err_str_size >= 256)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Snapshot error: [value cannot be converted to string]\n");
-    jerry_release_value (err_str_val);
+    jerry_value_free (err_str_val);
     return;
   }
 
   jerry_char_t err_str_buf[256];
-  jerry_size_t string_end = jerry_string_to_utf8_char_buffer (err_str_val, err_str_buf, err_str_size);
-  assert (string_end == err_str_size);
-  err_str_buf[string_end] = 0;
+  jerry_size_t bytes = jerry_string_to_buffer (err_str_val, JERRY_ENCODING_UTF8, err_str_buf, sizeof (err_str_buf) - 1);
+  err_str_buf[bytes] = '\0';
 
   jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Snapshot error: %s\n", (char *) err_str_buf);
-  jerry_release_value (err_str_val);
+  jerry_value_free (err_str_val);
 } /* print_unhandled_exception */
 
 /**
@@ -333,7 +323,7 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
 
   jerry_init (flags);
 
-  if (!jerry_is_valid_utf8_string (source_p, (jerry_size_t) source_length))
+  if (!jerry_validate_string (source_p, (jerry_size_t) source_length, JERRY_ENCODING_UTF8))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Input must be a valid UTF-8 string.\n");
     jerry_cleanup ();
@@ -372,50 +362,52 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
   }
 
   jerry_parse_options_t parse_options;
-  parse_options.options = JERRY_PARSE_HAS_RESOURCE;
+  parse_options.options = JERRY_PARSE_HAS_SOURCE_NAME;
   /* To avoid cppcheck warning. */
   parse_options.argument_list = 0;
-  parse_options.resource_name =
-    jerry_create_string_sz ((const jerry_char_t *) file_name_p, (jerry_size_t) strlen (file_name_p));
+  parse_options.source_name =
+    jerry_string ((const jerry_char_t *) file_name_p, (jerry_size_t) strlen (file_name_p), JERRY_ENCODING_UTF8);
 
   if (function_args_p != NULL)
   {
     parse_options.options |= JERRY_PARSE_HAS_ARGUMENT_LIST;
-    parse_options.argument_list = jerry_create_string_from_utf8 ((const jerry_char_t *) function_args_p);
+    parse_options.argument_list = jerry_string ((const jerry_char_t *) function_args_p,
+                                                (jerry_size_t) strlen (function_args_p),
+                                                JERRY_ENCODING_UTF8);
   }
 
   jerry_value_t snapshot_result = jerry_parse ((jerry_char_t *) source_p, source_length, &parse_options);
 
-  if (!jerry_value_is_error (snapshot_result))
+  if (!jerry_value_is_exception (snapshot_result))
   {
     jerry_value_t parse_result = snapshot_result;
     snapshot_result =
       jerry_generate_snapshot (parse_result, snapshot_flags, output_buffer, sizeof (output_buffer) / sizeof (uint32_t));
-    jerry_release_value (parse_result);
+    jerry_value_free (parse_result);
   }
 
   if (parse_options.options & JERRY_PARSE_HAS_ARGUMENT_LIST)
   {
-    jerry_release_value (parse_options.argument_list);
+    jerry_value_free (parse_options.argument_list);
   }
 
-  jerry_release_value (parse_options.resource_name);
+  jerry_value_free (parse_options.source_name);
 
-  if (jerry_value_is_error (snapshot_result))
+  if (jerry_value_is_exception (snapshot_result))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Generating snapshot failed!\n");
 
-    snapshot_result = jerry_get_value_from_error (snapshot_result, true);
+    snapshot_result = jerry_exception_value (snapshot_result, true);
 
     print_unhandled_exception (snapshot_result);
 
-    jerry_release_value (snapshot_result);
+    jerry_value_free (snapshot_result);
     jerry_cleanup ();
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  size_t snapshot_size = (size_t) jerry_get_number_value (snapshot_result);
-  jerry_release_value (snapshot_result);
+  size_t snapshot_size = (size_t) jerry_value_as_number (snapshot_result);
+  jerry_value_free (snapshot_result);
 
   FILE *snapshot_file_p = fopen (output_file_name_p, "wb");
   if (snapshot_file_p == NULL)

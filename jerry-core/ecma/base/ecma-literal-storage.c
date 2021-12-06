@@ -633,7 +633,7 @@ ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, /**< list of kno
 
       *(uint16_t *) destination_p = (uint16_t) length;
 
-      ecma_string_to_utf8_bytes (string_p, destination_p + sizeof (uint16_t), length);
+      ecma_string_to_cesu8_bytes (string_p, destination_p + sizeof (uint16_t), length);
 
       length = JERRY_ALIGNUP (sizeof (uint16_t) + length, JERRY_SNAPSHOT_LITERAL_ALIGNMENT);
     }

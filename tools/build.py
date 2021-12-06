@@ -227,7 +227,7 @@ def generate_build_options(arguments):
     build_options_append('JERRY_SNAPSHOT_SAVE', arguments.snapshot_save)
     build_options_append('JERRY_SYSTEM_ALLOCATOR', arguments.system_allocator)
     build_options_append('JERRY_VALGRIND', arguments.valgrind)
-    build_options_append('JERRY_VM_EXEC_STOP', arguments.vm_exec_stop)
+    build_options_append('JERRY_VM_HALT', arguments.vm_exec_stop)
     build_options_append('JERRY_VM_THROW', arguments.vm_throw)
 
     if arguments.gc_mark_limit is not None:

@@ -150,22 +150,22 @@ struct jerry_context_t
 
 #if JERRY_MODULE_SYSTEM
   ecma_module_t *module_current_p; /**< current module context */
-  jerry_module_state_changed_callback_t module_state_changed_callback_p; /**< callback which is called after the
-                                                                          *   state of a module is changed */
+  jerry_module_state_changed_cb_t module_state_changed_callback_p; /**< callback which is called after the
+                                                                    *   state of a module is changed */
   void *module_state_changed_callback_user_p; /**< user pointer for module_state_changed_callback_p */
-  jerry_module_import_meta_callback_t module_import_meta_callback_p; /**< callback which is called when an
-                                                                      *   import.meta expression of a module
-                                                                      *   is evaluated the first time */
+  jerry_module_import_meta_cb_t module_import_meta_callback_p; /**< callback which is called when an
+                                                                *   import.meta expression of a module
+                                                                *   is evaluated the first time */
   void *module_import_meta_callback_user_p; /**< user pointer for module_import_meta_callback_p */
-  jerry_module_import_callback_t module_import_callback_p; /**< callback for dynamic module import */
+  jerry_module_import_cb_t module_import_callback_p; /**< callback for dynamic module import */
   void *module_import_callback_user_p; /**< user pointer for module_import_callback_p */
 #endif /* JERRY_MODULE_SYSTEM */
 
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
   jerry_context_data_header_t *context_data_p; /**< linked list of user-provided context-specific pointers */
-  jerry_external_string_free_callback_t external_string_free_callback_p; /**< free callback for external strings */
+  jerry_external_string_free_cb_t external_string_free_callback_p; /**< free callback for external strings */
   void *error_object_created_callback_user_p; /**< user pointer for error_object_update_callback_p */
-  jerry_error_object_created_callback_t error_object_created_callback_p; /**< decorator callback for Error objects */
+  jerry_error_object_created_cb_t error_object_created_callback_p; /**< decorator callback for Error objects */
   size_t ecma_gc_objects_number; /**< number of currently allocated objects */
   size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
   size_t jmem_heap_allocated_size; /**< size of allocated regions */
@@ -194,30 +194,30 @@ struct jerry_context_t
 #if JERRY_PROMISE_CALLBACK
   uint32_t promise_callback_filters; /**< reported event types for promise callback */
   void *promise_callback_user_p; /**< user pointer for promise callback */
-  jerry_promise_callback_t promise_callback; /**< user function for tracking Promise object operations */
+  jerry_promise_event_cb_t promise_callback; /**< user function for tracking Promise object operations */
 #endif /* JERRY_PROMISE_CALLBACK */
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_TYPEDARRAY
   uint32_t arraybuffer_compact_allocation_limit; /**< maximum size of compact allocation */
-  jerry_arraybuffer_allocate_t arraybuffer_allocate_callback; /**< callback for allocating
-                                                               *   arraybuffer memory */
-  jerry_arraybuffer_free_t arraybuffer_free_callback; /**< callback for freeing arraybuffer memory */
+  jerry_arraybuffer_allocate_cb_t arraybuffer_allocate_callback; /**< callback for allocating
+                                                                  *   arraybuffer memory */
+  jerry_arraybuffer_free_cb_t arraybuffer_free_callback; /**< callback for freeing arraybuffer memory */
   void *arraybuffer_allocate_callback_user_p; /**< user pointer passed to arraybuffer_allocate_callback
                                                *   and arraybuffer_free_callback functions */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 
-#if JERRY_VM_EXEC_STOP
+#if JERRY_VM_HALT
   uint32_t vm_exec_stop_frequency; /**< reset value for vm_exec_stop_counter */
   uint32_t vm_exec_stop_counter; /**< down counter for reducing the calls of vm_exec_stop_cb */
   void *vm_exec_stop_user_p; /**< user pointer for vm_exec_stop_cb */
   ecma_vm_exec_stop_callback_t vm_exec_stop_cb; /**< user function which returns whether the
                                                  *   ECMAScript execution should be stopped */
-#endif /* JERRY_VM_EXEC_STOP */
+#endif /* JERRY_VM_HALT */
 
 #if JERRY_VM_THROW
   void *vm_throw_callback_user_p; /**< user pointer for vm_throw_callback_p */
-  jerry_vm_throw_callback_t vm_throw_callback_p; /**< callback for capturing throws */
+  jerry_throw_cb_t vm_throw_callback_p; /**< callback for capturing throws */
 #endif /* JERRY_VM_THROW */
 
 #if (JERRY_STACK_LIMIT != 0)

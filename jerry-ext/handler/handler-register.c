@@ -19,24 +19,24 @@
  * Register a JavaScript function in the global object.
  *
  * Note:
- *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *      returned value must be freed with jerry_value_free, when it is no longer needed.
  *
  * @return true value - if the operation was successful,
  *         error - otherwise.
  */
 jerry_value_t
-jerryx_handler_register_global (const jerry_char_t *name_p, /**< name of the function */
+jerryx_handler_register_global (const char *name_p, /**< name of the function */
                                 jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t global_obj_val = jerry_get_global_object ();
-  jerry_value_t function_name_val = jerry_create_string (name_p);
-  jerry_value_t function_val = jerry_create_external_function (handler_p);
+  jerry_value_t global_obj_val = jerry_current_realm ();
+  jerry_value_t function_name_val = jerry_string_sz (name_p);
+  jerry_value_t function_val = jerry_function_external (handler_p);
 
-  jerry_value_t result_val = jerry_set_property (global_obj_val, function_name_val, function_val);
+  jerry_value_t result_val = jerry_object_set (global_obj_val, function_name_val, function_val);
 
-  jerry_release_value (function_val);
-  jerry_release_value (function_name_val);
-  jerry_release_value (global_obj_val);
+  jerry_value_free (function_val);
+  jerry_value_free (function_name_val);
+  jerry_value_free (global_obj_val);
 
   return result_val;
 } /* jerryx_handler_register_global */
@@ -66,20 +66,20 @@ jerryx_set_properties (const jerry_value_t target_object, /**< target object */
 
   if (entries == NULL)
   {
-    return JERRYX_SET_PROPERTIES_RESULT (jerry_create_undefined (), 0);
+    return JERRYX_SET_PROPERTIES_RESULT (jerry_undefined (), 0);
   }
 
   for (; (entries[idx].name != NULL); idx++)
   {
     const jerryx_property_entry *entry = &entries[idx];
 
-    jerry_value_t prop_name = jerry_create_string_from_utf8 ((const jerry_char_t *) entry->name);
-    jerry_value_t result = jerry_set_property (target_object, prop_name, entry->value);
+    jerry_value_t prop_name = jerry_string_sz (entry->name);
+    jerry_value_t result = jerry_object_set (target_object, prop_name, entry->value);
 
-    jerry_release_value (prop_name);
+    jerry_value_free (prop_name);
 
     // By API definition:
-    // The jerry_set_property returns TRUE if there is no problem
+    // The jerry_object_set returns TRUE if there is no problem
     // and error object if there is any problem.
     // Thus there is no need to check if the boolean value is false or not.
     if (!jerry_value_is_boolean (result))
@@ -87,11 +87,11 @@ jerryx_set_properties (const jerry_value_t target_object, /**< target object */
       return JERRYX_SET_PROPERTIES_RESULT (result, idx);
     }
 
-    jerry_release_value (entry->value);
-    jerry_release_value (result);
+    jerry_value_free (entry->value);
+    jerry_value_free (result);
   }
 
-  return JERRYX_SET_PROPERTIES_RESULT (jerry_create_undefined (), idx);
+  return JERRYX_SET_PROPERTIES_RESULT (jerry_undefined (), idx);
 #undef JERRYX_SET_PROPERTIES_RESULT
 } /* jerryx_set_properties */
 
@@ -112,7 +112,7 @@ jerryx_release_property_entry (const jerryx_property_entry entries[], /**< list 
 
   for (uint32_t idx = register_result.registered; entries[idx].name != NULL; idx++)
   {
-    jerry_release_value (entries[idx].value);
+    jerry_value_free (entries[idx].value);
   }
 } /* jerryx_release_property_entry */
 
@@ -120,10 +120,10 @@ jerryx_release_property_entry (const jerryx_property_entry entries[], /**< list 
  * Set a property to a specified value with a given name.
  *
  * Notes:
- *   - The operation performed is the same as what the `jerry_set_property` method.
+ *   - The operation performed is the same as what the `jerry_object_set` method.
  *   - The property name must be a zero terminated UTF-8 string.
  *   - There should be no '\0' (NULL) character in the name excluding the string terminator.
- *   - Returned value must be freed with jerry_release_value, when it is no longer needed.
+ *   - Returned value must be freed with jerry_value_free, when it is no longer needed.
  *
  * @return true value - if the operation was successful
  *         thrown error - otherwise
@@ -133,10 +133,10 @@ jerryx_set_property_str (const jerry_value_t target_object, /**< target object *
                          const char *name, /**< property name */
                          const jerry_value_t value) /**< value to set */
 {
-  jerry_value_t property_name_val = jerry_create_string_from_utf8 ((const jerry_char_t *) name);
-  jerry_value_t result_val = jerry_set_property (target_object, property_name_val, value);
+  jerry_value_t property_name_val = jerry_string_sz (name);
+  jerry_value_t result_val = jerry_object_set (target_object, property_name_val, value);
 
-  jerry_release_value (property_name_val);
+  jerry_value_free (property_name_val);
 
   return result_val;
 } /* jerryx_set_property_str */
@@ -145,10 +145,10 @@ jerryx_set_property_str (const jerry_value_t target_object, /**< target object *
  * Get a property value of a specified object.
  *
  * Notes:
- *   - The operation performed is the same as what the `jerry_get_property` method.
+ *   - The operation performed is the same as what the `jerry_object_get` method.
  *   - The property name must be a zero terminated UTF-8 string.
  *   - There should be no '\0' (NULL) character in the name excluding the string terminator.
- *   - Returned value must be freed with jerry_release_value, when it is no longer needed.
+ *   - Returned value must be freed with jerry_value_free, when it is no longer needed.
  *
  * @return jerry_value_t - the property value
  */
@@ -156,9 +156,9 @@ jerry_value_t
 jerryx_get_property_str (const jerry_value_t target_object, /**< target object */
                          const char *name) /**< property name */
 {
-  jerry_value_t prop_name = jerry_create_string_from_utf8 ((const jerry_char_t *) name);
-  jerry_value_t result_val = jerry_get_property (target_object, prop_name);
-  jerry_release_value (prop_name);
+  jerry_value_t prop_name = jerry_string_sz (name);
+  jerry_value_t result_val = jerry_object_get (target_object, prop_name);
+  jerry_value_free (prop_name);
 
   return result_val;
 } /* jerryx_get_property_str */
@@ -167,7 +167,7 @@ jerryx_get_property_str (const jerry_value_t target_object, /**< target object *
  * Check if a property exists on an object.
  *
  * Notes:
- *   - The operation performed is the same as what the `jerry_has_property` method.
+ *   - The operation performed is the same as what the `jerry_object_has` method.
  *   - The property name must be a zero terminated UTF-8 string.
  *   - There should be no '\0' (NULL) character in the name excluding the string terminator.
  *
@@ -180,16 +180,16 @@ jerryx_has_property_str (const jerry_value_t target_object, /**< target object *
 {
   bool has_property = false;
 
-  jerry_value_t prop_name = jerry_create_string_from_utf8 ((const jerry_char_t *) name);
-  jerry_value_t has_prop_val = jerry_has_property (target_object, prop_name);
+  jerry_value_t prop_name = jerry_string_sz (name);
+  jerry_value_t has_prop_val = jerry_object_has (target_object, prop_name);
 
-  if (!jerry_value_is_error (has_prop_val))
+  if (!jerry_value_is_exception (has_prop_val))
   {
     has_property = jerry_value_is_true (has_prop_val);
   }
 
-  jerry_release_value (has_prop_val);
-  jerry_release_value (prop_name);
+  jerry_value_free (has_prop_val);
+  jerry_value_free (prop_name);
 
   return has_property;
 } /* jerryx_has_property_str */

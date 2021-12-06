@@ -29,8 +29,8 @@
 void main_init_engine (main_args_t *arguments_p);
 void main_print_unhandled_exception (jerry_value_t error_value);
 
-jerry_value_t main_wait_for_source_callback (const jerry_char_t *resource_name_p,
-                                             size_t resource_name_size,
+jerry_value_t main_wait_for_source_callback (const jerry_char_t *source_name_p,
+                                             size_t source_name_size,
                                              const jerry_char_t *source_p,
                                              size_t source_size,
                                              void *user_p);

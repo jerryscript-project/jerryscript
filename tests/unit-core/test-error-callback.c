@@ -30,21 +30,21 @@ error_object_created_callback (const jerry_value_t error_object_t, /**< new erro
   error_object_created_callback_is_running = true;
   error_object_created_callback_count++;
 
-  jerry_value_t name = jerry_create_string ((const jerry_char_t *) "message");
-  jerry_value_t message = jerry_create_string ((const jerry_char_t *) "Replaced message!");
+  jerry_value_t name = jerry_string_sz ("message");
+  jerry_value_t message = jerry_string_sz ("Replaced message!");
 
-  jerry_value_t result = jerry_set_property (error_object_t, name, message);
+  jerry_value_t result = jerry_object_set (error_object_t, name, message);
   TEST_ASSERT (jerry_value_is_boolean (result) && jerry_value_is_true (result));
-  jerry_release_value (result);
+  jerry_value_free (result);
 
   /* This SyntaxError must not trigger a recusrsive call of the this callback. */
   const char *source_p = "Syntax Error in JS!";
   result = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
-  TEST_ASSERT (jerry_value_is_error (result));
+  TEST_ASSERT (jerry_value_is_exception (result));
 
-  jerry_release_value (result);
-  jerry_release_value (message);
-  jerry_release_value (name);
+  jerry_value_free (result);
+  jerry_value_free (message);
+  jerry_value_free (name);
 
   error_object_created_callback_is_running = false;
 } /* error_object_created_callback */
@@ -57,7 +57,7 @@ run_test (const char *source_p)
   {
     jerry_value_t result = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
     TEST_ASSERT (jerry_value_is_boolean (result) && jerry_value_is_true (result));
-    jerry_release_value (result);
+    jerry_value_free (result);
   }
 } /* run_test */
 
@@ -71,8 +71,7 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_set_error_object_created_callback (error_object_created_callback,
-                                           (void *) &error_object_created_callback_count);
+  jerry_error_on_created (error_object_created_callback, (void *) &error_object_created_callback_count);
 
   run_test ("var result = false\n"
             "try {\n"
@@ -85,7 +84,7 @@ main (void)
   run_test ("var error = new Error()\n"
             "error.message === 'Replaced message!'\n");
 
-  jerry_release_value (jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Message"));
+  jerry_value_free (jerry_error_sz (JERRY_ERROR_COMMON, "Message"));
 
   TEST_ASSERT (error_object_created_callback_count == 11);
 

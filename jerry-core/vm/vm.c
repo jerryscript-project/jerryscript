@@ -1112,7 +1112,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
         if (opcode_data & VM_OC_BACKWARD_BRANCH)
         {
-#if JERRY_VM_EXEC_STOP
+#if JERRY_VM_HALT
           if (JERRY_CONTEXT (vm_exec_stop_cb) != NULL && --JERRY_CONTEXT (vm_exec_stop_counter) == 0)
           {
             result = JERRY_CONTEXT (vm_exec_stop_cb) (JERRY_CONTEXT (vm_exec_stop_user_p));
@@ -1125,9 +1125,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               JERRY_CONTEXT (vm_exec_stop_counter) = 1;
 
-              if (ecma_is_value_error_reference (result))
+              if (ecma_is_value_exception (result))
               {
-                ecma_raise_error_from_error_reference (result);
+                ecma_throw_exception (result);
               }
               else
               {
@@ -1140,7 +1140,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               goto error;
             }
           }
-#endif /* JERRY_VM_EXEC_STOP */
+#endif /* JERRY_VM_HALT */
 
           branch_offset = -branch_offset;
         }
@@ -3819,7 +3819,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (ecma_are_values_integer_numbers (left_value, right_value))
           {
             bool is_less = (ecma_integer_value_t) left_value < (ecma_integer_value_t) right_value;
-#if !JERRY_VM_EXEC_STOP
+#if !JERRY_VM_HALT
             /* This is a lookahead to the next opcode to improve performance.
              * If it is CBC_BRANCH_IF_TRUE_BACKWARD, execute it. */
             if (*byte_code_p <= CBC_BRANCH_IF_TRUE_BACKWARD_3 && *byte_code_p >= CBC_BRANCH_IF_TRUE_BACKWARD)
@@ -3853,7 +3853,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
               continue;
             }
-#endif /* !JERRY_VM_EXEC_STOP */
+#endif /* !JERRY_VM_HALT */
             *stack_top_p++ = ecma_make_boolean_value (is_less);
             continue;
           }
@@ -4842,7 +4842,7 @@ error:
       {
         JERRY_CONTEXT (status_flags) |= ECMA_STATUS_ERROR_THROWN;
 
-        jerry_vm_throw_callback_t vm_throw_callback_p = JERRY_CONTEXT (vm_throw_callback_p);
+        jerry_throw_cb_t vm_throw_callback_p = JERRY_CONTEXT (vm_throw_callback_p);
 
         if (vm_throw_callback_p != NULL)
         {

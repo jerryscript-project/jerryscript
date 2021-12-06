@@ -68,7 +68,7 @@ typedef struct ecma_module
   union
   {
     ecma_compiled_code_t *compiled_code_p; /**< compiled code for the module */
-    jerry_native_module_evaluate_callback_t callback; /**< callback for evaluating native modules */
+    jerry_native_module_evaluate_cb_t callback; /**< callback for evaluating native modules */
   } u;
 } ecma_module_t;
 
@@ -117,7 +117,7 @@ typedef struct ecma_module_resolve_stack
 ecma_value_t ecma_module_initialize (ecma_module_t *module_p);
 ecma_module_t *ecma_module_get_resolved_module (ecma_value_t module_val);
 
-ecma_value_t ecma_module_link (ecma_module_t *module_p, jerry_module_resolve_callback_t callback_p, void *user_p);
+ecma_value_t ecma_module_link (ecma_module_t *module_p, jerry_module_resolve_cb_t callback_p, void *user_p);
 ecma_value_t ecma_module_evaluate (ecma_module_t *module_p);
 ecma_value_t ecma_module_import (ecma_value_t specifier, ecma_value_t user_value);
 

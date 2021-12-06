@@ -1277,11 +1277,13 @@ ecma_builtin_string_prototype_object_repeat (ecma_string_t *original_string_p, /
 
   JMEM_DEFINE_LOCAL_ARRAY (str_buffer, total_size, lit_utf8_byte_t);
 
-  lit_utf8_byte_t *buffer_ptr = str_buffer;
+  ecma_string_to_cesu8_bytes (original_string_p, str_buffer, size);
+  lit_utf8_byte_t *buffer_ptr = str_buffer + size;
 
-  for (int32_t n = 0; n < repeat_count; n++)
+  for (int32_t n = 1; n < repeat_count; n++)
   {
-    buffer_ptr += ecma_string_copy_to_cesu8_buffer (original_string_p, buffer_ptr, (lit_utf8_size_t) (size));
+    memcpy (buffer_ptr, str_buffer, size);
+    buffer_ptr += size;
   }
 
   ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer, (lit_utf8_size_t) (buffer_ptr - str_buffer));

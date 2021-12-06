@@ -34,9 +34,9 @@ compare_specifier (jerry_value_t specifier, /* string value */
   jerry_char_t buffer[sizeof (string) - 1];
 
   TEST_ASSERT (jerry_value_is_string (specifier));
-  TEST_ASSERT (jerry_get_string_size (specifier) == length);
+  TEST_ASSERT (jerry_string_size (specifier, JERRY_ENCODING_CESU8) == length);
 
-  TEST_ASSERT (jerry_string_to_char_buffer (specifier, buffer, length) == length);
+  TEST_ASSERT (jerry_string_to_buffer (specifier, JERRY_ENCODING_CESU8, buffer, length) == length);
   TEST_ASSERT (memcmp (buffer, string, length) == 0);
 } /* compare_specifier */
 
@@ -45,14 +45,14 @@ compare_property (jerry_value_t namespace_object, /**< namespace object */
                   const char *name_p, /**< property name */
                   double expected_value) /**< property value (number for simplicity) */
 {
-  jerry_value_t name = jerry_create_string ((const jerry_char_t *) name_p);
-  jerry_value_t result = jerry_get_property (namespace_object, name);
+  jerry_value_t name = jerry_string_sz (name_p);
+  jerry_value_t result = jerry_object_get (namespace_object, name);
 
   TEST_ASSERT (jerry_value_is_number (result));
-  TEST_ASSERT (jerry_get_number_value (result) == expected_value);
+  TEST_ASSERT (jerry_value_as_number (result) == expected_value);
 
-  jerry_release_value (result);
-  jerry_release_value (name);
+  jerry_value_free (result);
+  jerry_value_free (name);
 } /* compare_property */
 
 static jerry_value_t
@@ -81,7 +81,7 @@ create_module (int id) /**< module id */
     result = jerry_parse (source, sizeof (source) - 1, &module_parse_options);
   }
 
-  TEST_ASSERT (!jerry_value_is_error (result));
+  TEST_ASSERT (!jerry_value_is_exception (result));
   return result;
 } /* create_module */
 
@@ -98,7 +98,7 @@ resolve_callback1 (const jerry_value_t specifier, /**< module specifier */
   compare_specifier (specifier, 1);
 
   counter++;
-  return counter == 1 ? jerry_create_number (7) : jerry_create_object ();
+  return counter == 1 ? jerry_number (7) : jerry_object ();
 } /* resolve_callback1 */
 
 static jerry_value_t prev_module;
@@ -118,7 +118,7 @@ resolve_callback2 (const jerry_value_t specifier, /**< module specifier */
   {
     if (terminate_with_error)
     {
-      return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) "Module not found");
+      return jerry_throw_sz (JERRY_ERROR_RANGE, "Module not found");
     }
 
     return create_module (0);
@@ -145,62 +145,62 @@ native_module_evaluate (const jerry_value_t native_module) /**< native module */
 {
   ++counter;
 
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_EVALUATING);
+  TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_EVALUATING);
 
-  jerry_value_t exp_val = jerry_create_string ((const jerry_char_t *) "exp");
-  jerry_value_t other_exp_val = jerry_create_string ((const jerry_char_t *) "other_exp");
+  jerry_value_t exp_val = jerry_string_sz ("exp");
+  jerry_value_t other_exp_val = jerry_string_sz ("other_exp");
   /* The native module has no such export. */
-  jerry_value_t no_exp_val = jerry_create_string ((const jerry_char_t *) "no_exp");
+  jerry_value_t no_exp_val = jerry_string_sz ("no_exp");
 
-  jerry_value_t result = jerry_native_module_get_export (native_module, exp_val);
+  jerry_value_t result = jerry_native_module_get (native_module, exp_val);
   TEST_ASSERT (jerry_value_is_undefined (result));
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  result = jerry_native_module_get_export (native_module, other_exp_val);
+  result = jerry_native_module_get (native_module, other_exp_val);
   TEST_ASSERT (jerry_value_is_undefined (result));
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  result = jerry_native_module_get_export (native_module, no_exp_val);
-  TEST_ASSERT (jerry_value_is_error (result));
-  TEST_ASSERT (jerry_get_error_type (result) == JERRY_ERROR_REFERENCE);
-  jerry_release_value (result);
+  result = jerry_native_module_get (native_module, no_exp_val);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  TEST_ASSERT (jerry_error_type (result) == JERRY_ERROR_REFERENCE);
+  jerry_value_free (result);
 
-  jerry_value_t export = jerry_create_number (3.5);
-  result = jerry_native_module_set_export (native_module, exp_val, export);
+  jerry_value_t export = jerry_number (3.5);
+  result = jerry_native_module_set (native_module, exp_val, export);
   TEST_ASSERT (jerry_value_is_boolean (result) && jerry_value_is_true (result));
-  jerry_release_value (result);
-  jerry_release_value (export);
+  jerry_value_free (result);
+  jerry_value_free (export);
 
-  export = jerry_create_string ((const jerry_char_t *) "str");
-  result = jerry_native_module_set_export (native_module, other_exp_val, export);
+  export = jerry_string_sz ("str");
+  result = jerry_native_module_set (native_module, other_exp_val, export);
   TEST_ASSERT (jerry_value_is_boolean (result) && jerry_value_is_true (result));
-  jerry_release_value (result);
-  jerry_release_value (export);
+  jerry_value_free (result);
+  jerry_value_free (export);
 
-  result = jerry_native_module_set_export (native_module, no_exp_val, no_exp_val);
-  TEST_ASSERT (jerry_value_is_error (result));
-  TEST_ASSERT (jerry_get_error_type (result) == JERRY_ERROR_REFERENCE);
-  jerry_release_value (result);
+  result = jerry_native_module_set (native_module, no_exp_val, no_exp_val);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  TEST_ASSERT (jerry_error_type (result) == JERRY_ERROR_REFERENCE);
+  jerry_value_free (result);
 
-  result = jerry_native_module_get_export (native_module, exp_val);
-  TEST_ASSERT (jerry_value_is_number (result) && jerry_get_number_value (result) == 3.5);
-  jerry_release_value (result);
+  result = jerry_native_module_get (native_module, exp_val);
+  TEST_ASSERT (jerry_value_is_number (result) && jerry_value_as_number (result) == 3.5);
+  jerry_value_free (result);
 
-  result = jerry_native_module_get_export (native_module, other_exp_val);
+  result = jerry_native_module_get (native_module, other_exp_val);
   TEST_ASSERT (jerry_value_is_string (result));
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  jerry_release_value (exp_val);
-  jerry_release_value (other_exp_val);
-  jerry_release_value (no_exp_val);
+  jerry_value_free (exp_val);
+  jerry_value_free (other_exp_val);
+  jerry_value_free (no_exp_val);
 
   if (counter == 4)
   {
     ++counter;
-    return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Ooops!");
+    return jerry_throw_sz (JERRY_ERROR_COMMON, "Ooops!");
   }
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* native_module_evaluate */
 
 static jerry_value_t
@@ -213,16 +213,15 @@ resolve_callback4 (const jerry_value_t specifier, /**< module specifier */
 
   ++counter;
 
-  jerry_value_t exports[2] = { jerry_create_string ((const jerry_char_t *) "exp"),
-                               jerry_create_string ((const jerry_char_t *) "other_exp") };
+  jerry_value_t exports[2] = { jerry_string_sz ("exp"), jerry_string_sz ("other_exp") };
 
-  jerry_value_t native_module = jerry_native_module_create (native_module_evaluate, exports, 2);
-  TEST_ASSERT (!jerry_value_is_error (native_module));
+  jerry_value_t native_module = jerry_native_module (native_module_evaluate, exports, 2);
+  TEST_ASSERT (!jerry_value_is_exception (native_module));
 
-  jerry_release_value (exports[0]);
-  jerry_release_value (exports[1]);
+  jerry_value_free (exports[0]);
+  jerry_value_free (exports[1]);
 
-  *((jerry_value_t *) user_p) = jerry_acquire_value (native_module);
+  *((jerry_value_t *) user_p) = jerry_value_copy (native_module);
   return native_module;
 } /* resolve_callback4 */
 
@@ -232,7 +231,7 @@ module_state_changed (jerry_module_state_t new_state, /**< new state of the modu
                       const jerry_value_t value, /**< value argument */
                       void *user_p) /**< user pointer */
 {
-  TEST_ASSERT (jerry_module_get_state (module_val) == new_state);
+  TEST_ASSERT (jerry_module_state (module_val) == new_state);
   TEST_ASSERT (module_val == module);
   TEST_ASSERT (user_p == (void *) &counter);
 
@@ -250,14 +249,14 @@ module_state_changed (jerry_module_state_t new_state, /**< new state of the modu
     case 2:
     {
       TEST_ASSERT (new_state == JERRY_MODULE_STATE_EVALUATED);
-      TEST_ASSERT (jerry_value_is_number (value) && jerry_get_number_value (value) == 33.5);
+      TEST_ASSERT (jerry_value_is_number (value) && jerry_value_as_number (value) == 33.5);
       break;
     }
     default:
     {
       TEST_ASSERT (counter == 4);
       TEST_ASSERT (new_state == JERRY_MODULE_STATE_ERROR);
-      TEST_ASSERT (jerry_value_is_number (value) && jerry_get_number_value (value) == -5.5);
+      TEST_ASSERT (jerry_value_is_number (value) && jerry_value_as_number (value) == -5.5);
       break;
     }
   }
@@ -281,62 +280,62 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_MODULE))
+  if (!jerry_feature_enabled (JERRY_FEATURE_MODULE))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Module is disabled!\n");
     jerry_cleanup ();
     return 0;
   }
 
-  jerry_value_t number = jerry_create_number (5);
-  jerry_value_t object = jerry_create_object ();
+  jerry_value_t number = jerry_number (5);
+  jerry_value_t object = jerry_object ();
 
   jerry_value_t result = jerry_module_link (number, resolve_callback1, NULL);
-  TEST_ASSERT (jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  jerry_value_free (result);
 
   result = jerry_module_link (object, resolve_callback1, NULL);
-  TEST_ASSERT (jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  jerry_value_free (result);
 
   module = create_module (1);
 
   /* After an error, module must remain in unlinked mode. */
   result = jerry_module_link (module, resolve_callback1, (void *) &module);
-  TEST_ASSERT (jerry_value_is_error (result));
+  TEST_ASSERT (jerry_value_is_exception (result));
   TEST_ASSERT (counter == 1);
-  jerry_release_value (result);
+  jerry_value_free (result);
 
   result = jerry_module_link (module, resolve_callback1, (void *) &module);
-  TEST_ASSERT (jerry_value_is_error (result));
+  TEST_ASSERT (jerry_value_is_exception (result));
   TEST_ASSERT (counter == 2);
-  jerry_release_value (result);
+  jerry_value_free (result);
 
   prev_module = module;
   counter = 0;
   terminate_with_error = true;
   result = jerry_module_link (module, resolve_callback2, NULL);
-  TEST_ASSERT (jerry_value_is_error (result));
+  TEST_ASSERT (jerry_value_is_exception (result));
   TEST_ASSERT (counter == 32);
-  jerry_release_value (result);
+  jerry_value_free (result);
 
   /* The successfully resolved modules is kept around in unlinked state. */
-  jerry_gc (JERRY_GC_PRESSURE_HIGH);
+  jerry_heap_gc (JERRY_GC_PRESSURE_HIGH);
 
   counter = 31;
   terminate_with_error = false;
   result = jerry_module_link (module, resolve_callback2, NULL);
   TEST_ASSERT (jerry_value_is_boolean (result) && jerry_value_is_true (result));
   TEST_ASSERT (counter == 32);
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
-  TEST_ASSERT (jerry_module_get_number_of_requests (module) == 1);
-  result = jerry_module_get_request (module, 0);
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
-  jerry_release_value (result);
+  TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_LINKED);
+  TEST_ASSERT (jerry_module_request_count (module) == 1);
+  result = jerry_module_request (module, 0);
+  TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_LINKED);
+  jerry_value_free (result);
 
-  jerry_release_value (module);
+  jerry_value_free (module);
 
   module = create_module (1);
 
@@ -346,10 +345,10 @@ main (void)
   result = jerry_module_link (module, resolve_callback2, NULL);
   TEST_ASSERT (jerry_value_is_boolean (result) && jerry_value_is_true (result));
   TEST_ASSERT (counter == 32);
-  jerry_release_value (result);
-  jerry_release_value (module);
+  jerry_value_free (result);
+  jerry_value_free (module);
 
-  TEST_ASSERT (jerry_module_get_state (number) == JERRY_MODULE_STATE_INVALID);
+  TEST_ASSERT (jerry_module_state (number) == JERRY_MODULE_STATE_INVALID);
 
   jerry_parse_options_t module_parse_options;
   module_parse_options.options = JERRY_PARSE_MODULE;
@@ -359,116 +358,116 @@ main (void)
                                                 "export * from '44_module.mjs'\n"
                                                 "import * as b from '36_module.mjs'\n");
   module = jerry_parse (source1, sizeof (source1) - 1, &module_parse_options);
-  TEST_ASSERT (!jerry_value_is_error (module));
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
+  TEST_ASSERT (!jerry_value_is_exception (module));
+  TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_UNLINKED);
 
-  TEST_ASSERT (jerry_module_get_number_of_requests (number) == 0);
-  TEST_ASSERT (jerry_module_get_number_of_requests (module) == 4);
+  TEST_ASSERT (jerry_module_request_count (number) == 0);
+  TEST_ASSERT (jerry_module_request_count (module) == 4);
 
-  result = jerry_module_get_request (object, 0);
-  TEST_ASSERT (jerry_value_is_error (result));
-  jerry_release_value (result);
+  result = jerry_module_request (object, 0);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  jerry_value_free (result);
 
-  result = jerry_module_get_request (module, 0);
+  result = jerry_module_request (module, 0);
   compare_specifier (result, 16);
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  result = jerry_module_get_request (module, 1);
+  result = jerry_module_request (module, 1);
   compare_specifier (result, 7);
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  result = jerry_module_get_request (module, 2);
+  result = jerry_module_request (module, 2);
   compare_specifier (result, 44);
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  result = jerry_module_get_request (module, 3);
+  result = jerry_module_request (module, 3);
   compare_specifier (result, 36);
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  result = jerry_module_get_request (module, 4);
-  TEST_ASSERT (jerry_value_is_error (result));
-  jerry_release_value (result);
+  result = jerry_module_request (module, 4);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  jerry_value_free (result);
 
-  jerry_release_value (module);
+  jerry_value_free (module);
 
-  result = jerry_module_get_namespace (number);
-  TEST_ASSERT (jerry_value_is_error (result));
-  jerry_release_value (result);
+  result = jerry_module_namespace (number);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  jerry_value_free (result);
 
   jerry_char_t source2[] = TEST_STRING_LITERAL ("export let a = 6\n"
                                                 "export let b = 8.5\n");
   module = jerry_parse (source2, sizeof (source2) - 1, &module_parse_options);
-  TEST_ASSERT (!jerry_value_is_error (module));
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
+  TEST_ASSERT (!jerry_value_is_exception (module));
+  TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_UNLINKED);
 
   result = jerry_module_link (module, resolve_callback3, NULL);
-  TEST_ASSERT (!jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (!jerry_value_is_exception (result));
+  jerry_value_free (result);
 
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
+  TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_LINKED);
 
   result = jerry_module_evaluate (module);
-  TEST_ASSERT (!jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (!jerry_value_is_exception (result));
+  jerry_value_free (result);
 
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_EVALUATED);
+  TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_EVALUATED);
 
-  result = jerry_module_get_namespace (module);
+  result = jerry_module_namespace (module);
   TEST_ASSERT (jerry_value_is_object (result));
   compare_property (result, "a", 6);
   compare_property (result, "b", 8.5);
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  jerry_release_value (module);
+  jerry_value_free (module);
 
-  module = jerry_native_module_create (NULL, &object, 1);
-  TEST_ASSERT (jerry_value_is_error (module));
-  jerry_release_value (module);
+  module = jerry_native_module (NULL, &object, 1);
+  TEST_ASSERT (jerry_value_is_exception (module));
+  jerry_value_free (module);
 
-  module = jerry_native_module_create (NULL, NULL, 0);
-  TEST_ASSERT (!jerry_value_is_error (module));
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
+  module = jerry_native_module (NULL, NULL, 0);
+  TEST_ASSERT (!jerry_value_is_exception (module));
+  TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_UNLINKED);
 
-  result = jerry_native_module_get_export (object, number);
-  TEST_ASSERT (jerry_value_is_error (result));
-  jerry_release_value (result);
+  result = jerry_native_module_get (object, number);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  jerry_value_free (result);
 
-  result = jerry_native_module_set_export (module, number, number);
-  TEST_ASSERT (jerry_value_is_error (result));
-  jerry_release_value (result);
+  result = jerry_native_module_set (module, number, number);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  jerry_value_free (result);
 
-  jerry_release_value (module);
+  jerry_value_free (module);
 
   /* Valid identifier. */
-  jerry_value_t export = jerry_create_string ((const jerry_char_t *) "\xed\xa0\x83\xed\xb2\x80");
+  jerry_value_t export = jerry_string_sz ("\xed\xa0\x83\xed\xb2\x80");
 
-  module = jerry_native_module_create (NULL, &export, 1);
-  TEST_ASSERT (!jerry_value_is_error (module));
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
+  module = jerry_native_module (NULL, &export, 1);
+  TEST_ASSERT (!jerry_value_is_exception (module));
+  TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_UNLINKED);
 
   result = jerry_module_link (module, NULL, NULL);
   TEST_ASSERT (jerry_value_is_boolean (result) && jerry_value_is_true (result));
-  jerry_release_value (result);
+  jerry_value_free (result);
 
   result = jerry_module_evaluate (module);
   TEST_ASSERT (jerry_value_is_undefined (result));
-  jerry_release_value (result);
+  jerry_value_free (result);
 
-  jerry_release_value (module);
-  jerry_release_value (export);
+  jerry_value_free (module);
+  jerry_value_free (export);
 
   /* Invalid identifiers. */
-  export = jerry_create_string ((const jerry_char_t *) "a+");
-  module = jerry_native_module_create (NULL, &export, 1);
-  TEST_ASSERT (jerry_value_is_error (module));
-  jerry_release_value (module);
-  jerry_release_value (export);
+  export = jerry_string_sz ("a+");
+  module = jerry_native_module (NULL, &export, 1);
+  TEST_ASSERT (jerry_value_is_exception (module));
+  jerry_value_free (module);
+  jerry_value_free (export);
 
-  export = jerry_create_string ((const jerry_char_t *) "\xed\xa0\x80");
-  module = jerry_native_module_create (NULL, &export, 1);
-  TEST_ASSERT (jerry_value_is_error (module));
-  jerry_release_value (module);
-  jerry_release_value (export);
+  export = jerry_string_sz ("\xed\xa0\x80");
+  module = jerry_native_module (NULL, &export, 1);
+  TEST_ASSERT (jerry_value_is_exception (module));
+  jerry_value_free (module);
+  jerry_value_free (export);
 
   counter = 0;
 
@@ -480,74 +479,74 @@ main (void)
       "if (exp !== 3.5 || other !== 'str') { throw 'Assertion failed!' }\n"
       "if (namespace.exp !== 3.5 || namespace.other_exp !== 'str') { throw 'Assertion failed!' }\n");
     module = jerry_parse (source3, sizeof (source3) - 1, &module_parse_options);
-    TEST_ASSERT (!jerry_value_is_error (module));
-    TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
+    TEST_ASSERT (!jerry_value_is_exception (module));
+    TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_UNLINKED);
 
     jerry_value_t native_module;
 
     result = jerry_module_link (module, resolve_callback4, (void *) &native_module);
-    TEST_ASSERT (!jerry_value_is_error (result));
-    jerry_release_value (result);
+    TEST_ASSERT (!jerry_value_is_exception (result));
+    jerry_value_free (result);
 
     TEST_ASSERT (counter == i * 2 + 1);
-    TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
-    TEST_ASSERT (jerry_module_get_state (native_module) == JERRY_MODULE_STATE_LINKED);
+    TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_LINKED);
+    TEST_ASSERT (jerry_module_state (native_module) == JERRY_MODULE_STATE_LINKED);
 
     result = jerry_module_evaluate (module);
 
     if (i == 0)
     {
-      TEST_ASSERT (!jerry_value_is_error (result));
-      TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_EVALUATED);
-      TEST_ASSERT (jerry_module_get_state (native_module) == JERRY_MODULE_STATE_EVALUATED);
+      TEST_ASSERT (!jerry_value_is_exception (result));
+      TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_EVALUATED);
+      TEST_ASSERT (jerry_module_state (native_module) == JERRY_MODULE_STATE_EVALUATED);
       TEST_ASSERT (counter == 2);
     }
     else
     {
-      TEST_ASSERT (jerry_value_is_error (result));
-      TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_ERROR);
-      TEST_ASSERT (jerry_module_get_state (native_module) == JERRY_MODULE_STATE_ERROR);
+      TEST_ASSERT (jerry_value_is_exception (result));
+      TEST_ASSERT (jerry_module_state (module) == JERRY_MODULE_STATE_ERROR);
+      TEST_ASSERT (jerry_module_state (native_module) == JERRY_MODULE_STATE_ERROR);
       TEST_ASSERT (counter == 5);
     }
 
-    jerry_release_value (result);
-    jerry_release_value (module);
-    jerry_release_value (native_module);
+    jerry_value_free (result);
+    jerry_value_free (module);
+    jerry_value_free (native_module);
   }
 
-  jerry_release_value (object);
-  jerry_release_value (number);
+  jerry_value_free (object);
+  jerry_value_free (number);
 
   counter = 0;
-  jerry_module_set_state_changed_callback (module_state_changed, (void *) &counter);
+  jerry_module_on_state_changed (module_state_changed, (void *) &counter);
 
   jerry_char_t source4[] = TEST_STRING_LITERAL ("33.5\n");
   module = jerry_parse (source4, sizeof (source4) - 1, &module_parse_options);
 
   result = jerry_module_link (module, NULL, NULL);
-  TEST_ASSERT (!jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (!jerry_value_is_exception (result));
+  jerry_value_free (result);
 
   result = jerry_module_evaluate (module);
-  TEST_ASSERT (!jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (!jerry_value_is_exception (result));
+  jerry_value_free (result);
 
-  jerry_release_value (module);
+  jerry_value_free (module);
 
   jerry_char_t source5[] = TEST_STRING_LITERAL ("throw -5.5\n");
   module = jerry_parse (source5, sizeof (source5) - 1, &module_parse_options);
 
   result = jerry_module_link (module, NULL, NULL);
-  TEST_ASSERT (!jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (!jerry_value_is_exception (result));
+  jerry_value_free (result);
 
   result = jerry_module_evaluate (module);
-  TEST_ASSERT (jerry_value_is_error (result));
-  jerry_release_value (result);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  jerry_value_free (result);
 
-  jerry_release_value (module);
+  jerry_value_free (module);
 
-  jerry_module_set_state_changed_callback (NULL, NULL);
+  jerry_module_on_state_changed (NULL, NULL);
 
   TEST_ASSERT (counter == 4);
 
@@ -555,8 +554,8 @@ main (void)
   module = jerry_parse (source6, sizeof (source6) - 1, &module_parse_options);
 
   result = jerry_module_link (module, resolve_callback5, NULL);
-  TEST_ASSERT (jerry_value_is_error (result) && jerry_get_error_type (result) == JERRY_ERROR_SYNTAX);
-  jerry_release_value (result);
+  TEST_ASSERT (jerry_value_is_exception (result) && jerry_error_type (result) == JERRY_ERROR_SYNTAX);
+  jerry_value_free (result);
 
   jerry_cleanup ();
 

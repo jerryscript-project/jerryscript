@@ -587,7 +587,7 @@ lit_utf8_decr (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characte
   do
   {
     current_p--;
-  } while ((*(current_p) &LIT_UTF8_EXTRA_BYTE_MASK) == LIT_UTF8_EXTRA_BYTE_MARKER);
+  } while ((*current_p & LIT_UTF8_EXTRA_BYTE_MASK) == LIT_UTF8_EXTRA_BYTE_MARKER);
 
   *buf_p = current_p;
 } /* lit_utf8_decr */
@@ -824,57 +824,51 @@ lit_code_point_to_utf8 (lit_code_point_t code_point, /**< code point */
 
 /**
  * Convert cesu-8 string to an utf-8 string and put it into the buffer.
- * It is the caller's responsibility to make sure that the string fits in the buffer.
+ * String will be truncated to fit the buffer.
  *
  * @return number of bytes copied to the buffer.
  */
 lit_utf8_size_t
-lit_convert_cesu8_string_to_utf8_string (const lit_utf8_byte_t *cesu8_string, /**< cesu-8 string */
+lit_convert_cesu8_string_to_utf8_string (const lit_utf8_byte_t *cesu8_string_p, /**< cesu-8 string */
                                          lit_utf8_size_t cesu8_size, /**< size of cesu-8 string */
-                                         lit_utf8_byte_t *utf8_string, /**< destination utf-8 buffer pointer
-                                                                        * (can be NULL if buffer_size == 0) */
+                                         lit_utf8_byte_t *utf8_string_p, /**< destination utf-8 buffer pointer
+                                                                          * (can be NULL if buffer_size == 0) */
                                          lit_utf8_size_t utf8_size) /**< size of utf-8 buffer */
 {
-  const lit_utf8_byte_t *cesu8_pos = cesu8_string;
-  const lit_utf8_byte_t *cesu8_end_pos = cesu8_string + cesu8_size;
+  const lit_utf8_byte_t *cesu8_cursor_p = cesu8_string_p;
+  const lit_utf8_byte_t *cesu8_end_p = cesu8_string_p + cesu8_size;
 
-  lit_utf8_byte_t *utf8_pos = utf8_string;
-  lit_utf8_byte_t *utf8_end_pos = utf8_string + utf8_size;
+  lit_utf8_byte_t *utf8_cursor_p = utf8_string_p;
+  lit_utf8_byte_t *utf8_end_p = utf8_string_p + utf8_size;
 
-  lit_utf8_size_t size = 0;
-
-  ecma_char_t prev_ch = 0;
-  lit_utf8_size_t prev_ch_size = 0;
-
-  while (cesu8_pos < cesu8_end_pos)
+  while (cesu8_cursor_p < cesu8_end_p)
   {
-    ecma_char_t ch;
-    lit_utf8_size_t code_unit_size = lit_read_code_unit_from_cesu8 (cesu8_pos, &ch);
+    lit_code_point_t cp;
+    lit_utf8_size_t read_size = lit_read_code_point_from_cesu8 (cesu8_cursor_p, cesu8_end_p, &cp);
+    lit_utf8_size_t encoded_size = (cp >= LIT_UTF16_FIRST_SURROGATE_CODE_POINT) ? 4 : read_size;
 
-    if (lit_is_code_point_utf16_low_surrogate (ch) && lit_is_code_point_utf16_high_surrogate (prev_ch))
+    if (utf8_cursor_p + encoded_size > utf8_end_p)
     {
-      JERRY_ASSERT (code_unit_size == prev_ch_size);
-      utf8_pos -= prev_ch_size;
-      lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (prev_ch, ch);
-      lit_code_point_to_utf8 (code_point, utf8_pos);
-      size++;
+      break;
+    }
+
+    if (cp >= LIT_UTF16_FIRST_SURROGATE_CODE_POINT)
+    {
+      lit_code_point_to_utf8 (cp, utf8_cursor_p);
     }
     else
     {
-      memcpy (utf8_pos, cesu8_pos, code_unit_size);
-      size += code_unit_size;
+      memcpy (utf8_cursor_p, cesu8_cursor_p, encoded_size);
     }
 
-    utf8_pos = utf8_string + size;
-    cesu8_pos += code_unit_size;
-    prev_ch = ch;
-    prev_ch_size = code_unit_size;
+    utf8_cursor_p += encoded_size;
+    cesu8_cursor_p += read_size;
   }
 
-  JERRY_ASSERT (cesu8_pos == cesu8_end_pos);
-  JERRY_ASSERT (utf8_pos <= utf8_end_pos);
+  JERRY_ASSERT (cesu8_cursor_p == cesu8_end_p);
+  JERRY_ASSERT (utf8_cursor_p <= utf8_end_p);
 
-  return size;
+  return (lit_utf8_byte_t) (utf8_cursor_p - utf8_string_p);
 } /* lit_convert_cesu8_string_to_utf8_string */
 
 /**

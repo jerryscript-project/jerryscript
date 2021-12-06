@@ -27,10 +27,10 @@ vm_exec_stop_callback (void *user_p)
   {
     (*int_p)--;
 
-    return jerry_create_undefined ();
+    return jerry_undefined ();
   }
 
-  return jerry_create_string ((const jerry_char_t *) "Abort script");
+  return jerry_string_sz ("Abort script");
 } /* vm_exec_stop_callback */
 
 int
@@ -39,7 +39,7 @@ main (void)
   TEST_INIT ();
 
   /* Test stopping an infinite loop. */
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_VM_EXEC_STOP))
+  if (!jerry_feature_enabled (JERRY_FEATURE_VM_EXEC_STOP))
   {
     return 0;
   }
@@ -47,19 +47,19 @@ main (void)
   jerry_init (JERRY_INIT_EMPTY);
 
   int countdown = 6;
-  jerry_set_vm_exec_stop_callback (vm_exec_stop_callback, &countdown, 16);
+  jerry_halt_handler (16, vm_exec_stop_callback, &countdown);
 
   const jerry_char_t inf_loop_code_src1[] = "while(true) {}";
   jerry_value_t parsed_code_val = jerry_parse (inf_loop_code_src1, sizeof (inf_loop_code_src1) - 1, NULL);
 
-  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
   jerry_value_t res = jerry_run (parsed_code_val);
   TEST_ASSERT (countdown == 0);
 
-  TEST_ASSERT (jerry_value_is_error (res));
+  TEST_ASSERT (jerry_value_is_exception (res));
 
-  jerry_release_value (res);
-  jerry_release_value (parsed_code_val);
+  jerry_value_free (res);
+  jerry_value_free (parsed_code_val);
 
   /* A more complex example. Although the callback error is captured
    * by the catch block, it is automatically thrown again. */
@@ -72,16 +72,16 @@ main (void)
 
   parsed_code_val = jerry_parse (inf_loop_code_src2, sizeof (inf_loop_code_src2) - 1, NULL);
 
-  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
   res = jerry_run (parsed_code_val);
   TEST_ASSERT (countdown == 0);
 
   /* The result must have an error flag which proves that
    * the error is thrown again inside the catch block. */
-  TEST_ASSERT (jerry_value_is_error (res));
+  TEST_ASSERT (jerry_value_is_exception (res));
 
-  jerry_release_value (res);
-  jerry_release_value (parsed_code_val);
+  jerry_value_free (res);
+  jerry_value_free (parsed_code_val);
 
   jerry_cleanup ();
   return 0;

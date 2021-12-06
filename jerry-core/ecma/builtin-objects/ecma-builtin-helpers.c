@@ -54,11 +54,12 @@ ecma_builtin_helper_object_to_string_tag_helper (ecma_value_t tag_value) /**< st
   JERRY_ASSERT (ecma_is_value_string (tag_value));
 
   ecma_string_t *tag_str_p = ecma_get_string_from_value (tag_value);
+  lit_utf8_size_t tag_str_size = ecma_string_get_size (tag_str_p);
   ecma_string_t *ret_string_p;
 
   /* Building string "[object #@@toStringTag#]"
      The string size will be size("[object ") + size(#@@toStringTag#) + size ("]"). */
-  const lit_utf8_size_t buffer_size = 9 + ecma_string_get_size (tag_str_p);
+  const lit_utf8_size_t buffer_size = 9 + tag_str_size;
   JMEM_DEFINE_LOCAL_ARRAY (str_buffer, buffer_size, lit_utf8_byte_t);
 
   lit_utf8_byte_t *buffer_ptr = str_buffer;
@@ -80,9 +81,8 @@ ecma_builtin_helper_object_to_string_tag_helper (ecma_value_t tag_value) /**< st
   }
 
   /* Copy to buffer the #@@toStringTag# string */
-  buffer_ptr += ecma_string_copy_to_cesu8_buffer (tag_str_p,
-                                                  buffer_ptr,
-                                                  (lit_utf8_size_t) ((str_buffer + buffer_size) - buffer_ptr));
+  ecma_string_to_cesu8_bytes (tag_str_p, buffer_ptr, tag_str_size);
+  buffer_ptr += tag_str_size;
 
   JERRY_ASSERT (buffer_ptr <= str_buffer + buffer_size);
 

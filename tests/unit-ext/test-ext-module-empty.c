@@ -33,43 +33,43 @@ main (int argc, char **argv)
   jerry_init (JERRY_INIT_EMPTY);
 
   /* Attempt to load a non-existing module. */
-  module_name = jerry_create_string ((jerry_char_t *) "some-unknown-module-name");
+  module_name = jerry_string_sz ("some-unknown-module-name");
   jerry_value_t module = jerryx_module_resolve (module_name, &resolver, 1);
-  jerry_release_value (module_name);
+  jerry_value_free (module_name);
 
-  TEST_ASSERT (jerry_value_is_error (module));
+  TEST_ASSERT (jerry_value_is_exception (module));
 
   /* Retrieve the error message. */
-  module = jerry_get_value_from_error (module, true);
-  jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "message");
-  jerry_value_t prop = jerry_get_property (module, prop_name);
+  module = jerry_exception_value (module, true);
+  jerry_value_t prop_name = jerry_string_sz ("message");
+  jerry_value_t prop = jerry_object_get (module, prop_name);
 
   /* Assert that the error message is a string with specific contents. */
   TEST_ASSERT (jerry_value_is_string (prop));
 
-  bytes_copied = jerry_substring_to_utf8_char_buffer (prop, 0, 254, buffer, 256);
+  bytes_copied = jerry_string_to_buffer (prop, JERRY_ENCODING_UTF8, buffer, sizeof (buffer));
   buffer[bytes_copied] = 0;
   TEST_ASSERT (!strcmp ((const char *) buffer, "Module not found"));
 
   /* Release the error message property name and value. */
-  jerry_release_value (prop);
-  jerry_release_value (prop_name);
+  jerry_value_free (prop);
+  jerry_value_free (prop_name);
 
   /* Retrieve the moduleName property. */
-  prop_name = jerry_create_string ((const jerry_char_t *) "moduleName");
-  prop = jerry_get_property (module, prop_name);
+  prop_name = jerry_string_sz ("moduleName");
+  prop = jerry_object_get (module, prop_name);
 
   /* Assert that the moduleName property is a string containing the requested module name. */
   TEST_ASSERT (jerry_value_is_string (prop));
 
-  bytes_copied = jerry_substring_to_utf8_char_buffer (prop, 0, 254, buffer, 256);
+  bytes_copied = jerry_string_to_buffer (prop, JERRY_ENCODING_UTF8, buffer, sizeof (buffer));
   buffer[bytes_copied] = 0;
   TEST_ASSERT (!strcmp ((const char *) buffer, "some-unknown-module-name"));
 
   /* Release everything. */
-  jerry_release_value (prop);
-  jerry_release_value (prop_name);
-  jerry_release_value (module);
+  jerry_value_free (prop);
+  jerry_value_free (prop_name);
+  jerry_value_free (module);
 
   return 0;
 } /* main */

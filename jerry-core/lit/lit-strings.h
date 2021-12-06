@@ -116,9 +116,9 @@ lit_utf8_size_t lit_get_unicode_char_size_by_utf8_first_byte (const lit_utf8_byt
 lit_utf8_size_t lit_code_unit_to_utf8 (ecma_char_t code_unit, lit_utf8_byte_t *buf_p);
 lit_utf8_size_t lit_code_point_to_utf8 (lit_code_point_t code_point, lit_utf8_byte_t *buf);
 lit_utf8_size_t lit_code_point_to_cesu8 (lit_code_point_t code_point, lit_utf8_byte_t *buf);
-lit_utf8_size_t lit_convert_cesu8_string_to_utf8_string (const lit_utf8_byte_t *cesu8_string,
+lit_utf8_size_t lit_convert_cesu8_string_to_utf8_string (const lit_utf8_byte_t *cesu8_string_p,
                                                          lit_utf8_size_t cesu8_size,
-                                                         lit_utf8_byte_t *utf8_string,
+                                                         lit_utf8_byte_t *utf8_string_p,
                                                          lit_utf8_size_t utf8_size);
 lit_code_point_t lit_convert_surrogate_pair_to_code_point (ecma_char_t high_surrogate, ecma_char_t low_surrogate);
 

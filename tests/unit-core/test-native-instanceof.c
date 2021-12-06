@@ -26,26 +26,26 @@ external_function (const jerry_call_info_t *call_info_p, const jerry_value_t arg
   (void) args_p;
   (void) args_count;
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* external_function */
 
 static void
 test_instanceof (jerry_value_t instanceof, jerry_value_t constructor)
 {
-  jerry_value_t instance = jerry_construct_object (constructor, NULL, 0);
+  jerry_value_t instance = jerry_construct (constructor, NULL, 0);
   jerry_value_t args[2] = { instance, constructor };
 
-  jerry_value_t undefined = jerry_create_undefined ();
-  jerry_value_t result = jerry_call_function (instanceof, undefined, args, 2);
-  jerry_release_value (undefined);
+  jerry_value_t undefined = jerry_undefined ();
+  jerry_value_t result = jerry_call (instanceof, undefined, args, 2);
+  jerry_value_free (undefined);
 
-  TEST_ASSERT (!jerry_value_is_error (result));
+  TEST_ASSERT (!jerry_value_is_exception (result));
   TEST_ASSERT (jerry_value_is_boolean (result));
 
   TEST_ASSERT (jerry_value_is_true (result));
 
-  jerry_release_value (instance);
-  jerry_release_value (result);
+  jerry_value_free (instance);
+  jerry_value_free (result);
 } /* test_instanceof */
 
 int
@@ -56,22 +56,22 @@ main (void)
   jerry_value_t instanceof = jerry_eval ((jerry_char_t *) instanceof_source, sizeof (instanceof_source) - 1, true);
 
   /* Test for a native-backed function. */
-  jerry_value_t constructor = jerry_create_external_function (external_function);
+  jerry_value_t constructor = jerry_function_external (external_function);
 
   test_instanceof (instanceof, constructor);
-  jerry_release_value (constructor);
+  jerry_value_free (constructor);
 
   /* Test for a JS constructor. */
-  jerry_value_t global = jerry_get_global_object ();
-  jerry_value_t object_name = jerry_create_string ((jerry_char_t *) "Object");
-  constructor = jerry_get_property (global, object_name);
-  jerry_release_value (object_name);
-  jerry_release_value (global);
+  jerry_value_t global = jerry_current_realm ();
+  jerry_value_t object_name = jerry_string_sz ("Object");
+  constructor = jerry_object_get (global, object_name);
+  jerry_value_free (object_name);
+  jerry_value_free (global);
 
   test_instanceof (instanceof, constructor);
-  jerry_release_value (constructor);
+  jerry_value_free (constructor);
 
-  jerry_release_value (instanceof);
+  jerry_value_free (instanceof);
 
   jerry_cleanup ();
 

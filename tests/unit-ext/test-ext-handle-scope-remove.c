@@ -44,8 +44,8 @@ create_object (void)
 {
   jerryx_escapable_handle_scope scope;
   jerryx_open_escapable_handle_scope (&scope);
-  jerry_value_t obj = jerryx_create_handle (jerry_create_object ());
-  jerry_set_object_native_pointer (obj, NULL, &native_info);
+  jerry_value_t obj = jerryx_create_handle (jerry_object ());
+  jerry_object_set_native_ptr (obj, &native_info, NULL);
 
   // If leaves `escaped` uninitialized, there will be a style error on linux thrown by compiler
   jerry_value_t escaped = 0;
@@ -65,15 +65,15 @@ test_handle_scope_val (void)
   jerry_value_t obj = create_object ();
   (void) obj;
 
-  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 0);
 
   jerryx_close_handle_scope (scope);
-  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 0);
 
-  jerry_release_value (obj);
-  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  jerry_value_free (obj);
+  jerry_heap_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 1);
 } /* test_handle_scope_val */
 

@@ -16,10 +16,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "shell.h"
-#include "jerryscript.h"
-#include "jerryscript-ext/handler.h"
+
 #include "jerryscript-port.h"
+#include "jerryscript.h"
+
+#include "jerryscript-ext/handler.h"
+#include "shell.h"
 
 /**
  * Standalone Jerry exit codes
@@ -34,26 +36,27 @@ static void
 register_js_function (const char *name_p, /**< name of the function */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t result_val = jerryx_handler_register_global ((const jerry_char_t *) name_p, handler_p);
+  jerry_value_t result_val = jerryx_handler_register_global (name_p, handler_p);
 
-  if (jerry_value_is_error (result_val))
+  if (jerry_value_is_exception (result_val))
   {
     printf ("Warning: failed to register '%s' method.", name_p);
   }
 
-  jerry_release_value (result_val);
+  jerry_value_free (result_val);
 } /* register_js_function */
 
 /**
  * Jerryscript simple test
  */
-int test_jerry (int argc, char **argv)
+int
+test_jerry (int argc, char **argv)
 {
   /* Suppress compiler errors */
   (void) argc;
   (void) argv;
 
-  jerry_value_t ret_value = jerry_create_undefined ();
+  jerry_value_t ret_value = jerry_undefined ();
 
   const jerry_char_t script[] = "print ('Hello, World!');";
   printf ("This test run the following script code: [%s]\n\n", script);
@@ -67,7 +70,7 @@ int test_jerry (int argc, char **argv)
   /* Setup Global scope code */
   ret_value = jerry_parse (script, sizeof (script) - 1, NULL);
 
-  if (!jerry_value_is_error (ret_value))
+  if (!jerry_value_is_exception (ret_value))
   {
     /* Execute the parsed source code in the Global scope */
     ret_value = jerry_run (ret_value);
@@ -75,14 +78,14 @@ int test_jerry (int argc, char **argv)
 
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
 
-  if (jerry_value_is_error (ret_value))
+  if (jerry_value_is_exception (ret_value))
   {
     printf ("Script Error!");
 
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  jerry_release_value (ret_value);
+  jerry_value_free (ret_value);
 
   /* Cleanup engine */
   jerry_cleanup ();
@@ -91,14 +94,17 @@ int test_jerry (int argc, char **argv)
 
 } /* test_jerry */
 
-const shell_command_t shell_commands[] = {
-  { "test", "Jerryscript Hello World test", test_jerry },
-  { NULL, NULL, NULL }
-};
+const shell_command_t shell_commands[] = { { "test", "Jerryscript Hello World test", test_jerry },
+                                           { NULL, NULL, NULL } };
 
-int main (void)
+int
+main (void)
 {
-  union { double d; unsigned u; } now = { .d = jerry_port_get_current_time () };
+  union
+  {
+    double d;
+    unsigned u;
+  } now = { .d = jerry_port_get_current_time () };
   srand (now.u);
   printf ("You are running RIOT on a(n) %s board.\n", RIOT_BOARD);
   printf ("This board features a(n) %s MCU.\n", RIOT_MCU);

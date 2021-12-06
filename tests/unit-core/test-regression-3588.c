@@ -30,16 +30,16 @@ construct_handler (const jerry_call_info_t *call_info_p, /**< call information *
   JERRY_UNUSED (call_info_p);
 
   TEST_ASSERT (args_cnt == 1);
-  TEST_ASSERT (jerry_get_number_value (args_p[0]) == 1.0);
+  TEST_ASSERT (jerry_value_as_number (args_p[0]) == 1.0);
 
-  return jerry_create_undefined ();
+  return jerry_undefined ();
 } /* construct_handler */
 
 int
 main (void)
 {
   /* Test JERRY_FEATURE_SYMBOL feature as it is a must-have in ES.next */
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_SYMBOL))
+  if (!jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Skipping test, ES.next support is disabled.\n");
     return 0;
@@ -48,17 +48,17 @@ main (void)
   jerry_init (JERRY_INIT_EMPTY);
 
   {
-    jerry_value_t global_obj_val = jerry_get_global_object ();
+    jerry_value_t global_obj_val = jerry_current_realm ();
 
-    jerry_value_t function_val = jerry_create_external_function (construct_handler);
-    jerry_value_t function_name_val = jerry_create_string ((const jerry_char_t *) "Demo");
-    jerry_value_t result_val = jerry_set_property (global_obj_val, function_name_val, function_val);
-    TEST_ASSERT (!jerry_value_is_error (result_val));
+    jerry_value_t function_val = jerry_function_external (construct_handler);
+    jerry_value_t function_name_val = jerry_string_sz ("Demo");
+    jerry_value_t result_val = jerry_object_set (global_obj_val, function_name_val, function_val);
+    TEST_ASSERT (!jerry_value_is_exception (result_val));
     TEST_ASSERT (jerry_value_is_true (result_val));
-    jerry_release_value (result_val);
-    jerry_release_value (function_name_val);
-    jerry_release_value (global_obj_val);
-    jerry_release_value (function_val);
+    jerry_value_free (result_val);
+    jerry_value_free (function_name_val);
+    jerry_value_free (global_obj_val);
+    jerry_value_free (function_val);
   }
 
   {
@@ -67,13 +67,13 @@ main (void)
                            "new Sub1 ()");
 
     jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+    TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
 
     jerry_value_t result = jerry_run (parsed_code_val);
-    TEST_ASSERT (!jerry_value_is_error (result));
+    TEST_ASSERT (!jerry_value_is_exception (result));
 
-    jerry_release_value (result);
-    jerry_release_value (parsed_code_val);
+    jerry_value_free (result);
+    jerry_value_free (parsed_code_val);
   }
 
   {
@@ -81,13 +81,13 @@ main (void)
                                                                    "new Sub2 (1)");
 
     jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
-    TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+    TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));
 
     jerry_value_t result = jerry_run (parsed_code_val);
-    TEST_ASSERT (!jerry_value_is_error (result));
+    TEST_ASSERT (!jerry_value_is_exception (result));
 
-    jerry_release_value (result);
-    jerry_release_value (parsed_code_val);
+    jerry_value_free (result);
+    jerry_value_free (parsed_code_val);
   }
 
   jerry_cleanup ();

@@ -19,9 +19,9 @@
 
 #include "jerryscript.h"
 
-static const jerry_char_t *module_name_property_name = (jerry_char_t *) "moduleName";
-static const jerry_char_t *module_not_found = (jerry_char_t *) "Module not found";
-static const jerry_char_t *module_name_not_string = (jerry_char_t *) "Module name is not a string";
+static const char *module_name_property_name = "moduleName";
+static const char *module_not_found = "Module not found";
+static const char *module_name_not_string = "Module name is not a string";
 
 /**
  * Create an error related to modules
@@ -33,19 +33,16 @@ static const jerry_char_t *module_name_not_string = (jerry_char_t *) "Module nam
  */
 static jerry_value_t
 jerryx_module_create_error (jerry_error_t error_type, /**< the type of error to create */
-                            const jerry_char_t *message, /**< the error message */
+                            const char *message, /**< the error message */
                             const jerry_value_t module_name) /**< the module name */
 {
-  jerry_value_t ret = jerry_create_error (error_type, message);
+  jerry_value_t error_object = jerry_error_sz (error_type, message);
+  jerry_value_t property_name = jerry_string_sz (module_name_property_name);
 
-  jerry_value_t error_object = jerry_get_value_from_error (ret, false);
-  jerry_value_t property_name = jerry_create_string (module_name_property_name);
+  jerry_value_free (jerry_object_set (error_object, property_name, module_name));
 
-  jerry_release_value (jerry_set_property (error_object, property_name, module_name));
-
-  jerry_release_value (property_name);
-  jerry_release_value (error_object);
-  return ret;
+  jerry_value_free (property_name);
+  return jerry_throw_value (error_object, true);
 } /* jerryx_module_create_error */
 
 /**
@@ -54,7 +51,7 @@ jerryx_module_create_error (jerry_error_t error_type, /**< the type of error to 
 static void
 jerryx_module_manager_init (void *user_data_p)
 {
-  *((jerry_value_t *) user_data_p) = jerry_create_object ();
+  *((jerry_value_t *) user_data_p) = jerry_object ();
 } /* jerryx_module_manager_init */
 
 /**
@@ -63,7 +60,7 @@ jerryx_module_manager_init (void *user_data_p)
 static void
 jerryx_module_manager_deinit (void *user_data_p) /**< context pointer to deinitialize */
 {
-  jerry_release_value (*(jerry_value_t *) user_data_p);
+  jerry_value_free (*(jerry_value_t *) user_data_p);
 } /* jerryx_module_manager_deinit */
 
 /**
@@ -118,10 +115,10 @@ jerryx_module_check_cache (jerry_value_t cache, /**< cache from which to attempt
   bool ret = false;
 
   /* Check if the cache has the module. */
-  jerry_value_t js_has_property = jerry_has_property (cache, module_name);
+  jerry_value_t js_has_property = jerry_object_has (cache, module_name);
 
   /* If we succeed in getting an answer, we examine the answer. */
-  if (!jerry_value_is_error (js_has_property))
+  if (!jerry_value_is_exception (js_has_property))
   {
     bool has_property = jerry_value_is_true (js_has_property);
 
@@ -130,13 +127,13 @@ jerryx_module_check_cache (jerry_value_t cache, /**< cache from which to attempt
     {
       if (result != NULL)
       {
-        (*result) = jerry_get_property (cache, module_name);
+        (*result) = jerry_object_get (cache, module_name);
       }
       ret = true;
     }
   }
 
-  jerry_release_value (js_has_property);
+  jerry_value_free (js_has_property);
 
   return ret;
 } /* jerryx_module_check_cache */
@@ -152,22 +149,22 @@ jerryx_module_add_to_cache (jerry_value_t cache, /**< cache to which to add the 
                             jerry_value_t module_name, /**< key at which to cache the module */
                             jerry_value_t module) /**< the module to cache */
 {
-  jerry_value_t ret = jerry_set_property (cache, module_name, module);
+  jerry_value_t ret = jerry_object_set (cache, module_name, module);
 
-  if (jerry_value_is_error (ret))
+  if (jerry_value_is_exception (ret))
   {
-    jerry_release_value (module);
+    jerry_value_free (module);
   }
   else
   {
-    jerry_release_value (ret);
+    jerry_value_free (ret);
     ret = module;
   }
 
   return ret;
 } /* jerryx_module_add_to_cache */
 
-static const jerry_char_t *on_resolve_absent = (jerry_char_t *) "Module on_resolve () must not be NULL";
+static const char *on_resolve_absent = "Module on_resolve () must not be NULL";
 
 /**
  * Declare and define the default module resolver - one which examines what modules are defined in the above linker
@@ -180,9 +177,9 @@ jerryx_resolve_native_module (const jerry_value_t canonical_name, /**< canonical
 {
   const jerryx_native_module_t *module_p = NULL;
 
-  jerry_size_t name_size = jerry_get_utf8_string_size (canonical_name);
+  jerry_size_t name_size = jerry_string_size (canonical_name, JERRY_ENCODING_UTF8);
   JERRY_VLA (jerry_char_t, name_string, name_size);
-  jerry_string_to_utf8_char_buffer (canonical_name, name_string, name_size);
+  jerry_string_to_buffer (canonical_name, JERRY_ENCODING_UTF8, name_string, name_size);
 
   /* Look for the module by its name in the list of module definitions. */
   for (module_p = first_module_p; module_p != NULL; module_p = module_p->next_p)
@@ -226,7 +223,7 @@ jerryx_module_resolve_local (const jerry_value_t name, /**< name of the module t
     goto done;
   }
 
-  instances = *(jerry_value_t *) jerry_get_context_data (&jerryx_module_manager);
+  instances = *(jerry_value_t *) jerry_context_data (&jerryx_module_manager);
 
   /**
    * Establish the canonical name for the requested module. Each resolver presents its own canonical name. If one of
@@ -235,15 +232,14 @@ jerryx_module_resolve_local (const jerry_value_t name, /**< name of the module t
   for (index = 0; index < resolver_count; index++)
   {
     get_canonical_name_p = (resolvers_p[index] == NULL ? NULL : resolvers_p[index]->get_canonical_name_p);
-    canonical_names[index] =
-      ((get_canonical_name_p == NULL) ? jerry_acquire_value (name) : get_canonical_name_p (name));
+    canonical_names[index] = ((get_canonical_name_p == NULL) ? jerry_value_copy (name) : get_canonical_name_p (name));
     canonical_names_used++;
     if (jerryx_module_check_cache (instances, canonical_names[index], result))
     {
       /* A NULL for result indicates that we are to delete the module from the cache if found. Let's do that here.*/
       if (result == NULL)
       {
-        jerry_delete_property (instances, canonical_names[index]);
+        jerry_object_delete (instances, canonical_names[index]);
       }
       goto done;
     }
@@ -263,7 +259,7 @@ jerryx_module_resolve_local (const jerry_value_t name, /**< name of the module t
     resolve_p = (resolvers_p[index] == NULL ? NULL : resolvers_p[index]->resolve_p);
     if (resolve_p != NULL && resolve_p (canonical_names[index], result))
     {
-      if (!jerry_value_is_error (*result))
+      if (!jerry_value_is_exception (*result))
       {
         *result = jerryx_module_add_to_cache (instances, canonical_names[index], *result);
       }
@@ -278,7 +274,7 @@ done:
   /* Release the canonical names as returned by the various resolvers. */
   for (index = 0; index < canonical_names_used; index++)
   {
-    jerry_release_value (canonical_names[index]);
+    jerry_value_free (canonical_names[index]);
   }
 } /* jerryx_module_resolve_local */
 
@@ -311,7 +307,7 @@ jerryx_module_clear_cache (const jerry_value_t name, /**< name of the module to 
                            const jerryx_module_resolver_t **resolvers_p, /**< list of resolvers */
                            size_t resolver_count) /**< number of resolvers in @p resolvers */
 {
-  void *instances_p = jerry_get_context_data (&jerryx_module_manager);
+  void *instances_p = jerry_context_data (&jerryx_module_manager);
 
   if (jerry_value_is_undefined (name))
   {

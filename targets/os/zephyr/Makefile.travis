@@ -1,0 +1,63 @@
+# Copyright JS Foundation and other contributors, http://js.foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Default target for running the build test outside the Travis CI environment.
+all:
+	$(MAKE) install
+	$(MAKE) script
+
+
+## Targets for installing build dependencies of the Zephyr JerryScript target.
+
+# Install tools via apt.
+install-apt-get-deps:
+	sudo apt-get install -q -y gperf dfu-util device-tree-compiler gcc-arm-none-eabi
+
+# Install Zephyr SDK.
+install-zephyr-toolchain:
+	wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.13.2/zephyr-toolchain-arm-0.13.2-linux-x86_64-setup.run -O ../zephyr-toolchain-arm-0.13.2-linux-x86_64-setup.run
+	sh ../zephyr-toolchain-arm-0.13.2-linux-x86_64-setup.run -- -y -d $(CURDIR)/../zephyr-toolchain-0.13.2
+
+# Fetch Zephyr Project repository and install python dependencies.
+install-zephyr:
+	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v2.7.0
+	pip3 install -U pip
+	pip3 install -U setuptools
+	pip3 install -r ../zephyr/scripts/requirements.txt
+
+# Install recent CMake
+install-cmake:
+	pip install cmake
+	cmake --version
+
+# Perform all the necessary (JerryScript-independent) installation steps.
+install-noapt: install-zephyr-toolchain install-zephyr install-cmake
+install: install-apt-get-deps install-noapt
+
+
+## Targets for building Zephyr with JerryScript.
+
+# Initialize west meta-tool
+init-west:
+	west init -l $(CURDIR)/../zephyr
+	west update hal_stm32 cmsis
+	west zephyr-export
+
+# Build the firmware (Zephyr with JerryScript).
+SHELL=bash
+script: init-west
+	export ZEPHYR_TOOLCHAIN_VARIANT=zephyr && \
+	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-toolchain-0.13.2 && \
+	west build -d $(CURDIR)/../build -p auto -b stm32f4_disco targets/os/zephyr/ -- -G'Unix Makefiles'

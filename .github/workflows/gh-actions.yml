@@ -256,8 +256,8 @@ jobs:
       - run: sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
       - run: sudo apt update
       - run: sudo apt install gcc-arm-embedded python3-setuptools
-      - run: make -f ./targets/mbedos5/Makefile.travis install
-      - run: make -f ./targets/mbedos5/Makefile.travis script
+      - run: make -f ./targets/os/mbedos5/Makefile.travis install
+      - run: make -f ./targets/os/mbedos5/Makefile.travis script
 
   Zephyr_STM32F4_Build_Test:
     runs-on: ubuntu-latest
@@ -268,8 +268,8 @@ jobs:
           python-version: '3.x'
       - run: sudo apt update
       - run: sudo apt install gperf dfu-util device-tree-compiler
-      - run: make -f ./targets/zephyr/Makefile.travis install
-      - run: make -f ./targets/zephyr/Makefile.travis script
+      - run: make -f ./targets/os/zephyr/Makefile.travis install
+      - run: make -f ./targets/os/zephyr/Makefile.travis script
 
   NuttX_STM32F4_Build_Test:
     runs-on: ubuntu-latest
@@ -277,8 +277,8 @@ jobs:
       - uses: actions/checkout@v2
       - run: sudo apt update
       - run: sudo apt install gcc-arm-none-eabi libnewlib-arm-none-eabi gperf
-      - run: make -f ./targets/nuttx-stm32f4/Makefile.travis install-noapt
-      - run: make -f ./targets/nuttx-stm32f4/Makefile.travis script
+      - run: make -f ./targets/os/nuttx/Makefile.travis install-noapt
+      - run: make -f ./targets/os/nuttx/Makefile.travis script
 
   RIOT_STM32F4_Build_Test:
     runs-on: ubuntu-18.04 # needed due to ppa:team-gcc-arm-embedded/ppa
@@ -289,8 +289,8 @@ jobs:
       - run: sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
       - run: sudo apt update
       - run: sudo apt install clang gcc-arm-embedded gcc-multilib
-      - run: make -f ./targets/riot-stm32f4/Makefile.travis install-noapt
-      - run: make -f ./targets/riot-stm32f4/Makefile.travis script
+      - run: make -f ./targets/os/riot/Makefile.travis install-noapt
+      - run: make -f ./targets/os/riot/Makefile.travis script
 
   ESP8266_Build_Test:
     runs-on: ubuntu-latest
@@ -299,8 +299,8 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '2.7' # needed due to ESP8266_RTOS_SDK/tools/gen_appbin.py
-      - run: make -f ./targets/esp8266/Makefile.travis install-noapt
-      - run: make -f ./targets/esp8266/Makefile.travis script
+      - run: make -f ./targets/baremetal-sdk/esp8266-rtos-sdk/Makefile.travis install-noapt
+      - run: make -f ./targets/baremetal-sdk/esp8266-rtos-sdk/Makefile.travis script
 
   Notification:
     runs-on: ubuntu-latest

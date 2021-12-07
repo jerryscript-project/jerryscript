@@ -16,13 +16,13 @@
 #include "jerryscript-ext/handler.h"
 
 /**
- * Get the resource name (usually a file name) of the currently executed script or the given function object
+ * Get the source name (usually a file name) of the currently executed script or the given function object
  *
  * Note: returned value must be freed with jerry_value_free, when it is no longer needed
  *
  * @return JS string constructed from
- *         - the currently executed function object's resource name, if the given value is undefined
- *         - resource name of the function object, if the given value is a function object
+ *         - the currently executed function object's source name, if the given value is undefined
+ *         - source name of the function object, if the given value is a function object
  *         - "<anonymous>", otherwise
  */
 jerry_value_t

@@ -43,7 +43,7 @@ typedef enum
 /**
  * Callback for jerry_debugger_wait_and_run_client_source
  *
- * The callback receives the resource name, source code and a user pointer.
+ * The callback receives the source name, source code and a user pointer.
  *
  * @return this value is passed back by jerry_debugger_wait_and_run_client_source
  */

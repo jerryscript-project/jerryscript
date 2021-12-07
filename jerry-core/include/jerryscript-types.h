@@ -441,7 +441,7 @@ typedef enum
  */
 typedef struct
 {
-  jerry_value_t source_name; /**< resource name */
+  jerry_value_t source_name; /**< source name */
   jerry_size_t line; /**< line index */
   jerry_size_t column; /**< column index */
 } jerry_frame_location_t;

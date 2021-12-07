@@ -290,7 +290,7 @@ main_init_engine (main_args_t *arguments_p) /**< main arguments */
   main_register_global_function ("assert", jerryx_handler_assert);
   main_register_global_function ("gc", jerryx_handler_gc);
   main_register_global_function ("print", jerryx_handler_print);
-  main_register_global_function ("resourceName", jerryx_handler_source_name);
+  main_register_global_function ("sourceName", jerryx_handler_source_name);
   main_register_global_function ("createRealm", main_create_realm);
 } /* main_init_engine */
 
@@ -449,8 +449,8 @@ main_print_unhandled_exception (jerry_value_t error_value) /**< error value */
  * @return result fo the source code execution
  */
 jerry_value_t
-main_wait_for_source_callback (const jerry_char_t *source_name_p, /**< resource name */
-                               size_t source_name_size, /**< size of resource name */
+main_wait_for_source_callback (const jerry_char_t *source_name_p, /**< source name */
+                               size_t source_name_size, /**< size of source name */
                                const jerry_char_t *source_p, /**< source code */
                                size_t source_size, /**< source code size */
                                void *user_p) /**< user pointer */

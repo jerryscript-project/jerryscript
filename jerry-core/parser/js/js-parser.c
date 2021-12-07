@@ -2108,8 +2108,8 @@ parser_parse_source (void *source_p, /**< source code */
     context.user_value = context.options_p->user_value;
   }
 
-#if JERRY_RESOURCE_NAME
-  ecma_value_t source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+#if JERRY_SOURCE_NAME
+  ecma_value_t source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_ANON);
 
   if (context.options_p != NULL && (context.options_p->options & JERRY_PARSE_HAS_SOURCE_NAME))
   {
@@ -2120,9 +2120,9 @@ parser_parse_source (void *source_p, /**< source code */
   }
   else if (context.global_status_flags & ECMA_PARSE_EVAL)
   {
-    source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
+    source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_EVAL);
   }
-#endif /* JERRY_RESOURCE_NAME */
+#endif /* JERRY_SOURCE_NAME */
 
   context.last_context_p = NULL;
   context.last_statement.current_p = NULL;
@@ -2262,9 +2262,9 @@ parser_parse_source (void *source_p, /**< source code */
     context.script_p->realm_p = (ecma_object_t *) JERRY_CONTEXT (global_object_p);
 #endif /* JERRY_BUILTIN_REALMS */
 
-#if JERRY_RESOURCE_NAME
+#if JERRY_SOURCE_NAME
     context.script_p->source_name = source_name;
-#endif /* JERRY_RESOURCE_NAME */
+#endif /* JERRY_SOURCE_NAME */
 
     ECMA_SET_INTERNAL_VALUE_POINTER (context.script_value, context.script_p);
 
@@ -2430,9 +2430,9 @@ parser_parse_source (void *source_p, /**< source code */
     parser_free_literals (&context.literal_pool);
     parser_cbc_stream_free (&context.byte_code);
 
-#if JERRY_RESOURCE_NAME
+#if JERRY_SOURCE_NAME
     ecma_deref_ecma_string (ecma_get_string_from_value (context.script_p->source_name));
-#endif /* JERRY_RESOURCE_NAME */
+#endif /* JERRY_SOURCE_NAME */
 
     if (context.script_p != NULL)
     {

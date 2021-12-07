@@ -12,12 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export function getName() {
-  return resourceName();
-}
+import { getName, getNamePromise } from "./module-source-name-export.mjs"
 
-export function getNamePromise(collector) {
-  return new Promise((resolve) => { collector["start"] = resourceName(); resolve(); })
-    .then(() => { collector["middle"] = resourceName(); });
-}
+assert(getName().endsWith("module-source-name-export.mjs"));
 
+var collector = {};
+getNamePromise(collector).then(() => { collector["end"] = sourceName(); });
+
+function __checkAsync() {
+  assert(collector["start"].endsWith("module-source-name-export.mjs"));
+  assert(collector["middle"].endsWith("module-source-name-export.mjs"));
+  assert(collector["end"].endsWith("module-source-name.mjs"));
+  assert(Object.keys(collector).length === 3);
+}

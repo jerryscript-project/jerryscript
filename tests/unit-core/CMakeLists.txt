@@ -79,7 +79,7 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-error-callback.c
   test-regexp.c
   test-regression-3588.c
-  test-resource-name.c
+  test-source-name.c
   test-script-user-value.c
   test-snapshot.c
   test-source-info.c

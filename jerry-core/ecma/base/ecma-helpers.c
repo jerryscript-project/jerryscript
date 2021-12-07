@@ -1433,9 +1433,9 @@ ecma_script_deref (ecma_value_t script_value) /**< script value */
     }
   }
 
-#if JERRY_RESOURCE_NAME
+#if JERRY_SOURCE_NAME
   ecma_deref_ecma_string (ecma_get_string_from_value (script_p->source_name));
-#endif /* JERRY_RESOURCE_NAME */
+#endif /* JERRY_SOURCE_NAME */
 
 #if JERRY_MODULE_SYSTEM
   if (type & CBC_SCRIPT_HAS_IMPORT_META)
@@ -1773,27 +1773,27 @@ ecma_compiled_code_get_line_info (const ecma_compiled_code_t *bytecode_header_p)
 #endif /* JERRY_LINE_INFO */
 
 /**
- * Get the resource name of a compiled code.
+ * Get the source name of a compiled code.
  *
- * @return resource name value
+ * @return source name value
  */
 ecma_value_t
 ecma_get_source_name (const ecma_compiled_code_t *bytecode_p) /**< compiled code */
 {
-#if JERRY_RESOURCE_NAME
+#if JERRY_SOURCE_NAME
 #if JERRY_SNAPSHOT_EXEC
   if (JERRY_UNLIKELY (bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
   {
-    return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_ANON);
   }
 #endif /* JERRY_SNAPSHOT_EXEC */
 
   ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
   return ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value)->source_name;
-#else /* !JERRY_RESOURCE_NAME */
+#else /* !JERRY_SOURCE_NAME */
   JERRY_UNUSED (bytecode_p);
-  return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
-#endif /* !JERRY_RESOURCE_NAME */
+  return ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_ANON);
+#endif /* !JERRY_SOURCE_NAME */
 } /* ecma_get_source_name */
 
 #if (JERRY_STACK_LIMIT != 0)

@@ -5364,19 +5364,19 @@ jerry_frame_is_strict (jerry_frame_t *frame_p) /**< frame pointer */
 } /* jerry_frame_is_strict */
 
 /**
- * Get the resource name (usually a file name) of the currently executed script or the given function object
+ * Get the source name (usually a file name) of the currently executed script or the given function object
  *
  * Note: returned value must be freed with jerry_value_free, when it is no longer needed
  *
  * @return JS string constructed from
- *         - the currently executed function object's resource name, if the given value is undefined
- *         - resource name of the function object, if the given value is a function object
+ *         - the currently executed function object's source name, if the given value is undefined
+ *         - source name of the function object, if the given value is a function object
  *         - "<anonymous>", otherwise
  */
 jerry_value_t
 jerry_source_name (const jerry_value_t value) /**< jerry api value */
 {
-#if JERRY_RESOURCE_NAME
+#if JERRY_SOURCE_NAME
   if (ecma_is_value_undefined (value) && JERRY_CONTEXT (vm_top_context_p) != NULL)
   {
     return ecma_copy_value (ecma_get_source_name (JERRY_CONTEXT (vm_top_context_p)->shared_p->bytecode_header_p));
@@ -5386,16 +5386,16 @@ jerry_source_name (const jerry_value_t value) /**< jerry api value */
 
   if (script_value == JMEM_CP_NULL)
   {
-    return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_ANON);
   }
 
   const cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
   return ecma_copy_value (script_p->source_name);
-#else /* !JERRY_RESOURCE_NAME */
+#else /* !JERRY_SOURCE_NAME */
   JERRY_UNUSED (value);
-  return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
-#endif /* JERRY_RESOURCE_NAME */
+  return ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_ANON);
+#endif /* JERRY_SOURCE_NAME */
 } /* jerry_source_name */
 
 /**

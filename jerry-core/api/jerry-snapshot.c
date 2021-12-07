@@ -643,10 +643,10 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     }
 #endif /* JERRY_ESNEXT */
 
-#if JERRY_RESOURCE_NAME
-    /* resource name */
+#if JERRY_SOURCE_NAME
+    /* source name */
     extra_bytes += (uint32_t) sizeof (ecma_value_t);
-#endif /* JERRY_RESOURCE_NAME */
+#endif /* JERRY_SOURCE_NAME */
 
     new_code_size = JERRY_ALIGNUP (new_code_size + extra_bytes, JMEM_ALIGNMENT);
 
@@ -880,7 +880,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
 
   uint32_t allowed_opts =
     (JERRY_SNAPSHOT_EXEC_COPY_DATA | JERRY_SNAPSHOT_EXEC_ALLOW_STATIC | JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION
-     | JERRY_SNAPSHOT_EXEC_HAS_RESOURCE | JERRY_SNAPSHOT_EXEC_HAS_USER_VALUE);
+     | JERRY_SNAPSHOT_EXEC_HAS_SOURCE_NAME | JERRY_SNAPSHOT_EXEC_HAS_USER_VALUE);
 
   if ((exec_snapshot_opts & ~(allowed_opts)) != 0)
   {
@@ -955,10 +955,10 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
     script_p->realm_p = (ecma_object_t *) JERRY_CONTEXT (global_object_p);
 #endif /* JERRY_BUILTIN_REALMS */
 
-#if JERRY_RESOURCE_NAME
-    ecma_value_t source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+#if JERRY_SOURCE_NAME
+    ecma_value_t source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_ANON);
 
-    if ((exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_HAS_RESOURCE) && option_values_p != NULL
+    if ((exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_HAS_SOURCE_NAME) && option_values_p != NULL
         && ecma_is_value_string (option_values_p->source_name) > 0)
     {
       ecma_ref_ecma_string (ecma_get_string_from_value (option_values_p->source_name));
@@ -966,7 +966,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
     }
 
     script_p->source_name = source_name;
-#endif /* JERRY_RESOURCE_NAME */
+#endif /* JERRY_SOURCE_NAME */
 
 #if JERRY_FUNCTION_TO_STRING
     script_p->source_code = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);

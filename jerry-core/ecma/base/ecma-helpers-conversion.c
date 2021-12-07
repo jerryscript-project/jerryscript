@@ -368,16 +368,6 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 
   bool sign = false;
 
-  if (*str_p == LIT_CHAR_PLUS)
-  {
-    str_p++;
-  }
-  else if (*str_p == LIT_CHAR_MINUS)
-  {
-    sign = true;
-    str_p++;
-  }
-
   if (str_p + 2 < end_p && str_p[0] == LIT_CHAR_0)
   {
     uint8_t radix = lit_char_to_radix (str_p[1]);
@@ -386,6 +376,16 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     {
       return ecma_utf8_string_to_number_by_radix (str_p, str_size, radix, options);
     }
+  }
+
+  if (*str_p == LIT_CHAR_PLUS)
+  {
+    str_p++;
+  }
+  else if (*str_p == LIT_CHAR_MINUS)
+  {
+    sign = true;
+    str_p++;
   }
 
   /* Check if string is equal to "Infinity". */

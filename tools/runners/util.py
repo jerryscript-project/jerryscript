@@ -75,4 +75,4 @@ def get_platform_cmd_prefix():
 
 def get_python_cmd_prefix():
     # python script doesn't have execute permission on github actions windows runner
-    return get_platform_cmd_prefix() + [sys.executable or 'python']
+    return [sys.executable or 'python']

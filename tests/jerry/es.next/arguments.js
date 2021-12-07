@@ -199,3 +199,21 @@ function f19(e = (v) => eval(v))
   assert(arguments === -12.5)
 }
 f19(undefined, "A");
+
+function f20 (arguments, a = eval('arguments')) {
+  assert(a === 3.1);
+  assert(arguments === 3.1);
+}
+f20(3.1);
+
+function f21 (arguments, a = arguments) {
+  assert(a === 3.1);
+  assert(arguments === 3.1);
+}
+f21(3.1);
+
+function f22 (arguments, [a = arguments]) {
+  assert(a === 3.1);
+  assert(arguments === 3.1);
+}
+f22(3.1, []);

@@ -1246,6 +1246,7 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
 
     if (has_arguments)
     {
+      /* Force the lexically stored arguments object creation */
       literal_pool_p->status_flags |= (SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS | SCANNER_LITERAL_POOL_NO_ARGUMENTS);
     }
   }
@@ -1306,6 +1307,14 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
         literal_p->type = type;
       }
 
+      if (has_arguments && scanner_literal_is_arguments (literal_p))
+      {
+        /* 'arguments' function argument existence should prevent the arguments object construction */
+        new_literal_pool_p->status_flags =
+          (uint16_t) (new_literal_pool_p->status_flags
+                      & ~(SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS | SCANNER_LITERAL_POOL_NO_ARGUMENTS));
+      }
+
       if (type & (SCANNER_LITERAL_IS_DESTRUCTURED_ARG | SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG))
       {
         has_destructured_arg = true;
@@ -1328,6 +1337,7 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
     }
     else if (has_arguments && scanner_literal_is_arguments (literal_p))
     {
+      /* Arguments object is directly referenced from the function arguments */
       new_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS;
 
       if (type & SCANNER_LITERAL_NO_REG)

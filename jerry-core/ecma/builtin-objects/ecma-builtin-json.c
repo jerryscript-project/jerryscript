@@ -26,6 +26,7 @@
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
 
+#include "jcontext.h"
 #include "jrt-libc-includes.h"
 #include "jrt.h"
 #include "lit-char-helpers.h"
@@ -634,6 +635,8 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
   JERRY_ASSERT (reviver_p);
   JERRY_ASSERT (holder_p);
   JERRY_ASSERT (name_p);
+
+  ECMA_CHECK_STACK_USAGE ();
 
   /* 1. */
   ecma_value_t value = ecma_op_object_get (holder_p, name_p);

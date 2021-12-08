@@ -400,7 +400,106 @@ scanner_seek (parser_context_t *context_p) /**< context */
   context_p->next_scanner_info_p = prev_p->next_p;
 } /* scanner_seek */
 
+/**
+ * Checks whether a literal is equal to "arguments".
+ */
+static inline bool JERRY_ATTR_ALWAYS_INLINE
+scanner_literal_is_arguments (lexer_lit_location_t *literal_p) /**< literal */
+{
+  return lexer_compare_identifier_to_string (literal_p, (const uint8_t *) "arguments", 9);
+} /* scanner_literal_is_arguments */
+
 #if JERRY_ESNEXT
+
+/**
+ * Find if there is a duplicated argument in the given context
+ *
+ * @return true - if there are duplicates, false - otherwise
+ */
+static bool
+scanner_find_duplicated_arg (parser_context_t *context_p, lexer_lit_location_t *lit_loc_p)
+{
+  if (!(context_p->status_flags & PARSER_FUNCTION_IS_PARSING_ARGS))
+  {
+    return false;
+  }
+
+  if (scanner_literal_is_arguments (lit_loc_p))
+  {
+    return true;
+  }
+
+  uint16_t register_end, encoding_limit, encoding_delta;
+  ecma_value_t *literal_p;
+  ecma_value_t *literal_start_p;
+
+  const ecma_compiled_code_t *bytecode_header_p = JERRY_CONTEXT (vm_top_context_p)->shared_p->bytecode_header_p;
+
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
+
+    register_end = args_p->register_end;
+
+    literal_p = (ecma_value_t *) (args_p + 1);
+    literal_p -= register_end;
+    literal_start_p = literal_p;
+    literal_p += args_p->literal_end;
+  }
+  else
+  {
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
+
+    register_end = args_p->register_end;
+
+    literal_p = (ecma_value_t *) (args_p + 1);
+    literal_p -= register_end;
+    literal_start_p = literal_p;
+    literal_p += args_p->literal_end;
+  }
+
+  if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
+  {
+    encoding_limit = CBC_SMALL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_SMALL_LITERAL_ENCODING_DELTA;
+  }
+  else
+  {
+    encoding_limit = CBC_FULL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_FULL_LITERAL_ENCODING_DELTA;
+  }
+
+  uint8_t *byte_code_p = (uint8_t *) literal_p;
+
+  bool found_duplicate = false;
+
+  while (*byte_code_p == CBC_CREATE_LOCAL)
+  {
+    byte_code_p++;
+    uint16_t literal_index = *byte_code_p++;
+
+    if (literal_index >= encoding_limit)
+    {
+      literal_index = (uint16_t) (((literal_index << 8) | *byte_code_p++) - encoding_delta);
+    }
+
+    ecma_string_t *arg_string = ecma_get_string_from_value (literal_start_p[literal_index]);
+    uint8_t *destination_p = (uint8_t *) parser_malloc (context_p, lit_loc_p->length);
+    lexer_convert_ident_to_cesu8 (destination_p, lit_loc_p->char_p, lit_loc_p->length);
+    ecma_string_t *search_key_p = ecma_new_ecma_string_from_utf8 (destination_p, lit_loc_p->length);
+    scanner_free (destination_p, lit_loc_p->length);
+
+    found_duplicate = ecma_compare_ecma_strings (arg_string, search_key_p);
+    ecma_deref_ecma_string (search_key_p);
+
+    if (found_duplicate)
+    {
+      break;
+    }
+  }
+
+  return found_duplicate;
+} /* scanner_find_duplicated_arg */
 
 /**
  * Find any let/const declaration of a given literal.
@@ -466,7 +565,8 @@ scanner_scope_find_lexical_declaration (parser_context_t *context_p, /**< contex
   {
     ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
-    if (property_p != NULL && ecma_is_property_enumerable (*property_p))
+    if (property_p != NULL
+        && (ecma_is_property_enumerable (*property_p) || scanner_find_duplicated_arg (context_p, literal_p)))
     {
       ecma_deref_ecma_string (name_p);
       return true;
@@ -548,15 +648,6 @@ scanner_push_literal_pool (parser_context_t *context_p, /**< context */
 } /* scanner_push_literal_pool */
 
 JERRY_STATIC_ASSERT (PARSER_MAXIMUM_IDENT_LENGTH <= UINT8_MAX, maximum_ident_length_must_fit_in_a_byte);
-
-/**
- * Checks whether a literal is equal to "arguments".
- */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
-scanner_literal_is_arguments (lexer_lit_location_t *literal_p) /**< literal */
-{
-  return lexer_compare_identifier_to_string (literal_p, (const uint8_t *) "arguments", 9);
-} /* scanner_literal_is_arguments */
 
 /**
  * Current status of arguments.

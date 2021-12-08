@@ -540,7 +540,8 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 
   uint32_t chain_index;
   memcpy (&chain_index, eval_string_p, sizeof (uint32_t));
-  uint32_t parse_opts = ECMA_PARSE_DIRECT_EVAL | (chain_index << ECMA_PARSE_CHAIN_INDEX_SHIFT);
+  uint32_t parse_opts = ECMA_PARSE_DIRECT_EVAL;
+  JERRY_CONTEXT (debugger_eval_chain_index) = (uint16_t) chain_index;
 
   parser_source_char_t source_char;
   source_char.source_p = eval_string_p + 5;

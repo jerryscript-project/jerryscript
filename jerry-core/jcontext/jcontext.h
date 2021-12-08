@@ -236,6 +236,7 @@ struct jerry_context_t
   jmem_cpointer_t debugger_byte_code_free_tail; /**< tail of byte code free linked list */
   uint32_t debugger_flags; /**< debugger flags */
   uint16_t debugger_received_length; /**< length of currently received bytes */
+  uint16_t debugger_eval_chain_index; /**< eval chain index */
   uint8_t debugger_message_delay; /**< call receive message when reaches zero */
   uint8_t debugger_max_send_size; /**< maximum amount of data that can be sent */
   uint8_t debugger_max_receive_size; /**< maximum amount of data that can be received */

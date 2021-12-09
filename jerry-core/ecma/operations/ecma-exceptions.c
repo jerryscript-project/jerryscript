@@ -300,14 +300,14 @@ ecma_get_error_type (ecma_object_t *error_object_p) /**< possible error object *
  */
 ecma_value_t
 ecma_raise_standard_error (jerry_error_t error_type, /**< error type */
-                           const char *msg_p) /**< error message */
+                           ecma_error_msg_t msg) /**< error message */
 {
   ecma_object_t *error_obj_p;
-  const lit_utf8_byte_t *str_p = (lit_utf8_byte_t *) msg_p;
+  const lit_utf8_byte_t *str_p = (lit_utf8_byte_t *) ecma_get_error_msg (msg);
 
-  if (msg_p != NULL)
+  if (msg != ECMA_ERR_EMPTY)
   {
-    ecma_string_t *error_msg_p = ecma_new_ecma_string_from_utf8 (str_p, lit_zt_utf8_string_size (str_p));
+    ecma_string_t *error_msg_p = ecma_new_ecma_external_string_from_cesu8 (str_p, ecma_get_error_size (msg), NULL);
     error_obj_p = ecma_new_standard_error (error_type, error_msg_p);
     ecma_deref_ecma_string (error_msg_p);
   }
@@ -417,7 +417,7 @@ ecma_raise_standard_error_with_format (jerry_error_t error_type, /**< error type
 ecma_value_t
 ecma_raise_common_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_COMMON, ecma_get_error_msg (msg));
+  return ecma_raise_standard_error (JERRY_ERROR_COMMON, msg);
 } /* ecma_raise_common_error */
 
 /**
@@ -431,7 +431,7 @@ ecma_raise_common_error (ecma_error_msg_t msg) /**< error message */
 ecma_value_t
 ecma_raise_range_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_RANGE, ecma_get_error_msg (msg));
+  return ecma_raise_standard_error (JERRY_ERROR_RANGE, msg);
 } /* ecma_raise_range_error */
 
 /**
@@ -445,7 +445,7 @@ ecma_raise_range_error (ecma_error_msg_t msg) /**< error message */
 ecma_value_t
 ecma_raise_reference_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_REFERENCE, ecma_get_error_msg (msg));
+  return ecma_raise_standard_error (JERRY_ERROR_REFERENCE, msg);
 } /* ecma_raise_reference_error */
 
 /**
@@ -459,7 +459,7 @@ ecma_raise_reference_error (ecma_error_msg_t msg) /**< error message */
 ecma_value_t
 ecma_raise_syntax_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_SYNTAX, ecma_get_error_msg (msg));
+  return ecma_raise_standard_error (JERRY_ERROR_SYNTAX, msg);
 } /* ecma_raise_syntax_error */
 
 /**
@@ -473,7 +473,7 @@ ecma_raise_syntax_error (ecma_error_msg_t msg) /**< error message */
 ecma_value_t
 ecma_raise_type_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_TYPE, ecma_get_error_msg (msg));
+  return ecma_raise_standard_error (JERRY_ERROR_TYPE, msg);
 } /* ecma_raise_type_error */
 
 /**
@@ -487,7 +487,7 @@ ecma_raise_type_error (ecma_error_msg_t msg) /**< error message */
 ecma_value_t
 ecma_raise_uri_error (ecma_error_msg_t msg) /**< error message */
 {
-  return ecma_raise_standard_error (JERRY_ERROR_URI, ecma_get_error_msg (msg));
+  return ecma_raise_standard_error (JERRY_ERROR_URI, msg);
 } /* ecma_raise_uri_error */
 
 #if (JERRY_STACK_LIMIT != 0)

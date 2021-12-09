@@ -18,6 +18,7 @@
 #include "jerryscript.h"
 
 #include "ecma-conversion.h"
+#include "ecma-errors.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-helpers-number.h"
@@ -51,7 +52,7 @@ main (void)
   TEST_ASSERT (num == 123);
 
   /* 1, 3 */
-  ecma_value_t error_throw = ecma_raise_standard_error (JERRY_ERROR_TYPE, "I'm an error");
+  ecma_value_t error_throw = ecma_raise_standard_error (JERRY_ERROR_TYPE, ECMA_ERR_INVALID_ARRAY_LENGTH);
 
   result = ecma_op_to_length (error_throw, &num);
 

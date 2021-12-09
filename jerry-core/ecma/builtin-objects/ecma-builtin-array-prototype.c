@@ -28,6 +28,7 @@
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
 
+#include "jcontext.h"
 #include "jrt.h"
 #include "lit-char-helpers.h"
 
@@ -2659,6 +2660,8 @@ ecma_builtin_array_flatten_into_array (ecma_value_t target, /**< target will con
                                        ecma_value_t mapped_value, /**< mapped value  */
                                        ecma_value_t thisArg) /**< this arg */
 {
+  ECMA_CHECK_STACK_USAGE ();
+
   /* 7. */
   ecma_length_t target_index = start;
 

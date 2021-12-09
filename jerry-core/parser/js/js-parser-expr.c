@@ -726,7 +726,7 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
       }
       else if (parser_is_constructor_literal (context_p))
       {
-        JERRY_ASSERT (!is_static);
+        JERRY_ASSERT (!is_static || is_private);
         parser_raise_error (context_p, PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR);
       }
 

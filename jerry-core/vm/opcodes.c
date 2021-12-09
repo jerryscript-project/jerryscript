@@ -1959,14 +1959,11 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
                              ecma_value_t prop_name, /**< property name to resolve */
                              uint8_t opcode) /**< current cbc opcode */
 {
-  if (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags) == CBC_FUNCTION_CONSTRUCTOR)
-  {
-    ecma_environment_record_t *environment_record_p = ecma_op_get_environment_record (frame_ctx_p->lex_env_p);
+  ecma_environment_record_t *environment_record_p = ecma_op_get_environment_record (frame_ctx_p->lex_env_p);
 
-    if (!ecma_op_this_binding_is_initialized (environment_record_p))
-    {
-      return ecma_raise_reference_error (ECMA_ERR_CALL_SUPER_CONSTRUCTOR_DERIVED_CLASS_BEFORE_THIS);
-    }
+  if (environment_record_p && !ecma_op_this_binding_is_initialized (environment_record_p))
+  {
+    return ecma_raise_reference_error (ECMA_ERR_CALL_SUPER_CONSTRUCTOR_DERIVED_CLASS_BEFORE_THIS);
   }
 
   ecma_value_t parent = ecma_op_resolve_super_base (frame_ctx_p->lex_env_p);

@@ -579,9 +579,15 @@ ecma_op_get_environment_record (ecma_object_t *lex_env_p) /**< lexical environme
       }
     }
 
-    JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+    if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
+
     lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
+
+  return NULL;
 } /* ecma_op_get_environment_record */
 
 /**

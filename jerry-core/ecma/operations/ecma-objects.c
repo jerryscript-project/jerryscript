@@ -2986,6 +2986,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           return LIT_MAGIC_STRING_JSON_U;
         }
 #endif /* JERRY_BUILTIN_JSON */
+#if JERRY_BUILTIN_ATOMICS
+        case ECMA_BUILTIN_ID_ATOMICS:
+        {
+          return LIT_MAGIC_STRING_ATOMICS_U;
+        }
+#endif /* JERRY_BUILTIN_ATOMICS */
 #if !JERRY_ESNEXT
 #if JERRY_BUILTIN_ERRORS
         case ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE:

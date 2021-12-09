@@ -585,7 +585,8 @@ ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< 
                                             const ecma_value_t args_p[], /**< argument list */
                                             const uint32_t args_count) /**< argument number */
 {
-  JERRY_UNUSED (args_count);
+  ecma_value_t arg = args_count > 0 ? args_p[0] : ECMA_VALUE_UNDEFINED;
+
   ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) function_obj_p;
   uint8_t promise_type = executor_p->header.u.built_in.u2.routine_flags;
 
@@ -602,7 +603,7 @@ ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< 
     /* 8. */
     ecma_op_object_put_by_index (ecma_get_object_from_value (executor_p->values),
                                  (uint32_t) (executor_p->index - 1),
-                                 args_p[0],
+                                 arg,
                                  false);
   }
   else
@@ -630,12 +631,7 @@ ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< 
                                                     ecma_get_magic_string (data_propery_name),
                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                     NULL);
-    prop_value_p->value = ECMA_VALUE_UNDEFINED;
-
-    if (args_count != 0)
-    {
-      prop_value_p->value = ecma_copy_value_if_not_object (args_p[0]);
-    }
+    prop_value_p->value = ecma_copy_value_if_not_object (arg);
 
     ecma_value_t obj_val = ecma_make_object_value (obj_p);
     /* 12. */

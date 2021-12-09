@@ -51,9 +51,9 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
                                          bool waitable) /**< waitable argument */
 {
   /* 2. */
-  if (!ecma_is_value_object (typedarray))
+  if (!ecma_is_typedarray (typedarray))
   {
-    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_OBJECT);
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_TYPED_ARRAY);
   }
 
   /* 3-4. */

@@ -1904,13 +1904,11 @@
   <test id="built-ins/Atomics/add/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/add/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/add/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/add/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/and/bigint/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/and/bigint/non-shared-bufferdata.js"><reason></reason></test>
   <test id="built-ins/Atomics/and/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/and/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/and/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/compareExchange/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/compareExchange/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/compareExchange/bigint/good-views.js"><reason></reason></test>
@@ -1928,14 +1926,12 @@
   <test id="built-ins/Atomics/exchange/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/exchange/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/exchange/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/isLockFree/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/load/bigint/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/load/bigint/non-shared-bufferdata.js"><reason></reason></test>
   <test id="built-ins/Atomics/load/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/load/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/load/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bigint/non-bigint64-typedarray-throws.js"><reason></reason></test>
@@ -1980,7 +1976,6 @@
   <test id="built-ins/Atomics/or/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/or/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/or/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/store/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/store/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/store/bigint/good-views.js"><reason></reason></test>
@@ -1997,7 +1992,6 @@
   <test id="built-ins/Atomics/sub/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/sub/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/sub/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bigint/cannot-suspend-throws.js"><reason></reason></test>
@@ -2076,7 +2070,6 @@
   <test id="built-ins/Atomics/xor/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/xor/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/xor/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/non-views.js"><reason></reason></test>
 
   <!-- ES2017: Shared Memory and Atomics
        features: [SharedArrayBuffer]
@@ -2085,11 +2078,9 @@
   <test id="built-ins/Atomics/add/bigint/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/add/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/add/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/add/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/and/bigint/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/and/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/and/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/compareExchange/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/compareExchange/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/compareExchange/bigint/good-views.js"><reason></reason></test>
@@ -2099,11 +2090,9 @@
   <test id="built-ins/Atomics/exchange/bigint/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/exchange/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/exchange/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/load/bigint/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/load/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/load/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bigint/notify-all-on-loc.js"><reason></reason></test>
@@ -2132,7 +2121,6 @@
   <test id="built-ins/Atomics/or/bigint/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/or/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/or/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/store/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/store/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/store/bigint/good-views.js"><reason></reason></test>
@@ -2142,7 +2130,6 @@
   <test id="built-ins/Atomics/sub/bigint/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/sub/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/sub/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/non-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bigint/cannot-suspend-throws.js"><reason></reason></test>
@@ -2247,6 +2234,7 @@
   <test id="built-ins/Atomics/waitAsync/bigint/was-woken-before-timeout.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/false-for-timeout-agent.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/false-for-timeout.js"><reason></reason></test>
+  <test id="built-ins/Atomics/waitAsync/implicit-infinity-for-timeout.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/nan-for-timeout-agent.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/negative-index-throws.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/negative-timeout-agent.js"><reason></reason></test>
@@ -2293,7 +2281,6 @@
   <test id="built-ins/Atomics/xor/bigint/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/xor/expected-return-value.js"><reason></reason></test>
   <test id="built-ins/Atomics/xor/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/non-views.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/typedarray-backed-by-sharedarraybuffer.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/buffer-arg/typedarray-backed-by-sharedarraybuffer.js"><reason></reason></test>
   <!-- END - ES2017: Shared Memory and Atomics -->

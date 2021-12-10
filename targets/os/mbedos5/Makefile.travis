@@ -21,20 +21,18 @@ all:
 
 ## Targets for installing build dependencies of the Mbed OS 5 JerryScript target.
 
-# Deploy Mbed and install Mbed Python dependencies.
-install:
-	pip install mbed-cli
-	cd targets/os/mbedos5 && mbed deploy
-	pip install idna==2.5 # FIXME: workaround
-	pip install -r targets/os/mbedos5/mbed-os/requirements.txt
-	pip install -r targets/os/mbedos5/tools/requirements.txt
+install-mbedos:
+	git clone https://github.com/ARMmbed/mbed-os.git ../mbed-os -b mbed-os-5.15
 
+# Deploy Mbed and install Mbed Python dependencies.
+install-mbedos-deps:
+	pip install mbed-cli
+	pip install -r ../mbed-os/requirements.txt
+
+install: install-mbedos install-mbedos-deps
 
 ## Targets for building Mbed OS 5 with JerryScript.
 
 # Build the firmware (Mbed OS 5 with JerryScript).
 script:
-	# HACK: `EXTRA_SRC[_MOD]` are abused to pass `--library` to `mbed compile` in the `all` make target that builds an app
-	# HACK: this is needed because the Mbed OS 5 target code does not contain any `main` function, so the `all` make target does not link
-	# HACK: but the `library` make target does not build either because the launcher sources require `jerry-targetjs.h` that are explicitly not generated for libraries
-	$(MAKE) -C targets/os/mbedos5 BOARD=K64F EXTRA_SRC=dummy EXTRA_SRC_MOD=--library
+	$(MAKE) -C targets/os/mbedos5 BOARD=K64F MBED_OS_DIR=$(realpath ../mbed-os)

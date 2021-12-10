@@ -13,16 +13,37 @@
  * limitations under the License.
  */
 
-#define _BSD_SOURCE
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
+#include <string.h>
 
-#include "jerry-core/include/jerryscript-port.h"
+#include "jerryscript.h"
+#include "jerryscript-port.h"
 
-#include "us_ticker_api.h"
+#include "mbed.h"
 
-#ifndef JSMBED_OVERRIDE_JERRY_PORT_LOG
+/**
+ * JerryScript log level.
+ */
+static jerry_log_level_t jerry_log_level = JERRY_LOG_LEVEL_ERROR;
+
+/**
+ * Sets log level.
+ */
+void set_log_level (jerry_log_level_t level)
+{
+  jerry_log_level = level;
+} /* set_log_level */
+
+/**
+ * Aborts the program.
+ */
+void jerry_port_fatal (jerry_fatal_code_t code)
+{
+  exit (1);
+} /* jerry_port_fatal */
+
 /**
  * Provide log message implementation for the engine.
  */
@@ -43,16 +64,16 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
     printf ("\r"); /* add CR for proper display in serial monitors */
   }
 } /* jerry_port_log */
-#endif /* JSMBED_OVERRIDE_JERRY_PORT_LOG */
 
 /**
- * Implementation of jerry_port_get_local_time_zone_adjustment.
+ * Dummy function to get the time zone adjustment.
  *
- * @return 0, as we live in UTC.
+ * @return 0
  */
 double
 jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
 {
+  /* We live in UTC. */
   return 0;
 } /* jerry_port_get_local_time_zone_adjustment */
 
@@ -90,3 +111,13 @@ jerry_port_get_current_time (void)
   last_time = curr_time;
   return result;
 } /* jerry_port_get_current_time */
+
+/**
+ * Provide the implementation of jerry_port_print_char.
+ * Uses 'printf' to print a single character to standard output.
+ */
+void
+jerry_port_print_char (char c) /**< the character to print */
+{
+  printf ("%c", c);
+} /* jerry_port_print_char */

@@ -35,6 +35,7 @@
 #include "ecma-extended-info.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
+#include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
 #include "ecma-iterator-object.h"
@@ -5950,7 +5951,7 @@ jerry_arraybuffer_allocate_buffer_no_throw (ecma_object_t *arraybuffer_p) /**< A
     return false;
   }
 
-  return ecma_arraybuffer_allocate_buffer (arraybuffer_p) != NULL;
+  return ecma_arraybuffer_allocate_buffer (arraybuffer_p) != ECMA_VALUE_ERROR;
 } /* jerry_arraybuffer_allocate_buffer_no_throw */
 
 #endif /* JERRY_BUILTIN_TYPEDARRAY */

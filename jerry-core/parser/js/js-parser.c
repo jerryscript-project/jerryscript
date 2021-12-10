@@ -2505,8 +2505,9 @@ parser_parse_source (void *source_p, /**< source code */
   }
   else
   {
-    err_str_p =
-      ecma_new_ecma_string_from_utf8 (parser_get_error_utf8 (context.error), parser_get_error_size (context.error));
+    err_str_p = ecma_new_ecma_external_string_from_cesu8 (parser_get_error_utf8 (context.error),
+                                                          parser_get_error_size (context.error),
+                                                          NULL);
   }
   ecma_value_t err_str_val = ecma_make_string_value (err_str_p);
   ecma_value_t line_str_val = ecma_make_uint32_value (context.token.line);

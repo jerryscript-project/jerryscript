@@ -2805,6 +2805,58 @@ ecma_op_advance_string_index (ecma_string_t *str_p, /**< input string */
 } /* ecma_op_advance_string_index */
 #endif /* JERRY_ESNEXT */
 
+#if JERRY_ICU
+/**
+ * Copy the string's data into a newly allocated UTF16 encoded buffer
+ *
+ * @return pointer to the allocated buffer
+ */
+uint16_t *
+ecma_string_cesu8_to_utf16 (ecma_string_t *str_p, /**< input string */
+                            lit_utf8_size_t *utf16_length_p) /**< [out] utf16 buffer size */
+{
+  lit_utf8_size_t utf8_size;
+  lit_utf8_size_t utf8_length;
+  uint8_t flags = ECMA_STRING_FLAG_EMPTY;
+  const lit_utf8_byte_t *utf8_buffer_p = ecma_string_get_chars (str_p, &utf8_size, &utf8_length, NULL, &flags);
+  const lit_utf8_byte_t *utf8_buffer_end_p = utf8_buffer_p + utf8_size;
+
+  *utf16_length_p = utf8_length;
+  uint16_t *utf16_buff_p = (uint16_t *) jmem_heap_alloc_block (*utf16_length_p * sizeof (uint16_t));
+  uint16_t *utf16_buff_iter_p = utf16_buff_p;
+
+  while (utf8_buffer_p < utf8_buffer_end_p)
+  {
+    *utf16_buff_iter_p++ = (uint16_t) lit_cesu8_read_next (&utf8_buffer_p);
+  }
+
+  if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
+  {
+    jmem_heap_free_block ((void *) utf8_buffer_p, utf8_size);
+  }
+
+  return utf16_buff_p;
+} /* ecma_string_cesu8_to_utf16 */
+
+/**
+ * Allocate a new string from UTF16 encoded buffer
+ *
+ * @return pointer to the allocated string
+ */
+ecma_string_t *
+ecma_new_ecma_string_from_utf16 (uint16_t *utf16_buff_p, lit_utf8_size_t utf16_length)
+{
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+
+  while (utf16_length--)
+  {
+    ecma_stringbuilder_append_codepoint (&builder, *utf16_buff_p++);
+  }
+
+  return ecma_stringbuilder_finalize (&builder);
+} /* ecma_new_ecma_string_from_utf16 */
+#endif /* JERRY_ICU */
+
 /**
  * @}
  * @}

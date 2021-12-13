@@ -99,13 +99,13 @@ TEST262_TEST_SUITE_OPTIONS = [
 
 # Test options for test262-es2015
 TEST262_ES2015_TEST_SUITE_OPTIONS = [
-    Options('test262_tests_es2015', OPTIONS_PROFILE_ESNEXT + ['--line-info=on', '--error-messages=on']),
+    Options('test262_tests_es2015', OPTIONS_PROFILE_ESNEXT + ['--line-info=on', '--error-messages=on', '--icu=ON']),
 ]
 
 # Test options for test262-esnext
 TEST262_ESNEXT_TEST_SUITE_OPTIONS = [
     Options('test262_tests_esnext', OPTIONS_PROFILE_ESNEXT
-            + ['--line-info=on', '--error-messages=on', '--mem-heap=20480']),
+            + ['--line-info=on', '--error-messages=on', '--mem-heap=20480', '--icu=ON']),
 ]
 
 # Test options for jerry-debugger

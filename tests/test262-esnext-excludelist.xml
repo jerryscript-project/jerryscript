@@ -39,15 +39,6 @@
   <test id="built-ins/Number/prototype/toPrecision/exponential.js"><reason></reason></test>
   <test id="built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js"><reason></reason></test>
   <test id="built-ins/String/prototype/matchAll/regexp-is-undefined.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/form-is-not-valid-throws.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/length.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/name.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/normalize.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-abrupt-from-form.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-abrupt-from-this.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-normalized-string-from-coerced-form.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-normalized-string-using-default-parameter.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-normalized-string.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js"><reason></reason></test>

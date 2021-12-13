@@ -82,15 +82,6 @@
   <test id="built-ins/RegExp/prototype/Symbol.search/get-sticky-err.js"><reason>RegExpBuiltinExec no longer uses accessors to get flags</reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.split/coerce-limit.js"><reason>Test is outdated: ES11, 21.2.5.13 13</reason></test>
   <test id="built-ins/RegExp/prototype/test/get-sticky-err.js"><reason>RegExpBuiltinExec no longer uses accessors to get flags</reason></test>
-  <test id="built-ins/String/prototype/normalize/form-is-not-valid-throws.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/length.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/name.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/normalize.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-abrupt-from-form.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-abrupt-from-this.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-normalized-string-from-coerced-form.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-normalized-string.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/normalize/return-normalized-string-using-default-parameter.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLowerCase/special_casing_conditional.js"><reason></reason></test>
   <test id="intl402/6.2.2_a.js"><reason></reason></test>

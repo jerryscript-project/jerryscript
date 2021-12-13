@@ -25,6 +25,7 @@ set(JERRY_ERROR_MESSAGES            OFF          CACHE BOOL   "Enable error mess
 set(JERRY_EXTERNAL_CONTEXT          OFF          CACHE BOOL   "Enable external context?")
 set(JERRY_PARSER                    ON           CACHE BOOL   "Enable javascript-parser?")
 set(JERRY_FUNCTION_TO_STRING        OFF          CACHE BOOL   "Enable function toString operation?")
+set(JERRY_ICU                       OFF          CACHE BOOL   "Enable ICU support?")
 set(JERRY_LINE_INFO                 OFF          CACHE BOOL   "Enable line info?")
 set(JERRY_LOGGING                   OFF          CACHE BOOL   "Enable logging?")
 set(JERRY_MEM_STATS                 OFF          CACHE BOOL   "Enable memory statistics?")
@@ -78,6 +79,16 @@ if(JERRY_MEM_STATS OR JERRY_PARSER_DUMP_BYTE_CODE OR JERRY_REGEXP_DUMP_BYTE_CODE
   set(JERRYRE_LOGGING_MESSAGE " (FORCED BY STATS OR DUMP)")
 endif()
 
+# ICU
+if(JERRY_ICU)
+  find_package(ICU REQUIRED COMPONENTS uc)
+
+  if(NOT ICU_FOUND)
+    set(JERRY_ICU OFF)
+    set(JERRY_ICU_MESSAGE " (FORCED BY MISSING LIBRARY)")
+  endif()
+endif()
+
 # Status messages
 message(STATUS "JERRY_CPOINTER_32_BIT          " ${JERRY_CPOINTER_32_BIT} ${JERRY_CPOINTER_32_BIT_MESSAGE})
 message(STATUS "JERRY_DEBUGGER                 " ${JERRY_DEBUGGER})
@@ -85,6 +96,7 @@ message(STATUS "JERRY_ERROR_MESSAGES           " ${JERRY_ERROR_MESSAGES})
 message(STATUS "JERRY_EXTERNAL_CONTEXT         " ${JERRY_EXTERNAL_CONTEXT})
 message(STATUS "JERRY_PARSER                   " ${JERRY_PARSER})
 message(STATUS "JERRY_FUNCTION_TO_STRING       " ${JERRY_FUNCTION_TO_STRING})
+message(STATUS "JERRY_ICU                      " ${JERRY_ICU} ${JERRY_ICU_MESSAGE})
 message(STATUS "JERRY_LINE_INFO                " ${JERRY_LINE_INFO})
 message(STATUS "JERRY_LOGGING                  " ${JERRY_LOGGING} ${JERRY_LOGGING_MESSAGE})
 message(STATUS "JERRY_MEM_STATS                " ${JERRY_MEM_STATS})
@@ -641,6 +653,12 @@ if(JERRY_VALGRIND)
   set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} ${INCLUDE_THIRD_PARTY_VALGRIND})
 endif()
 
+# ICU
+jerry_add_define01(JERRY_ICU)
+if(JERRY_ICU)
+  set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} ${ICU_INCLUDE_DIRS})
+endif()
+
 # Enable VM execution stop callback
 jerry_add_define01(JERRY_VM_HALT)
 
@@ -764,6 +782,10 @@ else()
     target_link_libraries(${JERRY_CORE_NAME} m)
     set(JERRY_CORE_PKGCONFIG_LIBS "${JERRY_CORE_PKGCONFIG_LIBS} -lm")
   endif()
+endif()
+
+if(JERRY_ICU)
+  target_link_libraries (${JERRY_CORE_NAME} ${ICU_LIBRARIES})
 endif()
 
 separate_arguments(EXTERNAL_LINK_LIBS)

@@ -38,6 +38,10 @@
 #include "ecma-regexp-object.h"
 #endif /* JERRY_BUILTIN_REGEXP */
 
+#if JERRY_ICU
+#include "unicode/unorm2.h"
+#endif /* JERRY_ICU */
+
 #if JERRY_BUILTIN_STRING
 
 #define ECMA_BUILTINS_INTERNAL
@@ -80,6 +84,7 @@ enum
 
   ECMA_STRING_PROTOTYPE_SUBSTR,
 
+  ECMA_STRING_PROTOTYPE_NORMALIZE,
   ECMA_STRING_PROTOTYPE_REPEAT,
   ECMA_STRING_PROTOTYPE_CODE_POINT_AT,
   ECMA_STRING_PROTOTYPE_PAD_START,
@@ -1225,6 +1230,150 @@ ecma_builtin_string_prototype_object_trim (ecma_string_t *original_string_p) /**
 } /* ecma_builtin_string_prototype_object_trim */
 
 #if JERRY_ESNEXT
+#if JERRY_ICU
+/**
+ * Helper macro to register form normalizer entries
+ */
+#define FORM_ENTRY(id, instance_cb) \
+  {                                 \
+    id, instance_cb                 \
+  }
+
+/**
+ * ICU string normalizer instance callback
+ */
+typedef const UNormalizer2 *(*icu_string_normalizer_instance_cb_t) (UErrorCode *);
+#else /* !JERRY_ICU */
+/**
+ * Helper macro to register form normalizer entries
+ */
+#define FORM_ENTRY(id, instance_cb) \
+  {                                 \
+    id                              \
+  }
+#endif /* JERRY_ICU */
+
+/**
+ * Normalization form descriptor
+ */
+typedef struct
+{
+  lit_magic_string_id_t kind; /**< kind */
+#if JERRY_ICU
+  icu_string_normalizer_instance_cb_t instance_cb; /**< normalizer instance callback */
+#endif /* JERRY_ICU */
+} icu_string_form_normalizer_t;
+
+/**
+ * List of normalization forms
+ */
+static const icu_string_form_normalizer_t icu_string_normalize_forms[] = {
+  FORM_ENTRY (LIT_MAGIC_STRING_NFC_U, unorm2_getNFCInstance),
+  FORM_ENTRY (LIT_MAGIC_STRING_NFD_U, unorm2_getNFDInstance),
+  FORM_ENTRY (LIT_MAGIC_STRING_NFKC_U, unorm2_getNFKCInstance),
+  FORM_ENTRY (LIT_MAGIC_STRING_NFKD_U, unorm2_getNFKDInstance)
+};
+
+#undef FORM_ENTRY
+
+/**
+ * The String.prototype object's 'normalize' routine
+ *
+ * See also:
+ *          ECMA-262 v12, 22.1.3.13
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_string_prototype_object_normalize (ecma_string_t *original_string_p, /**< this argument */
+                                                ecma_value_t form_value) /**< normalization from */
+{
+#if JERRY_ICU
+  icu_string_normalizer_instance_cb_t normalizer_instance_cb = unorm2_getNFCInstance;
+#endif /* JERRY_ICU */
+
+  if (!ecma_is_value_undefined (form_value))
+  {
+    ecma_string_t *form_p = ecma_op_to_string (form_value);
+
+    if (JERRY_UNLIKELY (form_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    size_t forms_size = sizeof (icu_string_normalize_forms) / sizeof (icu_string_normalize_forms[0]);
+    uint32_t form_idx = 0;
+
+    for (; form_idx < forms_size; form_idx++)
+    {
+      if (ecma_compare_ecma_string_to_magic_id (form_p, icu_string_normalize_forms[form_idx].kind))
+      {
+#if JERRY_ICU
+        normalizer_instance_cb = icu_string_normalize_forms[form_idx].instance_cb;
+#endif /* JERRY_ICU */
+        break;
+      }
+    }
+
+    ecma_deref_ecma_string (form_p);
+
+    if (form_idx >= forms_size)
+    {
+      return ecma_raise_range_error (ECMA_ERR_INVALID_NORMALIZATION_FORM);
+    }
+  }
+
+#if JERRY_ICU
+  JERRY_ASSERT (normalizer_instance_cb != NULL);
+  size_t string_size = ecma_string_get_size (original_string_p);
+
+  if (string_size == 0)
+  {
+    ecma_ref_ecma_string (original_string_p);
+    return ecma_make_string_value (original_string_p);
+  }
+
+  UErrorCode status = U_ZERO_ERROR;
+  const UNormalizer2 *normalizer_cb = normalizer_instance_cb (&status);
+
+  if (!U_FAILURE (status))
+  {
+    ecma_value_t result = ECMA_VALUE_ERROR;
+
+    lit_utf8_size_t length;
+    uint16_t *buffer_p = ecma_string_cesu8_to_utf16 (original_string_p, &length);
+    int32_t norm_length = unorm2_normalize (normalizer_cb, buffer_p, (int32_t) length, NULL, 0, &status);
+
+    if (!U_FAILURE (status) || status == U_BUFFER_OVERFLOW_ERROR)
+    {
+      uint16_t *norm_buff_p = (uint16_t *) jmem_heap_alloc_block ((uint32_t) norm_length * sizeof (uint16_t));
+
+      status = U_ZERO_ERROR;
+      norm_length = unorm2_normalize (normalizer_cb, buffer_p, (int32_t) length, norm_buff_p, norm_length, &status);
+
+      if (!U_FAILURE (status))
+      {
+        result = ecma_make_string_value (ecma_new_ecma_string_from_utf16 (norm_buff_p, (uint32_t) norm_length));
+      }
+
+      jmem_heap_free_block (norm_buff_p, (uint32_t) norm_length * sizeof (uint16_t));
+    }
+
+    jmem_heap_free_block (buffer_p, length * sizeof (uint16_t));
+
+    if (!ECMA_IS_VALUE_ERROR (result))
+    {
+      return result;
+    }
+  }
+
+  return ecma_raise_type_error (ECMA_ERR_NORMALIZATION_FAILED);
+#else /* !JERRY_ICU */
+  ecma_ref_ecma_string (original_string_p);
+  return ecma_make_string_value (original_string_p);
+#endif /* JERRY_ICU */
+} /* ecma_builtin_string_prototype_object_normalize */
 
 /**
  * The String.prototype object's 'repeat' routine
@@ -1570,6 +1719,11 @@ ecma_builtin_string_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
     }
 #endif /* JERRY_BUILTIN_ANNEXB */
 #if JERRY_ESNEXT
+    case ECMA_STRING_PROTOTYPE_NORMALIZE:
+    {
+      ret_value = ecma_builtin_string_prototype_object_normalize (string_p, arg1);
+      break;
+    }
     case ECMA_STRING_PROTOTYPE_REPEAT:
     {
       ret_value = ecma_builtin_string_prototype_object_repeat (string_p, arg1);

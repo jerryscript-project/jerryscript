@@ -122,6 +122,8 @@ def get_arguments():
                          help='enable js-parser (%(choices)s)')
     coregrp.add_argument('--function-to-string', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='enable function toString (%(choices)s)')
+    coregrp.add_argument('--icu', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable ICU support')
     coregrp.add_argument('--line-info', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='provide line info (%(choices)s)')
     coregrp.add_argument('--logging', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -211,6 +213,7 @@ def generate_build_options(arguments):
     build_options_append('JERRY_DEBUGGER', arguments.jerry_debugger)
     build_options_append('JERRY_PARSER', arguments.js_parser)
     build_options_append('JERRY_FUNCTION_TO_STRING', arguments.function_to_string)
+    build_options_append('JERRY_ICU', arguments.icu)
     build_options_append('JERRY_LINE_INFO', arguments.line_info)
     build_options_append('JERRY_LOGGING', arguments.logging)
     build_options_append('JERRY_GLOBAL_HEAP_SIZE', arguments.mem_heap)

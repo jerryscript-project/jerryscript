@@ -241,7 +241,7 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
   }
 
   /* 3. */
-  ecma_value_t iterator = ecma_op_function_validated_call (method, value, NULL, 0);
+  ecma_value_t iterator = ecma_internal_method_validated_call (method, value, NULL, 0);
 
   if (use_default_method)
   {
@@ -313,10 +313,10 @@ ecma_op_iterator_next (ecma_value_t iterator, /**< iterator value */
 
   if (has_value)
   {
-    return ecma_op_function_call (next_method_obj_p, iterator, &value, 1);
+    return ecma_internal_method_call (next_method_obj_p, iterator, &value, 1);
   }
 
-  return ecma_op_function_call (next_method_obj_p, iterator, NULL, 0);
+  return ecma_internal_method_call (next_method_obj_p, iterator, NULL, 0);
 } /* ecma_op_iterator_next */
 
 /**
@@ -349,7 +349,7 @@ ecma_op_iterator_return (ecma_value_t iterator, /**< iterator value */
     return ecma_create_iter_result_object (value, ECMA_VALUE_TRUE);
   }
 
-  ecma_value_t result = ecma_op_function_validated_call (func_return, iterator, &value, 1);
+  ecma_value_t result = ecma_internal_method_validated_call (func_return, iterator, &value, 1);
   ecma_free_value (func_return);
 
   return result;
@@ -393,7 +393,7 @@ ecma_op_iterator_throw (ecma_value_t iterator, /**< iterator value */
     return ecma_raise_type_error (ECMA_ERR_ITERATOR_THROW_IS_NOT_AVAILABLE);
   }
 
-  ecma_value_t result = ecma_op_function_validated_call (func_throw, iterator, &value, 1);
+  ecma_value_t result = ecma_internal_method_validated_call (func_throw, iterator, &value, 1);
   ecma_free_value (func_throw);
 
   return result;
@@ -496,7 +496,7 @@ ecma_op_iterator_close (ecma_value_t iterator) /**< iterator value */
 
   /* 6. */
   ecma_object_t *return_obj_p = ecma_get_object_from_value (return_method);
-  ecma_value_t inner_result = ecma_op_function_call (return_obj_p, iterator, NULL, 0);
+  ecma_value_t inner_result = ecma_internal_method_call (return_obj_p, iterator, NULL, 0);
   ecma_deref_object (return_obj_p);
 
   /* 7. */

@@ -1450,15 +1450,14 @@ jerry_value_type (const jerry_value_t value) /**< input value to check */
  * Used by jerry_object_type to get the type of class objects
  */
 static const uint8_t jerry_class_object_type[] = {
-  /* These objects require custom property resolving. */
-  JERRY_OBJECT_TYPE_STRING, /**< type of ECMA_OBJECT_CLASS_STRING */
-  JERRY_OBJECT_TYPE_ARGUMENTS, /**< type of ECMA_OBJECT_CLASS_ARGUMENTS */
 #if JERRY_BUILTIN_TYPEDARRAY
   JERRY_OBJECT_TYPE_TYPEDARRAY, /**< type of ECMA_OBJECT_CLASS_TYPEDARRAY */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 #if JERRY_MODULE_SYSTEM
   JERRY_OBJECT_TYPE_MODULE_NAMESPACE, /**< type of ECMA_OBJECT_CLASS_MODULE_NAMESPACE */
 #endif /* JERRY_MODULE_SYSTEM */
+  JERRY_OBJECT_TYPE_STRING, /**< type of ECMA_OBJECT_CLASS_STRING */
+  JERRY_OBJECT_TYPE_ARGUMENTS, /**< type of ECMA_OBJECT_CLASS_ARGUMENTS */
 
 /* These objects are marked by Garbage Collector. */
 #if JERRY_ESNEXT
@@ -3192,7 +3191,7 @@ jerry_object_has (const jerry_value_t object, /**< object value */
   ecma_object_t *obj_p = ecma_get_object_from_value (object);
   ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (key);
 
-  return jerry_return (ecma_op_object_has_property (obj_p, prop_name_p));
+  return jerry_return (ecma_internal_method_has_property (obj_p, prop_name_p));
 } /* jerry_object_has */
 
 /**
@@ -3215,8 +3214,8 @@ jerry_object_has_own (const jerry_value_t object, /**< object value */
   ecma_object_t *obj_p = ecma_get_object_from_value (object);
   ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (key);
 
-  return jerry_return (ecma_op_object_has_own_property (obj_p, prop_name_p));
-} /* jerry_has_own_property */
+  return ecma_op_object_has_own_property (obj_p, prop_name_p);
+} /* jerry_object_has_own */
 
 /**
  * Checks whether the object has the given internal property.
@@ -3274,7 +3273,7 @@ jerry_object_delete (const jerry_value_t object, /**< object value */
     return false;
   }
 
-  return ecma_op_object_delete (ecma_get_object_from_value (object), ecma_get_prop_name_from_value (key), false);
+  return ecma_internal_method_delete (ecma_get_object_from_value (object), ecma_get_prop_name_from_value (key), false);
 } /* jerry_object_delete */
 
 /**
@@ -3295,7 +3294,7 @@ jerry_object_delete_index (const jerry_value_t object, /**< object value */
   }
 
   ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 (index);
-  ecma_value_t ret_value = ecma_op_object_delete (ecma_get_object_from_value (object), str_idx_p, false);
+  ecma_value_t ret_value = ecma_internal_method_delete (ecma_get_object_from_value (object), str_idx_p, false);
   ecma_deref_ecma_string (str_idx_p);
 
   return ret_value;
@@ -3367,9 +3366,8 @@ jerry_object_get (const jerry_value_t object, /**< object value */
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
-  jerry_value_t ret_value =
-    ecma_op_object_get (ecma_get_object_from_value (object), ecma_get_prop_name_from_value (key));
-  return jerry_return (ret_value);
+  return jerry_return (
+    ecma_internal_method_get (ecma_get_object_from_value (object), ecma_get_prop_name_from_value (key), object));
 } /* jerry_object_get */
 
 /**
@@ -3440,16 +3438,21 @@ jerry_object_find_own (const jerry_value_t object, /**< object value */
   }
 #endif /* JERRY_BUILTIN_PROXY */
 
-  ecma_value_t ret_value = ecma_op_object_find_own (receiver, object_p, property_name_p);
+  ecma_property_descriptor_t prop_desc = ecma_internal_method_get_own_property (object_p, property_name_p);
 
-  if (ecma_is_value_found (ret_value))
+  if (ecma_property_descriptor_error (&prop_desc))
+  {
+    return jerry_return (ECMA_VALUE_ERROR);
+  }
+
+  if (ecma_property_descriptor_found (&prop_desc))
   {
     if (found_p != NULL)
     {
       *found_p = true;
     }
 
-    return jerry_return (ret_value);
+    return jerry_return (ecma_property_descriptor_get (&prop_desc, receiver));
   }
 
   return ECMA_VALUE_UNDEFINED;
@@ -3524,8 +3527,11 @@ jerry_object_set (const jerry_value_t object, /**< object value */
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
-  return jerry_return (
-    ecma_op_object_put (ecma_get_object_from_value (object), ecma_get_prop_name_from_value (key), value, true));
+  return jerry_return (ecma_internal_method_set (ecma_get_object_from_value (object),
+                                                 ecma_get_prop_name_from_value (key),
+                                                 value,
+                                                 object,
+                                                 true));
 } /* jerry_object_set */
 
 /**
@@ -3656,35 +3662,27 @@ jerry_property_descriptor (void)
 static jerry_property_descriptor_t
 jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc_p) /**<[out] property_descriptor */
 {
+  JERRY_ASSERT (!(prop_desc_p->flags & (ECMA_PROP_DESC_PROPERTY | ECMA_PROP_DESC_VIRTUAL)));
+
   jerry_property_descriptor_t prop_desc = jerry_property_descriptor ();
 
-  prop_desc.flags = prop_desc_p->flags;
+  prop_desc.flags = (uint16_t) (prop_desc_p->flags & ECMA_PROP_DESC_FLAG_MASK);
 
-  if (prop_desc.flags & (JERRY_PROP_IS_VALUE_DEFINED))
+  if (prop_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
   {
     prop_desc.value = prop_desc_p->value;
   }
 
   if (prop_desc_p->flags & JERRY_PROP_IS_GET_DEFINED)
   {
-    prop_desc.getter = ECMA_VALUE_NULL;
-
-    if (prop_desc_p->get_p != NULL)
-    {
-      prop_desc.getter = ecma_make_object_value (prop_desc_p->get_p);
-      JERRY_ASSERT (ecma_op_is_callable (prop_desc.getter));
-    }
+    prop_desc.getter =
+      ecma_is_value_undefined (prop_desc_p->u.accessor.get) ? ECMA_VALUE_NULL : prop_desc_p->u.accessor.get;
   }
 
   if (prop_desc_p->flags & JERRY_PROP_IS_SET_DEFINED)
   {
-    prop_desc.setter = ECMA_VALUE_NULL;
-
-    if (prop_desc_p->set_p != NULL)
-    {
-      prop_desc.setter = ecma_make_object_value (prop_desc_p->set_p);
-      JERRY_ASSERT (ecma_op_is_callable (prop_desc.setter));
-    }
+    prop_desc.setter =
+      ecma_is_value_undefined (prop_desc_p->u.accessor.set) ? ECMA_VALUE_NULL : prop_desc_p->u.accessor.set;
   }
 
   return prop_desc;
@@ -3702,7 +3700,7 @@ jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc
 static ecma_property_descriptor_t
 jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_p) /**< input property_descriptor */
 {
-  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_define_property_descriptor ();
 
   prop_desc.flags = prop_desc_p->flags;
 
@@ -3732,7 +3730,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
 
     if (ecma_op_is_callable (getter))
     {
-      prop_desc.get_p = ecma_get_object_from_value (getter);
+      prop_desc.u.accessor.get = getter;
     }
     else if (!ecma_is_value_null (getter))
     {
@@ -3753,7 +3751,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
 
     if (ecma_op_is_callable (setter))
     {
-      prop_desc.set_p = ecma_get_object_from_value (setter);
+      prop_desc.u.accessor.set = setter;
     }
     else if (!ecma_is_value_null (setter))
     {
@@ -3831,9 +3829,9 @@ jerry_object_define_own_prop (const jerry_value_t object, /**< object value */
     return jerry_type_error_or_false (ECMA_ERR_WRONG_ARGS_MSG, prop_desc_p->flags);
   }
 
-  return jerry_return (ecma_op_object_define_own_property (ecma_get_object_from_value (object),
-                                                           ecma_get_prop_name_from_value (key),
-                                                           &prop_desc));
+  return jerry_return (ecma_internal_method_define_own_property (ecma_get_object_from_value (object),
+                                                                 ecma_get_prop_name_from_value (key),
+                                                                 &prop_desc));
 } /* jerry_object_define_own_prop */
 
 /**
@@ -3854,62 +3852,62 @@ jerry_object_get_own_prop (const jerry_value_t object, /**< object value */
     return ECMA_VALUE_FALSE;
   }
 
-  ecma_property_descriptor_t prop_desc;
+  ecma_property_descriptor_t prop_desc =
+    ecma_internal_method_get_own_property (ecma_get_object_from_value (object), ecma_get_prop_name_from_value (key));
 
-  ecma_value_t status = ecma_op_object_get_own_property_descriptor (ecma_get_object_from_value (object),
-                                                                    ecma_get_prop_name_from_value (key),
-                                                                    &prop_desc);
-
-#if JERRY_BUILTIN_PROXY
-  if (ECMA_IS_VALUE_ERROR (status))
+  if (ecma_property_descriptor_error (&prop_desc))
   {
+    ecma_free_property_descriptor (&prop_desc);
     return ecma_create_exception_from_context ();
   }
-#endif /* JERRY_BUILTIN_PROXY */
 
-  if (!ecma_is_value_true (status))
+  if (!ecma_property_descriptor_found (&prop_desc))
   {
+    ecma_free_property_descriptor (&prop_desc);
     return ECMA_VALUE_FALSE;
   }
 
-  /* The flags are always filled in the returned descriptor. */
-  JERRY_ASSERT (
-    (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED) && (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
-    && ((prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED) || !(prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED)));
-
-  prop_desc_p->flags = prop_desc.flags;
+  prop_desc_p->flags = (JERRY_PROP_IS_ENUMERABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE_DEFINED);
   prop_desc_p->value = ECMA_VALUE_UNDEFINED;
   prop_desc_p->getter = ECMA_VALUE_UNDEFINED;
   prop_desc_p->setter = ECMA_VALUE_UNDEFINED;
 
-  if (prop_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
+  if (ecma_property_descriptor_is_data_descriptor (&prop_desc))
   {
-    prop_desc_p->value = prop_desc.value;
+    prop_desc_p->flags |= (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE_DEFINED);
+    prop_desc_p->value = ecma_copy_value (ecma_property_descriptor_value (&prop_desc));
+
+    if (ecma_property_descriptor_is_writable (&prop_desc))
+    {
+      prop_desc_p->flags |= JERRY_PROP_IS_WRITABLE;
+    }
+  }
+  else
+  {
+    if (prop_desc.flags & JERRY_PROP_IS_GET_DEFINED)
+    {
+      prop_desc_p->flags |= JERRY_PROP_IS_GET_DEFINED;
+      prop_desc_p->getter = ecma_copy_value (ecma_property_descriptor_accessor_getter_value (&prop_desc));
+    }
+
+    if (prop_desc.flags & JERRY_PROP_IS_SET_DEFINED)
+    {
+      prop_desc_p->flags |= JERRY_PROP_IS_SET_DEFINED;
+      prop_desc_p->getter = ecma_copy_value (ecma_property_descriptor_accessor_setter_value (&prop_desc));
+    }
   }
 
-  if (prop_desc_p->flags & JERRY_PROP_IS_GET_DEFINED)
+  if (ecma_property_descriptor_is_configurable (&prop_desc))
   {
-    if (prop_desc.get_p != NULL)
-    {
-      prop_desc_p->getter = ecma_make_object_value (prop_desc.get_p);
-    }
-    else
-    {
-      prop_desc_p->getter = ECMA_VALUE_NULL;
-    }
+    prop_desc_p->flags |= JERRY_PROP_IS_CONFIGURABLE;
   }
 
-  if (prop_desc_p->flags & JERRY_PROP_IS_SET_DEFINED)
+  if (ecma_property_descriptor_is_enumerable (&prop_desc))
   {
-    if (prop_desc.set_p != NULL)
-    {
-      prop_desc_p->setter = ecma_make_object_value (prop_desc.set_p);
-    }
-    else
-    {
-      prop_desc_p->setter = ECMA_VALUE_NULL;
-    }
+    prop_desc_p->flags |= JERRY_PROP_IS_ENUMERABLE;
   }
+
+  ecma_free_property_descriptor (&prop_desc);
 
   return ECMA_VALUE_TRUE;
 } /* jerry_object_get_own_prop */
@@ -3966,7 +3964,7 @@ jerry_call (const jerry_value_t func_object, /**< function object to call */
     }
   }
 
-  return jerry_return (ecma_op_function_validated_call (func_object, this_value, args_p, args_count));
+  return jerry_return (ecma_internal_method_validated_call (func_object, this_value, args_p, args_count));
 } /* jerry_call */
 
 /**
@@ -3999,10 +3997,10 @@ jerry_construct (const jerry_value_t func_object, /**< function object to call *
     }
   }
 
-  return jerry_return (ecma_op_function_construct (ecma_get_object_from_value (func_object),
-                                                   ecma_get_object_from_value (func_object),
-                                                   args_p,
-                                                   args_count));
+  return jerry_return (ecma_internal_method_construct (ecma_get_object_from_value (func_object),
+                                                       ecma_get_object_from_value (func_object),
+                                                       args_p,
+                                                       args_count));
 } /* jerry_construct */
 
 /**
@@ -4058,22 +4056,21 @@ jerry_object_proto (const jerry_value_t object) /**< object value */
 
   ecma_object_t *obj_p = ecma_get_object_from_value (object);
 
-#if JERRY_BUILTIN_PROXY
-  if (ECMA_OBJECT_IS_PROXY (obj_p))
-  {
-    return jerry_return (ecma_proxy_object_get_prototype_of (obj_p));
-  }
-#endif /* JERRY_BUILTIN_PROXY */
+  ecma_object_t *proto_p = ecma_internal_method_get_prototype_of (obj_p);
 
-  if (obj_p->u2.prototype_cp == JMEM_CP_NULL)
+  if (proto_p == NULL)
   {
     return ECMA_VALUE_NULL;
   }
 
-  ecma_object_t *proto_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, obj_p->u2.prototype_cp);
-  ecma_ref_object (proto_obj_p);
+#if JERRY_BUILTIN_PROXY
+  if (proto_p == ECMA_OBJECT_POINTER_ERROR)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+#endif /* JERRY_BUILTIN_PROXY */
 
-  return ecma_make_object_value (proto_obj_p);
+  return ecma_make_object_value (proto_p);
 } /* jerry_object_proto */
 
 /**
@@ -4095,14 +4092,7 @@ jerry_object_set_proto (const jerry_value_t object, /**< object value */
   }
   ecma_object_t *obj_p = ecma_get_object_from_value (object);
 
-#if JERRY_BUILTIN_PROXY
-  if (ECMA_OBJECT_IS_PROXY (obj_p))
-  {
-    return jerry_return (ecma_proxy_object_set_prototype_of (obj_p, proto));
-  }
-#endif /* JERRY_BUILTIN_PROXY */
-
-  return ecma_op_ordinary_object_set_prototype_of (obj_p, proto);
+  return jerry_return (ecma_internal_method_set_prototype_of (obj_p, proto));
 } /* jerry_object_set_proto */
 
 /**
@@ -4449,9 +4439,13 @@ jerry_object_foreach (const jerry_value_t object, /**< object value */
   {
     ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
 
-    property_value = ecma_op_object_get (object_p, property_name_p);
+    property_value = ecma_internal_method_get (object_p, property_name_p, object);
 
-    if (ECMA_IS_VALUE_ERROR (property_value))
+    if (!ecma_is_value_found (property_value))
+    {
+      property_value = ECMA_VALUE_UNDEFINED;
+    }
+    else if (ECMA_IS_VALUE_ERROR (property_value))
     {
       break;
     }
@@ -4497,7 +4491,7 @@ jerry_object_property_names (const jerry_value_t object, /**< object */
   while (true)
   {
     /* Step 1. Get Object.[[OwnKeys]] */
-    ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (obj_iter_p, filter);
+    ecma_collection_t *prop_names_p = ecma_internal_method_own_property_keys (obj_iter_p, filter);
 
 #if JERRY_BUILTIN_PROXY
     if (prop_names_p == NULL)
@@ -4545,26 +4539,27 @@ jerry_object_property_names (const jerry_value_t object, /**< object */
           & (JERRY_PROPERTY_FILTER_EXCLUDE_NON_CONFIGURABLE | JERRY_PROPERTY_FILTER_EXCLUDE_NON_ENUMERABLE
              | JERRY_PROPERTY_FILTER_EXCLUDE_NON_WRITABLE))
       {
-        ecma_property_descriptor_t prop_desc;
-        ecma_value_t status = ecma_op_object_get_own_property_descriptor (obj_iter_p, key_p, &prop_desc);
+        ecma_property_descriptor_t prop_desc = ecma_internal_method_get_own_property (obj_iter_p, key_p);
 
-#if JERRY_BUILTIN_PROXY
-        if (ECMA_IS_VALUE_ERROR (status))
+        if (ecma_property_descriptor_error (&prop_desc))
         {
           ecma_collection_free (prop_names_p);
           ecma_collection_free (result_p);
           ecma_deref_object (obj_iter_p);
+          ecma_free_property_descriptor (&prop_desc);
           return ecma_create_exception_from_context ();
         }
-#endif /* JERRY_BUILTIN_PROXY */
 
-        JERRY_ASSERT (ecma_is_value_true (status));
-        uint16_t flags = prop_desc.flags;
+        JERRY_ASSERT (ecma_property_descriptor_found (&prop_desc));
+        bool is_configurable = ecma_property_descriptor_is_configurable (&prop_desc);
+        bool is_writable = ecma_property_descriptor_is_writable (&prop_desc);
+        bool is_enumerable = ecma_property_descriptor_is_enumerable (&prop_desc);
+
         ecma_free_property_descriptor (&prop_desc);
 
-        if ((!(flags & JERRY_PROP_IS_CONFIGURABLE) && (filter & JERRY_PROPERTY_FILTER_EXCLUDE_NON_CONFIGURABLE))
-            || (!(flags & JERRY_PROP_IS_ENUMERABLE) && (filter & JERRY_PROPERTY_FILTER_EXCLUDE_NON_ENUMERABLE))
-            || (!(flags & JERRY_PROP_IS_WRITABLE) && (filter & JERRY_PROPERTY_FILTER_EXCLUDE_NON_WRITABLE)))
+        if ((!is_configurable && (filter & JERRY_PROPERTY_FILTER_EXCLUDE_NON_CONFIGURABLE))
+            || (!is_enumerable && (filter & JERRY_PROPERTY_FILTER_EXCLUDE_NON_ENUMERABLE))
+            || (!is_writable && (filter & JERRY_PROPERTY_FILTER_EXCLUDE_NON_WRITABLE)))
         {
           continue;
         }
@@ -4622,7 +4617,7 @@ jerry_object_property_names (const jerry_value_t object, /**< object */
       break;
     }
 
-    ecma_object_t *proto_p = ecma_op_object_get_prototype_of (obj_iter_p);
+    ecma_object_t *proto_p = ecma_internal_method_get_prototype_of (obj_iter_p);
 
     if (proto_p == NULL)
     {

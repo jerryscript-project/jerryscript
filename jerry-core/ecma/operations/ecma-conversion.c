@@ -602,7 +602,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
   ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
   ecma_value_t completion;
-  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_define_property_descriptor ();
   {
     prop_desc.flags = (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE_DEFINED | JERRY_PROP_IS_WRITABLE
                        | JERRY_PROP_IS_ENUMERABLE_DEFINED | JERRY_PROP_IS_ENUMERABLE
@@ -618,14 +618,15 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
     /* a. */
     prop_desc.value = src_prop_desc_p->value;
 
-    completion = ecma_op_object_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_VALUE), &prop_desc);
+    completion =
+      ecma_internal_method_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_VALUE), &prop_desc);
     JERRY_ASSERT (ecma_is_value_true (completion));
 
     /* b. */
     prop_desc.value = ecma_make_boolean_value (src_prop_desc_p->flags & JERRY_PROP_IS_WRITABLE);
 
     completion =
-      ecma_op_object_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE), &prop_desc);
+      ecma_internal_method_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE), &prop_desc);
     JERRY_ASSERT (ecma_is_value_true (completion));
   }
   else
@@ -637,29 +638,15 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
 #endif /* JERRY_ESNEXT */
     {
       /* a. */
-      if (src_prop_desc_p->get_p == NULL)
-      {
-        prop_desc.value = ECMA_VALUE_UNDEFINED;
-      }
-      else
-      {
-        prop_desc.value = ecma_make_object_value (src_prop_desc_p->get_p);
-      }
-
-      completion = ecma_op_object_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_GET), &prop_desc);
+      prop_desc.value = src_prop_desc_p->u.accessor.get;
+      completion =
+        ecma_internal_method_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_GET), &prop_desc);
       JERRY_ASSERT (ecma_is_value_true (completion));
 
       /* b. */
-      if (src_prop_desc_p->set_p == NULL)
-      {
-        prop_desc.value = ECMA_VALUE_UNDEFINED;
-      }
-      else
-      {
-        prop_desc.value = ecma_make_object_value (src_prop_desc_p->set_p);
-      }
-
-      completion = ecma_op_object_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_SET), &prop_desc);
+      prop_desc.value = src_prop_desc_p->u.accessor.set;
+      completion =
+        ecma_internal_method_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_SET), &prop_desc);
       JERRY_ASSERT (ecma_is_value_true (completion));
     }
   }
@@ -667,17 +654,99 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
   prop_desc.value = ecma_make_boolean_value (src_prop_desc_p->flags & JERRY_PROP_IS_ENUMERABLE);
 
   completion =
-    ecma_op_object_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE), &prop_desc);
+    ecma_internal_method_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE), &prop_desc);
   JERRY_ASSERT (ecma_is_value_true (completion));
 
   prop_desc.value = ecma_make_boolean_value (src_prop_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE);
 
   completion =
-    ecma_op_object_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE), &prop_desc);
+    ecma_internal_method_define_own_property (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE), &prop_desc);
   JERRY_ASSERT (ecma_is_value_true (completion));
 
   return obj_p;
 } /* ecma_op_from_property_descriptor */
+
+/**
+ * Function to create an object from a property descriptor
+ *
+ * @return constructed object
+ */
+ecma_object_t *
+ecma_op_create_object_from_property_descriptor (
+  const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
+
+  if (ecma_property_descriptor_is_data_descriptor (prop_desc_p))
+  {
+    ecma_property_value_t *value = ecma_create_named_data_property (obj_p,
+                                                                    ecma_get_magic_string (LIT_MAGIC_STRING_VALUE),
+                                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                    NULL);
+
+    value->value = ecma_copy_value_if_not_object (ecma_property_descriptor_value (prop_desc_p));
+
+    ecma_property_value_t *writable =
+      ecma_create_named_data_property (obj_p,
+                                       ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE),
+                                       ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                       NULL);
+
+    writable->value = ecma_make_boolean_value (ecma_property_descriptor_is_writable (prop_desc_p));
+  }
+  else
+  {
+    ecma_property_value_t *getter = ecma_create_named_data_property (obj_p,
+                                                                     ecma_get_magic_string (LIT_MAGIC_STRING_GET),
+                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                     NULL);
+
+    ecma_object_t *prop_desc_getter = ecma_property_descriptor_accessor_getter (prop_desc_p);
+
+    if (prop_desc_getter == NULL)
+    {
+      getter->value = ECMA_VALUE_UNDEFINED;
+    }
+    else
+    {
+      getter->value = ecma_make_object_value (prop_desc_getter);
+    }
+
+    ecma_property_value_t *setter = ecma_create_named_data_property (obj_p,
+                                                                     ecma_get_magic_string (LIT_MAGIC_STRING_SET),
+                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                     NULL);
+
+    ecma_object_t *prop_desc_setter = ecma_property_descriptor_accessor_setter (prop_desc_p);
+
+    if (prop_desc_setter == NULL)
+    {
+      setter->value = ECMA_VALUE_UNDEFINED;
+    }
+    else
+    {
+      setter->value = ecma_make_object_value (prop_desc_setter);
+    }
+  }
+
+  ecma_property_value_t *enumerable =
+    ecma_create_named_data_property (obj_p,
+                                     ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE),
+                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                     NULL);
+
+  enumerable->value = ecma_make_boolean_value (ecma_property_descriptor_is_enumerable (prop_desc_p));
+
+  ecma_property_value_t *configurable =
+    ecma_create_named_data_property (obj_p,
+                                     ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE),
+                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                     NULL);
+
+  configurable->value = ecma_make_boolean_value (ecma_property_descriptor_is_configurable (prop_desc_p));
+
+  return obj_p;
+} /* ecma_op_create_object_from_property_descriptor */
 
 /**
  * ToPropertyDescriptor operation.
@@ -703,7 +772,8 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
   /* 3. */
-  ecma_value_t enumerable_prop_value = ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE));
+  ecma_value_t enumerable_prop_value =
+    ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE), obj_value);
 
   if (ECMA_IS_VALUE_ERROR (enumerable_prop_value))
   {
@@ -711,7 +781,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   }
 
   /* 2. */
-  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_define_property_descriptor ();
 
   if (ecma_is_value_found (enumerable_prop_value))
   {
@@ -725,7 +795,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
 
   /* 4. */
   ecma_value_t configurable_prop_value =
-    ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE));
+    ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE), obj_value);
 
   if (ECMA_IS_VALUE_ERROR (configurable_prop_value))
   {
@@ -743,7 +813,8 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   }
 
   /* 5. */
-  ecma_value_t value_prop_value = ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_VALUE));
+  ecma_value_t value_prop_value =
+    ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_VALUE), obj_value);
 
   if (ECMA_IS_VALUE_ERROR (value_prop_value))
   {
@@ -758,7 +829,8 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   }
 
   /* 6. */
-  ecma_value_t writable_prop_value = ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE));
+  ecma_value_t writable_prop_value =
+    ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE), obj_value);
 
   if (ECMA_IS_VALUE_ERROR (writable_prop_value))
   {
@@ -775,7 +847,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   }
 
   /* 7. */
-  ecma_value_t get_prop_value = ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_GET));
+  ecma_value_t get_prop_value = ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_GET), obj_value);
 
   if (ECMA_IS_VALUE_ERROR (get_prop_value))
   {
@@ -792,26 +864,11 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
     }
 
     prop_desc.flags |= JERRY_PROP_IS_GET_DEFINED;
-
-    if (ecma_is_value_undefined (get_prop_value))
-    {
-      prop_desc.get_p = NULL;
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_value_object (get_prop_value));
-
-      ecma_object_t *get_p = ecma_get_object_from_value (get_prop_value);
-      ecma_ref_object (get_p);
-
-      prop_desc.get_p = get_p;
-    }
-
-    ecma_free_value (get_prop_value);
+    prop_desc.u.accessor.get = get_prop_value;
   }
 
   /* 8. */
-  ecma_value_t set_prop_value = ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_SET));
+  ecma_value_t set_prop_value = ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_SET), obj_value);
 
   if (ECMA_IS_VALUE_ERROR (set_prop_value))
   {
@@ -828,22 +885,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
     }
 
     prop_desc.flags |= JERRY_PROP_IS_SET_DEFINED;
-
-    if (ecma_is_value_undefined (set_prop_value))
-    {
-      prop_desc.set_p = NULL;
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_value_object (set_prop_value));
-
-      ecma_object_t *set_p = ecma_get_object_from_value (set_prop_value);
-      ecma_ref_object (set_p);
-
-      prop_desc.set_p = set_p;
-    }
-
-    ecma_free_value (set_prop_value);
+    prop_desc.u.accessor.set = set_prop_value;
   }
 
   /* 9. */
@@ -861,7 +903,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
 free_desc:
   if (ECMA_IS_VALUE_ERROR (ret_value))
   {
-    ecma_free_property_descriptor (&prop_desc);
+    ecma_free_define_property_descriptor (&prop_desc);
   }
 
   return ret_value;

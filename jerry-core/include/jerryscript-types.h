@@ -183,13 +183,13 @@ typedef enum
   JERRY_PROP_IS_ENUMERABLE = (1 << 1), /**< [[Enumerable]] */
   JERRY_PROP_IS_WRITABLE = (1 << 2), /**< [[Writable]] */
 
-  JERRY_PROP_IS_CONFIGURABLE_DEFINED = (1 << 3), /**< is [[Configurable]] defined? */
-  JERRY_PROP_IS_ENUMERABLE_DEFINED = (1 << 4), /**< is [[Enumerable]] defined? */
-  JERRY_PROP_IS_WRITABLE_DEFINED = (1 << 5), /**< is [[Writable]] defined? */
+  JERRY_PROP_IS_VALUE_DEFINED = (1 << 3), /**< is [[Value]] defined? */
+  JERRY_PROP_IS_GET_DEFINED = (1 << 4), /**< is [[Get]] defined? */
+  JERRY_PROP_IS_SET_DEFINED = (1 << 5), /**< is [[Set]] defined? */
 
-  JERRY_PROP_IS_VALUE_DEFINED = (1 << 6), /**< is [[Value]] defined? */
-  JERRY_PROP_IS_GET_DEFINED = (1 << 7), /**< is [[Get]] defined? */
-  JERRY_PROP_IS_SET_DEFINED = (1 << 8), /**< is [[Set]] defined? */
+  JERRY_PROP_IS_CONFIGURABLE_DEFINED = (1 << 6), /**< is [[Configurable]] defined? */
+  JERRY_PROP_IS_ENUMERABLE_DEFINED = (1 << 7), /**< is [[Enumerable]] defined? */
+  JERRY_PROP_IS_WRITABLE_DEFINED = (1 << 8), /**< is [[Writable]] defined? */
 
   JERRY_PROP_SHOULD_THROW = (1 << 9), /**< should throw on error, instead of returning with false */
 } jerry_property_descriptor_flags_t;

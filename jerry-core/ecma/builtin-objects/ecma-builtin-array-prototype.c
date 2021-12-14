@@ -112,8 +112,11 @@ ecma_builtin_array_prototype_helper_set_length (ecma_object_t *object, /**< obje
                                                 ecma_number_t length) /**< new length */
 {
   ecma_value_t length_value = ecma_make_number_value (length);
-  ecma_value_t ret_value =
-    ecma_op_object_put (object, ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH), length_value, true);
+  ecma_value_t ret_value = ecma_internal_method_set (object,
+                                                     ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
+                                                     length_value,
+                                                     ecma_make_object_value (object),
+                                                     true);
 
   ecma_free_value (length_value);
 
@@ -486,7 +489,8 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
   {
     /* 5.b */
     ecma_string_t *index_str_p = ecma_new_ecma_string_from_number (n);
-    ecma_value_t put_value = ecma_op_object_put (obj_p, index_str_p, argument_list_p[index], true);
+    ecma_value_t put_value =
+      ecma_internal_method_set (obj_p, index_str_p, argument_list_p[index], ecma_make_object_value (obj_p), true);
     ecma_deref_ecma_string (index_str_p);
 
     if (ECMA_IS_VALUE_ERROR (put_value))
@@ -542,6 +546,8 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
   }
 
   ecma_length_t middle = len / 2;
+  ecma_value_t obj_value = ecma_make_object_value (obj_p);
+
   for (ecma_length_t lower = 0; lower < middle; lower++)
   {
     ecma_length_t upper = len - lower - 1;
@@ -554,7 +560,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
     ecma_value_t lower_value = ECMA_VALUE_EMPTY;
     ecma_value_t upper_value = ECMA_VALUE_EMPTY;
 
-    ecma_value_t has_lower = ecma_op_object_has_property (obj_p, lower_str_p);
+    ecma_value_t has_lower = ecma_internal_method_has_property (obj_p, lower_str_p);
 
 #if JERRY_BUILTIN_PROXY
     if (ECMA_IS_VALUE_ERROR (has_lower))
@@ -567,7 +573,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
 
     if (lower_exist)
     {
-      lower_value = ecma_op_object_get (obj_p, lower_str_p);
+      lower_value = ecma_internal_method_get (obj_p, lower_str_p, obj_value);
 
       if (ECMA_IS_VALUE_ERROR (lower_value))
       {
@@ -575,7 +581,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
       }
     }
 
-    ecma_value_t has_upper = ecma_op_object_has_property (obj_p, upper_str_p);
+    ecma_value_t has_upper = ecma_internal_method_has_property (obj_p, upper_str_p);
 
 #if JERRY_BUILTIN_PROXY
     if (ECMA_IS_VALUE_ERROR (has_upper))
@@ -588,7 +594,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
 
     if (upper_exist)
     {
-      upper_value = ecma_op_object_get (obj_p, upper_str_p);
+      upper_value = ecma_internal_method_get (obj_p, upper_str_p, obj_value);
 
       if (ECMA_IS_VALUE_ERROR (upper_value))
       {
@@ -596,7 +602,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
       }
     }
 #else /* !JERRY_ESNEXT */
-    ecma_value_t lower_value = ecma_op_object_get (obj_p, lower_str_p);
+    ecma_value_t lower_value = ecma_internal_method_get (obj_p, lower_str_p, obj_value);
 
     if (ECMA_IS_VALUE_ERROR (lower_value))
     {
@@ -605,30 +611,31 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
       return ret_value;
     }
 
-    ecma_value_t upper_value = ecma_op_object_get (obj_p, upper_str_p);
+    ecma_value_t upper_value = ecma_internal_method_get (obj_p, upper_str_p, obj_value);
 
     if (ECMA_IS_VALUE_ERROR (upper_value))
     {
       goto clean_up;
     }
 
-    ecma_value_t has_lower = ecma_op_object_has_property (obj_p, lower_str_p);
-    ecma_value_t has_upper = ecma_op_object_has_property (obj_p, upper_str_p);
+    ecma_value_t has_lower = ecma_internal_method_has_property (obj_p, lower_str_p);
+    ecma_value_t has_upper = ecma_internal_method_has_property (obj_p, upper_str_p);
 
     bool lower_exist = ecma_is_value_true (has_lower);
     bool upper_exist = ecma_is_value_true (has_upper);
+
 #endif /* JERRY_ESNEXT */
 
     if (lower_exist && upper_exist)
     {
-      ecma_value_t outer_put_value = ecma_op_object_put (obj_p, lower_str_p, upper_value, true);
+      ecma_value_t outer_put_value = ecma_internal_method_set (obj_p, lower_str_p, upper_value, obj_value, true);
 
       if (ECMA_IS_VALUE_ERROR (outer_put_value))
       {
         goto clean_up;
       }
 
-      ecma_value_t inner_put_value = ecma_op_object_put (obj_p, upper_str_p, lower_value, true);
+      ecma_value_t inner_put_value = ecma_internal_method_set (obj_p, upper_str_p, lower_value, obj_value, true);
 
       if (ECMA_IS_VALUE_ERROR (inner_put_value))
       {
@@ -637,14 +644,14 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
     }
     else if (!lower_exist && upper_exist)
     {
-      ecma_value_t put_value = ecma_op_object_put (obj_p, lower_str_p, upper_value, true);
+      ecma_value_t put_value = ecma_internal_method_set (obj_p, lower_str_p, upper_value, obj_value, true);
 
       if (ECMA_IS_VALUE_ERROR (put_value))
       {
         goto clean_up;
       }
 
-      ecma_value_t del_value = ecma_op_object_delete (obj_p, upper_str_p, true);
+      ecma_value_t del_value = ecma_internal_method_delete (obj_p, upper_str_p, true);
 
       if (ECMA_IS_VALUE_ERROR (del_value))
       {
@@ -653,14 +660,14 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
     }
     else if (lower_exist)
     {
-      ecma_value_t del_value = ecma_op_object_delete (obj_p, lower_str_p, true);
+      ecma_value_t del_value = ecma_internal_method_delete (obj_p, lower_str_p, true);
 
       if (ECMA_IS_VALUE_ERROR (del_value))
       {
         goto clean_up;
       }
 
-      ecma_value_t put_value = ecma_op_object_put (obj_p, upper_str_p, lower_value, true);
+      ecma_value_t put_value = ecma_internal_method_set (obj_p, upper_str_p, lower_value, obj_value, true);
 
       if (ECMA_IS_VALUE_ERROR (put_value))
       {
@@ -1045,7 +1052,7 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t lhs, /**< 
 
     ecma_value_t compare_args[] = { lhs, rhs };
 
-    ecma_value_t call_value = ecma_op_function_call (comparefn_obj_p, ECMA_VALUE_UNDEFINED, compare_args, 2);
+    ecma_value_t call_value = ecma_internal_method_call (comparefn_obj_p, ECMA_VALUE_UNDEFINED, compare_args, 2);
     if (ECMA_IS_VALUE_ERROR (call_value))
     {
       return call_value;
@@ -1107,23 +1114,25 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   {
     ecma_string_t *prop_name_p = ecma_new_ecma_string_from_uint32 (i);
 
-    ecma_property_descriptor_t prop_desc;
-    ecma_value_t get_desc = ecma_op_object_get_own_property_descriptor (obj_p, prop_name_p, &prop_desc);
+    ecma_property_descriptor_t prop_desc = ecma_internal_method_get_own_property (obj_p, prop_name_p);
 
-    if (ECMA_IS_VALUE_ERROR (get_desc))
+    if (ecma_property_descriptor_error (&prop_desc))
     {
       ecma_collection_free (array_index_props_p);
       ecma_deref_ecma_string (prop_name_p);
-      return get_desc;
+      ecma_free_property_descriptor (&prop_desc);
+      return ECMA_VALUE_ERROR;
     }
 
-    if (ecma_is_value_true (get_desc))
+    if (ecma_property_descriptor_found (&prop_desc))
     {
       ecma_ref_ecma_string (prop_name_p);
       ecma_collection_push_back (array_index_props_p, ecma_make_string_value (prop_name_p));
       ecma_free_property_descriptor (&prop_desc);
       continue;
     }
+
+    ecma_free_property_descriptor (&prop_desc);
   }
 
   uint32_t defined_prop_count = array_index_props_p->item_count;
@@ -1147,7 +1156,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
       break;
     }
 
-    ecma_value_t index_value = ecma_op_object_get (obj_p, property_name_p);
+    ecma_value_t index_value = ecma_internal_method_get (obj_p, property_name_p, ecma_make_object_value (obj_p));
 
     if (ECMA_IS_VALUE_ERROR (index_value))
     {
@@ -1215,7 +1224,7 @@ clean_up:
 
     if (index >= copied_num && index < len)
     {
-      ecma_value_t del_value = ecma_op_object_delete (obj_p, property_name_p, true);
+      ecma_value_t del_value = ecma_internal_method_delete (obj_p, property_name_p, true);
 
       if (ECMA_IS_VALUE_ERROR (del_value))
       {
@@ -1548,13 +1557,14 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
       if (ecma_is_value_found (get_value))
       {
         /* ES5.1:6.d.i, 6.d.ii, ES11:4.c.iv. */
-        operation_value = ecma_op_object_put (obj_p, index_str_p, get_value, true);
+        operation_value =
+          ecma_internal_method_set (obj_p, index_str_p, get_value, ecma_make_object_value (obj_p), true);
         ecma_free_value (get_value);
       }
       else
       {
         /* ES5.1:6.e.i, ES11:4.c.v. */
-        operation_value = ecma_op_object_delete (obj_p, index_str_p, true);
+        operation_value = ecma_internal_method_delete (obj_p, index_str_p, true);
       }
 
       ecma_deref_ecma_string (index_str_p);
@@ -1881,7 +1891,7 @@ ecma_builtin_array_apply (ecma_value_t arg1, /**< callbackfn */
 
       ecma_value_t call_args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
       /* 7.c.ii */
-      ecma_value_t call_value = ecma_op_function_call (func_object_p, arg2, call_args, 3);
+      ecma_value_t call_value = ecma_internal_method_call (func_object_p, arg2, call_args, 3);
 
       if (ECMA_IS_VALUE_ERROR (call_value))
       {
@@ -1977,7 +1987,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
       current_index = ecma_make_length_value (index);
       ecma_value_t call_args[] = { current_value, current_index, ecma_make_object_value (obj_p) };
 
-      ecma_value_t mapped_value = ecma_op_function_call (func_object_p, arg2, call_args, 3);
+      ecma_value_t mapped_value = ecma_internal_method_call (func_object_p, arg2, call_args, 3);
 
       if (ECMA_IS_VALUE_ERROR (mapped_value))
       {
@@ -2078,7 +2088,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
 
       ecma_value_t call_args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
       /* 9.c.ii */
-      ecma_value_t call_value = ecma_op_function_call (func_object_p, arg2, call_args, 3);
+      ecma_value_t call_value = ecma_internal_method_call (func_object_p, arg2, call_args, 3);
 
       if (ECMA_IS_VALUE_ERROR (call_value))
       {
@@ -2218,7 +2228,7 @@ ecma_builtin_array_reduce_from (const ecma_value_t args_p[], /**< routine's argu
       current_index = ecma_make_length_value (corrected_index);
       ecma_value_t call_args[] = { accumulator, current_value, current_index, ecma_make_object_value (obj_p) };
 
-      ecma_value_t call_value = ecma_op_function_call (func_object_p, ECMA_VALUE_UNDEFINED, call_args, 4);
+      ecma_value_t call_value = ecma_internal_method_call (func_object_p, ECMA_VALUE_UNDEFINED, call_args, 4);
       ecma_free_value (current_index);
       ecma_free_value (accumulator);
       ecma_free_value (current_value);
@@ -2368,7 +2378,7 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
 
     ecma_value_t call_args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
 
-    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
+    ecma_value_t call_value = ecma_internal_method_call (func_object_p, predicate_this_arg, call_args, 3);
 
     if (ECMA_IS_VALUE_ERROR (call_value))
     {
@@ -2687,7 +2697,8 @@ ecma_builtin_array_flatten_into_array (ecma_value_t target, /**< target will con
       /* i-ii. */
       ecma_value_t source_val = ecma_make_length_value (source_index);
       ecma_value_t args[] = { element, source_val, ecma_make_object_value (source) };
-      ecma_value_t temp_element = ecma_op_function_call (ecma_get_object_from_value (mapped_value), thisArg, args, 3);
+      ecma_value_t temp_element =
+        ecma_internal_method_call (ecma_get_object_from_value (mapped_value), thisArg, args, 3);
 
       ecma_free_value (element);
       ecma_free_value (source_val);

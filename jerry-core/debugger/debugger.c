@@ -586,8 +586,9 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 
     if (ecma_is_value_object (result))
     {
-      message =
-        ecma_op_object_find (ecma_get_object_from_value (result), ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
+      message = ecma_op_object_find (ecma_get_object_from_value (result),
+                                     ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE),
+                                     result);
 
       if (!ecma_is_value_string (message) || ecma_string_is_empty (ecma_get_string_from_value (message)))
       {

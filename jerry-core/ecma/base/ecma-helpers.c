@@ -23,6 +23,7 @@
 #include "ecma-globals.h"
 #include "ecma-lcache.h"
 #include "ecma-line-info.h"
+#include "ecma-objects.h"
 #include "ecma-property-hashmap.h"
 
 #include "byte-code.h"
@@ -59,8 +60,9 @@ JERRY_STATIC_ASSERT ((ECMA_OBJECT_MAX_REF + ECMA_OBJECT_REF_ONE) == ECMA_OBJECT_
 JERRY_STATIC_ASSERT ((ECMA_OBJECT_REF_MASK & (ECMA_OBJECT_TYPE_MASK | ECMA_OBJECT_FLAG_EXTENSIBLE)) == 0,
                      ecma_object_ref_mask_overlaps_with_object_type_or_extensible);
 
-JERRY_STATIC_ASSERT (ECMA_PROPERTY_FLAGS_MASK == ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                     ecma_property_flags_mask_must_use_the_configurable_enumerable_writable_flags);
+JERRY_STATIC_ASSERT (ECMA_PROPERTY_DESCRIPTOR_FLAGS_MASK
+                       == (ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROPERTY_FLAG_DATA),
+                     ecma_property_flags_mask_must_use_the_configurable_enumerable_writable_data_flags);
 
 /* These checks are needed by ecma_get_object_base_type. */
 JERRY_STATIC_ASSERT ((int) ECMA_OBJECT_TYPE_BUILT_IN_GENERAL == ((int) ECMA_OBJECT_TYPE_GENERAL | 0x1)
@@ -1197,42 +1199,347 @@ ecma_set_property_lcached (ecma_property_t *property_p, /**< property */
  * @return empty property descriptor
  */
 ecma_property_descriptor_t
-ecma_make_empty_property_descriptor (void)
+ecma_make_empty_define_property_descriptor (void)
 {
   ecma_property_descriptor_t prop_desc;
 
-  prop_desc.flags = 0;
+  prop_desc.flags = JERRY_PROP_NO_OPTS;
+  prop_desc.u.accessor.get = ECMA_VALUE_UNDEFINED;
+  prop_desc.u.accessor.set = ECMA_VALUE_UNDEFINED;
   prop_desc.value = ECMA_VALUE_UNDEFINED;
-  prop_desc.get_p = NULL;
-  prop_desc.set_p = NULL;
 
   return prop_desc;
-} /* ecma_make_empty_property_descriptor */
+} /* ecma_make_empty_define_property_descriptor */
 
 /**
  * Free values contained in the property descriptor
  * and make it empty property descriptor
  */
 void
-ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+ecma_free_define_property_descriptor (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
 {
   if (prop_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
   {
     ecma_free_value (prop_desc_p->value);
   }
 
-  if ((prop_desc_p->flags & JERRY_PROP_IS_GET_DEFINED) && prop_desc_p->get_p != NULL)
+  if ((prop_desc_p->flags & JERRY_PROP_IS_GET_DEFINED))
   {
-    ecma_deref_object (prop_desc_p->get_p);
+    ecma_fast_free_value (prop_desc_p->u.accessor.get);
   }
 
-  if ((prop_desc_p->flags & JERRY_PROP_IS_SET_DEFINED) && prop_desc_p->set_p != NULL)
+  if ((prop_desc_p->flags & JERRY_PROP_IS_SET_DEFINED))
   {
-    ecma_deref_object (prop_desc_p->set_p);
+    ecma_fast_free_value (prop_desc_p->u.accessor.set);
+  }
+} /* ecma_free_define_property_descriptor */
+
+/**
+ * Function to make an empty property descriptor
+ *
+ * Note:
+ *   if the property descriptor has the ECMA_PROP_DESC_FOUND, it should be freed with
+ *   ecma_free_property_descriptor.
+ *
+ * @return property descriptor
+ */
+ecma_property_descriptor_t
+ecma_make_empty_property_descriptor (void)
+{
+  ecma_property_descriptor_t prop_desc;
+  prop_desc.flags = ECMA_PROP_DESC_PROPERTY;
+
+  return prop_desc;
+} /* ecma_make_empty_property_descriptor */
+
+/**
+ * Free the property descriptor which contains a virtual property
+ */
+extern inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_free_virtual_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  JERRY_ASSERT (prop_desc_p->flags & (ECMA_PROP_DESC_VIRTUAL | ECMA_PROP_DESC_PROPERTY));
+
+  if (prop_desc_p->flags & ECMA_PROP_DESC_VIRTUAL)
+  {
+    ecma_free_value (prop_desc_p->value);
+  }
+} /* ecma_free_virtual_property_descriptor */
+
+/**
+ * Free the property descriptor
+ */
+void
+ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  if (prop_desc_p->flags & ECMA_PROP_DESC_PROPERTY)
+  {
+    return;
   }
 
-  *prop_desc_p = ecma_make_empty_property_descriptor ();
+  if (prop_desc_p->flags & ECMA_PROP_DESC_VIRTUAL)
+  {
+    ecma_free_value (prop_desc_p->value);
+  }
+  else
+  {
+    ecma_free_define_property_descriptor ((ecma_property_descriptor_t *) prop_desc_p);
+  }
 } /* ecma_free_property_descriptor */
+
+/**
+ * Check if the given property descriptor is enumerable
+ *
+ * @return bool
+ */
+bool
+ecma_property_descriptor_is_enumerable (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  return prop_desc_p->flags & JERRY_PROP_IS_ENUMERABLE;
+} /* ecma_property_descriptor_is_enumerable */
+
+/**
+ * Check if the given property descriptor is configurable
+ *
+ * @return bool
+ */
+bool
+ecma_property_descriptor_is_configurable (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  return prop_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE;
+} /* ecma_property_descriptor_is_configurable */
+
+/**
+ * Check if the given property descriptor is writable
+ *
+ * @return bool
+ */
+bool
+ecma_property_descriptor_is_writable (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  return prop_desc_p->flags & JERRY_PROP_IS_WRITABLE;
+} /* ecma_property_descriptor_is_writable */
+
+/**
+ * Check if the given property descriptor is a data property
+ *
+ * @return bool
+ */
+bool
+ecma_property_descriptor_is_data_descriptor (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  return prop_desc_p->flags & ECMA_PROP_DESC_DATA;
+} /* ecma_property_descriptor_is_data_descriptor */
+
+/**
+ * Check if the given property descriptor is a data property
+ *
+ * @return bool
+ */
+bool
+ecma_property_descriptor_is_accessor_descriptor (
+  const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  return (prop_desc_p->flags & (ECMA_PROP_DESC_ACCESSOR | ECMA_PROP_DESC_DATA)) != ECMA_PROP_DESC_DATA;
+} /* ecma_property_descriptor_is_accessor_descriptor */
+
+/**
+ * Check if the property descriptor is found
+ *
+ * @return bool
+ */
+bool
+ecma_property_descriptor_found (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  return (prop_desc_p->flags & ECMA_PROP_DESC_FOUND);
+} /* ecma_property_descriptor_found */
+
+/**
+ * Check if the property descriptor is an error
+ *
+ * @return bool
+ */
+bool
+ecma_property_descriptor_error (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  return prop_desc_p->flags & ECMA_PROP_DESC_ERROR;
+} /* ecma_property_descriptor_error */
+
+/**
+ * Get the value from the property descriptor
+ *
+ * @return property value
+ */
+ecma_value_t
+ecma_property_descriptor_value (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  JERRY_ASSERT (ecma_property_descriptor_is_data_descriptor (prop_desc_p));
+
+  if (prop_desc_p->flags & ECMA_PROP_DESC_PROPERTY)
+  {
+    return ECMA_PROPERTY_VALUE_PTR (prop_desc_p->u.property_p)->value;
+  }
+
+  return prop_desc_p->value;
+} /* ecma_property_descriptor_value */
+
+/**
+ * Get the getter function object pointer from the property descriptor
+ *
+ * @return NULL - if the getter function object is undefined
+ *         getter function object - otherwise
+ */
+ecma_object_t *
+ecma_property_descriptor_accessor_getter (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  JERRY_ASSERT (!ecma_property_descriptor_is_data_descriptor (prop_desc_p));
+  JERRY_ASSERT (!(prop_desc_p->flags & ECMA_PROP_DESC_VIRTUAL));
+
+  if (prop_desc_p->flags & ECMA_PROP_DESC_PROPERTY)
+  {
+    ecma_getter_setter_pointers_t *get_set_pair_p =
+      ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (prop_desc_p->u.property_p));
+    return ECMA_GET_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
+  }
+
+  return ecma_is_value_undefined (prop_desc_p->u.accessor.get)
+           ? NULL
+           : ecma_get_object_from_value (prop_desc_p->u.accessor.get);
+} /* ecma_property_descriptor_accessor_getter */
+
+/**
+ * Get the getter function object value from the property descriptor
+ *
+ * @return getter function object value
+ */
+ecma_value_t
+ecma_property_descriptor_accessor_getter_value (
+  const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  JERRY_ASSERT (!ecma_property_descriptor_is_data_descriptor (prop_desc_p));
+  JERRY_ASSERT (!(prop_desc_p->flags & ECMA_PROP_DESC_VIRTUAL));
+
+  if (prop_desc_p->flags & ECMA_PROP_DESC_PROPERTY)
+  {
+    ecma_getter_setter_pointers_t *get_set_pair_p =
+      ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (prop_desc_p->u.property_p));
+
+    if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
+    {
+      return ECMA_VALUE_NULL;
+    }
+
+    return ecma_make_object_value (ECMA_GET_POINTER (ecma_object_t, get_set_pair_p->getter_cp));
+  }
+
+  return prop_desc_p->u.accessor.get;
+} /* ecma_property_descriptor_accessor_getter */
+
+/**
+ * Get the setter function object pointer from the property descriptor
+ *
+ * @return NULL - if the setter function object is undefined
+ *         setter function object - otherwise
+ */
+ecma_object_t *
+ecma_property_descriptor_accessor_setter (const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  JERRY_ASSERT (!ecma_property_descriptor_is_data_descriptor (prop_desc_p));
+  JERRY_ASSERT (!(prop_desc_p->flags & ECMA_PROP_DESC_VIRTUAL));
+
+  if (prop_desc_p->flags & ECMA_PROP_DESC_PROPERTY)
+  {
+    ecma_getter_setter_pointers_t *get_set_pair_p =
+      ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (prop_desc_p->u.property_p));
+    return ECMA_GET_POINTER (ecma_object_t, get_set_pair_p->setter_cp);
+  }
+
+  return ecma_is_value_undefined (prop_desc_p->u.accessor.set)
+           ? NULL
+           : ecma_get_object_from_value (prop_desc_p->u.accessor.set);
+} /* ecma_property_descriptor_accessor_setter */
+
+/**
+ * Get the setter function object value from the property descriptor
+ *
+ * @return setter function object value
+ */
+ecma_value_t
+ecma_property_descriptor_accessor_setter_value (
+  const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  JERRY_ASSERT (!ecma_property_descriptor_is_data_descriptor (prop_desc_p));
+  JERRY_ASSERT (!(prop_desc_p->flags & ECMA_PROP_DESC_VIRTUAL));
+
+  if (!(prop_desc_p->flags & ECMA_PROP_DESC_PROPERTY))
+  {
+    return prop_desc_p->u.accessor.set;
+  }
+
+  ecma_getter_setter_pointers_t *get_set_pair_p =
+    ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (prop_desc_p->u.property_p));
+
+  if (get_set_pair_p->setter_cp == JMEM_CP_NULL)
+  {
+    return ECMA_VALUE_NULL;
+  }
+
+  return ecma_make_object_value (ECMA_GET_POINTER (ecma_object_t, get_set_pair_p->setter_cp));
+} /* ecma_property_descriptor_accessor_setter_value */
+
+/**
+ * Get the value contained in the property descriptor based on its type
+ *
+ * @return property descriptor value
+ */
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+ecma_property_descriptor_get (const ecma_property_descriptor_t *prop_desc_p, /**< property descriptor */
+                              ecma_value_t receiver) /**< receiver */
+{
+  JERRY_ASSERT (prop_desc_p->flags & (ECMA_PROP_DESC_VIRTUAL | ECMA_PROP_DESC_PROPERTY));
+
+  if (prop_desc_p->flags & ECMA_PROP_DESC_VIRTUAL)
+  {
+    return prop_desc_p->value;
+  }
+
+  JERRY_ASSERT (prop_desc_p->u.property_p != NULL);
+  ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_desc_p->u.property_p);
+
+  if (*prop_desc_p->u.property_p & ECMA_PROPERTY_FLAG_DATA)
+  {
+    return ecma_fast_copy_value (prop_value_p->value);
+  }
+
+  jmem_cpointer_t getter_cp = ecma_get_named_accessor_property (prop_value_p)->getter_cp;
+
+  if (getter_cp == JMEM_CP_NULL)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, getter_cp);
+
+  return ecma_internal_method_call (getter_p, receiver, NULL, 0);
+} /* ecma_property_descriptor_get */
+
+/**
+ * Set the property descriptor's configurable and enumerable flags based on the 'flags' argument
+ */
+void
+ecma_set_property_configurable_and_enumerable_flags (ecma_property_t *property_p, /**< property pointer */
+                                                     uint32_t flags) /**< flags */
+{
+  if (flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
+  {
+    ecma_set_property_enumerable_attr (property_p, flags & JERRY_PROP_IS_ENUMERABLE);
+  }
+
+  if (flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED)
+  {
+    ecma_set_property_configurable_attr (property_p, flags & JERRY_PROP_IS_CONFIGURABLE);
+  }
+} /* ecma_set_property_configurable_and_enumerable_flags */
 
 /**
  * Increase ref count of an extended primitve value.

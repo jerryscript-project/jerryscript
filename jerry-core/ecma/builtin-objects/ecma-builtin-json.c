@@ -639,7 +639,7 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
   ECMA_CHECK_STACK_USAGE ();
 
   /* 1. */
-  ecma_value_t value = ecma_op_object_get (holder_p, name_p);
+  ecma_value_t value = ecma_internal_method_get (holder_p, name_p, ecma_make_object_value (holder_p));
 
   /* 2. */
   if (ECMA_IS_VALUE_ERROR (value))
@@ -739,7 +739,7 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
   arguments_list[1] = value;
 
   /* 4. */
-  ecma_value_t ret_value = ecma_op_function_call (reviver_p, ecma_make_object_value (holder_p), arguments_list, 2);
+  ecma_value_t ret_value = ecma_internal_method_call (reviver_p, ecma_make_object_value (holder_p), arguments_list, 2);
   ecma_free_value (value);
   return ret_value;
 } /* ecma_builtin_json_internalize_property */
@@ -771,7 +771,7 @@ ecma_builtin_json_internalize_process_property (ecma_object_t *reviver_p, /**< r
   if (ecma_is_value_undefined (new_element))
   {
     /* ES11: 2.b.iii.2.a / 2.c.ii.2.a */
-    ecma_value_t delete_val = ecma_op_object_delete (object_p, prop_name, false);
+    ecma_value_t delete_val = ecma_internal_method_delete (object_p, prop_name, false);
 
 #if JERRY_ESNEXT
     if (ECMA_IS_VALUE_ERROR (delete_val))
@@ -1246,7 +1246,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
                                       ecma_string_t *key_p) /**< property key*/
 {
   /* 1. */
-  ecma_value_t value = ecma_op_object_get (holder_p, key_p);
+  ecma_value_t value = ecma_internal_method_get (holder_p, key_p, ecma_make_object_value (holder_p));
 
   /* 2. */
   if (ECMA_IS_VALUE_ERROR (value))
@@ -1267,7 +1267,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
 
     ecma_object_t *value_obj_p = ecma_get_object_from_value (to_object_value);
     ecma_value_t to_json =
-      ecma_op_object_get_with_receiver (value_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_TO_JSON_UL), value);
+      ecma_internal_method_get (value_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_TO_JSON_UL), value);
 
     ecma_deref_object (value_obj_p);
 
@@ -1284,7 +1284,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
       ecma_value_t call_args[] = { key_value };
       ecma_object_t *to_json_obj_p = ecma_get_object_from_value (to_json);
 
-      ecma_value_t result = ecma_op_function_call (to_json_obj_p, value, call_args, 1);
+      ecma_value_t result = ecma_internal_method_call (to_json_obj_p, value, call_args, 1);
       ecma_free_value (value);
 
       if (ECMA_IS_VALUE_ERROR (result))
@@ -1304,7 +1304,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
     ecma_value_t key_value = ecma_make_string_value (key_p);
     ecma_value_t call_args[] = { key_value, value };
 
-    ecma_value_t result = ecma_op_function_call (context_p->replacer_function_p, holder_value, call_args, 2);
+    ecma_value_t result = ecma_internal_method_call (context_p->replacer_function_p, holder_value, call_args, 2);
     ecma_free_value (value);
 
     if (ECMA_IS_VALUE_ERROR (result))

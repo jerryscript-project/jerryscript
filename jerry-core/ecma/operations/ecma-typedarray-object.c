@@ -32,6 +32,7 @@
 #include "ecma-iterator-object.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
+#include "ecma-ordinary-object.h"
 #include "ecma-shared-arraybuffer-object.h"
 
 #include "jcontext.h"
@@ -992,7 +993,7 @@ ecma_op_typedarray_from_helper (ecma_value_t this_val, /**< this_arg for the abo
     ecma_value_t current_index = ecma_make_uint32_value (index);
     ecma_value_t call_args[] = { current_value, current_index };
 
-    ecma_value_t cb_value = ecma_op_function_call (func_object_p, this_val, call_args, 2);
+    ecma_value_t cb_value = ecma_internal_method_call (func_object_p, this_val, call_args, 2);
 
     ecma_free_value (current_value);
     ecma_free_value (current_index);
@@ -1854,56 +1855,53 @@ ecma_is_typedarray (ecma_value_t value) /**< the target need to be checked */
 } /* ecma_is_typedarray */
 
 /**
- * Checks whether the property name is a valid element index
+ * ecma typedarray object's [[GetOwnProperty]] internal method
  *
- * @return true, if valid
- *         false, otherwise
+ * See also:
+ *          ECMA-262 v12, 10.4.5.1
+ *
+ * @return ecma property descriptor t
  */
-bool
-ecma_typedarray_is_element_index (ecma_string_t *property_name_p) /**< property name */
+ecma_property_descriptor_t
+ecma_typedarray_object_get_own_property (ecma_object_t *obj_p, /**< the object */
+                                         ecma_string_t *property_name_p) /**< property name */
 {
-  ecma_number_t num = ecma_string_to_number (property_name_p);
-
-  if (num == 0)
+  if (ecma_prop_name_is_symbol (property_name_p))
   {
-    return true;
+    return ecma_ordinary_object_get_own_property (obj_p, property_name_p);
   }
 
-  ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-  bool is_same = ecma_compare_ecma_strings (property_name_p, num_to_str);
-  ecma_deref_ecma_string (num_to_str);
-  return is_same;
-} /* ecma_typedarray_is_element_index */
+  uint32_t index = ecma_string_get_array_index (property_name_p);
+
+  if (index == ECMA_STRING_NOT_ARRAY_INDEX && !ecma_op_canonical_numeric_string (property_name_p))
+  {
+    return ecma_ordinary_object_get_own_property (obj_p, property_name_p);
+  }
+
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
+  ecma_value_t value = ecma_get_typedarray_element (&info, index);
+
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+
+  if (ECMA_IS_VALUE_ERROR (value))
+  {
+    prop_desc.flags = ECMA_PROP_DESC_ERROR;
+    return prop_desc;
+  }
+
+  if (JERRY_LIKELY (!ecma_is_value_undefined (value)))
+  {
+    prop_desc.flags = ECMA_PROP_DESC_VIRTUAL_FOUND | ECMA_PROP_DESC_DATA_ENUMERABLE_WRITABLE;
+    prop_desc.value = value;
+    return prop_desc;
+  }
+
+  prop_desc.flags = ECMA_PROP_DESC_VIRTUAL_NOT_FOUND_AND_STOP;
+  return prop_desc;
+} /* ecma_typedarray_object_get_own_property */
 
 /**
- * List names of a TypedArray object's integer indexed properties
- */
-void
-ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedArray object */
-                                             ecma_collection_t *prop_names_p, /**< prop name collection */
-                                             ecma_property_counter_t *prop_counter_p, /**< property counters */
-                                             jerry_property_filter_t filter) /**< property name filter options */
-{
-  JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
-
-  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES)
-  {
-    return;
-  }
-
-  uint32_t array_length = ecma_typedarray_get_length (obj_p);
-
-  for (uint32_t i = 0; i < array_length; i++)
-  {
-    ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
-    ecma_collection_push_back (prop_names_p, ecma_make_string_value (name_p));
-  }
-
-  prop_counter_p->array_index_named_props += array_length;
-} /* ecma_op_typedarray_list_lazy_property_names */
-
-/**
- * [[DefineOwnProperty]] operation for TypedArray objects
+ * ecma typedarray object's [[DefineOwnProperty]] internal method
  *
  * See also: ES2015 9.4.5.3
  *
@@ -1912,22 +1910,23 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
  *         raised TypeError - otherwise
  */
 ecma_value_t
-ecma_op_typedarray_define_own_property (ecma_object_t *obj_p, /**< TypedArray object */
-                                        ecma_string_t *property_name_p, /**< property name */
-                                        const ecma_property_descriptor_t *property_desc_p) /**< property descriptor */
+ecma_typedarray_object_define_own_property (
+  ecma_object_t *obj_p, /**< TypedArray object */
+  ecma_string_t *property_name_p, /**< property name */
+  const ecma_property_descriptor_t *property_desc_p) /**< property descriptor */
 {
   JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
 
   if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
   {
-    return ecma_op_general_object_define_own_property (obj_p, property_name_p, property_desc_p);
+    return ecma_ordinary_object_define_own_property (obj_p, property_name_p, property_desc_p);
   }
 
   uint32_t index = ecma_string_get_array_index (property_name_p);
 
-  if (index == ECMA_STRING_NOT_ARRAY_INDEX && !ecma_typedarray_is_element_index (property_name_p))
+  if (index == ECMA_STRING_NOT_ARRAY_INDEX && !ecma_op_canonical_numeric_string (property_name_p))
   {
-    return ecma_op_general_object_define_own_property (obj_p, property_name_p, property_desc_p);
+    return ecma_ordinary_object_define_own_property (obj_p, property_name_p, property_desc_p);
   }
 
   if ((property_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
@@ -1945,7 +1944,7 @@ ecma_op_typedarray_define_own_property (ecma_object_t *obj_p, /**< TypedArray ob
 
   if (index >= info.length || ecma_arraybuffer_is_detached (info.array_buffer_p))
   {
-    return ECMA_VALUE_FALSE;
+    return ecma_raise_property_redefinition (property_name_p, property_desc_p->flags);
   }
 
   if (property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
@@ -1959,7 +1958,94 @@ ecma_op_typedarray_define_own_property (ecma_object_t *obj_p, /**< TypedArray ob
   }
 
   return ECMA_VALUE_TRUE;
-} /* ecma_op_typedarray_define_own_property */
+} /* ecma_typedarray_define_own_property */
+
+/**
+ * ecma typedarray object's [[Get]] internal method
+ *
+ * See also:
+ *          ECMA-262 v12, 10.4.5.4
+ *
+ * @return ecma value t
+ */
+ecma_value_t
+ecma_typedarray_object_get (ecma_object_t *obj_p, /**< the object */
+                            ecma_string_t *property_name_p, /**< property name */
+                            ecma_value_t receiver) /**< receiver */
+{
+  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
+  {
+    return ecma_ordinary_object_get (obj_p, property_name_p, receiver);
+  }
+
+  uint32_t index = ecma_string_get_array_index (property_name_p);
+
+  if (index == ECMA_STRING_NOT_ARRAY_INDEX && !ecma_op_canonical_numeric_string (property_name_p))
+  {
+    return ecma_ordinary_object_get (obj_p, property_name_p, receiver);
+  }
+
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
+  return ecma_get_typedarray_element (&info, index);
+} /* ecma_typedarray_object_get */
+
+/**
+ * ecma typedarray object's [[Set]] internal method
+ *
+ * See also:
+ *          ECMA-262 v12, 10.4.5.5
+ *
+ * @return ecma value t
+ */
+ecma_value_t
+ecma_typedarray_object_set (ecma_object_t *obj_p, /**< the object */
+                            ecma_string_t *property_name_p, /**< property name */
+                            ecma_value_t value, /**< ecma value */
+                            ecma_value_t receiver, /**< receiver */
+                            bool is_throw) /**< flag that controls failure handling */
+{
+  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
+  {
+    return ecma_ordinary_object_set (obj_p, property_name_p, value, receiver, is_throw);
+  }
+
+  uint32_t index = ecma_string_get_array_index (property_name_p);
+
+  if (index == ECMA_STRING_NOT_ARRAY_INDEX && !ecma_op_canonical_numeric_string (property_name_p))
+  {
+    return ecma_ordinary_object_set (obj_p, property_name_p, value, receiver, is_throw);
+  }
+
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
+  return ecma_set_typedarray_element (&info, value, index);
+} /* ecma_typedarray_object_set */
+
+/**
+ * List names of a TypedArray object's integer indexed properties
+ */
+void
+ecma_typedarray_object_list_lazy_property_keys (ecma_object_t *obj_p, /**< a TypedArray object */
+                                                ecma_collection_t *prop_names_p, /**< prop name collection */
+                                                ecma_property_counter_t *prop_counter_p, /**< property counters */
+                                                jerry_property_filter_t filter) /**< property name filter options */
+{
+  JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
+
+  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES)
+  {
+    return;
+  }
+
+  uint32_t array_length = ecma_typedarray_get_length (obj_p);
+
+  for (uint32_t i = 0; i < array_length; i++)
+  {
+    ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
+    ecma_collection_push_back (prop_names_p, ecma_make_string_value (name_p));
+  }
+
+  prop_counter_p->array_index_named_props += array_length;
+} /* ecma_typedarray_object_list_lazy_property_keys */
 
 /**
  * Specify the creation of a new TypedArray
@@ -1979,7 +2065,7 @@ ecma_typedarray_create (ecma_object_t *constructor_p, /**< constructor function 
                         uint32_t arguments_list_len) /**< length of argument list */
 {
   ecma_value_t ret_val =
-    ecma_op_function_construct (constructor_p, constructor_p, arguments_list_p, arguments_list_len);
+    ecma_internal_method_construct (constructor_p, constructor_p, arguments_list_p, arguments_list_len);
   if (ECMA_IS_VALUE_ERROR (ret_val))
   {
     return ret_val;

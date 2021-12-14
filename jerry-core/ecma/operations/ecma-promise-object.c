@@ -26,6 +26,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-jobqueue.h"
+#include "ecma-native-function.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
 
@@ -422,7 +423,7 @@ static ecma_object_t *
 ecma_promise_create_resolving_function (ecma_object_t *promise_p, /**< Promise Object */
                                         ecma_native_handler_id_t id) /**< Callback handler */
 {
-  ecma_object_t *func_obj_p = ecma_op_create_native_handler (id, sizeof (ecma_promise_resolver_t));
+  ecma_object_t *func_obj_p = ecma_native_function_create (id, sizeof (ecma_promise_resolver_t));
 
   ecma_promise_resolver_t *resolver_p = (ecma_promise_resolver_t *) func_obj_p;
   resolver_p->promise = ecma_make_object_value (promise_p);
@@ -446,7 +447,7 @@ ecma_promise_run_executor (ecma_object_t *promise_p, /**< Promise Object */
   reject_func_p = ecma_promise_create_resolving_function (promise_p, ECMA_NATIVE_HANDLER_PROMISE_REJECT);
 
   ecma_value_t argv[] = { ecma_make_object_value (resolve_func_p), ecma_make_object_value (reject_func_p) };
-  ecma_value_t result = ecma_op_function_call (ecma_get_object_from_value (executor), this_value, argv, 2);
+  ecma_value_t result = ecma_internal_method_call (ecma_get_object_from_value (executor), this_value, argv, 2);
   ecma_deref_object (resolve_func_p);
   ecma_deref_object (reject_func_p);
 
@@ -653,16 +654,18 @@ ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< 
     if (promise_type == ECMA_PROMISE_ANY_REJECT)
     {
       ecma_value_t error_val = ecma_new_aggregate_error (executor_p->values, ECMA_VALUE_UNDEFINED);
-      ret =
-        ecma_op_function_call (ecma_get_object_from_value (capability_p->reject), ECMA_VALUE_UNDEFINED, &error_val, 1);
+      ret = ecma_internal_method_call (ecma_get_object_from_value (capability_p->reject),
+                                       ECMA_VALUE_UNDEFINED,
+                                       &error_val,
+                                       1);
       ecma_free_value (error_val);
     }
     else
     {
-      ret = ecma_op_function_call (ecma_get_object_from_value (capability_p->resolve),
-                                   ECMA_VALUE_UNDEFINED,
-                                   &executor_p->values,
-                                   1);
+      ret = ecma_internal_method_call (ecma_get_object_from_value (capability_p->resolve),
+                                       ECMA_VALUE_UNDEFINED,
+                                       &executor_p->values,
+                                       1);
     }
   }
 
@@ -746,8 +749,8 @@ ecma_promise_new_capability (ecma_value_t constructor, /**< constructor function
   capability_p->reject = ECMA_VALUE_UNDEFINED;
 
   /* 4-5. */
-  ecma_object_t *executor_p = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_CAPABILITY_EXECUTOR,
-                                                             sizeof (ecma_promise_capability_executor_t));
+  ecma_object_t *executor_p = ecma_native_function_create (ECMA_NATIVE_HANDLER_PROMISE_CAPABILITY_EXECUTOR,
+                                                           sizeof (ecma_promise_capability_executor_t));
 
   /* 6. */
   ecma_promise_capability_executor_t *executor_func_p = (ecma_promise_capability_executor_t *) executor_p;
@@ -763,7 +766,7 @@ ecma_promise_new_capability (ecma_value_t constructor, /**< constructor function
   }
   else
   {
-    promise = ecma_op_function_construct (constructor_obj_p, constructor_obj_p, &executor, 1);
+    promise = ecma_internal_method_construct (constructor_obj_p, constructor_obj_p, &executor, 1);
   }
 
   ecma_deref_object (executor_p);
@@ -848,7 +851,8 @@ ecma_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argument */
 
   ecma_value_t func = is_resolve ? capability_p->resolve : capability_p->reject;
 
-  ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (func), ECMA_VALUE_UNDEFINED, &value, 1);
+  ecma_value_t call_ret =
+    ecma_internal_method_call (ecma_get_object_from_value (func), ECMA_VALUE_UNDEFINED, &value, 1);
 
   if (ECMA_IS_VALUE_ERROR (call_ret))
   {
@@ -971,8 +975,10 @@ ecma_promise_then_catch_finally_helper (ecma_object_t *function_obj_p, /**< func
   JERRY_ASSERT (ecma_op_is_callable (finally_func_obj->on_finally));
 
   /* 4. */
-  ecma_value_t result =
-    ecma_op_function_call (ecma_get_object_from_value (finally_func_obj->on_finally), ECMA_VALUE_UNDEFINED, NULL, 0);
+  ecma_value_t result = ecma_internal_method_call (ecma_get_object_from_value (finally_func_obj->on_finally),
+                                                   ECMA_VALUE_UNDEFINED,
+                                                   NULL,
+                                                   0);
 
   if (ECMA_IS_VALUE_ERROR (result))
   {
@@ -994,7 +1000,7 @@ ecma_promise_then_catch_finally_helper (ecma_object_t *function_obj_p, /**< func
 
   /* 8. */
   ecma_object_t *value_thunk_func_p;
-  value_thunk_func_p = ecma_op_create_native_handler (id, sizeof (ecma_promise_value_thunk_t));
+  value_thunk_func_p = ecma_native_function_create (id, sizeof (ecma_promise_value_thunk_t));
 
   ecma_promise_value_thunk_t *value_thunk_func_obj = (ecma_promise_value_thunk_t *) value_thunk_func_p;
   value_thunk_func_obj->value = ecma_copy_value_if_not_object (arg);
@@ -1087,7 +1093,7 @@ ecma_promise_finally (ecma_value_t promise, /**< the promise which call 'finally
   /* 6.a-b */
   ecma_object_t *then_finally_obj_p;
   then_finally_obj_p =
-    ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_THEN_FINALLY, sizeof (ecma_promise_finally_function_t));
+    ecma_native_function_create (ECMA_NATIVE_HANDLER_PROMISE_THEN_FINALLY, sizeof (ecma_promise_finally_function_t));
 
   /* 6.c-d */
   ecma_promise_finally_function_t *then_finally_func_obj_p = (ecma_promise_finally_function_t *) then_finally_obj_p;
@@ -1097,7 +1103,7 @@ ecma_promise_finally (ecma_value_t promise, /**< the promise which call 'finally
   /* 6.e-f */
   ecma_object_t *catch_finally_obj_p;
   catch_finally_obj_p =
-    ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_CATCH_FINALLY, sizeof (ecma_promise_finally_function_t));
+    ecma_native_function_create (ECMA_NATIVE_HANDLER_PROMISE_CATCH_FINALLY, sizeof (ecma_promise_finally_function_t));
 
   /* 6.g-h */
   ecma_promise_finally_function_t *catch_finally_func_obj = (ecma_promise_finally_function_t *) catch_finally_obj_p;
@@ -1214,7 +1220,7 @@ ecma_op_if_abrupt_reject_promise (ecma_value_t *value_p, /**< [in - out] complet
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
   ecma_value_t call_ret =
-    ecma_op_function_call (ecma_get_object_from_value (capability_p->reject), ECMA_VALUE_UNDEFINED, &reason, 1);
+    ecma_internal_method_call (ecma_get_object_from_value (capability_p->reject), ECMA_VALUE_UNDEFINED, &reason, 1);
   ecma_free_value (reason);
 
   if (ECMA_IS_VALUE_ERROR (call_ret))

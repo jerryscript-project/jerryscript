@@ -80,11 +80,7 @@ ecma_value_t *ecma_fast_array_extend (ecma_object_t *object_p, uint32_t new_leng
 
 bool ecma_fast_array_set_property (ecma_object_t *object_p, uint32_t index, ecma_value_t value);
 
-bool ecma_array_object_delete_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-
 uint32_t ecma_delete_fast_array_properties (ecma_object_t *object_p, uint32_t new_length);
-
-ecma_collection_t *ecma_fast_array_object_own_property_keys (ecma_object_t *object_p, jerry_property_filter_t filter);
 
 void ecma_fast_array_convert_to_normal (ecma_object_t *object_p);
 
@@ -94,15 +90,71 @@ ecma_object_t *ecma_op_array_species_create (ecma_object_t *original_array_p, ec
 ecma_value_t ecma_op_create_array_iterator (ecma_object_t *obj_p, ecma_iterator_kind_t kind);
 #endif /* JERRY_ESNEXT */
 
-ecma_value_t ecma_op_array_object_set_length (ecma_object_t *object_p, ecma_value_t new_value, uint16_t flags);
-
-ecma_value_t ecma_op_array_object_define_own_property (ecma_object_t *object_p,
-                                                       ecma_string_t *property_name_p,
-                                                       const ecma_property_descriptor_t *property_desc_p);
+ecma_value_t ecma_op_array_object_set_length (ecma_object_t *object_p, ecma_value_t new_value, uint32_t flags);
 
 uint32_t ecma_array_get_length (ecma_object_t *array_p);
 
 ecma_value_t ecma_array_object_to_string (ecma_value_t this_arg);
+
+ecma_property_descriptor_t ecma_array_object_get_own_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+ecma_value_t ecma_array_object_define_own_property (ecma_object_t *object_p,
+                                                    ecma_string_t *property_name_p,
+                                                    const ecma_property_descriptor_t *property_desc_p);
+void ecma_array_object_list_lazy_property_keys (ecma_object_t *obj_p,
+                                                ecma_collection_t *prop_names_p,
+                                                ecma_property_counter_t *prop_counter_p,
+                                                jerry_property_filter_t filter);
+ecma_value_t ecma_array_object_get (ecma_object_t *obj_p, ecma_string_t *property_name_p, ecma_value_t receiver);
+ecma_value_t ecma_array_object_set (ecma_object_t *obj_p,
+                                    ecma_string_t *property_name_p,
+                                    ecma_value_t value,
+                                    ecma_value_t receiver,
+                                    bool is_throw);
+ecma_value_t ecma_array_object_delete (ecma_object_t *obj_p, ecma_string_t *property_name_p, bool is_throw);
+ecma_collection_t *ecma_array_object_own_property_keys (ecma_object_t *object_p, jerry_property_filter_t filter);
+
+/**
+ * Virtual function table for array object's internal methods
+ */
+#define ECMA_ARRAY_OBJ_VTABLE                                             \
+  [ECMA_OBJECT_TYPE_ARRAY] = { ecma_ordinary_object_get_prototype_of,     \
+                               ecma_ordinary_object_set_prototype_of,     \
+                               ecma_ordinary_object_is_extensible,        \
+                               ecma_ordinary_object_prevent_extensions,   \
+                               ecma_array_object_get_own_property,        \
+                               ecma_array_object_define_own_property,     \
+                               ecma_ordinary_object_has_property,         \
+                               ecma_array_object_get,                     \
+                               ecma_array_object_set,                     \
+                               ecma_array_object_delete,                  \
+                               ecma_array_object_own_property_keys,       \
+                               ecma_ordinary_object_call,                 \
+                               ecma_ordinary_object_construct,            \
+                               ecma_array_object_list_lazy_property_keys, \
+                               ecma_ordinary_object_delete_lazy_property }
+
+ecma_property_descriptor_t ecma_builtin_array_object_get_own_property (ecma_object_t *obj_p,
+                                                                       ecma_string_t *property_name_p);
+
+/**
+ * Virtual function table for built-in array object's internal methods
+ */
+#define ECMA_BUILT_IN_ARRAY_OBJ_VTABLE                                               \
+  [ECMA_OBJECT_TYPE_BUILT_IN_ARRAY] = { ecma_ordinary_object_get_prototype_of,       \
+                                        ecma_ordinary_object_set_prototype_of,       \
+                                        ecma_ordinary_object_is_extensible,          \
+                                        ecma_ordinary_object_prevent_extensions,     \
+                                        ecma_builtin_array_object_get_own_property,  \
+                                        ecma_array_object_define_own_property,       \
+                                        ecma_ordinary_object_has_property,           \
+                                        ecma_array_object_get,                       \
+                                        ecma_array_object_set,                       \
+                                        ecma_ordinary_object_delete,                 \
+                                        ecma_ordinary_object_own_property_keys,      \
+                                        ecma_ordinary_object_call,                   \
+                                        ecma_ordinary_object_construct,              \
+                                        ecma_builtin_object_list_lazy_property_keys, \
+                                        ecma_builtin_object_delete_lazy_property }
 
 /**
  * @}

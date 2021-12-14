@@ -218,7 +218,7 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
   {
     /* 6. */
     handler_result =
-      ecma_op_function_call (ecma_get_object_from_value (handler), ECMA_VALUE_UNDEFINED, &(job_p->argument), 1);
+      ecma_internal_method_call (ecma_get_object_from_value (handler), ECMA_VALUE_UNDEFINED, &(job_p->argument), 1);
   }
 
   ecma_value_t status;
@@ -231,18 +231,18 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
     }
 
     /* 7. */
-    status = ecma_op_function_call (ecma_get_object_from_value (capability_p->reject),
-                                    ECMA_VALUE_UNDEFINED,
-                                    &handler_result,
-                                    1);
+    status = ecma_internal_method_call (ecma_get_object_from_value (capability_p->reject),
+                                        ECMA_VALUE_UNDEFINED,
+                                        &handler_result,
+                                        1);
   }
   else
   {
     /* 8. */
-    status = ecma_op_function_call (ecma_get_object_from_value (capability_p->resolve),
-                                    ECMA_VALUE_UNDEFINED,
-                                    &handler_result,
-                                    1);
+    status = ecma_internal_method_call (ecma_get_object_from_value (capability_p->resolve),
+                                        ECMA_VALUE_UNDEFINED,
+                                        &handler_result,
+                                        1);
   }
 
   ecma_free_value (handler_result);

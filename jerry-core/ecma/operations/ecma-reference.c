@@ -117,22 +117,19 @@ ecma_op_resolve_super_base (ecma_object_t *lex_env_p) /**< starting lexical envi
     {
       ecma_object_t *home_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u1.home_object_cp);
 
-#if JERRY_BUILTIN_PROXY
-      if (ECMA_OBJECT_IS_PROXY (home_p))
-      {
-        return ecma_proxy_object_get_prototype_of (home_p);
-      }
-#endif /* JERRY_BUILTIN_PROXY */
+      ecma_object_t *proto_p = ecma_internal_method_get_prototype_of (home_p);
 
-      jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (home_p);
-
-      if (proto_cp == JMEM_CP_NULL)
+      if (proto_p == NULL)
       {
         return ECMA_VALUE_NULL;
       }
 
-      ecma_object_t *proto_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
-      ecma_ref_object (proto_p);
+#if JERRY_BUILTIN_PROXY
+      if (proto_p == ECMA_OBJECT_POINTER_ERROR)
+      {
+        return ECMA_VALUE_ERROR;
+      }
+#endif /* JERRY_BUILTIN_PROXY */
 
       return ecma_make_object_value (proto_p);
     }
@@ -172,7 +169,8 @@ ecma_op_is_prop_unscopable (ecma_object_t *binding_obj_p, /**< binding object */
   if (ecma_is_value_object (unscopables))
   {
     ecma_object_t *unscopables_obj_p = ecma_get_object_from_value (unscopables);
-    ecma_value_t get_unscopables_value = ecma_op_object_get (unscopables_obj_p, prop_name_p);
+    ecma_value_t get_unscopables_value = ecma_internal_method_get (unscopables_obj_p, prop_name_p, unscopables);
+
     ecma_deref_object (unscopables_obj_p);
 
     if (ECMA_IS_VALUE_ERROR (get_unscopables_value))
@@ -227,7 +225,7 @@ ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env
 #if JERRY_BUILTIN_PROXY
   if (ECMA_OBJECT_IS_PROXY (binding_obj_p))
   {
-    found_binding = ecma_proxy_object_has (binding_obj_p, name_p);
+    found_binding = ecma_proxy_object_has_property (binding_obj_p, name_p);
 
     if (!ecma_is_value_true (found_binding))
     {
@@ -237,7 +235,7 @@ ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env
   else
   {
 #endif /* JERRY_BUILTIN_PROXY */
-    found_binding = ecma_op_object_find (binding_obj_p, name_p);
+    found_binding = ecma_op_object_find (binding_obj_p, name_p, ecma_make_object_value (binding_obj_p));
 
     if (ECMA_IS_VALUE_ERROR (found_binding) || !ecma_is_value_found (found_binding))
     {
@@ -381,7 +379,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
             ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
 
             ecma_value_t base_value = ecma_make_object_value (binding_obj_p);
-            return ecma_op_function_call (getter_p, base_value, NULL, 0);
+            return ecma_internal_method_call (getter_p, base_value, NULL, 0);
           }
 #endif /* JERRY_LCACHE */
         }

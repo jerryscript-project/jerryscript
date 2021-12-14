@@ -22,6 +22,7 @@
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
+#include "ecma-ordinary-object.h"
 
 #include "jcontext.h"
 #include "lit-char-helpers.h"
@@ -1454,5 +1455,192 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
 #endif /* JERRY_NDEBUG */
   }
 } /* ecma_module_release_module */
+
+/**
+ * ecma module namespace object's [[GetOwnProperty]] internal method
+ *
+ * See also:
+ *          ECMA-262 v12, 10.4.6.5
+ *
+ * @return ecma_property_descriptor_t
+ */
+ecma_property_descriptor_t
+ecma_module_namespace_object_get_own_property (ecma_object_t *obj_p, /**< the object */
+                                               ecma_string_t *property_name_p) /**< property name */
+{
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+
+  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
+  {
+    if (!ecma_op_compare_string_to_global_symbol (property_name_p, LIT_GLOBAL_SYMBOL_TO_STRING_TAG))
+    {
+      return ecma_ordinary_object_get_own_property (obj_p, property_name_p);
+    }
+
+    prop_desc.flags = ECMA_PROP_DESC_VIRTUAL_FOUND;
+    prop_desc.value = ecma_make_magic_string_value (LIT_MAGIC_STRING_MODULE_UL);
+    return prop_desc;
+  }
+
+  prop_desc.u.property_p = ecma_find_named_property (obj_p, property_name_p);
+
+  if (prop_desc.u.property_p == NULL)
+  {
+    return prop_desc;
+  }
+
+  JERRY_ASSERT (ECMA_PROPERTY_IS_RAW (*prop_desc.u.property_p));
+
+  if (*prop_desc.u.property_p & ECMA_PROPERTY_FLAG_DATA)
+  {
+    prop_desc.flags =
+      ECMA_PROP_DESC_PROPERTY_FOUND | ECMA_PROPERTY_TO_PROPERTY_DESCRIPTOR_FLAGS (prop_desc.u.property_p);
+    return prop_desc;
+  }
+
+  ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_desc.u.property_p);
+  prop_value_p = ecma_get_property_value_from_named_reference (prop_value_p);
+
+  if (JERRY_UNLIKELY (prop_value_p->value == ECMA_VALUE_UNINITIALIZED))
+  {
+    ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
+    prop_desc.flags = ECMA_PROP_DESC_ERROR;
+    return prop_desc;
+  }
+
+  prop_desc.flags = (ECMA_PROP_DESC_VIRTUAL_FOUND | ECMA_PROP_DESC_ENUMERABLE | ECMA_PROP_DESC_WRITABLE);
+  prop_desc.value = ecma_fast_copy_value (prop_value_p->value);
+
+  return prop_desc;
+} /* ecma_module_namespace_object_get_own_property */
+
+/**
+ * ecma module namespace object's [[DefineOwnProperty]] internal method
+ *
+ * See also:
+ *          ECMA-262 v12, 10.4.6.6
+ *
+ * @return ecma value t
+ */
+ecma_value_t
+ecma_module_namespace_object_define_own_property (ecma_object_t *object_p, /**< the object */
+                                                  ecma_string_t *property_name_p, /**< property name */
+                                                  const ecma_property_descriptor_t *property_desc_p) /**< property
+                                                                                                      *   descriptor */
+{
+  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
+  {
+    return ecma_ordinary_object_define_own_property (object_p, property_name_p, property_desc_p);
+  }
+
+  ecma_property_descriptor_t prop_desc = ecma_internal_method_get_own_property (object_p, property_name_p);
+
+  if (ecma_property_descriptor_error (&prop_desc))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  if ((!ecma_property_descriptor_found (&prop_desc))
+      || ((property_desc_p->flags & (JERRY_PROP_IS_CONFIGURABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE))
+          == (JERRY_PROP_IS_CONFIGURABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE))
+      || ((property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE_DEFINED) == JERRY_PROP_IS_ENUMERABLE_DEFINED)
+      || ((property_desc_p->flags & (JERRY_PROP_IS_SET_DEFINED | JERRY_PROP_IS_GET_DEFINED))
+          == (JERRY_PROP_IS_SET_DEFINED | JERRY_PROP_IS_GET_DEFINED))
+      || ((property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED) == JERRY_PROP_IS_WRITABLE_DEFINED))
+  {
+    ecma_free_property_descriptor (&prop_desc);
+    return ecma_raise_property_redefinition (property_name_p, property_desc_p->flags);
+  }
+
+  if ((property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED))
+  {
+    if (!ecma_op_same_value (property_desc_p->value, ecma_property_descriptor_value (&prop_desc)))
+    {
+      ecma_free_property_descriptor (&prop_desc);
+      return ecma_raise_property_redefinition (property_name_p, property_desc_p->flags);
+    }
+  }
+  ecma_free_property_descriptor (&prop_desc);
+
+  return ECMA_VALUE_TRUE;
+} /* ecma_module_namespace_object_define_own_property */
+
+/**
+ * ecma module namespace object's [[Get]] internal method
+ *
+ * See also:
+ *          ECMA-262 v12, 10.4.6.8
+ *
+ * @return ecma value t
+ */
+ecma_value_t
+ecma_module_namespace_object_get (ecma_object_t *obj_p, /**< the object */
+                                  ecma_string_t *property_name_p, /**< property name */
+                                  ecma_value_t receiver) /**< receiver */
+{
+  JERRY_UNUSED (receiver);
+
+  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
+  {
+    /* ECMA-262 v11, 26.3.1 */
+    if (ecma_op_compare_string_to_global_symbol (property_name_p, LIT_GLOBAL_SYMBOL_TO_STRING_TAG))
+    {
+      return ecma_make_magic_string_value (LIT_MAGIC_STRING_MODULE_UL);
+    }
+  }
+  else
+  {
+    ecma_property_t *property_p = ecma_find_named_property (obj_p, property_name_p);
+
+    if (property_p != NULL)
+    {
+      JERRY_ASSERT (ECMA_PROPERTY_IS_RAW (*property_p));
+
+      ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+      if (!(*property_p & ECMA_PROPERTY_FLAG_DATA))
+      {
+        prop_value_p = ecma_get_property_value_from_named_reference (prop_value_p);
+
+        if (JERRY_UNLIKELY (prop_value_p->value == ECMA_VALUE_UNINITIALIZED))
+        {
+          return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
+        }
+      }
+
+      return ecma_fast_copy_value (prop_value_p->value);
+    }
+  }
+
+  jmem_cpointer_t proto_cp = ecma_object_get_prototype_of (obj_p);
+
+  if (proto_cp == JMEM_CP_NULL)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_object_t *proto_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
+
+  return ecma_internal_method_get (proto_p, property_name_p, receiver);
+} /* ecma_module_namespace_object_get */
+
+/**
+ * ecma module namespace object's [[Set]] internal method
+ *
+ * See also:
+ *          ECMA-262 v12, 10.4.6.9
+ *
+ * @return ecma value t
+ */
+ecma_value_t
+ecma_module_namespace_object_set (ecma_object_t *obj_p, /**< the object */
+                                  ecma_string_t *property_name_p, /**< property name */
+                                  ecma_value_t value, /**< ecma value */
+                                  ecma_value_t receiver, /**< receiver */
+                                  bool is_throw) /**< flag that controls failure handling */
+{
+  JERRY_UNUSED_3 (obj_p, value, receiver);
+  return ecma_raise_readonly_assignment (property_name_p, is_throw);
+} /* ecma_module_namespace_object_set */
 
 #endif /* JERRY_MODULE_SYSTEM */

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <excludeList>
   <!-- Uncategorized failing tests -->
-  <test id="built-ins/Array/prototype/splice/property-traps-order-with-species.js"><reason></reason></test>
   <test id="built-ins/BigInt/asIntN/arithmetic.js"><reason></reason></test>
   <test id="built-ins/BigInt/asIntN/asIntN.js"><reason></reason></test>
   <test id="built-ins/BigInt/asIntN/bigint-tobigint-errors.js"><reason></reason></test>
@@ -145,13 +144,7 @@
   <test id="language/expressions/prefix-increment/S11.4.4_A5_T5.js"><reason></reason></test>
   <test id="language/expressions/prefix-increment/S11.4.4_A6_T3.js"><reason></reason></test>
   <test id="language/expressions/super/call-proto-not-ctor.js"><reason></reason></test>
-  <test id="language/expressions/super/prop-dot-cls-ref-strict.js"><reason></reason></test>
-  <test id="language/expressions/super/prop-dot-obj-ref-non-strict.js"><reason></reason></test>
-  <test id="language/expressions/super/prop-dot-obj-ref-strict.js"><reason></reason></test>
-  <test id="language/expressions/super/prop-expr-cls-ref-strict.js"><reason></reason></test>
   <test id="language/expressions/super/prop-expr-obj-key-err.js"><reason></reason></test>
-  <test id="language/expressions/super/prop-expr-obj-ref-non-strict.js"><reason></reason></test>
-  <test id="language/expressions/super/prop-expr-obj-ref-strict.js"><reason></reason></test>
   <test id="language/expressions/tagged-template/invalid-escape-sequences.js"><reason></reason></test>
   <test id="language/expressions/yield/star-return-is-null.js"><reason></reason></test>
   <test id="language/expressions/yield/star-throw-is-null.js"><reason></reason></test>

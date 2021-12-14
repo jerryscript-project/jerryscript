@@ -272,7 +272,10 @@ set(SOURCE_CORE_FILES
   ecma/operations/ecma-bigint-object.c
   ecma/operations/ecma-bigint.c
   ecma/operations/ecma-boolean-object.c
+  ecma/operations/ecma-bound-function.c
+  ecma/operations/ecma-class-object.c
   ecma/operations/ecma-comparison.c
+  ecma/operations/ecma-constructor-function.c
   ecma/operations/ecma-container-object.c
   ecma/operations/ecma-conversion.c
   ecma/operations/ecma-dataview-object.c
@@ -283,9 +286,11 @@ set(SOURCE_CORE_FILES
   ecma/operations/ecma-iterator-object.c
   ecma/operations/ecma-jobqueue.c
   ecma/operations/ecma-lex-env.c
+  ecma/operations/ecma-native-function.c
   ecma/operations/ecma-number-object.c
   ecma/operations/ecma-objects-general.c
   ecma/operations/ecma-objects.c
+  ecma/operations/ecma-ordinary-object.c
   ecma/operations/ecma-promise-object.c
   ecma/operations/ecma-proxy-object.c
   ecma/operations/ecma-reference.c
@@ -451,7 +456,10 @@ if(ENABLE_AMALGAM)
     ecma/operations/ecma-bigint-object.h
     ecma/operations/ecma-bigint.h
     ecma/operations/ecma-boolean-object.h
+    ecma/operations/ecma-bound-function.h
+    ecma/operations/ecma-class-object.h
     ecma/operations/ecma-comparison.h
+    ecma/operations/ecma-constructor-function.h
     ecma/operations/ecma-container-object.h
     ecma/operations/ecma-conversion.h
     ecma/operations/ecma-dataview-object.h
@@ -461,9 +469,11 @@ if(ENABLE_AMALGAM)
     ecma/operations/ecma-iterator-object.h
     ecma/operations/ecma-jobqueue.h
     ecma/operations/ecma-lex-env.h
+    ecma/operations/ecma-native-function.h
     ecma/operations/ecma-number-object.h
     ecma/operations/ecma-objects-general.h
     ecma/operations/ecma-objects.h
+    ecma/operations/ecma-ordinary-object.h
     ecma/operations/ecma-promise-object.h
     ecma/operations/ecma-proxy-object.h
     ecma/operations/ecma-reference.h

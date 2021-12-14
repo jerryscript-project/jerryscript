@@ -117,19 +117,19 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
           receiver = arguments_list[2];
         }
 
-        ret_value = ecma_op_object_get_with_receiver (target_p, name_str_p, receiver);
+        ret_value = ecma_internal_method_get (target_p, name_str_p, receiver);
         break;
       }
 
       case ECMA_REFLECT_OBJECT_HAS:
       {
-        ret_value = ecma_op_object_has_property (target_p, name_str_p);
+        ret_value = ecma_internal_method_has_property (target_p, name_str_p);
         break;
       }
 
       case ECMA_REFLECT_OBJECT_DELETE_PROPERTY:
       {
-        ret_value = ecma_op_object_delete (target_p, name_str_p, false);
+        ret_value = ecma_internal_method_delete (target_p, name_str_p, false);
         break;
       }
 
@@ -144,7 +144,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
           receiver = arguments_list[3];
         }
 
-        ret_value = ecma_op_object_put_with_receiver (target_p, name_str_p, arguments_list[2], receiver, false);
+        ret_value = ecma_internal_method_set (target_p, name_str_p, arguments_list[2], receiver, false);
         break;
       }
     }
@@ -164,7 +164,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
 
     /* 2. */
-    ecma_collection_t *prop_names = ecma_op_object_own_property_keys (target_p, JERRY_PROPERTY_FILTER_ALL);
+    ecma_collection_t *prop_names = ecma_internal_method_own_property_keys (target_p, JERRY_PROPERTY_FILTER_ALL);
 
 #if JERRY_BUILTIN_PROXY
     if (prop_names == NULL)
@@ -214,7 +214,8 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
       return ECMA_VALUE_ERROR;
     }
 
-    ecma_value_t ret_value = ecma_op_function_construct (target_p, new_target_p, coll_p->buffer_p, coll_p->item_count);
+    ecma_value_t ret_value =
+      ecma_internal_method_construct (target_p, new_target_p, coll_p->buffer_p, coll_p->item_count);
 
     ecma_collection_free (coll_p);
     return ret_value;
@@ -239,20 +240,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
       }
 
       ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
-      ecma_value_t status;
-
-#if JERRY_BUILTIN_PROXY
-      if (ECMA_OBJECT_IS_PROXY (obj_p))
-      {
-        status = ecma_proxy_object_set_prototype_of (obj_p, arguments_list[1]);
-      }
-      else
-#endif /* JERRY_BUILTIN_PROXY */
-      {
-        status = ecma_op_ordinary_object_set_prototype_of (obj_p, arguments_list[1]);
-      }
-
-      return status;
+      return ecma_internal_method_set_prototype_of (obj_p, arguments_list[1]);
     }
     case ECMA_REFLECT_OBJECT_APPLY:
     {
@@ -283,10 +271,10 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
         return conv_result;
       }
 
-      ecma_value_t result = ecma_op_object_define_own_property (obj_p, name_str_p, &prop_desc);
+      ecma_value_t result = ecma_internal_method_define_own_property (obj_p, name_str_p, &prop_desc);
 
       ecma_deref_ecma_string (name_str_p);
-      ecma_free_property_descriptor (&prop_desc);
+      ecma_free_define_property_descriptor (&prop_desc);
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
@@ -314,23 +302,13 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     case ECMA_REFLECT_OBJECT_IS_EXTENSIBLE:
     {
       ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
-      return ecma_builtin_object_object_is_extensible (obj_p);
+      return ecma_internal_method_is_extensible (obj_p);
     }
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_REFLECT_OBJECT_PREVENT_EXTENSIONS);
       ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
-
-#if JERRY_BUILTIN_PROXY
-      if (ECMA_OBJECT_IS_PROXY (obj_p))
-      {
-        return ecma_proxy_object_prevent_extensions (obj_p);
-      }
-#endif /* !JERRY_BUILTIN_PROXY */
-
-      ecma_op_ordinary_object_prevent_extensions (obj_p);
-
-      return ECMA_VALUE_TRUE;
+      return ecma_internal_method_prevent_extensions (obj_p);
     }
   }
 } /* ecma_builtin_reflect_dispatch_routine */

@@ -25,7 +25,6 @@ JERRY_STATIC_ASSERT (sizeof (ecma_property_value_t) == sizeof (ecma_value_t),
                      size_of_ecma_property_value_t_must_be_equal_to_size_of_ecma_value_t);
 JERRY_STATIC_ASSERT (((sizeof (ecma_property_value_t) - 1) & sizeof (ecma_property_value_t)) == 0,
                      size_of_ecma_property_value_t_must_be_power_of_2);
-
 JERRY_STATIC_ASSERT (sizeof (ecma_extended_object_t) - sizeof (ecma_object_t) <= sizeof (uint64_t),
                      size_of_ecma_extended_object_part_must_be_less_than_or_equal_to_8_bytes);
 

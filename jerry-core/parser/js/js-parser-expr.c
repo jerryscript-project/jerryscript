@@ -3525,8 +3525,8 @@ parser_process_logical_assignment_token (parser_context_t *context_p) /**< conte
   parser_stack_pop_uint8 (context_p);
   parser_process_binary_assignment_token (context_p, token);
 
-  parser_branch_t prop_reference_branch;
-  parser_emit_cbc_forward_branch (context_p, CBC_JUMP_FORWARD, &prop_reference_branch);
+  parser_branch_t prop_descerence_branch;
+  parser_emit_cbc_forward_branch (context_p, CBC_JUMP_FORWARD, &prop_descerence_branch);
 
   parser_set_branch_to_current_position (context_p, &condition_branch);
   parser_emit_cbc_ext (context_p, CBC_EXT_POP_REFERENCE);
@@ -3534,7 +3534,7 @@ parser_process_logical_assignment_token (parser_context_t *context_p) /**< conte
   JERRY_ASSERT (context_p->stack_limit - context_p->stack_depth >= 2);
   PARSER_PLUS_EQUAL_U16 (context_p->stack_depth, 2);
 
-  parser_set_branch_to_current_position (context_p, &prop_reference_branch);
+  parser_set_branch_to_current_position (context_p, &prop_descerence_branch);
 } /* parser_process_logical_assignment_token */
 
 #endif /* JERRY_ESNEXT */

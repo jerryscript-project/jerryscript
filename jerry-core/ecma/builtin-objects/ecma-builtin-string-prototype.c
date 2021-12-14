@@ -309,7 +309,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_argument, /**< thi
     {
       /* 3.c.i */
       ecma_object_t *matcher_method = ecma_get_object_from_value (matcher);
-      ecma_value_t result = ecma_op_function_call (matcher_method, regexp_arg, &this_argument, 1);
+      ecma_value_t result = ecma_internal_method_call (matcher_method, regexp_arg, &this_argument, 1);
       ecma_deref_object (matcher_method);
       return result;
     }
@@ -464,7 +464,7 @@ ecma_builtin_string_prototype_object_match_all (ecma_value_t this_argument, /**<
     {
       /* 2.d.i */
       ecma_object_t *matcher_method = ecma_get_object_from_value (matcher);
-      ecma_value_t result = ecma_op_function_call (matcher_method, regexp_arg, &this_argument, 1);
+      ecma_value_t result = ecma_internal_method_call (matcher_method, regexp_arg, &this_argument, 1);
       ecma_deref_object (matcher_method);
       return result;
     }
@@ -584,7 +584,7 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
     if (!ecma_is_value_undefined (replace_symbol) && !ecma_is_value_null (replace_symbol))
     {
       ecma_value_t arguments[] = { this_value, replace_value };
-      ecma_value_t replace_result = ecma_op_function_validated_call (replace_symbol, search_value, arguments, 2);
+      ecma_value_t replace_result = ecma_internal_method_validated_call (replace_symbol, search_value, arguments, 2);
       ecma_free_value (replace_symbol);
 
       return replace_result;
@@ -665,7 +665,7 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
                                   ecma_make_uint32_value (pos),
                                   ecma_make_string_value (input_str_p) };
 
-          result = ecma_op_function_call (function_p, ECMA_VALUE_UNDEFINED, args, 3);
+          result = ecma_internal_method_call (function_p, ECMA_VALUE_UNDEFINED, args, 3);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -776,7 +776,7 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_value, /**< this 
 
     if (!ecma_is_value_undefined (search_symbol) && !ecma_is_value_null (search_symbol))
     {
-      ecma_value_t search_result = ecma_op_function_validated_call (search_symbol, regexp_value, &this_value, 1);
+      ecma_value_t search_result = ecma_internal_method_validated_call (search_symbol, regexp_value, &this_value, 1);
       ecma_free_value (search_symbol);
       return search_result;
     }
@@ -941,7 +941,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
     if (!ecma_is_value_undefined (split_symbol) && !ecma_is_value_null (split_symbol))
     {
       ecma_value_t arguments[] = { this_value, limit_value };
-      ecma_value_t split_result = ecma_op_function_validated_call (split_symbol, separator_value, arguments, 2);
+      ecma_value_t split_result = ecma_internal_method_validated_call (split_symbol, separator_value, arguments, 2);
       ecma_free_value (split_symbol);
 
       return split_result;

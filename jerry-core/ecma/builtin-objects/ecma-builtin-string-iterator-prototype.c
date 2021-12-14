@@ -100,7 +100,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
     /* After the ECMA_ITERATOR_INDEX_LIMIT limit is reached the [[%Iterator%NextIndex]]
        property is stored as an internal property */
     ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
-    ecma_value_t position_value = ecma_op_object_get (obj_p, prop_name_p);
+    ecma_value_t position_value = ecma_internal_method_get (obj_p, prop_name_p, this_val);
 
     position = (lit_utf8_size_t) (ecma_get_number_from_value (position_value));
     ecma_free_value (position_value);
@@ -157,8 +157,11 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
     ext_obj_p->u.cls.u2.iterator_index = ECMA_ITERATOR_INDEX_LIMIT;
 
     ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
-    ecma_value_t put_result =
-      ecma_op_object_put (obj_p, prop_name_p, ecma_make_length_value (position + result_size), true);
+    ecma_value_t put_result = ecma_internal_method_set (obj_p,
+                                                        prop_name_p,
+                                                        ecma_make_length_value (position + result_size),
+                                                        ecma_make_object_value (obj_p),
+                                                        true);
 
     JERRY_ASSERT (ecma_is_value_true (put_result));
   }

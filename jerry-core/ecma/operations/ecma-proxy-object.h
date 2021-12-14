@@ -34,11 +34,9 @@ ecma_object_t *ecma_proxy_create_revocable (ecma_value_t target, ecma_value_t ha
 ecma_value_t
 ecma_proxy_revoke_cb (ecma_object_t *function_obj_p, const ecma_value_t args_p[], const uint32_t args_count);
 
-ecma_value_t ecma_proxy_object_find (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
-
 /* Interal operations */
 
-ecma_value_t ecma_proxy_object_get_prototype_of (ecma_object_t *obj_p);
+ecma_object_t *ecma_proxy_object_get_prototype_of (ecma_object_t *obj_p);
 
 ecma_value_t ecma_proxy_object_set_prototype_of (ecma_object_t *obj_p, ecma_value_t proto);
 
@@ -46,15 +44,13 @@ ecma_value_t ecma_proxy_object_is_extensible (ecma_object_t *obj_p);
 
 ecma_value_t ecma_proxy_object_prevent_extensions (ecma_object_t *obj_p);
 
-ecma_value_t ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p,
-                                                            ecma_string_t *prop_name_p,
-                                                            ecma_property_descriptor_t *prop_desc_p);
+ecma_property_descriptor_t ecma_proxy_object_get_own_property (ecma_object_t *object_p, ecma_string_t *prop_name_p);
 
 ecma_value_t ecma_proxy_object_define_own_property (ecma_object_t *obj_p,
                                                     ecma_string_t *prop_name_p,
                                                     const ecma_property_descriptor_t *prop_desc_p);
 
-ecma_value_t ecma_proxy_object_has (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
+ecma_value_t ecma_proxy_object_has_property (ecma_object_t *obj_p, ecma_string_t *prop_name_p);
 
 ecma_value_t ecma_proxy_object_get (ecma_object_t *obj_p, ecma_string_t *prop_name_p, ecma_value_t receiver);
 
@@ -66,7 +62,7 @@ ecma_value_t ecma_proxy_object_set (ecma_object_t *obj_p,
 
 ecma_value_t ecma_proxy_object_delete_property (ecma_object_t *obj_p, ecma_string_t *prop_name_p, bool is_strict);
 
-ecma_collection_t *ecma_proxy_object_own_property_keys (ecma_object_t *obj_p);
+ecma_collection_t *ecma_proxy_object_own_property_keys (ecma_object_t *obj_p, jerry_property_filter_t filter);
 
 ecma_value_t
 ecma_proxy_object_call (ecma_object_t *obj_p, ecma_value_t this_argument, const ecma_value_t *args_p, uint32_t argc);
@@ -75,6 +71,26 @@ ecma_value_t ecma_proxy_object_construct (ecma_object_t *obj_p,
                                           ecma_object_t *new_target_p,
                                           const ecma_value_t *args_p,
                                           uint32_t argc);
+
+/**
+ * Virtual function table for Proxy object's internal methods
+ */
+#define ECMA_PROXY_OBJ_VTABLE                                         \
+  [ECMA_OBJECT_TYPE_PROXY] = { ecma_proxy_object_get_prototype_of,    \
+                               ecma_proxy_object_set_prototype_of,    \
+                               ecma_proxy_object_is_extensible,       \
+                               ecma_proxy_object_prevent_extensions,  \
+                               ecma_proxy_object_get_own_property,    \
+                               ecma_proxy_object_define_own_property, \
+                               ecma_proxy_object_has_property,        \
+                               ecma_proxy_object_get,                 \
+                               ecma_proxy_object_set,                 \
+                               ecma_proxy_object_delete_property,     \
+                               ecma_proxy_object_own_property_keys,   \
+                               ecma_proxy_object_call,                \
+                               ecma_proxy_object_construct,           \
+                               NULL,                                  \
+                               NULL }
 
 #endif /* JERRY_BUILTIN_PROXY */
 

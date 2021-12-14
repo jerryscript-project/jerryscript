@@ -211,7 +211,9 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
     obj_p = ecma_builtin_get (id);
   }
 
-  return ecma_op_object_get_with_receiver (obj_p, property_name_p, base_value);
+  ecma_value_t ret_value = ecma_internal_method_get (obj_p, property_name_p, base_value);
+
+  return ret_value;
 } /* ecma_op_get_value_object_base */
 
 /**
@@ -279,7 +281,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 
         ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-        ecma_value_t has_property = ecma_op_object_has_property (binding_obj_p, name_p);
+        ecma_value_t has_property = ecma_internal_method_has_property (binding_obj_p, name_p);
 
 #if JERRY_BUILTIN_PROXY
         if (ECMA_IS_VALUE_ERROR (has_property))
@@ -290,7 +292,8 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 
         if (ecma_is_value_true (has_property))
         {
-          ecma_value_t completion = ecma_op_object_put (binding_obj_p, name_p, value, is_strict);
+          ecma_value_t completion =
+            ecma_internal_method_set (binding_obj_p, name_p, value, ecma_make_object_value (binding_obj_p), is_strict);
 
           if (ECMA_IS_VALUE_ERROR (completion))
           {
@@ -326,7 +329,9 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 #endif /* JERRY_ERROR_MESSAGES */
   }
 
-  ecma_value_t completion = ecma_op_object_put (ecma_get_lex_env_binding_object (lex_env_p), name_p, value, false);
+  ecma_object_t *lex_env_binding_obj = ecma_get_lex_env_binding_object (lex_env_p);
+  ecma_value_t completion =
+    ecma_internal_method_set (lex_env_binding_obj, name_p, value, ecma_make_object_value (lex_env_binding_obj), false);
 
   JERRY_ASSERT (ecma_is_value_boolean (completion));
 

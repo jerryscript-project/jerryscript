@@ -148,10 +148,11 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
         ecma_op_advance_string_index (matcher_str_p, this_index, (flags & RE_FLAG_UNICODE) != 0);
 
       ecma_value_t next_index_value = ecma_make_length_value (next_index);
-      ecma_value_t set = ecma_op_object_put (regexp_obj_p,
-                                             ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                             next_index_value,
-                                             true);
+      ecma_value_t set = ecma_internal_method_set (regexp_obj_p,
+                                                   ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                   next_index_value,
+                                                   ecma_make_object_value (regexp_obj_p),
+                                                   true);
 
       ecma_free_value (next_index_value);
 

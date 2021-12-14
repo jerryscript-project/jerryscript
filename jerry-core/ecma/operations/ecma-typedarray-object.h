@@ -56,14 +56,7 @@ ecma_value_t ecma_typedarray_iterators_helper (ecma_value_t this_arg, ecma_itera
 
 bool ecma_object_is_typedarray (ecma_object_t *obj_p);
 bool ecma_is_typedarray (ecma_value_t target);
-bool ecma_typedarray_is_element_index (ecma_string_t *property_name_p);
-void ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p,
-                                                  ecma_collection_t *prop_names_p,
-                                                  ecma_property_counter_t *prop_counter_p,
-                                                  jerry_property_filter_t filter);
-ecma_value_t ecma_op_typedarray_define_own_property (ecma_object_t *obj_p,
-                                                     ecma_string_t *property_name_p,
-                                                     const ecma_property_descriptor_t *property_desc_p);
+bool ecma_op_canonical_numeric_string (ecma_string_t *property_name_p);
 ecma_value_t ecma_op_create_typedarray_with_type_and_length (ecma_typedarray_type_t typedarray_id,
                                                              uint32_t array_length);
 ecma_typedarray_info_t ecma_typedarray_get_info (ecma_object_t *typedarray_p);
@@ -80,6 +73,41 @@ ecma_value_t
 ecma_typedarray_create (ecma_object_t *constructor_p, ecma_value_t *arguments_list_p, uint32_t arguments_list_len);
 ecma_value_t ecma_typedarray_species_create (ecma_value_t this_arg, ecma_value_t *length, uint32_t arguments_list_len);
 
+ecma_property_descriptor_t ecma_typedarray_object_get_own_property (ecma_object_t *obj_p,
+                                                                    ecma_string_t *property_name_p);
+ecma_value_t ecma_typedarray_object_define_own_property (ecma_object_t *obj_p,
+                                                         ecma_string_t *property_name_p,
+                                                         const ecma_property_descriptor_t *property_desc_p);
+ecma_value_t ecma_typedarray_object_get (ecma_object_t *obj_p, ecma_string_t *property_name_p, ecma_value_t receiver);
+ecma_value_t ecma_typedarray_object_set (ecma_object_t *obj_p,
+                                         ecma_string_t *property_name_p,
+                                         ecma_value_t value,
+                                         ecma_value_t receiver,
+                                         bool is_throw);
+void ecma_typedarray_object_list_lazy_property_keys (ecma_object_t *obj_p,
+                                                     ecma_collection_t *prop_names_p,
+                                                     ecma_property_counter_t *prop_counter_p,
+                                                     jerry_property_filter_t filter);
+
+/**
+ * Virtual function table for typedarray object's internal methods
+ */
+#define ECMA_TYPEDARRAY_OBJ_VTABLE                                                   \
+  [ECMA_OBJECT_CLASS_TYPEDARRAY] = { NULL,                                           \
+                                     NULL,                                           \
+                                     NULL,                                           \
+                                     NULL,                                           \
+                                     ecma_typedarray_object_get_own_property,        \
+                                     ecma_typedarray_object_define_own_property,     \
+                                     NULL,                                           \
+                                     ecma_typedarray_object_get,                     \
+                                     ecma_typedarray_object_set,                     \
+                                     ecma_ordinary_object_delete,                    \
+                                     NULL,                                           \
+                                     NULL,                                           \
+                                     NULL,                                           \
+                                     ecma_typedarray_object_list_lazy_property_keys, \
+                                     ecma_ordinary_object_delete_lazy_property }
 /**
  * @}
  * @}

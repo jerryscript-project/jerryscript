@@ -218,7 +218,37 @@ function f22 (arguments, [a = arguments]) {
 }
 f22(3.1, []);
 
-function f23(arguments, eval = () => eval()) {
+try {
+  function f23(p = eval("var arguments"), arguments)
+  {
+  }
+  f23()
+  assert(false)
+} catch (e) {
+  assert(e instanceof SyntaxError)
+}
+
+try {
+  function f24(p = eval("var arguments")) {
+    let arguments;
+  }
+  f24()
+  assert(false)
+} catch (e) {
+  assert(e instanceof SyntaxError)
+}
+
+try {
+  function f25(p = eval("var arguments")) {
+    function arguments() { }
+  }
+  f25()
+  assert(false)
+} catch (e) {
+  assert(e instanceof SyntaxError)
+}
+
+function f26(arguments, eval = () => eval()) {
   assert(arguments === undefined);
 }
-f23(undefined);
+f26(undefined);

@@ -64,15 +64,15 @@ typedef enum
   PARSER_IS_GENERATOR_FUNCTION = (1u << 14), /**< a generator function is parsed */
   PARSER_IS_ASYNC_FUNCTION = (1u << 15), /**< an async function is parsed */
   PARSER_DISALLOW_AWAIT_YIELD = (1u << 16), /**< throw SyntaxError for await / yield keywords */
-  PARSER_FUNCTION_IS_PARSING_ARGS = (1u << 17), /**< set when parsing function arguments */
-  PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT = (1u << 18), /**< function has complex (ES2015+) argument definition */
-  PARSER_FUNCTION_HAS_REST_PARAM = (1u << 19), /**< function has rest parameter */
-  PARSER_CLASS_CONSTRUCTOR = (1u << 20), /**< a class constructor is parsed
+  PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT = (1u << 17), /**< function has complex (ES2015+) argument definition */
+  PARSER_FUNCTION_HAS_REST_PARAM = (1u << 18), /**< function has rest parameter */
+  PARSER_CLASS_CONSTRUCTOR = (1u << 19), /**< a class constructor is parsed
                                           *   Note: PARSER_ALLOW_SUPER must be present */
-  /* These four status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
-  PARSER_ALLOW_SUPER = (1u << 21), /**< allow super property access */
-  PARSER_ALLOW_SUPER_CALL = (1u << 22), /**< allow super constructor call
+  /* These five status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
+  PARSER_ALLOW_SUPER = (1u << 20), /**< allow super property access */
+  PARSER_ALLOW_SUPER_CALL = (1u << 21), /**< allow super constructor call
                                          *   Note: PARSER_CLASS_CONSTRUCTOR must be present */
+  PARSER_FUNCTION_IS_PARSING_ARGS = (1u << 22), /**< set when parsing function arguments */
   PARSER_INSIDE_CLASS_FIELD = (1u << 23), /**< a class field is being parsed */
   PARSER_ALLOW_NEW_TARGET = (1u << 24), /**< allow new.target parsing in the current context */
   PARSER_IS_METHOD = (1u << 25), /**< method is parsed */

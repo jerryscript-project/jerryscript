@@ -315,8 +315,8 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
     lex_env_p = JERRY_CONTEXT (vm_top_context_p)->lex_env_p;
 
 #if JERRY_DEBUGGER
-    uint32_t chain_index = parse_opts >> ECMA_PARSE_CHAIN_INDEX_SHIFT;
-    parse_opts &= (1 << ECMA_PARSE_CHAIN_INDEX_SHIFT) - 1;
+    uint32_t chain_index = JERRY_CONTEXT (debugger_eval_chain_index);
+    JERRY_CONTEXT (debugger_eval_chain_index) = 0;
 
     while (chain_index != 0)
     {

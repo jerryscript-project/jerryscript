@@ -60,7 +60,7 @@
 /**
  * Maximum number of array holes in a fast access mode array
  */
-#define ECMA_FAST_ARRAY_MAX_HOLE_COUNT (1 << 24)
+#define ECMA_FAST_ARRAY_MAX_HOLE_COUNT (1 << 16)
 
 ecma_object_t *ecma_op_new_array_object (uint32_t length);
 

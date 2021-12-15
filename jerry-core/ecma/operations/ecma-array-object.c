@@ -35,22 +35,6 @@
  * @{
  */
 
-#if JERRY_CPOINTER_32_BIT
-/**
- * Maximum length of the array length to allocate fast mode access for it
- * e.g. new Array(5000) is constructed as fast mode access array,
- * but new Array(50000000) is consturcted as normal property list based array
- */
-#define ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH (1 << 17)
-#else /* JERRY_CPOINTER_32_BIT */
-/**
- * Maximum length of the array length to allocate fast mode access for it
- * e.g. new Array(5000) is constructed as fast mode access array,
- * but new Array(50000000) is consturcted as normal property list based array
- */
-#define ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH (1 << 13)
-#endif /* JERRY_CPOINTER_32_BIT */
-
 /**
  * Property name type flag for array indices.
  */
@@ -130,7 +114,7 @@ ecma_op_new_array_object (uint32_t length) /**< length of the new array */
 
   if (length > 0)
   {
-    if (length >= ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH)
+    if (length >= ECMA_FAST_ARRAY_MAX_HOLE_COUNT)
     {
       return object_p;
     }
@@ -398,8 +382,7 @@ ecma_fast_array_set_property (ecma_object_t *object_p, /**< fast access mode arr
   uint32_t old_holes = ext_obj_p->u.array.length_prop_and_hole_count;
   uint32_t new_holes = index - old_length;
 
-  if (JERRY_UNLIKELY (new_holes > ECMA_FAST_ARRAY_MAX_NEW_HOLES_COUNT
-                      || ((old_holes >> ECMA_FAST_ARRAY_HOLE_SHIFT) + new_holes) > ECMA_FAST_ARRAY_MAX_HOLE_COUNT))
+  if (JERRY_UNLIKELY (new_holes > (ECMA_FAST_ARRAY_MAX_HOLE_COUNT - (old_holes >> ECMA_FAST_ARRAY_HOLE_SHIFT))))
   {
     ecma_fast_array_convert_to_normal (object_p);
 
@@ -623,8 +606,7 @@ ecma_fast_array_set_length (ecma_object_t *object_p, /**< fast access mode array
   uint32_t old_holes = ext_obj_p->u.array.length_prop_and_hole_count;
   uint32_t new_holes = new_length - old_length;
 
-  if (JERRY_UNLIKELY (new_holes > ECMA_FAST_ARRAY_MAX_NEW_HOLES_COUNT
-                      || ((old_holes >> ECMA_FAST_ARRAY_HOLE_SHIFT) + new_holes) > ECMA_FAST_ARRAY_MAX_HOLE_COUNT))
+  if (JERRY_UNLIKELY (new_holes > (ECMA_FAST_ARRAY_MAX_HOLE_COUNT - (old_holes >> ECMA_FAST_ARRAY_HOLE_SHIFT))))
   {
     ecma_fast_array_convert_to_normal (object_p);
   }
@@ -632,8 +614,6 @@ ecma_fast_array_set_length (ecma_object_t *object_p, /**< fast access mode array
   {
     ecma_fast_array_extend (object_p, new_length);
   }
-
-  return;
 } /* ecma_fast_array_set_length */
 
 /**

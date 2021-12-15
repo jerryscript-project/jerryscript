@@ -217,3 +217,8 @@ function f22 (arguments, [a = arguments]) {
   assert(arguments === 3.1);
 }
 f22(3.1, []);
+
+function f23(arguments, eval = () => eval()) {
+  assert(arguments === undefined);
+}
+f23(undefined);

@@ -1237,45 +1237,41 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
 
   JERRY_ASSERT (SCANNER_LITERAL_POOL_MAY_HAVE_ARGUMENTS (literal_pool_p->status_flags));
 
-  if (can_eval)
+  if (JERRY_UNLIKELY (can_eval))
   {
     if (prev_literal_pool_p != NULL)
     {
       prev_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
     }
 
-    if (has_arguments)
-    {
-      /* Force the lexically stored arguments object creation */
-      literal_pool_p->status_flags |= (SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS | SCANNER_LITERAL_POOL_NO_ARGUMENTS);
-    }
+    literal_pool_p->status_flags &= (uint16_t) ~SCANNER_LITERAL_POOL_CAN_EVAL;
   }
-
-  literal_pool_p->status_flags &= (uint16_t) ~SCANNER_LITERAL_POOL_CAN_EVAL;
-
-  parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
-
-  while (true)
+  else
   {
-    literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator);
+    parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
 
-    if (literal_p == NULL)
+    while (true)
     {
-      return;
-    }
+      literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator);
 
-    if (can_eval || (literal_p->type & SCANNER_LITERAL_EARLY_CREATE))
-    {
-      literal_p->type |= SCANNER_LITERAL_NO_REG | SCANNER_LITERAL_EARLY_CREATE;
-    }
+      if (literal_p == NULL)
+      {
+        return;
+      }
 
-    uint8_t type = literal_p->type;
-    const uint8_t mask =
-      (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_DESTRUCTURED_ARG | SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG);
+      if (can_eval || (literal_p->type & SCANNER_LITERAL_EARLY_CREATE))
+      {
+        literal_p->type |= SCANNER_LITERAL_NO_REG | SCANNER_LITERAL_EARLY_CREATE;
+      }
 
-    if ((type & mask) != SCANNER_LITERAL_IS_ARG)
-    {
-      break;
+      uint8_t type = literal_p->type;
+      const uint8_t mask =
+        (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_DESTRUCTURED_ARG | SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG);
+
+      if ((type & mask) != SCANNER_LITERAL_IS_ARG)
+      {
+        break;
+      }
     }
   }
 
@@ -1309,10 +1305,7 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
 
       if (has_arguments && scanner_literal_is_arguments (literal_p))
       {
-        /* 'arguments' function argument existence should prevent the arguments object construction */
-        new_literal_pool_p->status_flags =
-          (uint16_t) (new_literal_pool_p->status_flags
-                      & ~(SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS | SCANNER_LITERAL_POOL_NO_ARGUMENTS));
+        has_arguments = false;
       }
 
       if (type & (SCANNER_LITERAL_IS_DESTRUCTURED_ARG | SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG))
@@ -1369,6 +1362,12 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
         *new_literal_p = *literal_p;
       }
     }
+  }
+
+  if (has_arguments)
+  {
+    /* Force the lexically stored arguments object creation */
+    new_literal_pool_p->status_flags |= (SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS | SCANNER_LITERAL_POOL_NO_ARGUMENTS);
   }
 
   new_literal_pool_p->prev_p = prev_literal_pool_p;

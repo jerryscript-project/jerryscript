@@ -132,23 +132,7 @@ static ecma_value_t
 ecma_builtin_object_prototype_object_has_own_property (ecma_object_t *obj_p, /**< this argument */
                                                        ecma_string_t *prop_name_p) /**< first argument */
 {
-#if JERRY_BUILTIN_PROXY
-  if (ECMA_OBJECT_IS_PROXY (obj_p))
-  {
-    ecma_property_descriptor_t prop_desc;
-
-    ecma_value_t status = ecma_proxy_object_get_own_property_descriptor (obj_p, prop_name_p, &prop_desc);
-
-    if (ecma_is_value_true (status))
-    {
-      ecma_free_property_descriptor (&prop_desc);
-    }
-
-    return status;
-  }
-#endif /* JERRY_BUILTIN_PROXY */
-
-  return ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p);
+  return ecma_op_object_has_own_property (obj_p, prop_name_p);
 } /* ecma_builtin_object_prototype_object_has_own_property */
 
 /**

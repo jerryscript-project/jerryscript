@@ -12,83 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# USAGE:
-# specify the board using the command line:
-# make BOARD=[mbed board name]
+# default board: STM32F4-Discovery
+BOARD ?= DISCO_F407VG
 
-BOARD=$(subst [mbed] ,,$(shell mbed target))
-HEAPSIZE=16
+# defult toolchain
+TOOLCHAIN ?= GCC_ARM
 
-DEBUG?=0
-NO_JS?=0
-MBED_VERBOSE?=0
+# path to jerryscript/targets/os/mbedos5
+JERRY_TARGET_DIR = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-MBED_CLI_FLAGS=-j0 --source . --source ../../../
+# path to the root jerryscript directory
+JERRY_ROOT_DIR = $(realpath $(JERRY_TARGET_DIR)/../../..)
 
-EXTRA_SRC=
+# default build path
+BUILD_DIR ?= $(JERRY_ROOT_DIR)/build/mbed-os
 
-ifneq ($(EXTRA_SRC),)
-EXTRA_SRC_MOD=--source $(subst :, --source ,$(EXTRA_SRC))
-MBED_CLI_FLAGS += $(EXTRA_SRC_MOD)
-endif
+# default jerry heap size (in KB)
+JERRY_HEAP_SIZE ?= 70
 
-EXTERN_BUILD_DIR=
+.PHONY: all
+all: .mbedignore-copy .mbed-build .mbedignore-remove
 
-ifneq ($(EXTERN_BUILD_DIR),)
-MBED_CLI_FLAGS += --build $(EXTERN_BUILD_DIR)
-endif
-
-ifeq ($(DEBUG), 1)
-MBED_CLI_FLAGS += --profile ./mbed-os/tools/profiles/debug.json
-endif
-
-ifeq ($(MBED_VERBOSE), 1)
-MBED_CLI_FLAGS += -v
-else ifeq ($(MBED_VERBOSE), 2)
-MBED_CLI_FLAGS += -vv
-endif
-
-MBED_CLI_FLAGS += -D "JERRY_GLOBAL_HEAP_SIZE=$(HEAPSIZE)"
-MBED_CLI_FLAGS += -t GCC_ARM
-
-.PHONY: all js2c getlibs rebuild library
-all: source/jerry-targetjs.h source/pins.cpp .mbed ../../../.mbedignore
-	mbed target $(BOARD)
-	mbed compile $(MBED_CLI_FLAGS)
-
-library: .mbed ../../../.mbedignore
-	# delete encoded js code if it exists
-	rm -f source/jerry-targetjs.h
-	mbed target $(BOARD)
-	mbed compile $(MBED_CLI_FLAGS) --library
-
+.PHONY: clean
 clean:
-	rm -rf ./BUILD/$(BOARD)
+	rm -rf $(JERRY_ROOT_DIR)/build/mbed-os
 
-js2c: js/main.js js/flash_leds.js
-	python ../../../tools/js2c.py --ignore pins.js
+.PHONY: .mbed-build
+.mbed-build:
+	mbed config -G MBED_OS_DIR $(MBED_OS_DIR)
+	mbed compile \
+		--clean \
+		--build $(BUILD_DIR) \
+		--source $(MBED_OS_DIR) \
+		--source $(JERRY_ROOT_DIR) \
+		--source $(JERRY_TARGET_DIR) \
+		--toolchain $(TOOLCHAIN) \
+		--target $(BOARD) \
+		--macro JERRY_GLOBAL_HEAP_SIZE=$(JERRY_HEAP_SIZE)
 
-source/pins.cpp:
-	python tools/generate_pins.py ${BOARD}
+.mbedignore-copy:
+	cp .mbedignore $(JERRY_ROOT_DIR)
 
-ifeq ($(NO_JS),0)
-source/jerry-targetjs.h: js2c
-else
-source/jerry-targetjs.h: ;
-endif
-
-getlibs: .mbed
-
-.mbed:
-	echo 'ROOT=.' > .mbed
-	mbed config root .
-	mbed toolchain GCC_ARM
-	mbed target $(BOARD)
-	mbed deploy
-
-../../../.mbedignore:
-ifeq ($(OS),Windows_NT)
-	copy template-mbedignore.txt ..\..\..\.mbedignore
-else
-	cp ./template-mbedignore.txt ../../../.mbedignore
-endif
+.mbedignore-remove:
+	rm $(JERRY_ROOT_DIR)/.mbedignore

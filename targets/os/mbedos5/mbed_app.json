@@ -1,7 +1,0 @@
-{
-    "target_overrides": {
-        "NRF52_DK": {
-            "target.uart_hwfc": 0
-        }
-    }
-}

@@ -1839,17 +1839,12 @@ scanner_push_class_declaration (parser_context_t *context_p, /**< context */
 
   if (class_has_name)
   {
-    if (stack_mode == SCAN_STACK_CLASS_STATEMENT)
-    {
-      literal_p = scanner_add_literal (context_p, scanner_context_p);
-      scanner_context_p->active_literal_pool_p->no_declarations++;
-    }
-#if JERRY_MODULE_SYSTEM
-    else if (is_export_default)
-    {
-      literal_p = scanner_add_literal (context_p, scanner_context_p);
-      scanner_context_p->active_literal_pool_p->no_declarations++;
+    literal_p = scanner_add_literal (context_p, scanner_context_p);
+    scanner_context_p->active_literal_pool_p->no_declarations++;
 
+#if JERRY_MODULE_SYSTEM
+    if (is_export_default)
+    {
       scanner_detect_invalid_let (context_p, literal_p);
 
       if (literal_p->type & SCANNER_LITERAL_IS_USED)

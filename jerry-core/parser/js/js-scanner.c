@@ -2304,6 +2304,33 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
         continue;
       }
 #if JERRY_ESNEXT
+      case SCAN_STACK_CLASS_STATIC_BLOCK:
+      {
+        if (type != LEXER_RIGHT_BRACE)
+        {
+          break;
+        }
+
+        scanner_pop_literal_pool (context_p, scanner_context_p);
+        scanner_source_start_t start_range;
+        parser_stack_pop_uint8 (context_p);
+        parser_stack_pop (context_p, &start_range, sizeof (scanner_source_start_t));
+
+        scanner_context_p->mode = SCAN_MODE_CLASS_BODY_NO_SCAN;
+
+        scanner_location_info_t *location_info_p;
+        location_info_p = (scanner_location_info_t *) scanner_insert_info (context_p,
+                                                                           start_range.source_p,
+                                                                           sizeof (scanner_location_info_t));
+
+        location_info_p->info.type = SCANNER_TYPE_CLASS_STATIC_BLOCK_END;
+        location_info_p->location.source_p = context_p->source_p;
+        location_info_p->location.line = context_p->token.line;
+        location_info_p->location.column = context_p->token.column;
+
+        lexer_scan_identifier (context_p, LEXER_PARSE_CHECK_KEYWORDS | LEXER_PARSE_NO_STRICT_IDENT_ERROR);
+        return SCAN_KEEP_TOKEN;
+      }
       case SCAN_STACK_PRIVATE_BLOCK_EARLY:
       {
         parser_list_iterator_t literal_iterator;
@@ -2681,9 +2708,28 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
           }
           else if (lexer_token_is_identifier (context_p, "static", 6))
           {
+            scanner_source_start_t static_start;
+            static_start.source_p = context_p->source_p - 1;
+
             lexer_scan_identifier (context_p, LEXER_PARSE_NO_OPTS);
             identifier_found = true;
             private_field_flags |= SCANNER_PRIVATE_FIELD_STATIC;
+
+            if (!is_private && context_p->token.type == LEXER_LEFT_BRACE)
+            {
+              parser_stack_push (context_p, &static_start, sizeof (scanner_source_start_t));
+              parser_stack_push_uint8 (context_p, SCAN_STACK_CLASS_STATIC_BLOCK);
+
+              scanner_literal_pool_t *literal_pool_p =
+                scanner_push_literal_pool (context_p, &scanner_context, SCANNER_LITERAL_POOL_FUNCTION);
+              literal_pool_p->source_p = context_p->source_p - 1;
+
+              lexer_next_token (context_p);
+
+              scanner_context.mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
+
+              continue;
+            }
           }
 
           scanner_context.mode = SCAN_MODE_FUNCTION_ARGUMENTS;
@@ -3849,6 +3895,12 @@ scan_completed:
         {
           JERRY_DEBUG_MSG ("  CLASS: source:%d\n", (int) (info_p->source_p - source_start_p));
           print_location = false;
+          break;
+        }
+        case SCANNER_TYPE_CLASS_STATIC_BLOCK_END:
+        {
+          name_p = "SCANNER_TYPE_CLASS_STATIC_BLOCK_END";
+          print_location = true;
           break;
         }
         case SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END:

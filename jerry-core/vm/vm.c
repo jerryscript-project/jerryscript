@@ -1806,6 +1806,16 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           goto free_left_value;
         }
+        case VM_OC_CLASS_CALL_STATIC_BLOCK:
+        {
+          result = ecma_op_function_call (ecma_get_object_from_value (left_value), frame_ctx_p->this_binding, NULL, 0);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+          goto free_left_value;
+        }
         case VM_OC_PUSH_STATIC_FIELD_FUNC:
         {
           JERRY_ASSERT (byte_code_start_p[0] == CBC_EXT_OPCODE

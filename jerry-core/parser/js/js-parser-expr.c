@@ -847,11 +847,13 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
       }
     }
 
+    bool is_static_block = context_p->token.type == LEXER_LEFT_BRACE;
+
     if (context_p->token.type == LEXER_RIGHT_SQUARE)
     {
       is_computed = true;
     }
-    else if (LEXER_IS_IDENT_OR_STRING (context_p->token.lit_location.type))
+    else if (!is_static_block && LEXER_IS_IDENT_OR_STRING (context_p->token.lit_location.type))
     {
       if (is_static && !is_private)
       {
@@ -869,7 +871,7 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
 
     if (!(status_flags & (PARSER_IS_ASYNC_FUNCTION | PARSER_IS_GENERATOR_FUNCTION)))
     {
-      if (!lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
+      if (is_static_block || !lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
       {
         /* Class field. */
         if (fields_size == 0)
@@ -889,7 +891,7 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
             parser_emit_cbc_ext_literal_from_token (context_p, field_opcode);
           }
 
-          if (is_static && parser_is_constructor_literal (context_p))
+          if (is_static && !is_static_block && parser_is_constructor_literal (context_p))
           {
             parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIST_EXPECTED);
           }
@@ -925,7 +927,31 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
           }
         }
 
-        if (lexer_consume_assign (context_p))
+        if (is_static_block)
+        {
+          class_field_type |= PARSER_CLASS_FIELD_STATIC_BLOCK;
+
+          if (context_p->next_scanner_info_p->type != SCANNER_TYPE_CLASS_STATIC_BLOCK_END)
+          {
+            parser_flush_cbc (context_p);
+            parser_parse_class_static_block (context_p);
+          }
+
+          JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_CLASS_STATIC_BLOCK_END);
+
+          scanner_set_location (context_p, &((scanner_location_info_t *) context_p->next_scanner_info_p)->location);
+          scanner_release_next (context_p, sizeof (scanner_location_info_t));
+          JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
+          range.start_location.source_p = context_p->next_scanner_info_p->source_p - 1;
+
+          scanner_seek (context_p);
+
+          parser_stack_push (context_p, &range.start_location, sizeof (scanner_location_t));
+          fields_size += sizeof (scanner_location_t);
+
+          lexer_consume_next_character (context_p);
+        }
+        else if (lexer_consume_assign (context_p))
         {
           class_field_type |= PARSER_CLASS_FIELD_INITIALIZED;
 
@@ -1738,7 +1764,16 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
 
     if (!lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
     {
+#if JERRY_ESNEXT
+      /* The `await` keyword is interpreted as an IdentifierReference within function expressions */
+      context_p->status_flags &= (uint32_t) ~PARSER_IS_CLASS_STATIC_BLOCK;
+#endif /* JERRY_ESNEXT */
+
       lexer_next_token (context_p);
+
+#if JERRY_ESNEXT
+      context_p->status_flags |= parent_status_flags & PARSER_IS_CLASS_STATIC_BLOCK;
+#endif /* JERRY_ESNEXT */
 
       if (context_p->token.type != LEXER_LITERAL || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
       {
@@ -2168,7 +2203,8 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 #endif /* JERRY_FUNCTION_TO_STRING */
 
         uint32_t arrow_status_flags =
-          (PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION | (context_p->status_flags & PARSER_INSIDE_CLASS_FIELD));
+          (PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION
+           | (context_p->status_flags & (PARSER_INSIDE_CLASS_FIELD | PARSER_IS_CLASS_STATIC_BLOCK)));
 
         if (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC)
         {
@@ -2425,7 +2461,8 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 #endif /* JERRY_FUNCTION_TO_STRING */
 
       uint32_t arrow_status_flags =
-        (PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION | (context_p->status_flags & PARSER_INSIDE_CLASS_FIELD));
+        (PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION
+         | (context_p->status_flags & (PARSER_INSIDE_CLASS_FIELD | PARSER_IS_CLASS_STATIC_BLOCK)));
       parser_parse_function_expression (context_p, arrow_status_flags);
       return parser_abort_parsing_after_assignment_expression (context_p);
     }

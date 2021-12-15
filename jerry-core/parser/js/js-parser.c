@@ -2794,6 +2794,46 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #if JERRY_ESNEXT
 
 /**
+ * Parse static class block code
+ *
+ * @return compiled code
+ */
+ecma_compiled_code_t *
+parser_parse_class_static_block (parser_context_t *context_p) /**< context */
+{
+  parser_saved_context_t saved_context;
+  ecma_compiled_code_t *compiled_code_p;
+
+  parser_save_context (context_p, &saved_context);
+  context_p->status_flags |= (PARSER_IS_CLASS_STATIC_BLOCK | PARSER_FUNCTION_CLOSURE | PARSER_ALLOW_SUPER
+                              | PARSER_INSIDE_CLASS_FIELD | PARSER_ALLOW_NEW_TARGET | PARSER_DISALLOW_AWAIT_YIELD);
+
+#if JERRY_PARSER_DUMP_BYTE_CODE
+  if (context_p->is_show_opcodes)
+  {
+    JERRY_DEBUG_MSG ("\n--- Static class block parsing start ---\n\n");
+  }
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
+
+  scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
+  lexer_next_token (context_p);
+
+  parser_parse_statements (context_p);
+  compiled_code_p = parser_post_processing (context_p);
+
+#if JERRY_PARSER_DUMP_BYTE_CODE
+  if (context_p->is_show_opcodes)
+  {
+    JERRY_DEBUG_MSG ("\n--- Static class block parsing end ---\n\n");
+  }
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
+
+  parser_restore_context (context_p, &saved_context);
+
+  return compiled_code_p;
+} /* parser_parse_class_static_block */
+
+/**
  * Parse arrow function code
  *
  * @return compiled code
@@ -2826,6 +2866,12 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
   }
 #endif /* JERRY_DEBUGGER */
 
+  /* The `await` keyword is disallowed in the IdentifierReference position */
+  if (status_flags & PARSER_IS_CLASS_STATIC_BLOCK)
+  {
+    context_p->status_flags |= PARSER_DISALLOW_AWAIT_YIELD;
+  }
+
   if (context_p->token.type == LEXER_LEFT_PAREN)
   {
     lexer_next_token (context_p);
@@ -2835,6 +2881,12 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
   else
   {
     parser_parse_function_arguments (context_p, LEXER_ARROW);
+  }
+
+  /* The `await` keyword is interpreted as an identifier within the body of arrow functions */
+  if (status_flags & PARSER_IS_CLASS_STATIC_BLOCK)
+  {
+    context_p->status_flags &= (uint32_t) ~(PARSER_DISALLOW_AWAIT_YIELD | PARSER_IS_CLASS_STATIC_BLOCK);
   }
 
   JERRY_ASSERT (context_p->token.type == LEXER_ARROW);
@@ -2950,6 +3002,20 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
     if (class_field_type & PARSER_CLASS_FIELD_NORMAL)
     {
       scanner_set_location (context_p, &range.start_location);
+
+      if (class_field_type & PARSER_CLASS_FIELD_STATIC_BLOCK)
+      {
+        scanner_seek (context_p);
+        JERRY_ASSERT (context_p->source_p[1] == LIT_CHAR_LEFT_BRACE);
+        context_p->source_p += 2;
+        context_p->source_end_p = source_end_p;
+
+        uint16_t func_index = lexer_construct_class_static_block_function (context_p);
+
+        parser_emit_cbc_ext_literal (context_p, CBC_EXT_CLASS_CALL_STATIC_BLOCK, func_index);
+        continue;
+      }
+
       uint32_t ident_opts = LEXER_OBJ_IDENT_ONLY_IDENTIFIERS;
       is_private = context_p->source_p[-1] == LIT_CHAR_HASHMARK;
 

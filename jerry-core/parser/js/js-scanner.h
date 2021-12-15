@@ -49,6 +49,7 @@ typedef enum
   SCANNER_TYPE_LITERAL_FLAGS, /**< object or array literal with non-zero flags (stored in u8_arg) */
   SCANNER_TYPE_CLASS_CONSTRUCTOR, /**< class constructor */
   SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END, /**< class field initializer end */
+  SCANNER_TYPE_CLASS_STATIC_BLOCK_END, /**< class static block end */
   SCANNER_TYPE_LET_EXPRESSION, /**< let expression */
   SCANNER_TYPE_ERR_REDECLARED, /**< syntax error: a variable is redeclared */
   SCANNER_TYPE_ERR_ASYNC_FUNCTION, /**< an invalid async function follows */

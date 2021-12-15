@@ -581,6 +581,10 @@
               VM_OC_PUSH_STATIC_FIELD_FUNC | VM_OC_GET_LITERAL)                                                        \
   CBC_OPCODE (CBC_EXT_ADD_COMPUTED_FIELD, CBC_NO_FLAG, -1, VM_OC_ADD_COMPUTED_FIELD | VM_OC_GET_STACK)                 \
   CBC_OPCODE (CBC_EXT_ADD_STATIC_COMPUTED_FIELD, CBC_NO_FLAG, -1, VM_OC_ADD_COMPUTED_FIELD | VM_OC_GET_STACK)          \
+  CBC_OPCODE (CBC_EXT_CLASS_CALL_STATIC_BLOCK,                                                                         \
+              CBC_HAS_LITERAL_ARG,                                                                                     \
+              0,                                                                                                       \
+              VM_OC_CLASS_CALL_STATIC_BLOCK | VM_OC_GET_LITERAL)                                                       \
   /* Class private property related opcodes */                                                                         \
   CBC_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL_REFERENCE,                                                             \
               CBC_HAS_LITERAL_ARG,                                                                                     \

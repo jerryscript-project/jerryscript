@@ -76,12 +76,13 @@ typedef enum
   PARSER_INSIDE_CLASS_FIELD = (1u << 23), /**< a class field is being parsed */
   PARSER_ALLOW_NEW_TARGET = (1u << 24), /**< allow new.target parsing in the current context */
   PARSER_IS_METHOD = (1u << 25), /**< method is parsed */
+  PARSER_IS_CLASS_STATIC_BLOCK = (1u << 26), /**< a class static block is parsed */
   PARSER_PRIVATE_FUNCTION_NAME = PARSER_IS_FUNC_EXPRESSION, /**< represents private method for
                                                              *   parser_set_function_name*/
 #endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 26), /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 27), /**< store identifier of the current export statement */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 27), /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 28), /**< store identifier of the current export statement */
 #endif /* JERRY_MODULE_SYSTEM */
   PARSER_HAS_LATE_LIT_INIT = (1u << 30), /**< there are identifier or string literals which construction
                                           *   is postponed after the local parser data is freed */
@@ -144,6 +145,7 @@ typedef enum
   PARSER_CLASS_FIELD_NORMAL = (1u << 1), /**< normal (non-computed) class field */
   PARSER_CLASS_FIELD_INITIALIZED = (1u << 2), /**< class field is initialized */
   PARSER_CLASS_FIELD_STATIC = (1u << 3), /**< static class field */
+  PARSER_CLASS_FIELD_STATIC_BLOCK = (1u << 4), /**< static class field */
 } parser_class_field_type_t;
 
 #endif /* JERRY_ESNEXT */
@@ -798,6 +800,9 @@ void lexer_construct_literal_object (parser_context_t *context_p,
 bool lexer_construct_number_object (parser_context_t *context_p, bool is_expr, bool is_negative_number);
 void lexer_convert_push_number_to_push_literal (parser_context_t *context_p);
 uint16_t lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
+#if JERRY_ESNEXT
+uint16_t lexer_construct_class_static_block_function (parser_context_t *context_p);
+#endif /* JERRY_ESNEXT */
 void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only);
 bool lexer_compare_identifier_to_string (const lexer_lit_location_t *left_p, const uint8_t *right_p, size_t size);
 bool lexer_compare_identifiers (parser_context_t *context_p,
@@ -931,6 +936,7 @@ uint8_t *parser_line_info_generate (parser_context_t *context_p);
 
 ecma_compiled_code_t *parser_parse_function (parser_context_t *context_p, uint32_t status_flags);
 #if JERRY_ESNEXT
+ecma_compiled_code_t *parser_parse_class_static_block (parser_context_t *context_p);
 ecma_compiled_code_t *parser_parse_arrow_function (parser_context_t *context_p, uint32_t status_flags);
 ecma_compiled_code_t *parser_parse_class_fields (parser_context_t *context_p);
 void parser_set_function_name (parser_context_t *context_p,

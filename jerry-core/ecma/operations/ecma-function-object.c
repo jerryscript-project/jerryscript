@@ -1159,6 +1159,13 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
       }
 
       this_binding = arrow_func_p->this_binding;
+
+      if (JERRY_UNLIKELY (this_binding == ECMA_VALUE_UNINITIALIZED))
+      {
+        ecma_environment_record_t *env_record_p = ecma_op_get_environment_record (scope_p);
+        JERRY_ASSERT (env_record_p);
+        this_binding = env_record_p->this_binding;
+      }
       break;
     }
 

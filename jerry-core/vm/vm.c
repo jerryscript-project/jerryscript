@@ -566,6 +566,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t completion_value;
 
   ecma_environment_record_t *environment_record_p = ecma_op_get_environment_record (frame_ctx_p->lex_env_p);
+  JERRY_ASSERT (environment_record_p);
 
   if (!ecma_is_constructor (func_value))
   {

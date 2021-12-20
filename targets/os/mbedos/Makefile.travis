@@ -19,10 +19,10 @@ all:
 	$(MAKE) script
 
 
-## Targets for installing build dependencies of the Mbed OS 5 JerryScript target.
+## Targets for installing build dependencies of the Mbed OS JerryScript target.
 
 install-mbedos:
-	git clone https://github.com/ARMmbed/mbed-os.git ../mbed-os -b mbed-os-5.15
+	git clone https://github.com/ARMmbed/mbed-os.git ../mbed-os -b mbed-os-6.15.0
 
 # Deploy Mbed and install Mbed Python dependencies.
 install-mbedos-deps:
@@ -31,8 +31,8 @@ install-mbedos-deps:
 
 install: install-mbedos install-mbedos-deps
 
-## Targets for building Mbed OS 5 with JerryScript.
+## Targets for building Mbed OS with JerryScript.
 
-# Build the firmware (Mbed OS 5 with JerryScript).
+# Build the firmware (Mbed OS with JerryScript).
 script:
-	$(MAKE) -C targets/os/mbedos5 BOARD=K64F MBED_OS_DIR=$(realpath ../mbed-os)
+	$(MAKE) -C targets/os/mbedos MBED_OS_DIR=$(realpath ../mbed-os)

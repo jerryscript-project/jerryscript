@@ -26,12 +26,16 @@
 #define JERRY_STANDALONE_EXIT_CODE_OK   (0)
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
-int
-main ()
-{
-  Serial device (USBTX, USBRX); // tx, rx
-  device.baud (115200);
+#if MBED_MAJOR_VERSION == 5
+static Serial serial(USBTX, USBRX, 115200);
+#elif MBED_MAJOR_VERSION == 6
+static BufferedSerial serial(USBTX, USBRX, 115200);
+#else
+#error Unsupported Mbed OS version.
+#endif
 
+int main()
+{
   /* Initialize engine */
   jerry_init (JERRY_INIT_EMPTY);
 

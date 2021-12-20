@@ -44,10 +44,6 @@ def get_arguments():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--es51', action='store_true',
                        help='Run test262 ES5.1 version')
-    group.add_argument('--es2015', default=False, const='default',
-                       nargs='?', choices=['default', 'all', 'update'],
-                       help='Run test262 - ES2015. default: all tests except excludelist, ' +
-                       'all: all tests, update: all tests and update excludelist')
     group.add_argument('--esnext', default=False, const='default',
                        nargs='?', choices=['default', 'all', 'update'],
                        help='Run test262 - ES.next. default: all tests except excludelist, ' +
@@ -57,12 +53,7 @@ def get_arguments():
 
     args = parser.parse_args()
 
-    if args.es2015:
-        args.test_dir = os.path.join(args.test_dir, 'es2015')
-        args.test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
-        args.test262_git_hash = 'fd44cd73dfbce0b515a2474b7cd505d6176a9eb5'
-        args.excludelist_path = os.path.join('tests', 'test262-es6-excludelist.xml')
-    elif args.esnext:
+    if args.esnext:
         args.test_dir = os.path.join(args.test_dir, 'esnext')
         args.test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
         args.test262_git_hash = '9f2814f00ff7612f74024c15c165853b6765c7ab'
@@ -72,7 +63,7 @@ def get_arguments():
         args.test262_harness_dir = args.test_dir
         args.test262_git_hash = 'es5-tests'
 
-    args.mode = args.es2015 or args.esnext
+    args.mode = args.esnext
 
     return args
 
@@ -98,15 +89,6 @@ def prepare_test262_test_suite(args):
         path_to_remove = os.path.join(args.test_dir, 'test', 'suite', 'intl402')
         if os.path.isdir(path_to_remove):
             shutil.rmtree(path_to_remove)
-
-    # Since ES2018 iterator's next method is called once during the prologue of iteration,
-    # rather than during each step. The test is incorrect and stuck in an infinite loop.
-    # https://github.com/tc39/test262/pull/1248 fixed the test and it passes on test262-esnext.
-    if args.es2015:
-        test_to_remove = 'test/language/statements/for-of/iterator-next-reference.js'
-        path_to_remove = os.path.join(args.test_dir, os.path.normpath(test_to_remove))
-        if os.path.isfile(path_to_remove):
-            os.remove(path_to_remove)
 
     return 0
 

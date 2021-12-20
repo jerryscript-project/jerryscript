@@ -97,11 +97,6 @@ TEST262_TEST_SUITE_OPTIONS = [
     Options('test262_tests', OPTIONS_PROFILE_ES51),
 ]
 
-# Test options for test262-es2015
-TEST262_ES2015_TEST_SUITE_OPTIONS = [
-    Options('test262_tests_es2015', OPTIONS_PROFILE_ESNEXT + ['--line-info=on', '--error-messages=on']),
-]
-
 # Test options for test262-esnext
 TEST262_ESNEXT_TEST_SUITE_OPTIONS = [
     Options('test262_tests_esnext', OPTIONS_PROFILE_ESNEXT
@@ -199,10 +194,6 @@ def get_arguments():
                         help='Run jerry-tests')
     parser.add_argument('--test262', action='store_true',
                         help='Run test262 - ES5.1')
-    parser.add_argument('--test262-es2015', default=False, const='default',
-                        nargs='?', choices=['default', 'all', 'update'],
-                        help='Run test262 - ES2015. default: all tests except excludelist, ' +
-                        'all: all tests, update: all tests and update excludelist')
     parser.add_argument('--test262-esnext', default=False, const='default',
                         nargs='?', choices=['default', 'all', 'update'],
                         help='Run test262 - ESnext. default: all tests except excludelist, ' +
@@ -223,8 +214,8 @@ def get_arguments():
     script_args = parser.parse_args()
 
     if script_args.test262_test_list and not \
-       (script_args.test262 or script_args.test262_es2015 or script_args.test262_esnext):
-        print("--test262-test-list is only allowed with --test262 or --test262-es2015 or --test262-esnext\n")
+       (script_args.test262 or script_args.test262_esnext):
+        print("--test262-test-list is only allowed with --test262 or --test262-esnext\n")
         parser.print_help()
         sys.exit(1)
 
@@ -412,8 +403,6 @@ def run_test262_test_suite(options):
     jobs = []
     if options.test262:
         jobs.extend(TEST262_TEST_SUITE_OPTIONS)
-    if options.test262_es2015:
-        jobs.extend(TEST262_ES2015_TEST_SUITE_OPTIONS)
     if options.test262_esnext:
         jobs.extend(TEST262_ESNEXT_TEST_SUITE_OPTIONS)
 
@@ -430,10 +419,7 @@ def run_test262_test_suite(options):
             '--test-dir', settings.TEST262_TEST_SUITE_DIR
         ]
 
-        if job.name.endswith('es2015'):
-            test_cmd.append('--es2015')
-            test_cmd.append(options.test262_es2015)
-        elif job.name.endswith('esnext'):
+        if job.name.endswith('esnext'):
             test_cmd.append('--esnext')
             test_cmd.append(options.test262_esnext)
         else:
@@ -506,7 +492,7 @@ def main(options):
         Check(options.check_strings, run_check, [settings.STRINGS_SCRIPT]),
         Check(options.jerry_debugger, run_jerry_debugger_tests, options),
         Check(options.jerry_tests, run_jerry_tests, options),
-        Check(options.test262 or options.test262_es2015 or options.test262_esnext, run_test262_test_suite, options),
+        Check(options.test262 or options.test262_esnext, run_test262_test_suite, options),
         Check(options.unittests, run_unittests, options),
         Check(options.buildoption_test, run_buildoption_test, options),
     ]

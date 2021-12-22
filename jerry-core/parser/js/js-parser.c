@@ -1972,6 +1972,59 @@ JERRY_STATIC_ASSERT (PARSER_SCANNING_SUCCESSFUL == PARSER_HAS_LATE_LIT_INIT,
 #endif /* !JERRY_NDEBUG */
 
 /**
+ * Parser script size
+ */
+static size_t
+parser_script_size (parser_context_t *context_p) /**< context */
+{
+  size_t script_size = sizeof (cbc_script_t);
+
+  if (context_p->user_value != ECMA_VALUE_EMPTY)
+  {
+    script_size += sizeof (ecma_value_t);
+  }
+
+#if JERRY_FUNCTION_TO_STRING
+  if (context_p->argument_list != ECMA_VALUE_EMPTY)
+  {
+    script_size += sizeof (ecma_value_t);
+  }
+#endif /* JERRY_FUNCTION_TO_STRING */
+
+#if JERRY_MODULE_SYSTEM
+  if (context_p->global_status_flags & ECMA_PARSE_INTERNAL_HAS_IMPORT_META)
+  {
+    script_size += sizeof (ecma_value_t);
+  }
+#endif /* JERRY_MODULE_SYSTEM */
+  return script_size;
+} /* parser_script_size */
+
+#if JERRY_SOURCE_NAME
+/**
+ * Parser resource name
+ */
+static ecma_value_t
+parser_source_name (parser_context_t *context_p) /**< context */
+{
+  if (context_p->options_p != NULL && (context_p->options_p->options & JERRY_PARSE_HAS_SOURCE_NAME))
+  {
+    JERRY_ASSERT (ecma_is_value_string (context_p->options_p->source_name));
+
+    ecma_ref_ecma_string (ecma_get_string_from_value (context_p->options_p->source_name));
+    return context_p->options_p->source_name;
+  }
+
+  if (context_p->global_status_flags & ECMA_PARSE_EVAL)
+  {
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_EVAL);
+  }
+
+  return ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_ANON);
+} /* parser_source_name */
+#endif /* JERRY_SOURCE_NAME */
+
+/**
  * Parse and compile EcmaScript source code
  *
  * Note: source must be a valid UTF-8 string
@@ -2108,22 +2161,6 @@ parser_parse_source (void *source_p, /**< source code */
     context.user_value = context.options_p->user_value;
   }
 
-#if JERRY_SOURCE_NAME
-  ecma_value_t source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_ANON);
-
-  if (context.options_p != NULL && (context.options_p->options & JERRY_PARSE_HAS_SOURCE_NAME))
-  {
-    JERRY_ASSERT (ecma_is_value_string (context.options_p->source_name));
-
-    ecma_ref_ecma_string (ecma_get_string_from_value (context.options_p->source_name));
-    source_name = context.options_p->source_name;
-  }
-  else if (context.global_status_flags & ECMA_PARSE_EVAL)
-  {
-    source_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_SOURCE_NAME_EVAL);
-  }
-#endif /* JERRY_SOURCE_NAME */
-
   context.last_context_p = NULL;
   context.last_statement.current_p = NULL;
   context.token.flags = 0;
@@ -2197,27 +2234,6 @@ parser_parse_source (void *source_p, /**< source code */
     return NULL;
   }
 
-  size_t script_size = sizeof (cbc_script_t);
-
-  if (context.user_value != ECMA_VALUE_EMPTY)
-  {
-    script_size += sizeof (ecma_value_t);
-  }
-
-#if JERRY_FUNCTION_TO_STRING
-  if (context.argument_list != ECMA_VALUE_EMPTY)
-  {
-    script_size += sizeof (ecma_value_t);
-  }
-#endif /* JERRY_FUNCTION_TO_STRING */
-
-#if JERRY_MODULE_SYSTEM
-  if (context.global_status_flags & ECMA_PARSE_INTERNAL_HAS_IMPORT_META)
-  {
-    script_size += sizeof (ecma_value_t);
-  }
-#endif /* JERRY_MODULE_SYSTEM */
-
   if (context.arguments_start_p == NULL)
   {
     context.source_p = context.source_start_p;
@@ -2249,7 +2265,7 @@ parser_parse_source (void *source_p, /**< source code */
 
   PARSER_TRY (context.try_buffer)
   {
-    context.script_p = parser_malloc (&context, script_size);
+    context.script_p = parser_malloc (&context, parser_script_size (&context));
 
     CBC_SCRIPT_SET_TYPE (context.script_p, context.user_value, CBC_SCRIPT_REF_ONE);
 
@@ -2263,7 +2279,7 @@ parser_parse_source (void *source_p, /**< source code */
 #endif /* JERRY_BUILTIN_REALMS */
 
 #if JERRY_SOURCE_NAME
-    context.script_p->source_name = source_name;
+    context.script_p->source_name = parser_source_name (&context);
 #endif /* JERRY_SOURCE_NAME */
 
     ECMA_SET_INTERNAL_VALUE_POINTER (context.script_value, context.script_p);
@@ -2437,7 +2453,7 @@ parser_parse_source (void *source_p, /**< source code */
     if (context.script_p != NULL)
     {
       JERRY_ASSERT (context.script_p->refs_and_type >= CBC_SCRIPT_REF_ONE);
-      jmem_heap_free_block (context.script_p, script_size);
+      jmem_heap_free_block (context.script_p, parser_script_size (&context));
     }
   }
   PARSER_TRY_END
@@ -2512,6 +2528,7 @@ parser_parse_source (void *source_p, /**< source code */
   ecma_value_t err_str_val = ecma_make_string_value (err_str_p);
   ecma_value_t line_str_val = ecma_make_uint32_value (context.token.line);
   ecma_value_t col_str_val = ecma_make_uint32_value (context.token.column);
+  ecma_value_t source_name = parser_source_name (&context);
 
   ecma_raise_standard_error_with_format (JERRY_ERROR_SYNTAX,
                                          "% [%:%:%]",
@@ -2520,6 +2537,7 @@ parser_parse_source (void *source_p, /**< source code */
                                          line_str_val,
                                          col_str_val);
 
+  ecma_free_value (source_name);
   ecma_free_value (col_str_val);
   ecma_free_value (line_str_val);
   ecma_deref_ecma_string (err_str_p);

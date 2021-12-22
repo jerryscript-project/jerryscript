@@ -414,13 +414,15 @@ ecma_integer_multiply (ecma_integer_value_t left_integer, /**< left operand */
   if (JERRY_UNLIKELY ((left_integer & (left_integer - 1)) == 0))
   {
     /* Right shift right_integer with log2 (left_integer) */
-    return ecma_make_integer_value (right_integer << (__builtin_ctz ((unsigned int) left_integer)));
+    return ecma_make_integer_value (
+      (int32_t) ((uint32_t) right_integer << (__builtin_ctz ((unsigned int) left_integer))));
   }
 
   if (JERRY_UNLIKELY ((right_integer & (right_integer - 1)) == 0))
   {
     /* Right shift left_integer with log2 (right_integer) */
-    return ecma_make_integer_value (left_integer << (__builtin_ctz ((unsigned int) right_integer)));
+    return ecma_make_integer_value (
+      (int32_t) ((uint32_t) left_integer << (__builtin_ctz ((unsigned int) right_integer))));
   }
 #endif /* defined (__GNUC__) || defined (__clang__) */
 

@@ -28,7 +28,6 @@
   <test id="built-ins/BigInt/asUintN/length.js"><reason></reason></test>
   <test id="built-ins/BigInt/asUintN/name.js"><reason></reason></test>
   <test id="built-ins/BigInt/asUintN/order-of-steps.js"><reason></reason></test>
-  <test id="built-ins/Function/prototype/toString/class-declaration-complex-heritage.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/class-declaration-explicit-ctor.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/class-expression-explicit-ctor.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/well-known-intrinsic-object-functions.js"><reason></reason></test>

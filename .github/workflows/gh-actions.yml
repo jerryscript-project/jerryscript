@@ -82,20 +82,6 @@ jobs:
       - run: $RUNNER --test262
       - run: $RUNNER --test262 --build-debug
 
-  Conformance_Tests_ES2015:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: $RUNNER --test262-es2015=update
-      - run: $RUNNER --test262-es2015=update --build-debug
-      - uses: actions/upload-artifact@v2
-        if: success() || failure()
-        with:
-          name: Test262-ES2015-results
-          path: |
-            build/tests/test262_tests_es2015/local/bin/test262.report
-            build/tests/test262_tests_es2015-debug/local/bin/test262.report
-
   Conformance_Tests_ESNext:
     runs-on: ubuntu-latest
     steps:

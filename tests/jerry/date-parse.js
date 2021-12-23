@@ -181,3 +181,12 @@ assert (isNaN(Date.parse("Sat, 13 Sep 275760 00:00:01 GMT"))) // 864000000000100
 // Non standard date formats
 assert (Date.parse("2000/01/01 12:12Z") == 946728720000)
 assert (Date.parse("1991-07-13 16:04Z") == 679421040000)
+
+assert(Date.parse('Tue, 13 Sep 275760 00:00:00 GMT') == 8640000000000000);
+assert(isNaN(Date.parse('Tue, 14 Sep 275760 00:00:00 GMT')));
+assert(Date.parse("Tue, 20 Apr -271821 00:00:00 GMT") == -8640000000000000);
+assert(isNaN(Date.parse("Tue, 19 Apr -271821 00:00:00 GMT")));
+assert(Date.parse('9999') == 253370764800000);
+assert(isNaN(Date.parse('10000')));
+assert(Date.parse('-100000') == -3217862419200000);
+assert(isNaN(Date.parse('-99999')));

@@ -3765,7 +3765,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
             ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-            *stack_top_p++ = ecma_make_int32_value ((int32_t) (left_integer << (right_integer & 0x1f)));
+
+            *stack_top_p++ = ecma_make_int32_value ((int32_t) ((uint32_t) left_integer << (right_integer & 0x1f)));
             continue;
           }
 

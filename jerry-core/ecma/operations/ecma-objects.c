@@ -2762,6 +2762,7 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE)
 #endif /* JERRY_NUMBER_TYPE_FLOAT64 */
 #if JERRY_BUILTIN_BIGINT
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_BIGINT_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_BIGINT64ARRAY_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_BIGUINT64ARRAY_PROTOTYPE)
 #endif /* JERRY_BUILTIN_BIGINT */
@@ -2936,6 +2937,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
     {
       return LIT_MAGIC_STRING_FUNCTION_UL;
     }

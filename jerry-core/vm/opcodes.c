@@ -1235,6 +1235,11 @@ opfunc_find_private_key (ecma_object_t *class_object_p, /**< class environment *
                          ecma_string_t *search_key_p, /**< key */
                          ecma_string_t **out_private_key_p) /**< [out] private key */
 {
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    return NULL;
+  }
+
   ecma_string_t *internal_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS);
   ecma_property_t *prop_p = ecma_find_named_property (class_object_p, internal_string_p);
 

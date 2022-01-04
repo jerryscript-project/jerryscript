@@ -1390,6 +1390,55 @@ ecma_op_function_call_bound (ecma_object_t *func_obj_p, /**< Function object */
 } /* ecma_op_function_call_bound */
 
 /**
+ * Invoke accessor getter function
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+ecma_op_invoke_getter (ecma_getter_setter_pointers_t *get_set_pair_p, /**< accessor pair */
+                       ecma_value_t this_value) /**< 'this' argument's value */
+{
+  if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
+  ecma_ref_object (getter_p);
+
+  ecma_value_t result = ecma_op_function_call (getter_p, this_value, NULL, 0);
+  ecma_deref_object (getter_p);
+
+  return result;
+} /* ecma_op_invoke_getter */
+
+/**
+ * Invoke accessor setter function
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+ecma_op_invoke_setter (ecma_getter_setter_pointers_t *get_set_pair_p, /**< accessor pair */
+                       ecma_value_t this_value, /**< 'this' argument's value */
+                       ecma_value_t value) /**< value to set */
+{
+  if (get_set_pair_p->setter_cp == JMEM_CP_NULL)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp);
+  ecma_ref_object (setter_p);
+
+  ecma_value_t result = ecma_op_function_call (setter_p, this_value, &value, 1);
+  ecma_deref_object (setter_p);
+
+  return result;
+} /* ecma_op_invoke_setter */
+
+/**
  * General [[Call]] implementation
  *
  * @return ecma value

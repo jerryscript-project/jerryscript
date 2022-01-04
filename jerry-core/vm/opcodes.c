@@ -1429,9 +1429,7 @@ opfunc_private_set (ecma_value_t base, /**< this object */
     return ecma_raise_type_error (ECMA_ERR_PRIVATE_FIELD_WAS_DEFINED_WITHOUT_A_SETTER);
   }
 
-  ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp);
-
-  return ecma_op_function_call (setter_p, base, &value, 1);
+  return ecma_op_invoke_setter (get_set_pair_p, base, value);
 } /* opfunc_private_set */
 
 /**
@@ -1479,8 +1477,7 @@ opfunc_private_get (ecma_value_t base, /**< this object */
     }
     else
     {
-      ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
-      result = ecma_op_function_call (getter_p, base, NULL, 0);
+      result = ecma_op_invoke_getter (get_set_pair_p, base);
     }
   }
 

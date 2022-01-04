@@ -371,17 +371,8 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
               return ecma_fast_copy_value (prop_value_p->value);
             }
 
-            ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (prop_value_p);
-
-            if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
-            {
-              return ECMA_VALUE_UNDEFINED;
-            }
-
-            ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
-
-            ecma_value_t base_value = ecma_make_object_value (binding_obj_p);
-            return ecma_op_function_call (getter_p, base_value, NULL, 0);
+            return ecma_op_invoke_getter (ecma_get_named_accessor_property (prop_value_p),
+                                          ecma_make_object_value (binding_obj_p));
           }
 #endif /* JERRY_LCACHE */
         }

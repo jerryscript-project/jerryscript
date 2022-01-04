@@ -84,6 +84,11 @@ ecma_object_t *ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p
 
 ecma_value_t ecma_op_function_has_instance (ecma_object_t *func_obj_p, ecma_value_t value);
 
+ecma_value_t ecma_op_invoke_getter (ecma_getter_setter_pointers_t *get_set_pair_p, ecma_value_t this_value);
+
+ecma_value_t
+ecma_op_invoke_setter (ecma_getter_setter_pointers_t *get_set_pair_p, ecma_value_t this_value, ecma_value_t value);
+
 ecma_value_t ecma_op_function_validated_call (ecma_value_t callee,
                                               ecma_value_t this_arg_value,
                                               const ecma_value_t *arguments_list_p,

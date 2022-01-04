@@ -748,16 +748,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
     return ecma_fast_copy_value (prop_value_p->value);
   }
 
-  ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (prop_value_p);
-
-  if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
-  {
-    return ECMA_VALUE_UNDEFINED;
-  }
-
-  ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
-
-  return ecma_op_function_call (getter_p, base_value, NULL, 0);
+  return ecma_op_invoke_getter (ecma_get_named_accessor_property (prop_value_p), base_value);
 } /* ecma_op_object_find_own */
 
 /**
@@ -1532,6 +1523,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     }
   }
 
+  ecma_getter_setter_pointers_t *get_set_pair_p = NULL;
   jmem_cpointer_t setter_cp = JMEM_CP_NULL;
 
   if (property_p != NULL)
@@ -1557,7 +1549,6 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     }
     else
     {
-      ecma_getter_setter_pointers_t *get_set_pair_p;
       get_set_pair_p = ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (property_p));
       setter_cp = get_set_pair_p->setter_cp;
     }
@@ -1598,7 +1589,8 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
         if (!(inherited_property & ECMA_PROPERTY_FLAG_DATA))
         {
-          setter_cp = ecma_get_named_accessor_property (property_ref.value_p)->setter_cp;
+          get_set_pair_p = ecma_get_named_accessor_property (property_ref.value_p);
+          setter_cp = get_set_pair_p->setter_cp;
           create_new_property = false;
           break;
         }
@@ -1673,8 +1665,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     return ecma_raise_readonly_assignment (property_name_p, is_throw);
   }
 
-  ecma_value_t ret_value =
-    ecma_op_function_call (ECMA_GET_NON_NULL_POINTER (ecma_object_t, setter_cp), receiver, &value, 1);
+  ecma_value_t ret_value = ecma_op_invoke_setter (get_set_pair_p, receiver, value);
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {

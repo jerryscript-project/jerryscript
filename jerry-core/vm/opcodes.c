@@ -1398,40 +1398,58 @@ opfunc_private_set (ecma_value_t base, /**< this object */
                     ecma_value_t property, /**< property name */
                     ecma_value_t value) /**< ecma value */
 {
-  ecma_object_t *obj_p = ecma_get_object_from_value (base);
+  ecma_value_t base_obj = ecma_op_to_object (base);
+
+  if (ECMA_IS_VALUE_ERROR (base_obj))
+  {
+    return base_obj;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (base_obj);
   ecma_string_t *prop_name_p = ecma_get_string_from_value (property);
   ecma_string_t *private_key_p = NULL;
 
   ecma_property_t *prop_p = opfunc_find_private_element (obj_p, prop_name_p, &private_key_p, true);
 
+  ecma_value_t result;
+
   if (prop_p == NULL)
   {
-    return ecma_raise_type_error (ECMA_ERR_CANNOT_WRITE_PRIVATE_MEMBER_TO_AN_OBJECT_WHOSE_CLASS_DID_NOT_DECLARE_IT);
+    result = ecma_raise_type_error (ECMA_ERR_CANNOT_WRITE_PRIVATE_MEMBER_TO_AN_OBJECT_WHOSE_CLASS_DID_NOT_DECLARE_IT);
   }
-
-  if (*prop_p & ECMA_PROPERTY_FLAG_DATA)
+  else if (*prop_p & ECMA_PROPERTY_FLAG_DATA)
   {
     JERRY_ASSERT (ecma_prop_name_is_symbol (private_key_p));
 
     if (private_key_p->u.hash & ECMA_SYMBOL_FLAG_PRIVATE_INSTANCE_METHOD)
     {
-      return ecma_raise_type_error (ECMA_ERR_PRIVATE_METHOD_IS_NOT_WRITABLE);
+      result = ecma_raise_type_error (ECMA_ERR_PRIVATE_METHOD_IS_NOT_WRITABLE);
     }
-
-    ecma_value_assign_value (&ECMA_PROPERTY_VALUE_PTR (prop_p)->value, value);
-    return ecma_copy_value (value);
+    else
+    {
+      ecma_value_assign_value (&ECMA_PROPERTY_VALUE_PTR (prop_p)->value, value);
+      result = ecma_copy_value (value);
+    }
   }
-
-  ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (prop_p));
-
-  if (get_set_pair_p->setter_cp == JMEM_CP_NULL)
+  else
   {
-    return ecma_raise_type_error (ECMA_ERR_PRIVATE_FIELD_WAS_DEFINED_WITHOUT_A_SETTER);
+    ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (prop_p));
+
+    if (get_set_pair_p->setter_cp == JMEM_CP_NULL)
+    {
+      result = ecma_raise_type_error (ECMA_ERR_PRIVATE_FIELD_WAS_DEFINED_WITHOUT_A_SETTER);
+    }
+    else
+    {
+      ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp);
+
+      result = ecma_op_function_call (setter_p, base, &value, 1);
+    }
   }
 
-  ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp);
+  ecma_deref_object (obj_p);
 
-  return ecma_op_function_call (setter_p, base, &value, 1);
+  return result;
 } /* opfunc_private_set */
 
 /**

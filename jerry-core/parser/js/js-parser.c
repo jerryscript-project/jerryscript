@@ -1517,6 +1517,7 @@ parser_resolve_private_identifier (parser_context_t *context_p) /**< context */
 
     if (!(context_iter_p->opts & SCANNER_SUCCESSFUL_CLASS_SCAN))
     {
+      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
       return;
     }
 

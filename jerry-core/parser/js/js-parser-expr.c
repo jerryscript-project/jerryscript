@@ -4072,6 +4072,10 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
     return;
   }
 
+#ifndef JERRY_NDEBUG
+  bool rest_found = false;
+#endif /* !defined(JERRY_NDEBUG) */
+
   cbc_ext_opcode_t context_opcode = CBC_EXT_OBJ_INIT_CONTEXT_CREATE;
 
   if (flags & PARSER_PATTERN_HAS_REST_ELEMENT)
@@ -4115,8 +4119,9 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
         parser_raise_error (context_p, PARSER_ERR_RIGHT_BRACE_EXPECTED);
       }
 
-      /* Checked at the end because there might be syntax errors before. */
-      JERRY_ASSERT (flags & PARSER_PATTERN_HAS_REST_ELEMENT);
+#ifndef JERRY_NDEBUG
+      rest_found = true;
+#endif /* !defined(JERRY_NDEBUG) */
       break;
     }
 
@@ -4203,6 +4208,11 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
   parser_emit_cbc_ext (context_p, CBC_EXT_OBJ_INIT_CONTEXT_END);
 
   parser_pattern_finalize (context_p, flags, &end_pos);
+
+#ifndef JERRY_NDEBUG
+  /* Checked at the end because there might be syntax errors before. */
+  JERRY_ASSERT (!!(flags & PARSER_PATTERN_HAS_REST_ELEMENT) == rest_found);
+#endif /* !defined(JERRY_NDEBUG) */
 } /* parser_parse_object_initializer */
 
 /**

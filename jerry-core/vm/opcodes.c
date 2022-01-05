@@ -59,10 +59,10 @@ opfunc_typeof (ecma_value_t left_value) /**< left value */
 /**
  * Update data property for object literals.
  */
-void
-opfunc_set_data_property (ecma_object_t *object_p, /**< object */
-                          ecma_string_t *prop_name_p, /**< data property name */
-                          ecma_value_t value) /**< new value */
+static void
+opfunc_assing_data_property (ecma_object_t *object_p, /**< object */
+                             ecma_string_t *prop_name_p, /**< data property name */
+                             ecma_value_t value) /**< new value */
 {
   JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
 
@@ -96,7 +96,7 @@ opfunc_set_data_property (ecma_object_t *object_p, /**< object */
   }
 
   ecma_named_data_property_assign_value (object_p, prop_value_p, value);
-} /* opfunc_set_data_property */
+} /* opfunc_assing_data_property */
 
 /**
  * Update getter or setter for object literals.
@@ -320,17 +320,15 @@ opfunc_for_in (ecma_value_t iterable_value, /**< ideally an iterable value */
 #if JERRY_ESNEXT
 
 /**
- * 'VM_OC_APPEND_ARRAY' opcode handler specialized for spread objects
+ * 'CBC_EXT_SPREAD_ARRAY_APPEND' opcode handler specialized for spread objects
  *
  * @return ECMA_VALUE_ERROR - if the operation failed
  *         ECMA_VALUE_EMPTY, otherwise
  */
-static ecma_value_t JERRY_ATTR_NOINLINE
+ecma_value_t JERRY_ATTR_NOINLINE
 opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top */
                                uint16_t values_length) /**< number of elements to set */
 {
-  JERRY_ASSERT (!(values_length & OPFUNC_HAS_SPREAD_ELEMENT));
-
   ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
   JERRY_ASSERT (ecma_get_object_type (array_obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
@@ -501,23 +499,15 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
 #endif /* JERRY_ESNEXT */
 
 /**
- * 'VM_OC_APPEND_ARRAY' opcode handler, for setting array object properties
+ * 'CBC_ARRAY_APPEND' opcode handler, for setting array object properties
  *
  * @return ECMA_VALUE_ERROR - if the operation failed
  *         ECMA_VALUE_EMPTY, otherwise
  */
 ecma_value_t JERRY_ATTR_NOINLINE
 opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
-                     uint16_t values_length) /**< number of elements to set
-                                              *   with potential OPFUNC_HAS_SPREAD_ELEMENT flag */
+                     uint16_t values_length) /**< number of elements to set */
 {
-#if JERRY_ESNEXT
-  if (values_length >= OPFUNC_HAS_SPREAD_ELEMENT)
-  {
-    return opfunc_append_to_spread_array (stack_top_p, (uint16_t) (values_length & ~OPFUNC_HAS_SPREAD_ELEMENT));
-  }
-#endif /* JERRY_ESNEXT */
-
   ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
   JERRY_ASSERT (ecma_get_object_type (array_obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
@@ -1158,8 +1148,8 @@ opfunc_add_computed_field (ecma_value_t class_object, /**< class object */
  * @return - new external function ecma-object
  */
 ecma_value_t
-opfunc_create_implicit_class_constructor (uint8_t opcode, /**< current cbc opcode */
-                                          const ecma_compiled_code_t *bytecode_p) /**< current byte code */
+opfunc_create_implicit_class_constructor (const ecma_compiled_code_t *bytecode_p, /**< current byte code */
+                                          bool is_herigate) /* true -if class heritage is present */
 {
   /* 8. */
   ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
@@ -1181,7 +1171,7 @@ opfunc_create_implicit_class_constructor (uint8_t opcode, /**< current cbc opcod
   constructor_object_p->u.constructor_function.flags = 0;
 
   /* 10.a.i */
-  if (opcode == CBC_EXT_PUSH_IMPLICIT_CONSTRUCTOR_HERITAGE)
+  if (is_herigate)
   {
     constructor_object_p->u.constructor_function.flags |= ECMA_CONSTRUCTOR_FUNCTION_HAS_HERITAGE;
   }
@@ -1574,9 +1564,6 @@ opfunc_collect_private_properties (ecma_value_t constructor, ecma_value_t prop_n
 
   if (opcode == CBC_EXT_COLLECT_PRIVATE_METHOD)
   {
-    prop_name ^= value;
-    value ^= prop_name;
-    prop_name ^= value;
     kind = ECMA_PRIVATE_METHOD;
   }
   else if (opcode == CBC_EXT_COLLECT_PRIVATE_GETTER)
@@ -1977,10 +1964,7 @@ opfunc_finalize_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  *         ECMA_VALUE_EMPTY - otherwise
  */
 ecma_value_t
-opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stack top */
-                             vm_frame_ctx_t *frame_ctx_p, /**< frame context */
-                             ecma_value_t prop_name, /**< property name to resolve */
-                             uint8_t opcode) /**< current cbc opcode */
+opfunc_resolve_super (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   ecma_environment_record_t *environment_record_p = ecma_op_get_environment_record (frame_ctx_p->lex_env_p);
 
@@ -2001,112 +1985,8 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t *stack_top_p = *vm_stack_top_p;
-
-  if (opcode >= CBC_EXT_SUPER_PROP_ASSIGNMENT_REFERENCE)
-  {
-    JERRY_ASSERT (opcode == CBC_EXT_SUPER_PROP_ASSIGNMENT_REFERENCE
-                  || opcode == CBC_EXT_SUPER_PROP_LITERAL_ASSIGNMENT_REFERENCE);
-    *stack_top_p++ = parent;
-    *stack_top_p++ = ecma_copy_value (prop_name);
-    *vm_stack_top_p = stack_top_p;
-
-    return ECMA_VALUE_EMPTY;
-  }
-
-  ecma_object_t *parent_p = ecma_get_object_from_value (parent);
-  ecma_string_t *prop_name_p = ecma_op_to_property_key (prop_name);
-
-  if (prop_name_p == NULL)
-  {
-    ecma_deref_object (parent_p);
-    return ECMA_VALUE_ERROR;
-  }
-
-  ecma_value_t result = ecma_op_object_get_with_receiver (parent_p, prop_name_p, frame_ctx_p->this_binding);
-  ecma_deref_ecma_string (prop_name_p);
-  ecma_deref_object (parent_p);
-
-  if (ECMA_IS_VALUE_ERROR (result))
-  {
-    return result;
-  }
-
-  if (opcode == CBC_EXT_SUPER_PROP_LITERAL_REFERENCE || opcode == CBC_EXT_SUPER_PROP_REFERENCE)
-  {
-    *stack_top_p++ = ecma_copy_value (frame_ctx_p->this_binding);
-    *stack_top_p++ = ECMA_VALUE_UNDEFINED;
-  }
-
-  *stack_top_p++ = result;
-  *vm_stack_top_p = stack_top_p;
-
-  return ECMA_VALUE_EMPTY;
-} /* opfunc_form_super_reference */
-
-/**
- * Assignment operation for SuperRefence base
- *
- * @return ECMA_VALUE_ERROR - if the operation fails
- *         ECMA_VALUE_EMPTY - otherwise
- */
-ecma_value_t
-opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, /**< vm stack top */
-                               vm_frame_ctx_t *frame_ctx_p, /**< frame context */
-                               uint32_t opcode_data) /**< opcode data to store the result */
-{
-  ecma_value_t *stack_top_p = *vm_stack_top_p;
-
-  ecma_value_t base_obj = ecma_op_to_object (stack_top_p[-3]);
-
-  if (ECMA_IS_VALUE_ERROR (base_obj))
-  {
-    return base_obj;
-  }
-
-  ecma_object_t *base_obj_p = ecma_get_object_from_value (base_obj);
-  ecma_string_t *prop_name_p = ecma_op_to_property_key (stack_top_p[-2]);
-
-  if (prop_name_p == NULL)
-  {
-    ecma_deref_object (base_obj_p);
-    return ECMA_VALUE_ERROR;
-  }
-
-  bool is_strict = (frame_ctx_p->status_flags & VM_FRAME_CTX_IS_STRICT) != 0;
-
-  ecma_value_t result =
-    ecma_op_object_put_with_receiver (base_obj_p, prop_name_p, stack_top_p[-1], frame_ctx_p->this_binding, is_strict);
-
-  ecma_deref_ecma_string (prop_name_p);
-  ecma_deref_object (base_obj_p);
-
-  if (ECMA_IS_VALUE_ERROR (result))
-  {
-    return result;
-  }
-
-  for (int32_t i = 1; i <= 3; i++)
-  {
-    ecma_free_value (stack_top_p[-i]);
-  }
-
-  stack_top_p -= 3;
-
-  if (opcode_data & VM_OC_PUT_STACK)
-  {
-    *stack_top_p++ = result;
-  }
-  else if (opcode_data & VM_OC_PUT_BLOCK)
-  {
-    ecma_fast_free_value (VM_GET_REGISTER (frame_ctx_p, 0));
-    VM_GET_REGISTERS (frame_ctx_p)[0] = result;
-  }
-
-  *vm_stack_top_p = stack_top_p;
-
-  return result;
-} /* opfunc_assign_super_reference */
+  return parent;
+} /* opfunc_resolve_super */
 
 /**
  * Copy data properties of an object
@@ -2222,7 +2102,7 @@ opfunc_copy_data_properties (ecma_value_t target_object, /**< target object */
       }
     }
 
-    opfunc_set_data_property (target_object_p, property_name_p, result);
+    opfunc_assing_data_property (target_object_p, property_name_p, result);
     ecma_free_value (result);
 
     result = ECMA_VALUE_EMPTY;
@@ -2303,7 +2183,81 @@ opfunc_lexical_scope_has_restricted_binding (vm_frame_ctx_t *frame_ctx_p, /**< f
                                   && !ecma_is_property_configurable (property));
 } /* opfunc_lexical_scope_has_restricted_binding */
 
+/**
+ * Create function name property to the given function object
+ */
+void
+opfunc_set_function_name (ecma_value_t function_object, /**< function object */
+                          ecma_value_t function_name, /**< function name */
+                          char *prefix_p, /**< function name prefix */
+                          lit_utf8_size_t prefix_size) /**< function name prefix's length */
+{
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (function_object);
+
+  if (ecma_find_named_property (func_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_NAME)) != NULL)
+  {
+    return;
+  }
+
+  ecma_property_value_t *value_p;
+  value_p = ecma_create_named_data_property (func_obj_p,
+                                             ecma_get_magic_string (LIT_MAGIC_STRING_NAME),
+                                             ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                             NULL);
+
+  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
+  {
+    ECMA_SET_SECOND_BIT_TO_POINTER_TAG (((ecma_extended_object_t *) func_obj_p)->u.function.scope_cp);
+  }
+
+  value_p->value = ecma_op_function_form_name (ecma_get_prop_name_from_value (function_name), prefix_p, prefix_size);
+} /* opfunc_set_function_name */
+
 #endif /* JERRY_ESNEXT */
+
+/**
+ * Set data property to an object/class
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+opfunc_set_data_property (ecma_value_t *stack_top_p, /**< vm stack */
+                          ecma_value_t prop_name, /**< property name to set */
+                          ecma_value_t value, /**< value to set */
+                          bool is_static) /**< true - if set class property
+                                               false - otherwise */
+{
+  ecma_string_t *prop_name_p = ecma_op_to_property_key (prop_name);
+
+  if (JERRY_UNLIKELY (prop_name_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  int index = -1;
+
+#if JERRY_ESNEXT
+  if (JERRY_UNLIKELY (is_static))
+  {
+    if (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
+    {
+      return ecma_raise_type_error (ECMA_ERR_CLASS_IS_NON_CONFIGURABLE);
+    }
+
+    index--;
+  }
+#else /* !JERRY_ESNEXT */
+  JERRY_UNUSED (is_static);
+#endif /* JERRY_ESNEXT */
+
+  ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[index]);
+
+  opfunc_assing_data_property (object_p, prop_name_p, value);
+  ecma_deref_ecma_string (prop_name_p);
+
+  return ECMA_VALUE_EMPTY;
+} /* opfunc_set_data_property */
 
 /**
  * @}

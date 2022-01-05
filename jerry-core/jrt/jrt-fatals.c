@@ -47,11 +47,6 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
       JERRY_ERROR_MSG ("Error: JERRY_FATAL_UNTERMINATED_GC_LOOPS\n");
       break;
     }
-    case JERRY_FATAL_DISABLED_BYTE_CODE:
-    {
-      JERRY_ERROR_MSG ("Error: JERRY_FATAL_DISABLED_BYTE_CODE\n");
-      break;
-    }
     case JERRY_FATAL_FAILED_ASSERTION:
     {
       JERRY_ERROR_MSG ("Error: JERRY_FATAL_FAILED_ASSERTION\n");

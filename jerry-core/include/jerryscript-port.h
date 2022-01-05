@@ -44,8 +44,7 @@ typedef enum
 {
   JERRY_FATAL_OUT_OF_MEMORY = 10, /**< Out of memory */
   JERRY_FATAL_REF_COUNT_LIMIT = 12, /**< Reference count limit reached */
-  JERRY_FATAL_DISABLED_BYTE_CODE = 13, /**< Executed disabled instruction */
-  JERRY_FATAL_UNTERMINATED_GC_LOOPS = 14, /**< Garbage collection loop limit reached */
+  JERRY_FATAL_UNTERMINATED_GC_LOOPS = 13, /**< Garbage collection loop limit reached */
   JERRY_FATAL_FAILED_ASSERTION = 120 /**< Assertion failed */
 } jerry_fatal_code_t;
 

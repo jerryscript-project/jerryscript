@@ -27,7 +27,7 @@ typedef struct
    * uint32_t alignment. Otherwise some bytes after the header are wasted. */
   uint32_t magic; /**< four byte magic number */
   uint32_t version; /**< version number */
-  uint32_t global_flags; /**< global configuration and feature flags */
+  uint32_t feature_flags; /**< combination of jerry_snapshot_global_flags_t */
   uint32_t lit_table_offset; /**< byte offset of the literal table */
   uint32_t number_of_funcs; /**< number of primary ECMAScript functions */
   uint32_t func_offsets[1]; /**< function offsets (lowest bit: global(0) or eval(1) context) */
@@ -39,15 +39,15 @@ typedef struct
 #define JERRY_SNAPSHOT_MAGIC (0x5952524Au)
 
 /**
- * Snapshot configuration flags.
+ * Feature flags for snapshot execution.
  */
 typedef enum
 {
-  /* 8 bits are reserved for dynamic features */
-  JERRY_SNAPSHOT_HAS_REGEX_LITERAL = (1u << 0), /**< byte code has regex literal */
-  JERRY_SNAPSHOT_HAS_CLASS_LITERAL = (1u << 1), /**< byte code has class literal */
-  /* 24 bits are reserved for compile time features */
-  JERRY_SNAPSHOT_FOUR_BYTE_CPOINTER = (1u << 8) /**< deprecated, an unused placeholder now */
-} jerry_snapshot_global_flags_t;
+  JERRY_SNAPSHOT_FEATURE_NONE = 0,
+  JERRY_SNAPSHOT_FEATURE_REGEXP = (1u << 0), /**< feature flag for JERRY_BUILTIN_REGEXP */
+  JERRY_SNAPSHOT_FEATURE_MODULE = (1u << 1), /**< feature flag for JERRY_MODULE_SYSTEM */
+  JERRY_SNAPSHOT_FEATURE_DEBUGGER = (1u << 2), /**< feature flag for JERRY_DEBUGGER */
+  JERRY_SNAPSHOT_FEATURE_ESNEXT = (1u << 3), /**< feature flag for JERRY_ESNEXT */
+} jerry_snapshot_feature_flags_t;
 
 #endif /* !JERRY_SNAPSHOT_H */

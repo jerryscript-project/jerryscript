@@ -34,46 +34,43 @@
 #if JERRY_SNAPSHOT_SAVE || JERRY_SNAPSHOT_EXEC
 
 /**
- * Get snapshot configuration flags.
+ * Get snapshot feature configuration flags.
  *
- * @return configuration flags
+ * @return feature configuration flags
  */
-static inline uint32_t JERRY_ATTR_ALWAYS_INLINE
-snapshot_get_global_flags (bool has_regex, /**< regex literal is present */
-                           bool has_class) /**< class literal is present */
+static inline jerry_snapshot_feature_flags_t
+snapshot_get_feature_flags (void)
 {
-  JERRY_UNUSED (has_regex);
-  JERRY_UNUSED (has_class);
-
-  uint32_t flags = 0;
+  jerry_snapshot_feature_flags_t flags = JERRY_SNAPSHOT_FEATURE_NONE;
 
 #if JERRY_BUILTIN_REGEXP
-  flags |= (has_regex ? JERRY_SNAPSHOT_HAS_REGEX_LITERAL : 0);
+  flags |= JERRY_SNAPSHOT_FEATURE_REGEXP;
 #endif /* JERRY_BUILTIN_REGEXP */
+#if JERRY_MODULE_SYSTEM
+  flags |= JERRY_SNAPSHOT_FEATURE_MODULE;
+#endif /* JERRY_MODULE_SYSTEM */
+#if JERRY_DEBUGGER
+  flags |= JERRY_SNAPSHOT_FEATURE_DEBUGGER;
+#endif /* JERRY_DEBUGGER */
 #if JERRY_ESNEXT
-  flags |= (has_class ? JERRY_SNAPSHOT_HAS_CLASS_LITERAL : 0);
+  flags |= JERRY_SNAPSHOT_FEATURE_ESNEXT;
 #endif /* JERRY_ESNEXT */
 
   return flags;
-} /* snapshot_get_global_flags */
+} /* snapshot_get_feature_flags */
 
 /**
- * Checks whether the global_flags argument matches to the current feature set.
+ * Validate snapshot header
  *
- * @return true if global_flags accepted, false otherwise
+ * @return true - if the header is valid
+ *         false - otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
-snapshot_check_global_flags (uint32_t global_flags) /**< global flags */
+static bool
+snapshot_validate_header (const jerry_snapshot_header_t *header_p)
 {
-#if JERRY_BUILTIN_REGEXP
-  global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_REGEX_LITERAL;
-#endif /* JERRY_BUILTIN_REGEXP */
-#if JERRY_ESNEXT
-  global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_CLASS_LITERAL;
-#endif /* JERRY_ESNEXT */
-
-  return global_flags == snapshot_get_global_flags (false, false);
-} /* snapshot_check_global_flags */
+  return (header_p->magic == JERRY_SNAPSHOT_MAGIC && header_p->version == JERRY_SNAPSHOT_VERSION
+          && (header_p->feature_flags & snapshot_get_feature_flags ()) == header_p->feature_flags);
+} /* snapshot_validate_header */
 
 #endif /* JERRY_SNAPSHOT_SAVE || JERRY_SNAPSHOT_EXEC */
 
@@ -86,8 +83,6 @@ typedef struct
 {
   size_t snapshot_buffer_write_offset;
   ecma_value_t snapshot_error;
-  bool regex_found;
-  bool class_found;
 } snapshot_globals_t;
 
 /** \addtogroup jerrysnapshot Jerry snapshot operations
@@ -171,11 +166,6 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
       jerry_throw_sz (JERRY_ERROR_RANGE, ecma_get_error_msg (ECMA_ERR_TAGGED_TEMPLATE_LITERALS));
     return 0;
   }
-
-  if (CBC_FUNCTION_GET_TYPE (compiled_code_p->status_flags) == CBC_FUNCTION_CONSTRUCTOR)
-  {
-    globals_p->class_found = true;
-  }
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_REGEXP
@@ -216,7 +206,6 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
       return 0;
     }
 
-    globals_p->regex_found = true;
     globals_p->snapshot_buffer_write_offset = JERRY_ALIGNUP (globals_p->snapshot_buffer_write_offset, JMEM_ALIGNMENT);
 
     /* Regexp character size is stored in refs. */
@@ -788,8 +777,6 @@ jerry_generate_snapshot (jerry_value_t compiled_code, /**< parsed script or func
 
   globals.snapshot_buffer_write_offset = aligned_header_size;
   globals.snapshot_error = ECMA_VALUE_EMPTY;
-  globals.regex_found = false;
-  globals.class_found = false;
 
   if (generate_snapshot_opts & JERRY_SNAPSHOT_SAVE_STATIC)
   {
@@ -808,7 +795,7 @@ jerry_generate_snapshot (jerry_value_t compiled_code, /**< parsed script or func
   jerry_snapshot_header_t header;
   header.magic = JERRY_SNAPSHOT_MAGIC;
   header.version = JERRY_SNAPSHOT_VERSION;
-  header.global_flags = snapshot_get_global_flags (globals.regex_found, globals.class_found);
+  header.feature_flags = (uint32_t) snapshot_get_feature_flags ();
   header.lit_table_offset = (uint32_t) globals.snapshot_buffer_write_offset;
   header.number_of_funcs = 1;
   header.func_offsets[0] = aligned_header_size;
@@ -897,8 +884,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
 
   const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) snapshot_data_p;
 
-  if (header_p->magic != JERRY_SNAPSHOT_MAGIC || header_p->version != JERRY_SNAPSHOT_VERSION
-      || !snapshot_check_global_flags (header_p->global_flags))
+  if (!snapshot_validate_header (header_p))
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_INVALID_SNAPSHOT_VERSION_OR_FEATURES));
   }
@@ -1219,7 +1205,6 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
 {
 #if JERRY_SNAPSHOT_SAVE
   uint32_t number_of_funcs = 0;
-  uint32_t merged_global_flags = 0;
   size_t functions_size = sizeof (jerry_snapshot_header_t);
 
   if (number_of_snapshots < 2)
@@ -1241,15 +1226,12 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
 
     const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) inp_buffers_p[i];
 
-    if (header_p->magic != JERRY_SNAPSHOT_MAGIC || header_p->version != JERRY_SNAPSHOT_VERSION
-        || !snapshot_check_global_flags (header_p->global_flags))
+    if (!snapshot_validate_header (header_p))
     {
       *error_p = "invalid snapshot version or unsupported features present";
       ecma_collection_destroy (lit_pool_p);
       return 0;
     }
-
-    merged_global_flags |= header_p->global_flags;
 
     uint32_t start_offset = header_p->func_offsets[0];
     const uint8_t *data_p = (const uint8_t *) inp_buffers_p[i];
@@ -1278,7 +1260,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
 
   header_p->magic = JERRY_SNAPSHOT_MAGIC;
   header_p->version = JERRY_SNAPSHOT_VERSION;
-  header_p->global_flags = merged_global_flags;
+  header_p->feature_flags = snapshot_get_feature_flags ();
   header_p->lit_table_offset = (uint32_t) functions_size;
   header_p->number_of_funcs = number_of_funcs;
 
@@ -1555,8 +1537,7 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
   const uint8_t *snapshot_data_p = (uint8_t *) snapshot_p;
   const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) snapshot_data_p;
 
-  if (snapshot_size <= sizeof (jerry_snapshot_header_t) || header_p->magic != JERRY_SNAPSHOT_MAGIC
-      || header_p->version != JERRY_SNAPSHOT_VERSION || !snapshot_check_global_flags (header_p->global_flags))
+  if (snapshot_size <= sizeof (jerry_snapshot_header_t) || !snapshot_validate_header (header_p))
   {
     /* Invalid snapshot format */
     return 0;

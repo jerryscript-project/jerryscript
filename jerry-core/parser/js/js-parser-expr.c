@@ -1420,7 +1420,7 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
         uint16_t function_literal_index = lexer_construct_function_object (context_p, status_flags);
 
 #if JERRY_ESNEXT
-        if (opcode >= CBC_EXT_SET_COMPUTED_GETTER)
+        if (is_computed)
         {
           literal_index = function_literal_index;
         }
@@ -3487,7 +3487,7 @@ parser_process_binary_assignment_token (parser_context_t *context_p, /**< contex
 
   if (opcode == CBC_ASSIGN_PROP_THIS_LITERAL && (context_p->stack_depth >= context_p->stack_limit))
   {
-    /* Stack limit is increased for VM_OC_ASSIGN_PROP_THIS. Needed by vm.c. */
+    /* Needed by vm.c. */
     JERRY_ASSERT (context_p->stack_depth == context_p->stack_limit);
 
     context_p->stack_limit++;

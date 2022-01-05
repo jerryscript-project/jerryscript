@@ -45,7 +45,7 @@ JERRY_STATIC_ASSERT (CBC_EXT_END == 167, number_of_cbc_ext_opcodes_changed);
 /**
  * Compact bytecode definition
  */
-#define CBC_OPCODE(arg1, arg2, arg3, arg4) ((arg2) | (((arg3) + CBC_STACK_ADJUST_BASE) << CBC_STACK_ADJUST_SHIFT)),
+#define CBC_OPCODE(arg1, arg2, arg3) ((arg2) | (((arg3) + CBC_STACK_ADJUST_BASE) << CBC_STACK_ADJUST_SHIFT)),
 
 /**
  * Flags of the opcodes.
@@ -63,7 +63,7 @@ const uint8_t cbc_ext_flags[] = { CBC_EXT_OPCODE_LIST };
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
 
-#define CBC_OPCODE(arg1, arg2, arg3, arg4) #arg1,
+#define CBC_OPCODE(arg1, arg2, arg3) #arg1,
 
 /**
  * Names of the opcodes.

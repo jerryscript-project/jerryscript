@@ -93,7 +93,7 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
       }
       case NUMBER_BITWISE_SHIFT_LEFT:
       {
-        result = (ecma_number_t) (ecma_number_to_int32 (left_number) << (right_uint32 & 0x1F));
+        result = (ecma_number_t) ((int32_t) ((uint32_t) ecma_number_to_int32 (left_number) << (right_uint32 & 0x1F)));
         break;
       }
       case NUMBER_BITWISE_SHIFT_RIGHT:

@@ -3273,14 +3273,17 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 #endif /* JERRY_ESNEXT */
       case LIT_CHAR_LEFT_BRACE:
       {
-        if (ident_opts & (LEXER_OBJ_IDENT_CLASS_NO_STATIC | LEXER_OBJ_IDENT_CLASS_PRIVATE))
+        const uint32_t static_block_flags =
+          (LEXER_OBJ_IDENT_CLASS_NO_STATIC | LEXER_OBJ_IDENT_CLASS_PRIVATE | LEXER_OBJ_IDENT_CLASS_IDENTIFIER);
+
+        if ((ident_opts & static_block_flags) == LEXER_OBJ_IDENT_CLASS_IDENTIFIER)
         {
-          break;
+          context_p->token.type = LEXER_LEFT_BRACE;
+          lexer_consume_next_character (context_p);
+          return;
         }
 
-        context_p->token.type = LEXER_LEFT_BRACE;
-        lexer_consume_next_character (context_p);
-        return;
+        break;
       }
       case LIT_CHAR_RIGHT_BRACE:
       {

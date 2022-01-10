@@ -1769,6 +1769,8 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 {
   JERRY_ASSERT (func_obj_p != NULL && !ecma_is_lexical_environment (func_obj_p));
 
+  ECMA_CHECK_STACK_USAGE ();
+
   switch (ecma_get_object_type (func_obj_p))
   {
     case ECMA_OBJECT_TYPE_FUNCTION:

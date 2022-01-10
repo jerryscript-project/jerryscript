@@ -472,6 +472,9 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
         if (ecma_number_is_nan (converted_number[0]))
         {
           *date_value_p = converted_number[0];
+#if JERRY_ESNEXT
+          date_object_p->header.u.cls.u1.date_flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
+#endif /* JERRY_ESNEXT */
           return ecma_make_number_value (converted_number[0]);
         }
 

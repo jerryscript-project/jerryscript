@@ -27,7 +27,7 @@ install-apt-get-deps:
 
 # Fetch RIOT OS repository.
 install-clone-riot:
-	git clone git://github.com/RIOT-OS/RIOT.git ../RIOT -b 2021.10
+	git clone https://github.com/RIOT-OS/RIOT.git ../RIOT -b 2021.10
 
 # Perform all the necessary (JerryScript-independent) installation steps.
 install-noapt: install-clone-riot

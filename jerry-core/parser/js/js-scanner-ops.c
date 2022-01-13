@@ -480,18 +480,16 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
           async_source_p = source_p;
         }
       }
-      else if (depth == total_depth - 1)
-      {
-        if (lexer_check_arrow (context_p))
-        {
-          arrow_type = SCANNER_SCAN_BRACKET_ARROW_WITH_ONE_ARG;
-          break;
-        }
 
-        if (context_p->stack_top_uint8 == SCAN_STACK_USE_ASYNC)
-        {
-          scanner_add_async_literal (context_p, scanner_context_p);
-        }
+      if (depth == total_depth - 1 && lexer_check_arrow (context_p))
+      {
+        arrow_type = SCANNER_SCAN_BRACKET_ARROW_WITH_ONE_ARG;
+        break;
+      }
+
+      if (context_p->stack_top_uint8 == SCAN_STACK_USE_ASYNC)
+      {
+        scanner_add_async_literal (context_p, scanner_context_p);
       }
 
       arrow_source_p = NULL;

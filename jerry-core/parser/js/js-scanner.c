@@ -2861,7 +2861,7 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
             continue;
           }
 
-          if (literal_pool_flags != SCANNER_LITERAL_POOL_FUNCTION)
+          if (literal_pool_flags & SCANNER_LITERAL_POOL_GENERATOR)
           {
             scanner_raise_error (context_p);
           }

@@ -3332,6 +3332,15 @@ ecma_op_ordinary_object_set_prototype_of (ecma_object_t *obj_p, /**< base object
 #if JERRY_BUILTIN_PROXY
     if (ECMA_OBJECT_IS_PROXY (iter_p))
     {
+      /**
+       * Prevent setting 'Object.prototype.__proto__'
+       * to avoid circular referencing in the prototype chain.
+       */
+      if (obj_p == ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE))
+      {
+        return ECMA_VALUE_FALSE;
+      }
+
       break;
     }
 #endif /* JERRY_BUILTIN_PROXY */

@@ -192,6 +192,8 @@ ecma_atomic_read_modify_write (ecma_value_t typedarray, /**< typedArray argument
   /* 9. */
   uint32_t indexed_position = ecma_number_to_uint32 (idx) * element_size + offset;
 
+  ecma_free_value (idx);
+
   JERRY_UNUSED (indexed_position);
   JERRY_UNUSED (element_type);
   JERRY_UNUSED (val);

@@ -774,7 +774,9 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
   JERRY_CONTEXT (global_object_p) = ecma_op_function_get_realm (bytecode_header_p);
 #endif /* JERRY_BUILTIN_REALMS */
 
+  ecma_ref_if_object (executable_object_p->frame_ctx.this_binding);
   ecma_value_t result = vm_execute (&executable_object_p->frame_ctx);
+  ecma_deref_if_object (executable_object_p->frame_ctx.this_binding);
 
 #if JERRY_BUILTIN_REALMS
   JERRY_CONTEXT (global_object_p) = saved_global_object_p;

@@ -2506,6 +2506,13 @@ parser_parse_source (void *source_p, /**< source code */
     jcontext_raise_exception (ECMA_VALUE_NULL);
     return NULL;
   }
+#if (JERRY_STACK_LIMIT != 0)
+  if (context.error == PARSER_ERR_STACK_OVERFLOW)
+  {
+    ecma_raise_standard_error (JERRY_ERROR_RANGE, ECMA_ERR_MAXIMUM_CALL_STACK_SIZE_EXCEEDED);
+    return NULL;
+  }
+#endif /* JERRY_STACK_LIMIT != 0 */
 
 #if JERRY_ERROR_MESSAGES
   ecma_string_t *err_str_p;

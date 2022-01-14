@@ -2799,6 +2799,12 @@ uint16_t
 lexer_construct_function_object (parser_context_t *context_p, /**< context */
                                  uint32_t extra_status_flags) /**< extra status flags */
 {
+#if (JERRY_STACK_LIMIT != 0)
+  if (JERRY_UNLIKELY (ecma_get_current_stack_usage () > CONFIG_MEM_STACK_LIMIT))
+  {
+    parser_raise_error (context_p, PARSER_ERR_STACK_OVERFLOW);
+  }
+#endif /* JERRY_STACK_LIMIT != 0 */
   ecma_compiled_code_t *compiled_code_p;
   lexer_literal_t *literal_p;
   uint16_t result_index;

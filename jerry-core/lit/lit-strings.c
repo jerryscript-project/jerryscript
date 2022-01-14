@@ -865,7 +865,7 @@ lit_convert_cesu8_string_to_utf8_string (const lit_utf8_byte_t *cesu8_string_p, 
     cesu8_cursor_p += read_size;
   }
 
-  JERRY_ASSERT (cesu8_cursor_p == cesu8_end_p);
+  JERRY_ASSERT (cesu8_cursor_p <= cesu8_end_p);
   JERRY_ASSERT (utf8_cursor_p <= utf8_end_p);
 
   return (lit_utf8_byte_t) (utf8_cursor_p - utf8_string_p);

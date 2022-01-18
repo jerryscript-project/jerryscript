@@ -47,6 +47,13 @@ check_syntax_error("class A { static get #a(){}; set #a(){}; #a; }");
 check_syntax_error("class A { static #a(){}; #a; }");
 check_syntax_error("class A extends B{ foo(){ super.#a }}");
 check_syntax_error("class A extends function() { x = this.#foo; }{ #foo; };");
+check_syntax_error("class A { static async *#bar(x) { } #bar }");
+check_syntax_error("class A { static async #bar(x) { } #bar }");
+check_syntax_error("class A { static *#bar(x) { } #bar }");
+check_syntax_error("class A { async *#bar(x) { } #bar }");
+check_syntax_error("class A { async #bar(x) { } #bar }");
+check_syntax_error("class A { *#bar(x) { } #bar }");
+
 
 class A {
   #a = 1;

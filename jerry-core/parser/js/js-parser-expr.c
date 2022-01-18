@@ -638,16 +638,21 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
       continue;
     }
 
-    if (is_private)
-    {
-      parser_check_duplicated_private_field (context_p, SCANNER_PRIVATE_FIELD_PROPERTY_GETTER_SETTER);
-    }
+    bool is_constructor_literal = false;
 
-    bool is_constructor_literal = context_p->token.type == LEXER_LITERAL && parser_is_constructor_literal (context_p);
-
-    if (is_private && is_constructor_literal && lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
+    if (context_p->token.type == LEXER_LITERAL)
     {
-      parser_raise_error (context_p, PARSER_ERR_CLASS_PRIVATE_CONSTRUCTOR);
+      is_constructor_literal = parser_is_constructor_literal (context_p);
+
+      if (is_private)
+      {
+        if (is_constructor_literal && lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
+        {
+          parser_raise_error (context_p, PARSER_ERR_CLASS_PRIVATE_CONSTRUCTOR);
+        }
+
+        parser_check_duplicated_private_field (context_p, SCANNER_PRIVATE_FIELD_PROPERTY_GETTER_SETTER);
+      }
     }
 
     if (!is_static && is_constructor_literal)
@@ -809,9 +814,9 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
         lexer_expect_object_literal_id (context_p, ident_opts);
       }
 
-      if (is_private)
+      if (is_private && context_p->token.type == LEXER_LITERAL)
       {
-        if (context_p->token.type == LEXER_LITERAL && parser_is_constructor_literal (context_p))
+        if (parser_is_constructor_literal (context_p))
         {
           parser_raise_error (context_p, PARSER_ERR_CLASS_PRIVATE_CONSTRUCTOR);
         }
@@ -836,9 +841,9 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
 
       status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
 
-      if (is_private)
+      if (is_private && context_p->token.type == LEXER_LITERAL)
       {
-        if (context_p->token.type == LEXER_LITERAL && parser_is_constructor_literal (context_p))
+        if (parser_is_constructor_literal (context_p))
         {
           parser_raise_error (context_p, PARSER_ERR_CLASS_PRIVATE_CONSTRUCTOR);
         }

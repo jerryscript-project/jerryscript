@@ -522,7 +522,6 @@
   <test id="language/statements/class/elements/private-method-double-initialisation-get-and-set.js"><reason></reason></test>
   <test id="language/statements/class/elements/private-method-double-initialisation-get.js"><reason></reason></test>
   <test id="language/statements/class/elements/private-method-double-initialisation-set.js"><reason></reason></test>
-  <test id="language/statements/class/elements/privatefieldput-primitive-receiver.js"><reason></reason></test>
   <test id="language/statements/class/elements/privatefieldset-evaluation-order-1.js"><reason></reason></test>
   <test id="language/statements/class/elements/privatefieldset-evaluation-order-2.js"><reason></reason></test>
   <test id="language/statements/class/elements/privatefieldset-evaluation-order-3.js"><reason></reason></test>

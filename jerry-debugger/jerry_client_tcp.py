@@ -17,6 +17,8 @@
 import socket
 import select
 
+from jerry_client_util import writeln, jerry_encode
+
 # pylint: disable=too-many-arguments,superfluous-parens
 class Socket(object):
     """ Create a new socket using the given address family, socket type and protocol number. """
@@ -29,7 +31,8 @@ class Socket(object):
         Connect to a remote socket at address (host, port).
         The format of address depends on the address family.
         """
-        print("Connecting to: %s:%s" % (self.address[0], self.address[1]))
+        connect_info = "Connecting to: %s:%s" % (self.address[0], self.address[1])
+        writeln(jerry_encode(connect_info))
         self.socket.connect(self.address)
 
     def close(self):

@@ -16,6 +16,8 @@
 
 import struct
 
+from jerry_client_util import jerry_ord
+
 MAX_BUFFER_SIZE = 256
 
 class RawPacket(object):
@@ -70,7 +72,7 @@ class RawPacket(object):
 
         while True:
             if len(self.data_buffer) >= 1:
-                size = ord(self.data_buffer[0])
+                size = jerry_ord(self.data_buffer[0])
                 if size == 0:
                     raise Exception("Unexpected data frame")
 

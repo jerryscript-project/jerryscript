@@ -24,5 +24,10 @@ then
     exit 1
 fi
 
-find ./tools ./jerry-debugger -name "*.py" \
+echo Checking jerry-debugger
+find ./jerry-debugger -name "*.py" \
+    | xargs pylint --rcfile=tools/pylint/pylintrc
+
+echo Checking testing tools
+find ./tools -name "*.py" \
     | xargs pylint --rcfile=tools/pylint/pylintrc

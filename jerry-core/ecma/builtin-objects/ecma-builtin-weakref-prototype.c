@@ -22,11 +22,6 @@
 #include "ecma-builtins-internal.h"
 
 /**
- * This object has a custom dispatch function.
- */
-#define BUILTIN_CUSTOM_DISPATCH
-
-/**
  * List of built-in routine identifiers.
  */
 enum
@@ -35,9 +30,6 @@ enum
   ECMA_BUILTIN_WEAKREF_PROTOTYPE_OBJECT_DEREF
 };
 
-/**
- * This object has a custom dispatch function.
- */
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-weakref-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID  weakref_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"

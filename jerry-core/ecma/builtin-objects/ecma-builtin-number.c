@@ -35,10 +35,6 @@
 #include "ecma-builtins-internal.h"
 
 #if JERRY_ESNEXT
-/**
- * This object has a custom dispatch function.
- */
-#define BUILTIN_CUSTOM_DISPATCH
 
 /**
  * List of built-in routine identifiers.
@@ -240,8 +236,30 @@ ecma_builtin_number_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
   }
 } /* ecma_builtin_number_dispatch_routine */
 
-#endif /* JERRY_ESNEXT */
+#else /* !JERRY_ESNEXT */
 
+/**
+ * Dispatcher of the built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_number_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine identifier */
+                                      ecma_value_t this_arg, /**< 'this' argument value */
+                                      const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                              *   passed to routine */
+                                      uint32_t arguments_number) /**< length of arguments' list */
+{
+  JERRY_UNUSED (this_arg);
+  JERRY_UNUSED (arguments_number);
+  JERRY_UNUSED (arguments_list_p);
+  JERRY_UNUSED (builtin_routine_id);
+
+  JERRY_UNREACHABLE ();
+} /* ecma_builtin_number_dispatch_routine */
+
+#endif /* JERRY_ESNEXT */
 /**
  * @}
  * @}

@@ -29,6 +29,15 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_BUILTIN_SHARED_ARRYBUFFER_ROUTINE_START = 0,
+  ECMA_BUILTIN_SHARED_ARRYBUFFER_SPECIES_GET,
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-shared-arraybuffer.inc.h"
 #define BUILTIN_UNDERSCORED_ID  shared_arraybuffer
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -76,16 +85,33 @@ ecma_builtin_shared_arraybuffer_dispatch_construct (const ecma_value_t *argument
 } /* ecma_builtin_shared_arraybuffer_dispatch_construct */
 
 /**
- * 24.2.3.2 get SharedArrayBuffer [ @@species ] accessor
+ * Dispatcher of the built-in's routines
  *
- * @return ecma_value
- *         returned value must be freed with ecma_free_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_shared_arraybuffer_species_get (ecma_value_t this_value) /**< This Value */
+ecma_builtin_shared_arraybuffer_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine identifier */
+                                                  ecma_value_t this_arg, /**< 'this' argument value */
+                                                  const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                          *   passed to routine */
+                                                  uint32_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_copy_value (this_value);
-} /* ecma_builtin_shared_arraybuffer_species_get */
+  JERRY_UNUSED (arguments_number);
+  JERRY_UNUSED (arguments_list_p);
+
+  switch (builtin_routine_id)
+  {
+    case ECMA_BUILTIN_SHARED_ARRYBUFFER_SPECIES_GET:
+    {
+      return ecma_copy_value (this_arg);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_shared_arraybuffer_dispatch_routine */
 
 /**
  * @}

@@ -29,6 +29,15 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_BUILTIN_REGEXP_ROUTINE_START = 0,
+  ECMA_BUILTIN_REGEXP_SPECES_GET,
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-regexp.inc.h"
 #define BUILTIN_UNDERSCORED_ID  regexp
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -216,19 +225,34 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   return ecma_builtin_regexp_dispatch_helper (arguments_list_p, arguments_list_len);
 } /* ecma_builtin_regexp_dispatch_construct */
 
-#if JERRY_ESNEXT
 /**
- * 21.2.4.2 get RegExp [ @@species ] accessor
+ * Dispatcher of the built-in's routines
  *
- * @return ecma_value
- *         returned value must be freed with ecma_free_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_regexp_species_get (ecma_value_t this_value) /**< This Value */
+ecma_builtin_regexp_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine identifier */
+                                      ecma_value_t this_arg, /**< 'this' argument value */
+                                      const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                              *   passed to routine */
+                                      uint32_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_copy_value (this_value);
-} /* ecma_builtin_regexp_species_get */
-#endif /* JERRY_ESNEXT */
+  JERRY_UNUSED (arguments_number);
+  JERRY_UNUSED (arguments_list_p);
+
+  switch (builtin_routine_id)
+  {
+    case ECMA_BUILTIN_REGEXP_SPECES_GET:
+    {
+      return ecma_copy_value (this_arg);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_regexp_dispatch_routine */
 
 /**
  * @}

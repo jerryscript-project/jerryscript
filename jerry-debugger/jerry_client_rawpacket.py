@@ -15,8 +15,19 @@
 # limitations under the License.
 
 import struct
+import sys
 
 MAX_BUFFER_SIZE = 256
+
+
+if sys.version_info.major >= 3:
+    def safe_ord(c):
+        if isinstance(c, int):
+            return c
+        return ord(c)
+else:
+	safe_ord = ord
+
 
 class RawPacket(object):
     """ Simplified transmission layer. """
@@ -70,7 +81,7 @@ class RawPacket(object):
 
         while True:
             if len(self.data_buffer) >= 1:
-                size = ord(self.data_buffer[0])
+                size = safe_ord(self.data_buffer[0])
                 if size == 0:
                     raise Exception("Unexpected data frame")
 

@@ -45,11 +45,10 @@ typedef SOCKET jerryx_socket_t;
 typedef char jerryx_socket_void_t;
 typedef int jerryx_socket_size_t;
 #else /* !_WIN32 */
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 /* On *nix the EWOULDBLOCK errno value can be returned for non-blocking operations */
 #define JERRYX_EWOULDBLOCK    EWOULDBLOCK
@@ -130,10 +129,10 @@ jerryx_debugger_tcp_log_error (int errno_value) /**< error value to log */
                  (LPTSTR) &error_message,
                  0,
                  NULL);
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "TCP Error: %s\n", error_message);
+  JERRYX_ERROR_MSG ("TCP Error: %s\n", error_message);
   LocalFree (error_message);
 #else /* !_WIN32 */
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "TCP Error: %s\n", strerror (errno_value));
+  JERRYX_ERROR_MSG ("TCP Error: %s\n", strerror (errno_value));
 #endif /* _WIN32 */
 } /* jerryx_debugger_tcp_log_error */
 

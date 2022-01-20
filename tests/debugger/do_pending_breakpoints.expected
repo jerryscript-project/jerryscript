@@ -9,7 +9,7 @@ No breakpoint found, do you want to add a pending breakpoint? (y or [n]) Pending
  1: :1 (pending)
  2: f() (pending)
 (jerry-debugger) c
-out: pending-breakpoints
+pending-breakpoints
 Breakpoint 3 at <unknown>:1
 Breakpoint 4 at <unknown>:3 (in f() at line:2, col:1)
 Stopped at breakpoint:3 <unknown>:1

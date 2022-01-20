@@ -129,6 +129,7 @@ Note: These options are for the micro-sd card slot of STM32F4-Discovery base-boa
 * Enable `System Type -> STM32 Peripheral Support -> SDIO`
 * Enable `RTOS Features -> Work queue support -> High priority (kernel) worker thread`
 * Enable `RTOS Features -> RTOS hooks -> Custom board late initialization`
+* Enable `RTOS Features -> RTOS hooks -> Enable on_exit() API`
 * Enable `Driver Support -> MMC/SD Driver Support`
 * Disable `Driver Support -> MMC/SD Driver Support -> MMC/SD write protect pin`
 * Disable `Driver Support -> MMC/SD Driver Support -> MMC/SD SPI transfer support`
@@ -145,6 +146,7 @@ A simpler solution is to append the necessary content to the `.config` configura
 # Assuming you are in jerry-nuttx folder.
 cat >> nuttx/.config << EOL
 CONFIG_ARCH_FPU=y
+CONFIG_SCHED_ONEXIT=y
 CONFIG_INTERPRETERS_JERRYSCRIPT=y
 CONFIG_INTERPRETERS_JERRYSCRIPT_PRIORITY=100
 CONFIG_INTERPRETERS_JERRYSCRIPT_STACKSIZE=16384

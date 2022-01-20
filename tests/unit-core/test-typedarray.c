@@ -15,7 +15,6 @@
 
 #include <stdio.h>
 
-#include "jerryscript-port-default.h"
 #include "jerryscript-port.h"
 #include "jerryscript.h"
 
@@ -570,7 +569,7 @@ main (void)
 
   if (!jerry_feature_enabled (JERRY_FEATURE_TYPEDARRAY))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "TypedArray is disabled!\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "TypedArray is disabled!\n");
     jerry_cleanup ();
     return 0;
   }

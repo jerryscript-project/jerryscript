@@ -72,12 +72,8 @@ JERRY_DEBUGGER_EVAL_OK = 1
 JERRY_DEBUGGER_EVAL_ERROR = 2
 
 # Subtypes of output
-JERRY_DEBUGGER_OUTPUT_OK = 1
-JERRY_DEBUGGER_OUTPUT_ERROR = 2
-JERRY_DEBUGGER_OUTPUT_WARNING = 3
-JERRY_DEBUGGER_OUTPUT_DEBUG = 4
-JERRY_DEBUGGER_OUTPUT_TRACE = 5
-
+JERRY_DEBUGGER_OUTPUT_PRINT = 1
+JERRY_DEBUGGER_OUTPUT_LOG = 2
 
 # Messages sent by the client to server.
 JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1
@@ -1147,33 +1143,20 @@ class JerryDebugger(object):
 
         # Subtypes of output
         if buffer_type == JERRY_DEBUGGER_OUTPUT_RESULT_END:
-            if subtype == JERRY_DEBUGGER_OUTPUT_OK:
-                log_type = "%sout:%s " % (self.blue, self.nocolor)
+            if subtype == JERRY_DEBUGGER_OUTPUT_PRINT:
 
                 message = self.current_out + message
                 lines = message.split("\n")
                 self.current_out = lines.pop()
 
-                return "".join(["%s%s\n" % (log_type, line) for line in lines])
+                return "".join(["%s\n" % line for line in lines])
 
-            if subtype == JERRY_DEBUGGER_OUTPUT_DEBUG:
-                log_type = "%slog:%s " % (self.yellow, self.nocolor)
-
+            if subtype == JERRY_DEBUGGER_OUTPUT_LOG:
                 message = self.current_log + message
                 lines = message.split("\n")
                 self.current_log = lines.pop()
 
-                return "".join(["%s%s\n" % (log_type, line) for line in lines])
-
-            if not message.endswith("\n"):
-                message += "\n"
-
-            if subtype == JERRY_DEBUGGER_OUTPUT_WARNING:
-                return "%swarning: %s%s" % (self.yellow, self.nocolor, message)
-            elif subtype == JERRY_DEBUGGER_OUTPUT_ERROR:
-                return "%serr: %s%s" % (self.red, self.nocolor, message)
-            elif subtype == JERRY_DEBUGGER_OUTPUT_TRACE:
-                return "%strace: %s%s" % (self.blue, self.nocolor, message)
+                return "".join(["%s\n" % line for line in lines])
 
         # Subtypes of eval
         self.prompt = True

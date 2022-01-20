@@ -41,6 +41,18 @@ typedef enum
 } jerry_init_flag_t;
 
 /**
+ * Jerry log levels. The levels are in severity order
+ * where the most serious levels come first.
+ */
+typedef enum
+{
+  JERRY_LOG_LEVEL_ERROR = 0u, /**< the engine will terminate after the message is printed */
+  JERRY_LOG_LEVEL_WARNING = 1u, /**< a request is aborted, but the engine continues its operation */
+  JERRY_LOG_LEVEL_DEBUG = 2u, /**< debug messages from the engine, low volume */
+  JERRY_LOG_LEVEL_TRACE = 3u /**< detailed info about engine internals, potentially high volume */
+} jerry_log_level_t;
+
+/**
  * JerryScript API Error object types.
  */
 typedef enum
@@ -316,9 +328,9 @@ typedef jerry_value_t (*jerry_halt_cb_t) (void *user_p);
 typedef void (*jerry_throw_cb_t) (const jerry_value_t exception_value, void *user_p);
 
 /**
- * Function type applied each byte of a string
+ * Function type applied to each unit of encoding when iterating over a string.
  */
-typedef void (*jerry_string_iterate_cb_t) (uint8_t byte, void *user_p);
+typedef void (*jerry_string_iterate_cb_t) (uint32_t value, void *user_p);
 
 /**
  * Function type applied for each data property of an object.

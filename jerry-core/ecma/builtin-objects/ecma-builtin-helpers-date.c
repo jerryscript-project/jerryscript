@@ -271,10 +271,10 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
  *
  * @return local time zone adjustment
  */
-extern inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
+extern inline int32_t JERRY_ATTR_ALWAYS_INLINE
 ecma_date_local_time_zone_adjustment (ecma_number_t time) /**< time value */
 {
-  return jerry_port_get_local_time_zone_adjustment (time, true);
+  return jerry_port_local_tza (time);
 } /* ecma_date_local_time_zone_adjustment */
 
 /**
@@ -288,7 +288,7 @@ ecma_date_local_time_zone_adjustment (ecma_number_t time) /**< time value */
 ecma_number_t
 ecma_date_utc (ecma_number_t time) /**< time value */
 {
-  return time - jerry_port_get_local_time_zone_adjustment (time, false);
+  return time - jerry_port_local_tza (time);
 } /* ecma_date_utc */
 
 /**
@@ -607,7 +607,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
       }
       case LIT_CHAR_LOWERCASE_Z: /* Time zone hours part. */
       {
-        int32_t time_zone = (int32_t) ecma_date_local_time_zone_adjustment (datetime_number);
+        int32_t time_zone = ecma_date_local_time_zone_adjustment (datetime_number);
 
         if (time_zone >= 0)
         {
@@ -627,7 +627,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
       {
         JERRY_ASSERT (*format_p == LIT_CHAR_UPPERCASE_Z); /* Time zone minutes part. */
 
-        int32_t time_zone = (int32_t) ecma_date_local_time_zone_adjustment (datetime_number);
+        int32_t time_zone = ecma_date_local_time_zone_adjustment (datetime_number);
 
         if (time_zone < 0)
         {

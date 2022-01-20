@@ -44,7 +44,7 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex: '<windows.h>'
     Priority: 0
-  - Regex: '<[-.a-z]*>'
+  - Regex: '<[-./a-z]*>'
     Priority: 1
   - Regex: '"jerryscript[-.a-z]*"'
     Priority: 2

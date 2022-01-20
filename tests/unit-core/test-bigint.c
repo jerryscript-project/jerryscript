@@ -22,7 +22,7 @@ main (void)
 {
   if (!jerry_feature_enabled (JERRY_FEATURE_BIGINT))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Bigint support is disabled!\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "Bigint support is disabled!\n");
     return 0;
   }
 

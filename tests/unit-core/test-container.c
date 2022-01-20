@@ -77,7 +77,7 @@ main (void)
   if (!jerry_feature_enabled (JERRY_FEATURE_MAP) || !jerry_feature_enabled (JERRY_FEATURE_SET)
       || !jerry_feature_enabled (JERRY_FEATURE_WEAKMAP) || !jerry_feature_enabled (JERRY_FEATURE_WEAKSET))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Containers are disabled!\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "Containers are disabled!\n");
     jerry_cleanup ();
     return 0;
   }

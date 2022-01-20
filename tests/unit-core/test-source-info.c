@@ -40,7 +40,7 @@ main (void)
 
   if (!jerry_feature_enabled (JERRY_FEATURE_FUNCTION_TO_STRING))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Source code is not stored!\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "Source code is not stored!\n");
     jerry_cleanup ();
     return 0;
   }

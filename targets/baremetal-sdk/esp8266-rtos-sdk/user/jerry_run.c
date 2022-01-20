@@ -32,7 +32,7 @@ js_entry ()
   {
     double d;
     unsigned u;
-  } now = { .d = jerry_port_get_current_time () };
+  } now = { .d = jerry_port_current_time () };
   srand (now.u);
 
   jerry_init (JERRY_INIT_EMPTY);

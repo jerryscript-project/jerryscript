@@ -16,7 +16,7 @@
 #ifndef JERRYSCRIPT_DEBUGGER_H
 #define JERRYSCRIPT_DEBUGGER_H
 
-#include "jerryscript-port.h"
+#include "jerryscript-types.h"
 
 JERRY_C_API_BEGIN
 
@@ -65,7 +65,6 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
                                        void *user_p,
                                        jerry_value_t *return_value);
 void jerry_debugger_send_output (const jerry_char_t *buffer, jerry_size_t str_size);
-void jerry_debugger_send_log (jerry_log_level_t level, const jerry_char_t *buffer, jerry_size_t str_size);
 
 /**
  * @}

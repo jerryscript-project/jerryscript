@@ -140,7 +140,7 @@ jerry_debugger_transport_close (void)
     current_p = next_p;
   } while (current_p != NULL);
 
-  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Debugger client connection closed.\n");
+  jerry_log (JERRY_LOG_LEVEL_DEBUG, "Debugger client connection closed.\n");
 
   jerry_debugger_free_unreferenced_byte_code ();
 } /* jerry_debugger_transport_close */

@@ -14,8 +14,8 @@ Breakpoint 4 at tests/debugger/do_break.js:45 (in f() at line:43, col:1)
  3: tests/debugger/do_break.js:33 (in f() at line:31, col:3)
  4: tests/debugger/do_break.js:45 (in f() at line:43, col:1)
 (jerry-debugger) c
-out: break test
-out: var cat
+break test
+var cat
 Stopped at breakpoint:1 tests/debugger/do_break.js:51
 (jerry-debugger) delete 1
 Breakpoint 1 deleted
@@ -27,6 +27,6 @@ Breakpoint 1 deleted
 (jerry-debugger) c
 Stopped at breakpoint:2 tests/debugger/do_break.js:36 (in test() at line:20, col:1)
 (jerry-debugger) continue
-out: function test
+function test
 Stopped at breakpoint:3 tests/debugger/do_break.js:33 (in f() at line:31, col:3)
 (jerry-debugger) c

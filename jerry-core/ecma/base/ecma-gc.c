@@ -139,7 +139,7 @@ ecma_ref_object_inline (ecma_object_t *object_p) /**< object */
   }
   else
   {
-    jerry_fatal (ERR_REF_COUNT_LIMIT);
+    jerry_fatal (JERRY_FATAL_REF_COUNT_LIMIT);
   }
 } /* ecma_ref_object_inline */
 
@@ -2287,7 +2287,7 @@ ecma_gc_run (void)
 /**
  * Try to free some memory (depending on memory pressure).
  *
- * When called with JMEM_PRESSURE_FULL, the engine will be terminated with ERR_OUT_OF_MEMORY.
+ * When called with JMEM_PRESSURE_FULL, the engine will be terminated with JERRY_FATAL_OUT_OF_MEMORY.
  */
 void
 ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
@@ -2379,7 +2379,7 @@ ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
   }
   else if (JERRY_UNLIKELY (pressure == JMEM_PRESSURE_FULL))
   {
-    jerry_fatal (ERR_OUT_OF_MEMORY);
+    jerry_fatal (JERRY_FATAL_OUT_OF_MEMORY);
   }
   else
   {

@@ -159,7 +159,7 @@ int32_t ecma_date_sec_from_time (ecma_number_t time);
 int32_t ecma_date_ms_from_time (ecma_number_t time);
 int32_t ecma_date_time_in_day_from_time (ecma_number_t time);
 
-ecma_number_t ecma_date_local_time_zone_adjustment (ecma_number_t time);
+int32_t ecma_date_local_time_zone_adjustment (ecma_number_t time);
 ecma_number_t ecma_date_utc (ecma_number_t time);
 ecma_number_t ecma_date_make_time (ecma_number_t hour, ecma_number_t min, ecma_number_t sec, ecma_number_t ms);
 ecma_number_t ecma_date_make_day (ecma_number_t year, ecma_number_t month, ecma_number_t date);

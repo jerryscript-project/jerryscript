@@ -21,7 +21,7 @@
 
 #include "jerryscript.h"
 
-#include "jerryscript-ext/handler.h"
+#include "jerryscript-ext/properties.h"
 #include "test-common.h"
 
 static jerry_value_t
@@ -81,7 +81,7 @@ test_simple_registration (void)
   jerry_value_free (register_result.result);
 
   jerry_value_t global_obj = jerry_current_realm ();
-  jerryx_set_property_str (global_obj, "test", target_object);
+  jerry_object_set_sz (global_obj, "test", target_object);
   jerry_value_free (target_object);
   jerry_value_free (global_obj);
 
@@ -167,7 +167,7 @@ test_error_setvalue (void)
   freeze_property (global_obj, target_prop);
 
   jerry_value_t new_object = jerry_object ();
-  jerry_value_t set_result = jerryx_set_property_str (global_obj, target_prop, new_object);
+  jerry_value_t set_result = jerry_object_set_sz (global_obj, target_prop, new_object);
   TEST_ASSERT (jerry_value_is_exception (set_result));
 
   jerry_value_free (set_result);

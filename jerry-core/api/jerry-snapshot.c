@@ -576,7 +576,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
   if (JERRY_UNLIKELY (script_p->refs_and_type >= CBC_SCRIPT_REF_MAX))
   {
     /* This is probably never happens in practice. */
-    jerry_fatal (ERR_REF_COUNT_LIMIT);
+    jerry_fatal (JERRY_FATAL_REF_COUNT_LIMIT);
   }
 
   script_p->refs_and_type += CBC_SCRIPT_REF_ONE;

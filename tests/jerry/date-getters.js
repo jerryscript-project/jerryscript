@@ -43,7 +43,7 @@ assert (d.getDate() == 9);
 assert (d.getUTCDate() == 9);
 assert (d.getDay() == 4);
 assert (d.getUTCDay() == 4);
-assert (d.getHours() == Math.floor(12 - 1.5 + d.getTimezoneOffset() / 60));
+assert (d.getHours() == Math.floor(12 - 1.5 - d.getTimezoneOffset() / 60));
 assert (d.getUTCHours() == Math.floor(12 - 1.5));
 assert (d.getMinutes() == 43);
 assert (d.getUTCMinutes() == 43);

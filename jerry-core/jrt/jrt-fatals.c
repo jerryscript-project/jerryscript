@@ -32,29 +32,29 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
 #ifndef JERRY_NDEBUG
   switch (code)
   {
-    case ERR_OUT_OF_MEMORY:
+    case JERRY_FATAL_OUT_OF_MEMORY:
     {
-      JERRY_ERROR_MSG ("Error: ERR_OUT_OF_MEMORY\n");
+      JERRY_ERROR_MSG ("Error: JERRY_FATAL_OUT_OF_MEMORY\n");
       break;
     }
-    case ERR_REF_COUNT_LIMIT:
+    case JERRY_FATAL_REF_COUNT_LIMIT:
     {
-      JERRY_ERROR_MSG ("Error: ERR_REF_COUNT_LIMIT\n");
+      JERRY_ERROR_MSG ("Error: JERRY_FATAL_REF_COUNT_LIMIT\n");
       break;
     }
-    case ERR_UNTERMINATED_GC_LOOPS:
+    case JERRY_FATAL_UNTERMINATED_GC_LOOPS:
     {
-      JERRY_ERROR_MSG ("Error: ERR_UNTERMINATED_GC_LOOPS\n");
+      JERRY_ERROR_MSG ("Error: JERRY_FATAL_UNTERMINATED_GC_LOOPS\n");
       break;
     }
-    case ERR_DISABLED_BYTE_CODE:
+    case JERRY_FATAL_DISABLED_BYTE_CODE:
     {
-      JERRY_ERROR_MSG ("Error: ERR_DISABLED_BYTE_CODE\n");
+      JERRY_ERROR_MSG ("Error: JERRY_FATAL_DISABLED_BYTE_CODE\n");
       break;
     }
-    case ERR_FAILED_INTERNAL_ASSERTION:
+    case JERRY_FATAL_FAILED_ASSERTION:
     {
-      JERRY_ERROR_MSG ("Error: ERR_FAILED_INTERNAL_ASSERTION\n");
+      JERRY_ERROR_MSG ("Error: JERRY_FATAL_FAILED_ASSERTION\n");
       break;
     }
   }
@@ -78,9 +78,9 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const char *function, /**< function name */
                    const uint32_t line) /**< line */
 {
-  JERRY_ERROR_MSG ("ICE: Assertion '%s' failed at %s(%s):%lu.\n", assertion, file, function, (unsigned long) line);
+  JERRY_ERROR_MSG ("ICE: Assertion '%s' failed at %s(%s):%u.\n", assertion, file, function, line);
 
-  jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
+  jerry_fatal (JERRY_FATAL_FAILED_ASSERTION);
 } /* jerry_assert_fail */
 
 /**
@@ -91,8 +91,8 @@ jerry_unreachable (const char *file, /**< file name */
                    const char *function, /**< function name */
                    const uint32_t line) /**< line */
 {
-  JERRY_ERROR_MSG ("ICE: Unreachable control path at %s(%s):%lu was executed.\n", file, function, (unsigned long) line);
+  JERRY_ERROR_MSG ("ICE: Unreachable control path at %s(%s):%u was executed.\n", file, function, line);
 
-  jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
+  jerry_fatal (JERRY_FATAL_FAILED_ASSERTION);
 } /* jerry_unreachable */
 #endif /* !JERRY_NDEBUG */

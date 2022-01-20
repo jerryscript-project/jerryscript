@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include "jerryscript-port-default.h"
 #include "jerryscript-port.h"
 #include "jerryscript.h"
 
@@ -24,7 +23,7 @@ main (void)
 {
   if (!jerry_feature_enabled (JERRY_FEATURE_DATAVIEW))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "DataView support is disabled!\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "DataView support is disabled!\n");
     return 0;
   }
 

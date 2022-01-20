@@ -297,7 +297,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET);
 
-      result = (int32_t) ((-ecma_date_local_time_zone_adjustment (date_value)) / ECMA_DATE_MS_PER_MINUTE);
+      result = -ecma_date_local_time_zone_adjustment (date_value) / ECMA_DATE_MS_PER_MINUTE;
       break;
     }
   }

@@ -197,7 +197,7 @@ jerry_debugger_send_output (const jerry_char_t *buffer, /**< buffer */
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
-                                JERRY_DEBUGGER_OUTPUT_OK,
+                                JERRY_DEBUGGER_OUTPUT_PRINT,
                                 (const uint8_t *) buffer,
                                 sizeof (uint8_t) * str_size);
   }
@@ -206,26 +206,3 @@ jerry_debugger_send_output (const jerry_char_t *buffer, /**< buffer */
   JERRY_UNUSED (str_size);
 #endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_send_output */
-
-/**
- * Send the log of the program to the debugger client.
- */
-void
-jerry_debugger_send_log (jerry_log_level_t level, /**< level of the diagnostics message */
-                         const jerry_char_t *buffer, /**< buffer */
-                         jerry_size_t str_size) /**< string size */
-{
-#if JERRY_DEBUGGER
-  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-  {
-    jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
-                                (uint8_t) (level + 2),
-                                (const uint8_t *) buffer,
-                                sizeof (uint8_t) * str_size);
-  }
-#else /* !JERRY_DEBUGGER */
-  JERRY_UNUSED (level);
-  JERRY_UNUSED (buffer);
-  JERRY_UNUSED (str_size);
-#endif /* JERRY_DEBUGGER */
-} /* jerry_debugger_send_log */

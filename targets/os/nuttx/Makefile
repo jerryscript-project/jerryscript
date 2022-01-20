@@ -21,8 +21,8 @@ STACKSIZE = $(CONFIG_INTERPRETERS_JERRYSCRIPT_STACKSIZE)
 
 # Path to the JerryScript and NuttX projects. If not specified, it is
 # supposed that JerryScript is located next to the nuttx folder.
-JERRYSCRIPT_ROOT_DIR ?= ../../../../jerryscript
-NUTTX_ROOT_DIR ?= $(JERRYSCRIPT_ROOT_DIR)/../nuttx
+JERRYSCRIPT_ROOT_DIR ?= $(abspath ../../../../jerryscript)
+NUTTX_INCLUDE_DIR ?= $(abspath $(JERRYSCRIPT_ROOT_DIR)/../nuttx/include)
 
 CFLAGS += -std=c99
 CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-core/include
@@ -30,11 +30,11 @@ CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-ext/include
 CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-math/include
 
 # These libs should be copied from the JerryScript project.
-LIBS = libjerry-core.a libjerry-ext.a libjerry-math.a
+LIBS = libjerry-core.a libjerry-ext.a libjerry-math.a libjerry-port.a
 
 ASRCS = setjmp.S
-CSRCS = jerry_port.c jerry_module.c
-MAINSRC = jerry_main.c
+CSRCS = jerry-port.c
+MAINSRC = jerry-main.c
 
 .PHONY: copylibs
 copylibs:
@@ -61,7 +61,7 @@ libjerry:
 		--amalgam=ON \
 		--mem-heap=70 \
 		--profile=es.next \
-		--compile-flag="--sysroot=${NUTTX_ROOT_DIR}" \
+		--compile-flag="-I${NUTTX_INCLUDE_DIR}" \
 		--toolchain=$(abspath $(JERRYSCRIPT_ROOT_DIR)/cmake/toolchain_mcu_stm32f4.cmake)
 
 clean:: cleanlibs

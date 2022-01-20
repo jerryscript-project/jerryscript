@@ -19,7 +19,7 @@ print("[A\nB", "C\nD", "E\nF\nG]");
 
 var s = "";
 
-for (i = 1; i <= 100; i++) {
+for (i = 1; i <= 10; i++) {
   /* Translated from hungarian: life is beautiful */
   s += i + ": Az élet gyönyörű.\n";
 }

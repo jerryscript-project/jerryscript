@@ -698,7 +698,7 @@ ecma_builtin_date_utc (const ecma_value_t args[], /**< arguments list */
 static ecma_number_t
 ecma_builtin_date_now_helper (void)
 {
-  return floor (DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ()));
+  return floor (DOUBLE_TO_ECMA_NUMBER_T (jerry_port_current_time ()));
 } /* ecma_builtin_date_now_helper */
 
 /**

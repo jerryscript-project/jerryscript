@@ -35,6 +35,8 @@ bool jerryx_debugger_serial_create (const char *config);
 bool jerryx_debugger_ws_create (void);
 bool jerryx_debugger_rp_create (void);
 
+bool jerryx_debugger_is_reset (jerry_value_t value);
+
 JERRY_C_API_END
 
 #endif /* !JERRYX_HANDLER_H */

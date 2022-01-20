@@ -27,53 +27,53 @@
 
 #define JERRY_UNUSED(x) ((void) (x))
 
-#define TEST_ASSERT(x)                                                \
-  do                                                                  \
-  {                                                                   \
-    if (JERRY_UNLIKELY (!(x)))                                        \
-    {                                                                 \
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR,                          \
-                      "TEST: Assertion '%s' failed at %s(%s):%lu.\n", \
-                      #x,                                             \
-                      __FILE__,                                       \
-                      __func__,                                       \
-                      (unsigned long) __LINE__);                      \
-      jerry_port_fatal (ERR_FAILED_INTERNAL_ASSERTION);               \
-    }                                                                 \
+#define TEST_ASSERT(x)                                           \
+  do                                                             \
+  {                                                              \
+    if (JERRY_UNLIKELY (!(x)))                                   \
+    {                                                            \
+      jerry_log (JERRY_LOG_LEVEL_ERROR,                          \
+                 "TEST: Assertion '%s' failed at %s(%s):%lu.\n", \
+                 #x,                                             \
+                 __FILE__,                                       \
+                 __func__,                                       \
+                 (unsigned long) __LINE__);                      \
+      jerry_port_fatal (JERRY_FATAL_FAILED_ASSERTION);           \
+    }                                                            \
   } while (0)
 
-#define TEST_ASSERT_STR(EXPECTED, RESULT)                               \
-  do                                                                    \
-  {                                                                     \
-    const char* __expected = (const char*) (EXPECTED);                  \
-    const char* __result = (const char*) (RESULT);                      \
-    if (strcmp (__expected, __result) != 0)                             \
-    {                                                                   \
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR,                            \
-                      "TEST: String comparison failed at %s(%s):%lu.\n" \
-                      " Expected: '%s'\n Got: '%s'\n",                  \
-                      __FILE__,                                         \
-                      __func__,                                         \
-                      (unsigned long) __LINE__,                         \
-                      __expected,                                       \
-                      __result);                                        \
-      jerry_port_fatal (ERR_FAILED_INTERNAL_ASSERTION);                 \
-    }                                                                   \
+#define TEST_ASSERT_STR(EXPECTED, RESULT)                          \
+  do                                                               \
+  {                                                                \
+    const char* __expected = (const char*) (EXPECTED);             \
+    const char* __result = (const char*) (RESULT);                 \
+    if (strcmp (__expected, __result) != 0)                        \
+    {                                                              \
+      jerry_log (JERRY_LOG_LEVEL_ERROR,                            \
+                 "TEST: String comparison failed at %s(%s):%lu.\n" \
+                 " Expected: '%s'\n Got: '%s'\n",                  \
+                 __FILE__,                                         \
+                 __func__,                                         \
+                 (unsigned long) __LINE__,                         \
+                 __expected,                                       \
+                 __result);                                        \
+      jerry_port_fatal (JERRY_FATAL_FAILED_ASSERTION);             \
+    }                                                              \
   } while (0)
 
 /**
  * Test initialization statement that should be included
  * at the beginning of main function in every unit test.
  */
-#define TEST_INIT()                                  \
-  do                                                 \
-  {                                                  \
-    union                                            \
-    {                                                \
-      double d;                                      \
-      unsigned u;                                    \
-    } now = { .d = jerry_port_get_current_time () }; \
-    srand (now.u);                                   \
+#define TEST_INIT()                              \
+  do                                             \
+  {                                              \
+    union                                        \
+    {                                            \
+      double d;                                  \
+      unsigned u;                                \
+    } now = { .d = jerry_port_current_time () }; \
+    srand (now.u);                               \
   } while (0)
 
 /**

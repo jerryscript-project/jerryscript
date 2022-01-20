@@ -45,6 +45,9 @@ JERRY_C_API_BEGIN
 #define JERRY_ATTR_NORETURN           __attribute__ ((noreturn))
 #define JERRY_ATTR_PURE               __attribute__ ((pure))
 #define JERRY_ATTR_WARN_UNUSED_RESULT __attribute__ ((warn_unused_result))
+#define JERRY_ATTR_WEAK               __attribute__ ((weak))
+
+#define JERRY_WEAK_SYMBOL_SUPPORT
 
 #ifndef JERRY_LIKELY
 #define JERRY_LIKELY(x) __builtin_expect (!!(x), 1)
@@ -153,6 +156,13 @@ void *__cdecl _alloca (size_t _Size);
 #ifndef JERRY_ATTR_WARN_UNUSED_RESULT
 #define JERRY_ATTR_WARN_UNUSED_RESULT
 #endif /* !JERRY_ATTR_WARN_UNUSED_RESULT */
+
+/**
+ * Function attribute to declare a function a weak symbol
+ */
+#ifndef JERRY_ATTR_WEAK
+#define JERRY_ATTR_WEAK
+#endif /* !JERRY_ATTR_WEAK */
 
 /**
  * Helper to predict that a condition is likely.

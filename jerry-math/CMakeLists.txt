@@ -90,6 +90,7 @@ if(USING_GCC OR USING_CLANG)
                PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_MATH_GCC_CLANG}")
 endif()
 target_include_directories(${JERRY_MATH_NAME} PUBLIC ${INCLUDE_MATH})
+add_dependencies(${JERRY_MATH_NAME} amalgam)
 
 configure_file(libjerry-math.pc.in libjerry-math.pc @ONLY)
 

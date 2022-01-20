@@ -131,6 +131,7 @@ set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} PARENT_SCOPE) # for tests/unit-
 set(SOURCE_CORE_FILES
   api/jerry-debugger-transport.c
   api/jerry-debugger.c
+  api/jerry-module.c
   api/jerry-snapshot.c
   api/jerryscript.c
   debugger/debugger.c
@@ -527,6 +528,8 @@ if(ENABLE_AMALGAM)
   add_dependencies(amalgam amalgam-jerry)
 
   set(SOURCE_CORE_FILES ${AMALGAM_CORE_C} ${AMALGAM_CORE_H} ${AMALGAM_CONFIG_H})
+  set(INCLUDE_CORE_PUBLIC PARENT_SCOPE)
+  set(INCLUDE_CORE_PRIVATE PARENT_SCOPE)
 endif()
 
 # Third-party
@@ -743,6 +746,7 @@ add_library(${JERRY_CORE_NAME} ${SOURCE_CORE_FILES})
 target_compile_definitions(${JERRY_CORE_NAME} PUBLIC ${DEFINES_JERRY})
 target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE_PUBLIC})
 target_include_directories(${JERRY_CORE_NAME} PRIVATE ${INCLUDE_CORE_PRIVATE})
+add_dependencies(${JERRY_CORE_NAME} amalgam)
 
 set(JERRY_CORE_PKGCONFIG_REQUIRES)
 set(JERRY_CORE_PKGCONFIG_LIBS)

@@ -49,7 +49,7 @@ foreach(SOURCE_UNIT_TEST_EXT ${SOURCE_UNIT_TEST_EXT_MODULES})
   set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
   set_property(TARGET ${TARGET_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
-  target_link_libraries(${TARGET_NAME} jerry-ext jerry-core jerry-port-default)
+  target_link_libraries(${TARGET_NAME} jerry-ext jerry-core jerry-port)
 
   add_dependencies(unittests-ext ${TARGET_NAME})
 endforeach()

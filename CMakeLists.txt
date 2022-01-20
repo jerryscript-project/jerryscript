@@ -54,7 +54,7 @@ set(JERRY_CMDLINE           ON  CACHE BOOL "Build jerry command line tool?")
 set(JERRY_CMDLINE_TEST      OFF CACHE BOOL "Build jerry test command line tool?")
 set(JERRY_CMDLINE_SNAPSHOT  OFF CACHE BOOL "Build jerry snapshot command line tool?")
 set(JERRY_LIBFUZZER         OFF CACHE BOOL "Build jerry with libfuzzer support?")
-set(JERRY_PORT_DEFAULT      ON  CACHE BOOL "Build default jerry port implementation?")
+set(JERRY_PORT              ON  CACHE BOOL "Build default jerry port implementation?")
 set(JERRY_EXT               ON  CACHE BOOL "Build jerry-ext?")
 set(JERRY_MATH              OFF CACHE BOOL "Build and use jerry-math?")
 set(UNITTESTS               OFF CACHE BOOL "Build unit tests?")
@@ -75,9 +75,9 @@ if(NOT USING_CLANG)
 endif()
 
 if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR JERRY_LIBFUZZER OR UNITTESTS OR DOCTESTS)
-  set(JERRY_PORT_DEFAULT ON)
+  set(JERRY_PORT ON)
 
-  set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE OR LIBFUZZER OR TESTS)")
+  set(JERRY_PORT_MESSAGE " (FORCED BY CMDLINE OR LIBFUZZER OR TESTS)")
 endif()
 
 if(JERRY_CMDLINE OR DOCTESTS)
@@ -138,7 +138,7 @@ message(STATUS "JERRY_CMDLINE                  " ${JERRY_CMDLINE} ${JERRY_CMDLIN
 message(STATUS "JERRY_CMDLINE_TEST             " ${JERRY_CMDLINE_TEST} ${JERRY_CMDLINE_TEST_MESSAGE})
 message(STATUS "JERRY_CMDLINE_SNAPSHOT         " ${JERRY_CMDLINE_SNAPSHOT} ${JERRY_CMDLINE_SNAPSHOT_MESSAGE})
 message(STATUS "JERRY_LIBFUZZER                " ${JERRY_LIBFUZZER} ${JERRY_LIBFUZZER_MESSAGE})
-message(STATUS "JERRY_PORT_DEFAULT             " ${JERRY_PORT_DEFAULT} ${JERRY_PORT_DEFAULT_MESSAGE})
+message(STATUS "JERRY_PORT                     " ${JERRY_PORT} ${JERRY_PORT_MESSAGE})
 message(STATUS "JERRY_EXT                      " ${JERRY_EXT} ${JERRY_EXT_MESSAGE})
 message(STATUS "JERRY_MATH                     " ${JERRY_MATH} ${JERRY_MATH_MESSAGE})
 message(STATUS "UNITTESTS                      " ${UNITTESTS})
@@ -278,8 +278,8 @@ if(JERRY_EXT)
 endif()
 
 # Jerry's default port implementation
-if(JERRY_PORT_DEFAULT)
-  add_subdirectory(jerry-port/default)
+if(JERRY_PORT)
+  add_subdirectory(jerry-port)
 endif()
 
 # Jerry command line tool

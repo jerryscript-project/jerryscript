@@ -1,7 +1,7 @@
 This is a port for espressif's esp-idf (esp32). The MATH, LTO and STRIP options should be disabled, so to build under the IDF toolchain, just run the following command
 
 ```
-python tools\build.py --toolchain=cmake/toolchain-esp32.cmake --cmake-param "-GUnix Makefiles" --jerry-cmdline=OFF --jerry-port-default=OFF --lto=OFF --strip=OFF
+python tools\build.py --toolchain=cmake/toolchain-esp32.cmake --cmake-param "-GUnix Makefiles" --jerry-cmdline=OFF --jerry-port=OFF --lto=OFF --strip=OFF
 ```
 
 NB: the MATH, STRIP and LTO might be disabled by platform as well. I strongly suggest limiting heap memory with '--mem-heap=128' but that really depends on the SRAM available on your esp32.

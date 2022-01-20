@@ -26,7 +26,7 @@ import shutil
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JERRY_CORE = os.path.join(ROOT_DIR, 'jerry-core')
-JERRY_PORT = os.path.join(ROOT_DIR, 'jerry-port', 'default')
+JERRY_PORT = os.path.join(ROOT_DIR, 'jerry-port')
 JERRY_MATH = os.path.join(ROOT_DIR, 'jerry-math')
 
 
@@ -259,7 +259,6 @@ def amalgamate_jerry_core(output_dir):
         append_c_files=True,
         remove_includes=[
             'jerryscript.h',
-            'jerryscript-port.h',
             'jerryscript-compiler.h',
             'jerryscript-core.h',
             'jerryscript-debugger.h',
@@ -275,6 +274,7 @@ def amalgamate_jerry_core(output_dir):
         base_dir=JERRY_CORE,
         input_files=[
             os.path.join(JERRY_CORE, 'include', 'jerryscript.h'),
+            os.path.join(JERRY_CORE, 'include', 'jerryscript-port.h'),
             os.path.join(JERRY_CORE, 'include', 'jerryscript-debugger-transport.h'),
         ],
         output_file=os.path.join(output_dir, 'jerryscript.h'),
@@ -286,31 +286,17 @@ def amalgamate_jerry_core(output_dir):
                     os.path.join(output_dir, 'jerryscript-config.h'))
 
 
-def amalgamate_jerry_port_default(output_dir):
+def amalgamate_jerry_port(output_dir):
     amalgamate(
         base_dir=JERRY_PORT,
-        output_file=os.path.join(output_dir, 'jerryscript-port-default.c'),
+        output_file=os.path.join(output_dir, 'jerryscript-port.c'),
         append_c_files=True,
         remove_includes=[
             'jerryscript-port.h',
-            'jerryscript-port-default.h',
-            'jerryscript-debugger.h',
         ],
         extra_includes=[
             'jerryscript.h',
-            'jerryscript-port-default.h',
         ],
-    )
-
-    amalgamate(
-        base_dir=JERRY_PORT,
-        input_files=[os.path.join(JERRY_PORT, 'include', 'jerryscript-port-default.h')],
-        output_file=os.path.join(output_dir, 'jerryscript-port-default.h'),
-        remove_includes=[
-            'jerryscript-port.h',
-            'jerryscript.h',
-        ],
-        extra_includes=['jerryscript.h'],
     )
 
 
@@ -328,8 +314,8 @@ def main():
     parser = argparse.ArgumentParser(description='Generate amalgamated sources.')
     parser.add_argument('--jerry-core', action='store_true',
                         help='amalgamate jerry-core files')
-    parser.add_argument('--jerry-port-default', action='store_true',
-                        help='amalgamate jerry-port-default files')
+    parser.add_argument('--jerry-port', action='store_true',
+                        help='amalgamate jerry-port files')
     parser.add_argument('--jerry-math', action='store_true',
                         help='amalgamate jerry-math files')
     parser.add_argument('--output-dir', metavar='DIR', default='amalgam',
@@ -350,8 +336,8 @@ def main():
     if args.jerry_core:
         amalgamate_jerry_core(args.output_dir)
 
-    if args.jerry_port_default:
-        amalgamate_jerry_port_default(args.output_dir)
+    if args.jerry_port:
+        amalgamate_jerry_port(args.output_dir)
 
     if args.jerry_math:
         amalgamate_jerry_math(args.output_dir)

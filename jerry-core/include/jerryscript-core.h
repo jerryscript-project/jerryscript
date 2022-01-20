@@ -37,7 +37,6 @@ JERRY_C_API_BEGIN
 void jerry_init (jerry_init_flag_t flags);
 void jerry_cleanup (void);
 
-jerry_context_t *jerry_context_alloc (jerry_size_t heap_size, jerry_context_alloc_cb_t alloc, void *cb_data_p);
 void *jerry_context_data (const jerry_context_data_manager_t *manager_p);
 
 jerry_value_t jerry_current_realm (void);
@@ -69,8 +68,10 @@ bool jerry_foreach_live_object_with_info (const jerry_object_native_info_t *nati
  * @{
  */
 
+void JERRY_ATTR_FORMAT (printf, 2, 3) jerry_log (jerry_log_level_t level, const char *format_p, ...);
+void jerry_log_set_level (jerry_log_level_t level);
 bool jerry_validate_string (const jerry_char_t *buffer_p, jerry_size_t buffer_size, jerry_encoding_t encoding);
-bool jerry_feature_enabled (const jerry_feature_t feature);
+bool JERRY_ATTR_CONST jerry_feature_enabled (const jerry_feature_t feature);
 void jerry_register_magic_strings (const jerry_char_t *const *ext_strings_p,
                                    uint32_t count,
                                    const jerry_length_t *str_lengths_p);
@@ -171,7 +172,7 @@ bool jerry_frame_is_strict (jerry_frame_t *frame_p);
  */
 
 /* Reference management */
-jerry_value_t jerry_value_copy (const jerry_value_t value);
+jerry_value_t JERRY_ATTR_WARN_UNUSED_RESULT jerry_value_copy (const jerry_value_t value);
 void jerry_value_free (jerry_value_t value);
 
 /**
@@ -256,8 +257,8 @@ jerry_value_t jerry_binary_op (jerry_binary_op_t operation, const jerry_value_t 
  */
 jerry_value_t jerry_throw (jerry_error_t type, const jerry_value_t message);
 jerry_value_t jerry_throw_sz (jerry_error_t type, const char *message_p);
-jerry_value_t jerry_throw_value (const jerry_value_t value, bool take_ownership);
-jerry_value_t jerry_throw_abort (const jerry_value_t value, bool take_ownership);
+jerry_value_t jerry_throw_value (jerry_value_t value, bool take_ownership);
+jerry_value_t jerry_throw_abort (jerry_value_t value, bool take_ownership);
 /**
  * jerry-api-exception-ctor @}
  */
@@ -309,7 +310,7 @@ void jerry_on_throw (jerry_throw_cb_t callback, void *user_p);
  * @{
  */
 
-jerry_value_t jerry_undefined (void);
+jerry_value_t JERRY_ATTR_CONST jerry_undefined (void);
 
 /**
  * jerry-api-undefined-ctor @}
@@ -329,7 +330,7 @@ jerry_value_t jerry_undefined (void);
  * @{
  */
 
-jerry_value_t jerry_null (void);
+jerry_value_t JERRY_ATTR_CONST jerry_null (void);
 
 /**
  * jerry-api-null-ctor @}
@@ -349,7 +350,7 @@ jerry_value_t jerry_null (void);
  * @{
  */
 
-jerry_value_t jerry_boolean (bool value);
+jerry_value_t JERRY_ATTR_CONST jerry_boolean (bool value);
 
 /**
  * jerry-api-boolean-ctor @}
@@ -458,7 +459,6 @@ void jerry_string_iterate (const jerry_value_t value,
                            jerry_encoding_t encoding,
                            jerry_string_iterate_cb_t callback,
                            void *user_p);
-void jerry_string_print (const jerry_value_t value);
 /**
  * jerry-api-string-op @}
  */
@@ -550,6 +550,7 @@ bool jerry_object_foreach (const jerry_value_t object, jerry_object_property_for
  * @{
  */
 jerry_value_t jerry_object_set (jerry_value_t object, const jerry_value_t key, const jerry_value_t value);
+jerry_value_t jerry_object_set_sz (jerry_value_t object, const char *key_p, const jerry_value_t value);
 jerry_value_t jerry_object_set_index (jerry_value_t object, uint32_t index, const jerry_value_t value);
 jerry_value_t jerry_object_define_own_prop (jerry_value_t object,
                                             const jerry_value_t key,
@@ -567,6 +568,7 @@ void jerry_object_set_native_ptr (jerry_value_t object,
  * @{
  */
 jerry_value_t jerry_object_has (const jerry_value_t object, const jerry_value_t key);
+jerry_value_t jerry_object_has_sz (const jerry_value_t object, const char *key_p);
 jerry_value_t jerry_object_has_own (const jerry_value_t object, const jerry_value_t key);
 bool jerry_object_has_internal (const jerry_value_t object, const jerry_value_t key);
 bool jerry_object_has_native_ptr (const jerry_value_t object, const jerry_object_native_info_t *native_info_p);
@@ -579,6 +581,7 @@ bool jerry_object_has_native_ptr (const jerry_value_t object, const jerry_object
  * @{
  */
 jerry_value_t jerry_object_get (const jerry_value_t object, const jerry_value_t key);
+jerry_value_t jerry_object_get_sz (const jerry_value_t object, const char *key_p);
 jerry_value_t jerry_object_get_index (const jerry_value_t object, uint32_t index);
 jerry_value_t jerry_object_get_own_prop (const jerry_value_t object,
                                          const jerry_value_t key,
@@ -599,6 +602,7 @@ jerry_value_t jerry_object_find_own (const jerry_value_t object,
  * @{
  */
 jerry_value_t jerry_object_delete (jerry_value_t object, const jerry_value_t key);
+jerry_value_t jerry_object_delete_sz (const jerry_value_t object, const char *key_p);
 jerry_value_t jerry_object_delete_index (jerry_value_t object, uint32_t index);
 bool jerry_object_delete_internal (jerry_value_t object, const jerry_value_t key);
 bool jerry_object_delete_native_ptr (jerry_value_t object, const jerry_object_native_info_t *native_info_p);
@@ -1101,8 +1105,30 @@ jerry_value_t jerry_module_namespace (const jerry_value_t module);
  * @defgroup jerry-api-module-op Operations
  * @{
  */
+
+/**
+ * Resolve and parse a module file
+ *
+ * @param specifier: module request specifier string.
+ * @param referrer: parent module.
+ * @param user_p: user specified pointer.
+ *
+ * @return module object if resolving is successful, error otherwise.
+ */
+jerry_value_t jerry_module_resolve (const jerry_value_t specifier, const jerry_value_t referrer, void *user_p);
+
 jerry_value_t jerry_module_link (const jerry_value_t module, jerry_module_resolve_cb_t callback, void *user_p);
 jerry_value_t jerry_module_evaluate (const jerry_value_t module);
+
+/**
+ * Release known modules in the current context. If realm parameter is supplied, cleans up modules native to that realm
+ * only. This function should be called by the user application when the module database in the current context is no
+ * longer needed.
+ *
+ * @param realm: release only those modules which realm value is equal to this argument.
+ */
+void jerry_module_cleanup (const jerry_value_t realm);
+
 /**
  * jerry-api-module-op @}
  */
@@ -1116,7 +1142,7 @@ jerry_value_t jerry_native_module (jerry_native_module_evaluate_cb_t callback,
                                    size_t export_count);
 jerry_value_t jerry_native_module_get (const jerry_value_t native_module, const jerry_value_t export_name);
 jerry_value_t
-jerry_native_module_set (const jerry_value_t native_module, const jerry_value_t export_name, const jerry_value_t value);
+jerry_native_module_set (jerry_value_t native_module, const jerry_value_t export_name, const jerry_value_t value);
 /**
  * jerry-api-module-native @}
  */

@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "jerryscript-core.h"
 #include "jerryscript-port.h"
 
 #include "config.h"
@@ -120,10 +121,10 @@ void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_code_t code);
  * Logging
  */
 #if JERRY_LOGGING
-#define JERRY_ERROR_MSG(...)   jerry_port_log (JERRY_LOG_LEVEL_ERROR, __VA_ARGS__)
-#define JERRY_WARNING_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_WARNING, __VA_ARGS__)
-#define JERRY_DEBUG_MSG(...)   jerry_port_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__)
-#define JERRY_TRACE_MSG(...)   jerry_port_log (JERRY_LOG_LEVEL_TRACE, __VA_ARGS__)
+#define JERRY_ERROR_MSG(...)   jerry_log (JERRY_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define JERRY_WARNING_MSG(...) jerry_log (JERRY_LOG_LEVEL_WARNING, __VA_ARGS__)
+#define JERRY_DEBUG_MSG(...)   jerry_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define JERRY_TRACE_MSG(...)   jerry_log (JERRY_LOG_LEVEL_TRACE, __VA_ARGS__)
 #else /* !JERRY_LOGGING */
 #define JERRY_ERROR_MSG(...)          \
   do                                  \
@@ -170,6 +171,11 @@ void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_code_t code);
  * Returns minimum positive value, that divides @a alignment and is more than or equal to @a value
  */
 #define JERRY_ALIGNUP(value, alignment) (((value) + ((alignment) -1)) & ~((alignment) -1))
+
+/**
+ * Align value down
+ */
+#define JERRY_ALIGNDOWN(value, alignment) ((value) & ~((alignment) -1))
 
 /*
  * min, max

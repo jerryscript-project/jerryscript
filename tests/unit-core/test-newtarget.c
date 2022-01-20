@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include "jerryscript-port-default.h"
 #include "jerryscript-port.h"
 #include "jerryscript.h"
 
@@ -112,7 +111,7 @@ main (void)
   /* Test JERRY_FEATURE_SYMBOL feature as it is a must-have in ES.next */
   if (!jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Skipping test, ES.next support is disabled.\n");
+    jerry_log (JERRY_LOG_LEVEL_ERROR, "Skipping test, ES.next support is disabled.\n");
     return 0;
   }
 

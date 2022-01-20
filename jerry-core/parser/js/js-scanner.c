@@ -3916,12 +3916,12 @@ scan_completed:
         }
         case SCANNER_TYPE_ERR_REDECLARED:
         {
-          JERRY_DEBUG_MSG ("  ERR_REDECLARED: source:%d\n", (int) (info_p->source_p - source_start_p));
+          JERRY_DEBUG_MSG ("  JERRY_FATAL_REDECLARED: source:%d\n", (int) (info_p->source_p - source_start_p));
           break;
         }
         case SCANNER_TYPE_ERR_ASYNC_FUNCTION:
         {
-          JERRY_DEBUG_MSG ("  ERR_ASYNC_FUNCTION: source:%d\n", (int) (info_p->source_p - source_start_p));
+          JERRY_DEBUG_MSG ("  JERRY_FATAL_ASYNC_FUNCTION: source:%d\n", (int) (info_p->source_p - source_start_p));
           break;
         }
         case SCANNER_TYPE_LITERAL_FLAGS:

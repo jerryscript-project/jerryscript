@@ -17,7 +17,7 @@
 TERM_NORMAL='\033[0m'
 TERM_RED='\033[1;31m'
 
-pylint --version &>/dev/null
+pylint3 --version &>/dev/null
 if [ $? -ne 0 ]
 then
     echo -e "${TERM_RED}Can't run check-pylint because pylint isn't installed.${TERM_NORMAL}\n"
@@ -25,4 +25,4 @@ then
 fi
 
 find ./tools ./jerry-debugger -name "*.py" \
-    | xargs pylint --rcfile=tools/pylint/pylintrc
+    | xargs pylint3 --rcfile=tools/pylint/pylintrc

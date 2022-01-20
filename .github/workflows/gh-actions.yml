@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: '3.8'
       - run: sudo apt update
-      - run: sudo apt install doxygen clang-format-10 cppcheck pylint python-serial
+      - run: sudo apt install doxygen clang-format-10 cppcheck pylint3 python3-serial
       - run: $RUNNER --check-signed-off=gh-actions
         if: ${{ always() }}
       - run: $RUNNER --check-doxygen
@@ -36,9 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '2.7' # needed by jerry-debugger
       - run: $RUNNER -q --jerry-tests
       - run: $RUNNER -q --jerry-tests --build-debug
       - run: $RUNNER -q --jerry-debugger

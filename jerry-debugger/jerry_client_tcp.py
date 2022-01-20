@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright JS Foundation and other contributors, http://js.foundation
 #
@@ -18,7 +18,7 @@ import socket
 import select
 
 # pylint: disable=too-many-arguments,superfluous-parens
-class Socket(object):
+class Socket():
     """ Create a new socket using the given address family, socket type and protocol number. """
     def __init__(self, address, socket_family=socket.AF_INET, socket_type=socket.SOCK_STREAM, proto=0, fileno=None):
         self.address = address

@@ -211,7 +211,9 @@ stack_usage (uint32_t *stack_top_p, size_t length_in_bytes)
     stack_p++;
   }
 
-  jerry_log (JERRY_LOG_LEVEL_ERROR, "Used stack: %d\n", (int) ((uint8_t *) stack_bottom_p - (uint8_t *) stack_p));
+  jerry_log (JERRY_LOG_LEVEL_ERROR,
+             "Used stack: %u\n",
+             (unsigned int) ((uint8_t *) stack_bottom_p - (uint8_t *) stack_p));
 } /* stack_usage */
 
 #else /* (JERRY_TEST_STACK_MEASURE) && (JERRY_TEST_STACK_MEASURE) */

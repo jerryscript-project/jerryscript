@@ -3208,9 +3208,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_EVAL:
         {
           JERRY_CONTEXT (status_flags) |= ECMA_STATUS_DIRECT_EVAL;
-          JERRY_ASSERT ((*byte_code_p >= CBC_CALL && *byte_code_p <= CBC_CALL2_PROP_BLOCK)
-                        || (*byte_code_p == CBC_EXT_OPCODE && byte_code_p[1] >= CBC_EXT_SPREAD_CALL
-                            && byte_code_p[1] <= CBC_EXT_SPREAD_CALL_PROP_BLOCK));
           continue;
         }
         case VM_OC_CALL:
@@ -3342,6 +3339,31 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #if JERRY_ESNEXT
+        case VM_OC_BRANCH_OPTIONAL_CHAIN:
+        {
+          left_value = stack_top_p[-1];
+
+          bool pop_reference = byte_code_p[0] == CBC_EXT_OPCODE && byte_code_p[1] == CBC_EXT_POP_REFERENCE;
+
+          if (!ecma_is_value_null (left_value) && !ecma_is_value_undefined (left_value))
+          {
+            if (pop_reference)
+            {
+              byte_code_p += 2;
+            }
+
+            continue;
+          }
+
+          stack_top_p[-1] = ECMA_VALUE_UNDEFINED;
+          byte_code_p = byte_code_start_p + branch_offset;
+
+          if (!pop_reference)
+          {
+            continue;
+          }
+          /* FALLTHRU */
+        }
         case VM_OC_POP_REFERENCE:
         {
           ecma_free_value (stack_top_p[-2]);

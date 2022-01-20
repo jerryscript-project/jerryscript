@@ -2003,16 +2003,12 @@
   <test id="language/expressions/class/elements/async-gen-private-method/yield-promise-reject-next.js"><reason></reason></test>
   <test id="language/expressions/class/elements/class-name-static-initializer-anonymous.js"><reason></reason></test>
   <test id="language/expressions/class/elements/class-name-static-initializer-default-export.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/grammar-private-field-optional-chaining.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/private-field-after-optional-chain.js"><reason></reason></test>
   <test id="language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next-catch.js"><reason></reason></test>
   <test id="language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next-for-await-of-async-iterator.js"><reason></reason></test>
   <test id="language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next.js"><reason></reason></test>
   <test id="language/statements/class/elements/async-gen-private-method/yield-promise-reject-next-catch.js"><reason></reason></test>
   <test id="language/statements/class/elements/async-gen-private-method/yield-promise-reject-next-for-await-of-async-iterator.js"><reason></reason></test>
   <test id="language/statements/class/elements/async-gen-private-method/yield-promise-reject-next.js"><reason></reason></test>
-  <test id="language/statements/class/elements/grammar-private-field-optional-chaining.js"><reason></reason></test>
-  <test id="language/statements/class/elements/private-field-after-optional-chain.js"><reason></reason></test>
   <!-- END - ESNext stage 3 proposals: class fields, private methods and static class features -->
 
   <!-- ESNext stage 3 proposal: top level await
@@ -2511,37 +2507,6 @@
   <test id="language/statements/try/tco-finally.js"><reason></reason></test>
   <test id="language/statements/while/tco-body.js"><reason></reason></test>
   <!-- END - ES2015: Proper Tail Call (PTC) Optimization -->
-
-  <!-- ES2020: Optional Chaining
-       features: [optional-chaining]
-       https://github.com/tc39/proposal-optional-chaining
-  -->
-  <test id="language/expressions/optional-chaining/call-expression.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/eval-optional-call.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/iteration-statement-do.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/iteration-statement-for-await-of.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/iteration-statement-for-in.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/iteration-statement-for-of-type-error.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/iteration-statement-for.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/iteration-statement-while.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/member-expression-async-identifier.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/member-expression-async-literal.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/member-expression-async-this.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/member-expression.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/new-target-optional-call.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/optional-call-preserves-this.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/optional-chain-async-optional-chain-square-brackets.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/optional-chain-async-square-brackets.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/optional-chain-expression-optional-expression.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/optional-chain-prod-arguments.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/optional-chain-prod-expression.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/optional-chain-prod-identifiername.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/optional-chain.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/optional-expression.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/runtime-semantics-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/short-circuiting.js"><reason></reason></test>
-  <test id="language/expressions/optional-chaining/super-property-optional-call.js"><reason></reason></test>
-  <!-- END - ES2020: Optional Chaining -->
 
   <!-- ES2017: Shared Memory and Atomics
        features: [Atomics]

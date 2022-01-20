@@ -504,9 +504,9 @@
   CBC_FORWARD_BRANCH (CBC_EXT_DEFAULT_INITIALIZER, -1, VM_OC_DEFAULT_INITIALIZER)                                      \
   CBC_OPCODE (CBC_EXT_ERROR, CBC_NO_FLAG, 0, VM_OC_ERROR)                                                              \
   CBC_FORWARD_BRANCH (CBC_EXT_BRANCH_IF_NULLISH, -1, VM_OC_BRANCH_IF_NULLISH)                                          \
-                                                                                                                       \
-  /* Basic opcodes. */                                                                                                 \
   CBC_OPCODE (CBC_EXT_POP_REFERENCE, CBC_NO_FLAG, -2, VM_OC_POP_REFERENCE)                                             \
+  CBC_FORWARD_BRANCH (CBC_EXT_BRANCH_OPTIONAL_CHAIN, 0, VM_OC_BRANCH_OPTIONAL_CHAIN)                                   \
+  /* Basic opcodes. */                                                                                                 \
   CBC_OPCODE (CBC_EXT_CREATE_ARGUMENTS, CBC_HAS_LITERAL_ARG, 0, VM_OC_CREATE_ARGUMENTS)                                \
   CBC_OPCODE (CBC_EXT_CREATE_VAR_EVAL, CBC_HAS_LITERAL_ARG, 0, VM_OC_EXT_VAR_EVAL)                                     \
   CBC_OPCODE (CBC_EXT_CREATE_VAR_FUNC_EVAL, CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2, 0, VM_OC_EXT_VAR_EVAL)         \

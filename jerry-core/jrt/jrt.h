@@ -117,6 +117,9 @@ void JERRY_ATTR_NORETURN jerry_unreachable (const char *file, const char *functi
  */
 void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_code_t code);
 
+jerry_log_level_t jerry_jrt_get_log_level (void);
+void jerry_jrt_set_log_level (jerry_log_level_t level);
+
 /*
  * Logging
  */

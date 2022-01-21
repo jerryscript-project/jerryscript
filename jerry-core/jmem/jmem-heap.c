@@ -738,32 +738,20 @@ jmem_heap_stats_print (void)
 
   JERRY_DEBUG_MSG ("Heap stats:\n");
 #if !JERRY_SYSTEM_ALLOCATOR
-  JERRY_DEBUG_MSG ("  Heap size = %zu bytes\n", heap_stats->size);
+  JERRY_DEBUG_MSG ("  Heap size = %u bytes\n", (unsigned) heap_stats->size);
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
-  JERRY_DEBUG_MSG ("  Allocated = %zu bytes\n"
-                   "  Peak allocated = %zu bytes\n"
-                   "  Waste = %zu bytes\n"
-                   "  Peak waste = %zu bytes\n"
-                   "  Allocated byte code data = %zu bytes\n"
-                   "  Peak allocated byte code data = %zu bytes\n"
-                   "  Allocated string data = %zu bytes\n"
-                   "  Peak allocated string data = %zu bytes\n"
-                   "  Allocated object data = %zu bytes\n"
-                   "  Peak allocated object data = %zu bytes\n"
-                   "  Allocated property data = %zu bytes\n"
-                   "  Peak allocated property data = %zu bytes\n",
-                   heap_stats->allocated_bytes,
-                   heap_stats->peak_allocated_bytes,
-                   heap_stats->waste_bytes,
-                   heap_stats->peak_waste_bytes,
-                   heap_stats->byte_code_bytes,
-                   heap_stats->peak_byte_code_bytes,
-                   heap_stats->string_bytes,
-                   heap_stats->peak_string_bytes,
-                   heap_stats->object_bytes,
-                   heap_stats->peak_object_bytes,
-                   heap_stats->property_bytes,
-                   heap_stats->peak_property_bytes);
+  JERRY_DEBUG_MSG ("  Allocated = %u bytes\n", (unsigned) heap_stats->allocated_bytes);
+  JERRY_DEBUG_MSG ("  Peak allocated = %u bytes\n", (unsigned) heap_stats->peak_allocated_bytes);
+  JERRY_DEBUG_MSG ("  Waste = %u bytes\n", (unsigned) heap_stats->waste_bytes);
+  JERRY_DEBUG_MSG ("  Peak waste = %u bytes\n", (unsigned) heap_stats->peak_waste_bytes);
+  JERRY_DEBUG_MSG ("  Allocated byte code data = %u bytes\n", (unsigned) heap_stats->byte_code_bytes);
+  JERRY_DEBUG_MSG ("  Peak allocated byte code data = %u bytes\n", (unsigned) heap_stats->peak_byte_code_bytes);
+  JERRY_DEBUG_MSG ("  Allocated string data = %u bytes\n", (unsigned) heap_stats->string_bytes);
+  JERRY_DEBUG_MSG ("  Peak allocated string data = %u bytes\n", (unsigned) heap_stats->peak_string_bytes);
+  JERRY_DEBUG_MSG ("  Allocated object data = %u bytes\n", (unsigned) heap_stats->object_bytes);
+  JERRY_DEBUG_MSG ("  Peak allocated object data = %u bytes\n", (unsigned) heap_stats->peak_object_bytes);
+  JERRY_DEBUG_MSG ("  Allocated property data = %u bytes\n", (unsigned) heap_stats->property_bytes);
+  JERRY_DEBUG_MSG ("  Peak allocated property data = %u bytes\n", (unsigned) heap_stats->peak_property_bytes);
 } /* jmem_heap_stats_print */
 
 /**

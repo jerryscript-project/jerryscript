@@ -300,6 +300,7 @@ set(SOURCE_CORE_FILES
   jmem/jmem-heap.c
   jmem/jmem-poolman.c
   jrt/jrt-fatals.c
+  jrt/jrt-logging.c
   lit/lit-char-helpers.c
   lit/lit-magic-strings.c
   lit/lit-strings.c

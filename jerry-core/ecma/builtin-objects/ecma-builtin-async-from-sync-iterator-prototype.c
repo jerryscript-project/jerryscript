@@ -23,6 +23,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-iterator-object.h"
+#include "ecma-native-function.h"
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
 
@@ -114,8 +115,8 @@ ecma_op_async_from_sync_iterator_prototype_continuation (ecma_value_t result, /*
   }
 
   /* 8 - 9. */
-  ecma_object_t *on_fullfilled = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_ASYNC_FROM_SYNC_ITERATOR_UNWRAP,
-                                                                sizeof (ecma_extended_object_t));
+  ecma_object_t *on_fullfilled =
+    ecma_native_function_create (ECMA_NATIVE_HANDLER_ASYNC_FROM_SYNC_ITERATOR_UNWRAP, sizeof (ecma_extended_object_t));
   ((ecma_extended_object_t *) on_fullfilled)->u.built_in.u2.routine_flags = (uint8_t) done_flag;
 
   /* 10. */
@@ -226,7 +227,7 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
 
     /* 7.b. */
     ecma_value_t resolve =
-      ecma_op_function_call (ecma_get_object_from_value (func_obj), ECMA_VALUE_UNDEFINED, &call_arg, arg_size);
+      ecma_internal_method_call (ecma_get_object_from_value (func_obj), ECMA_VALUE_UNDEFINED, &call_arg, arg_size);
     JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (resolve));
     ecma_free_value (resolve);
 
@@ -240,7 +241,7 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
   }
 
   /* 8. */
-  ecma_value_t call_result = ecma_op_function_validated_call (method, sync_iterator, &call_arg, arg_size);
+  ecma_value_t call_result = ecma_internal_method_validated_call (method, sync_iterator, &call_arg, arg_size);
   ecma_free_value (method);
 
   /* 9. */
@@ -271,8 +272,10 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
     ecma_value_t type_error = ecma_make_object_value (type_error_obj_p);
 
     /* 10.a. */
-    ecma_value_t reject =
-      ecma_op_function_call (ecma_get_object_from_value (capability_p->reject), ECMA_VALUE_UNDEFINED, &type_error, 1);
+    ecma_value_t reject = ecma_internal_method_call (ecma_get_object_from_value (capability_p->reject),
+                                                     ECMA_VALUE_UNDEFINED,
+                                                     &type_error,
+                                                     1);
     JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (reject));
     ecma_deref_object (type_error_obj_p);
     ecma_free_value (reject);

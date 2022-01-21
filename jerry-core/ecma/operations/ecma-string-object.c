@@ -24,6 +24,7 @@
 #include "ecma-helpers.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
+#include "ecma-ordinary-object.h"
 
 #include "jcontext.h"
 
@@ -98,15 +99,63 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 } /* ecma_op_create_string_object */
 
 /**
+ * ecma string object's [[GetOwnProperty]] internal method
+ *
+ * See also:
+ *          ECMA-262 v12, 10.4.3.1
+ *
+ * @return ecma property descriptor t
+ */
+ecma_property_descriptor_t
+ecma_string_object_get_own_property (ecma_object_t *obj_p, /**< the object */
+                                     ecma_string_t *property_name_p) /**< property name */
+{
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+
+  if (ecma_string_is_length (property_name_p))
+  {
+    ecma_value_t prim_value_p = ext_object_p->u.cls.u3.value;
+    ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
+    lit_utf8_size_t length = ecma_string_get_length (prim_value_str_p);
+
+    prop_desc.flags = ECMA_PROP_DESC_VIRTUAL_FOUND;
+    prop_desc.value = ecma_make_uint32_value (length);
+    return prop_desc;
+  }
+
+  uint32_t index = ecma_string_get_array_index (property_name_p);
+
+  if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+  {
+    ecma_value_t prim_value_p = ext_object_p->u.cls.u3.value;
+    ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
+
+    if (index < ecma_string_get_length (prim_value_str_p))
+    {
+      ecma_char_t char_at_idx = ecma_string_get_char_at_pos (prim_value_str_p, index);
+      ecma_string_t *char_str_p = ecma_new_ecma_string_from_code_unit (char_at_idx);
+
+      prop_desc.flags = ECMA_PROP_DESC_VIRTUAL_FOUND | ECMA_PROP_DESC_ENUMERABLE;
+      prop_desc.value = ecma_make_string_value (char_str_p);
+      return prop_desc;
+    }
+  }
+
+  return ecma_ordinary_object_get_own_property (obj_p, property_name_p);
+} /* ecma_string_object_get_own_property */
+
+/**
  * List names of a String object's lazy instantiated properties
  *
  * @return string values collection
  */
 void
-ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String object */
-                                         ecma_collection_t *prop_names_p, /**< prop name collection */
-                                         ecma_property_counter_t *prop_counter_p, /**< property counters */
-                                         jerry_property_filter_t filter) /**< property name filter options */
+ecma_string_object_list_lazy_property_keys (ecma_object_t *obj_p, /**< a String object */
+                                            ecma_collection_t *prop_names_p, /**< prop name collection */
+                                            ecma_property_counter_t *prop_counter_p, /**< property counters */
+                                            jerry_property_filter_t filter) /**< property name filter options */
 {
   JERRY_ASSERT (ecma_get_object_base_type (obj_p) == ECMA_OBJECT_BASE_TYPE_CLASS);
 
@@ -122,8 +171,6 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
     for (lit_utf8_size_t i = 0; i < length; i++)
     {
       ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
-
-      /* the properties are enumerable (ECMA-262 v5, 15.5.5.2.9) */
       ecma_collection_push_back (prop_names_p, ecma_make_string_value (name_p));
     }
 
@@ -135,7 +182,7 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
     ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
     prop_counter_p->string_named_props++;
   }
-} /* ecma_op_string_list_lazy_property_names */
+} /* ecma_string_object_list_lazy_property_keys */
 
 /**
  * @}

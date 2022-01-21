@@ -33,6 +33,7 @@
 #include "ecma-lex-env.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
+#include "ecma-ordinary-object.h"
 #include "ecma-promise-object.h"
 #include "ecma-regexp-object.h"
 
@@ -115,7 +116,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 #endif /* JERRY_LCACHE */
 
       /* There is no need to free the name. */
-      return ecma_op_object_get (object_p, property_name_p);
+      return ecma_internal_method_get (object_p, property_name_p, object);
     }
   }
 
@@ -195,9 +196,9 @@ vm_op_set_value (ecma_value_t base, /**< base object */
     JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (object));
 
     object_p = ecma_get_object_from_value (object);
-    ecma_op_ordinary_object_prevent_extensions (object_p);
+    ecma_ordinary_object_prevent_extensions (object_p);
 
-    result = ecma_op_object_put_with_receiver (object_p, property_p, value, base, is_strict);
+    result = ecma_internal_method_set (object_p, property_p, value, base, is_strict);
 
     ecma_free_value (base);
   }
@@ -223,7 +224,7 @@ vm_op_set_value (ecma_value_t base, /**< base object */
 
     if (!ecma_is_lexical_environment (object_p))
     {
-      result = ecma_op_object_put_with_receiver (object_p, property_p, value, base, is_strict);
+      result = ecma_internal_method_set (object_p, property_p, value, base, is_strict);
     }
     else
     {
@@ -575,8 +576,10 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   else
   {
     ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
-    completion_value =
-      ecma_op_function_construct (func_obj_p, JERRY_CONTEXT (current_new_target_p), arguments_p, arguments_list_len);
+    completion_value = ecma_internal_method_construct (func_obj_p,
+                                                       JERRY_CONTEXT (current_new_target_p),
+                                                       arguments_p,
+                                                       arguments_list_len);
 
     if (!ECMA_IS_VALUE_ERROR (completion_value) && ecma_op_this_binding_is_initialized (environment_record_p))
     {
@@ -670,27 +673,18 @@ vm_spread_operation (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     {
       ecma_object_t *constructor_obj_p = ecma_get_object_from_value (func_value);
 
-      completion_value = ecma_op_function_construct (constructor_obj_p,
-                                                     constructor_obj_p,
-                                                     collection_p->buffer_p,
-                                                     collection_p->item_count);
+      completion_value = ecma_internal_method_construct (constructor_obj_p,
+                                                         constructor_obj_p,
+                                                         collection_p->buffer_p,
+                                                         collection_p->item_count);
     }
   }
   else
   {
     ecma_value_t this_value = is_call_prop ? frame_ctx_p->stack_top_p[-2] : ECMA_VALUE_UNDEFINED;
 
-    if (!ecma_is_value_object (func_value) || !ecma_op_object_is_callable (ecma_get_object_from_value (func_value)))
-    {
-      completion_value = ecma_raise_type_error (ECMA_ERR_EXPECTED_A_FUNCTION);
-    }
-    else
-    {
-      ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
-
-      completion_value =
-        ecma_op_function_call (func_obj_p, this_value, collection_p->buffer_p, collection_p->item_count);
-    }
+    completion_value =
+      ecma_internal_method_validated_call (func_value, this_value, collection_p->buffer_p, collection_p->item_count);
 
     if (is_call_prop)
     {
@@ -761,7 +755,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t func_value = stack_top_p[-1];
 
   ecma_value_t completion_value =
-    ecma_op_function_validated_call (func_value, this_value, stack_top_p, arguments_list_len);
+    ecma_internal_method_validated_call (func_value, this_value, stack_top_p, arguments_list_len);
 
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 
@@ -843,7 +837,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor_value);
 
     completion_value =
-      ecma_op_function_construct (constructor_obj_p, constructor_obj_p, stack_top_p, arguments_list_len);
+      ecma_internal_method_construct (constructor_obj_p, constructor_obj_p, stack_top_p, arguments_list_len);
   }
 
   /* Free registers. */
@@ -1808,7 +1802,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_CLASS_CALL_STATIC_BLOCK:
         {
-          result = ecma_op_function_call (ecma_get_object_from_value (left_value), frame_ctx_p->this_binding, NULL, 0);
+          result =
+            ecma_internal_method_call (ecma_get_object_from_value (left_value), frame_ctx_p->this_binding, NULL, 0);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -4160,7 +4155,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (buffer_p[index]);
 
-            result = ecma_op_object_has_property (object_p, prop_name_p);
+            result = ecma_internal_method_has_property (object_p, prop_name_p);
 
             if (ECMA_IS_VALUE_ERROR (result))
             {

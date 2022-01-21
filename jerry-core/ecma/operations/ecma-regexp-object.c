@@ -1861,10 +1861,11 @@ fail_put_lastindex:
   /* We should only get here if the regexp is global or sticky */
   JERRY_ASSERT ((re_ctx.flags & (RE_FLAG_GLOBAL | RE_FLAG_STICKY)) != 0);
 
-  ret_value = ecma_op_object_put (regexp_object_p,
-                                  ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                  ecma_make_integer_value (0),
-                                  true);
+  ret_value = ecma_internal_method_set (regexp_object_p,
+                                        ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                        ecma_make_integer_value (0),
+                                        ecma_make_object_value (regexp_object_p),
+                                        true);
 
   if (ECMA_IS_VALUE_ERROR (ret_value))
   {
@@ -1906,10 +1907,11 @@ match_found:
       match_length = lit_utf8_string_length (match_begin_p, (lit_utf8_size_t) (match_end_p - match_begin_p));
     }
 
-    ret_value = ecma_op_object_put (regexp_object_p,
-                                    ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                    ecma_make_uint32_value ((uint32_t) index + match_length),
-                                    true);
+    ret_value = ecma_internal_method_set (regexp_object_p,
+                                          ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                          ecma_make_uint32_value ((uint32_t) index + match_length),
+                                          ecma_make_object_value (regexp_object_p),
+                                          true);
 
     if (ECMA_IS_VALUE_ERROR (ret_value))
     {
@@ -1989,7 +1991,8 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
 
   /* 4. */
   ecma_string_t *const last_index_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-  const ecma_value_t prev_last_index = ecma_op_object_get (regexp_object_p, last_index_str_p);
+  ecma_value_t prev_last_index = ecma_internal_method_get (regexp_object_p, last_index_str_p, regexp_arg);
+
   if (ECMA_IS_VALUE_ERROR (prev_last_index))
   {
     goto cleanup_string;
@@ -1999,7 +2002,7 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
   if (prev_last_index != ecma_make_uint32_value (0))
   {
     const ecma_value_t status =
-      ecma_op_object_put (regexp_object_p, last_index_str_p, ecma_make_uint32_value (0), true);
+      ecma_internal_method_set (regexp_object_p, last_index_str_p, ecma_make_uint32_value (0), regexp_arg, true);
 
     if (ECMA_IS_VALUE_ERROR (status))
     {
@@ -2017,7 +2020,8 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
   }
 
   /* 7. */
-  const ecma_value_t current_last_index = ecma_op_object_get (regexp_object_p, last_index_str_p);
+  ecma_value_t current_last_index = ecma_internal_method_get (regexp_object_p, last_index_str_p, regexp_arg);
+
   if (ECMA_IS_VALUE_ERROR (current_last_index))
   {
     ecma_free_value (match);
@@ -2031,7 +2035,7 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
   /* 8. */
   if (!same_value)
   {
-    result = ecma_op_object_put (regexp_object_p, last_index_str_p, prev_last_index, true);
+    result = ecma_internal_method_set (regexp_object_p, last_index_str_p, prev_last_index, regexp_arg, true);
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
@@ -2162,7 +2166,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
 
   /* 13-14. */
   ecma_value_t arguments[] = { this_arg, ecma_make_string_value (flags_str_p) };
-  ecma_value_t splitter = ecma_op_function_construct (constructor_obj_p, constructor_obj_p, arguments, 2);
+  ecma_value_t splitter = ecma_internal_method_construct (constructor_obj_p, constructor_obj_p, arguments, 2);
 
   ecma_deref_ecma_string (flags_str_p);
   ecma_deref_object (constructor_obj_p);
@@ -2237,7 +2241,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
   {
     /* 24.a-b. */
     ecma_value_t index_value = ecma_make_length_value (current_index);
-    result = ecma_op_object_put (splitter_obj_p, lastindex_str_p, index_value, true);
+    result = ecma_internal_method_set (splitter_obj_p, lastindex_str_p, index_value, splitter, true);
 
     ecma_free_value (index_value);
 
@@ -2265,7 +2269,8 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
     ecma_object_t *const match_array_p = ecma_get_object_from_value (result);
 
     /* 24.f.i. */
-    result = ecma_op_object_get (splitter_obj_p, lastindex_str_p);
+    result = ecma_internal_method_get (splitter_obj_p, lastindex_str_p, splitter);
+
     if (ECMA_IS_VALUE_ERROR (result))
     {
       ecma_deref_object (match_array_p);
@@ -2612,10 +2617,11 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
   {
     if (index > string_length)
     {
-      result = ecma_op_object_put ((ecma_object_t *) re_obj_p,
-                                   ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                   ecma_make_uint32_value (0),
-                                   true);
+      result = ecma_internal_method_set ((ecma_object_t *) re_obj_p,
+                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                         ecma_make_uint32_value (0),
+                                         ecma_make_object_value ((ecma_object_t *) re_obj_p),
+                                         true);
 
       if (!ECMA_IS_VALUE_ERROR (result))
       {
@@ -2690,7 +2696,7 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
         ecma_object_t *function_p = ecma_get_object_from_value (replace_arg);
 
         result =
-          ecma_op_function_call (function_p, ECMA_VALUE_UNDEFINED, arguments_p->buffer_p, arguments_p->item_count);
+          ecma_internal_method_call (function_p, ECMA_VALUE_UNDEFINED, arguments_p->buffer_p, arguments_p->item_count);
 
         ecma_collection_free (arguments_p);
 
@@ -2727,10 +2733,11 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
         if (JERRY_UNLIKELY ((re_ctx.flags & RE_FLAG_STICKY) != 0))
         {
           ecma_value_t index_value = ecma_make_length_value (index);
-          result = ecma_op_object_put ((ecma_object_t *) re_obj_p,
-                                       ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                       index_value,
-                                       true);
+          result = ecma_internal_method_set ((ecma_object_t *) re_obj_p,
+                                             ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                             index_value,
+                                             ecma_make_object_value ((ecma_object_t *) re_obj_p),
+                                             true);
 
           ecma_free_value (index_value);
 
@@ -2753,10 +2760,11 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
 #if JERRY_ESNEXT
     else if (JERRY_UNLIKELY ((re_ctx.flags & RE_FLAG_STICKY) != 0))
     {
-      result = ecma_op_object_put ((ecma_object_t *) re_obj_p,
-                                   ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                   ecma_make_uint32_value (0),
-                                   true);
+      result = ecma_internal_method_set ((ecma_object_t *) re_obj_p,
+                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                         ecma_make_uint32_value (0),
+                                         ecma_make_object_value ((ecma_object_t *) re_obj_p),
+                                         true);
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
@@ -2895,10 +2903,12 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
     ecma_free_value (result);
 #endif /* JERRY_ESNEXT */
 
-    result = ecma_op_object_put (this_obj_p,
-                                 ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                 ecma_make_uint32_value (0),
-                                 true);
+    result = ecma_internal_method_set (this_obj_p,
+                                       ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                       ecma_make_uint32_value (0),
+                                       this_arg,
+                                       true);
+
     if (ECMA_IS_VALUE_ERROR (result))
     {
       goto cleanup_replace;
@@ -2944,7 +2954,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
       ecma_object_t *const function_p = ecma_get_object_from_value (result);
 
       ecma_value_t arguments[] = { ecma_make_string_value (string_p) };
-      result = ecma_op_function_call (function_p, this_arg, arguments, 1);
+      result = ecma_internal_method_call (function_p, this_arg, arguments, 1);
 
       ecma_deref_object (function_p);
 
@@ -3030,7 +3040,11 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
       last_index = ecma_make_length_value (index);
 
       /* 10.d.iii.3.c */
-      result = ecma_op_object_put (this_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL), last_index, true);
+      result = ecma_internal_method_set (this_obj_p,
+                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                         last_index,
+                                         this_arg,
+                                         true);
 
       ecma_free_value (last_index);
 
@@ -3213,10 +3227,10 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
       ecma_ref_ecma_string (string_p);
       ecma_collection_push_back (arguments_p, ecma_make_string_value (string_p));
 
-      result = ecma_op_function_call (ecma_get_object_from_value (replace_arg),
-                                      ECMA_VALUE_UNDEFINED,
-                                      arguments_p->buffer_p,
-                                      arguments_p->item_count);
+      result = ecma_internal_method_call (ecma_get_object_from_value (replace_arg),
+                                          ECMA_VALUE_UNDEFINED,
+                                          arguments_p->buffer_p,
+                                          arguments_p->item_count);
 
       ecma_collection_free (arguments_p);
 
@@ -3350,8 +3364,11 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
   ecma_free_value (full_unicode_value);
 #endif /* JERRY_ESNEXT */
 
-  ecma_value_t set_status =
-    ecma_op_object_put (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL), ecma_make_uint32_value (0), true);
+  ecma_value_t set_status = ecma_internal_method_set (obj_p,
+                                                      ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                      ecma_make_uint32_value (0),
+                                                      this_arg,
+                                                      true);
 
   if (ECMA_IS_VALUE_ERROR (set_status))
   {
@@ -3435,15 +3452,21 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
       index = ecma_op_advance_string_index (str_p, index, full_unicode);
 
       last_index = ecma_make_length_value (index);
-      ecma_value_t next_set_status =
-        ecma_op_object_put (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL), last_index, true);
+      ecma_value_t next_set_status = ecma_internal_method_set (obj_p,
+                                                               ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                               last_index,
+                                                               this_arg,
+                                                               true);
 #else /* !JERRY_ESNEXT */
       ecma_number_t index = ecma_get_number_from_value (last_index);
       ecma_free_value (last_index);
 
       last_index = ecma_make_number_value (index + 1);
-      ecma_value_t next_set_status =
-        ecma_op_object_put (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL), last_index, true);
+      ecma_value_t next_set_status = ecma_internal_method_set (obj_p,
+                                                               ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                               last_index,
+                                                               this_arg,
+                                                               true);
 
 #endif /* JERRY_ESNEXT */
       ecma_free_value (last_index);
@@ -3491,7 +3514,7 @@ ecma_op_regexp_exec (ecma_value_t this_arg, /**< this argument */
     ecma_object_t *function_p = ecma_get_object_from_value (exec);
     ecma_value_t arguments[] = { ecma_make_string_value (str_p) };
 
-    ecma_value_t result = ecma_op_function_call (function_p, this_arg, arguments, 1);
+    ecma_value_t result = ecma_internal_method_call (function_p, this_arg, arguments, 1);
 
     ecma_deref_object (function_p);
 

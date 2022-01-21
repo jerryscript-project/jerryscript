@@ -482,8 +482,27 @@ bool ecma_is_property_lcached (ecma_property_t *property_p);
 void ecma_set_property_lcached (ecma_property_t *property_p, bool is_lcached);
 #endif /* JERRY_LCACHE */
 
+ecma_property_descriptor_t ecma_make_empty_define_property_descriptor (void);
+void ecma_free_define_property_descriptor (const ecma_property_descriptor_t *prop_desc_p);
+
 ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);
+void ecma_free_virtual_property_descriptor (ecma_property_descriptor_t *prop_desc_p);
+bool ecma_property_descriptor_is_enumerable (const ecma_property_descriptor_t *prop_desc_p);
+bool ecma_property_descriptor_is_configurable (const ecma_property_descriptor_t *prop_desc_p);
+bool ecma_property_descriptor_is_writable (const ecma_property_descriptor_t *prop_desc_p);
+bool ecma_property_descriptor_is_data_descriptor (const ecma_property_descriptor_t *prop_desc_p);
+bool ecma_property_descriptor_is_accessor_descriptor (const ecma_property_descriptor_t *prop_desc_p);
+bool ecma_property_descriptor_found (const ecma_property_descriptor_t *prop_desc_p);
+bool ecma_property_descriptor_error (const ecma_property_descriptor_t *prop_desc_p);
+ecma_value_t ecma_property_descriptor_value (const ecma_property_descriptor_t *prop_desc_p);
+ecma_object_t *ecma_property_descriptor_accessor_getter (const ecma_property_descriptor_t *prop_desc_p);
+ecma_value_t ecma_property_descriptor_accessor_getter_value (const ecma_property_descriptor_t *prop_desc_p);
+ecma_object_t *ecma_property_descriptor_accessor_setter (const ecma_property_descriptor_t *prop_desc_p);
+ecma_value_t ecma_property_descriptor_accessor_setter_value (const ecma_property_descriptor_t *prop_desc_p);
+ecma_object_t *ecma_property_descriptor_accessor_setter (const ecma_property_descriptor_t *prop_desc_p);
+ecma_value_t ecma_property_descriptor_get (const ecma_property_descriptor_t *prop_desc_p, ecma_value_t receiver);
+void ecma_set_property_configurable_and_enumerable_flags (ecma_property_t *property_p, uint32_t flags);
 
 void ecma_ref_extended_primitive (ecma_extended_primitive_t *primitve_p);
 void ecma_deref_exception (ecma_extended_primitive_t *exception_p);

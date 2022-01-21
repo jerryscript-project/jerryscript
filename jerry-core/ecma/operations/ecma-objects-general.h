@@ -27,22 +27,19 @@
  */
 
 ecma_object_t *ecma_op_create_object_object_noarg (void);
-ecma_object_t *ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prototype_p);
 
-ecma_value_t ecma_op_general_object_delete (ecma_object_t *obj_p, ecma_string_t *property_name_p, bool is_throw);
 ecma_value_t ecma_op_general_object_default_value (ecma_object_t *obj_p, ecma_preferred_type_hint_t hint);
 ecma_value_t ecma_op_general_object_ordinary_value (ecma_object_t *obj_p, ecma_preferred_type_hint_t hint);
-ecma_value_t ecma_op_general_object_define_own_property (ecma_object_t *object_p,
-                                                         ecma_string_t *property_name_p,
-                                                         const ecma_property_descriptor_t *property_desc_p);
 
 #if JERRY_ESNEXT
 void ecma_op_to_complete_property_descriptor (ecma_property_descriptor_t *desc_p);
-
-bool ecma_op_is_compatible_property_descriptor (const ecma_property_descriptor_t *desc_p,
-                                                const ecma_property_descriptor_t *current_p,
-                                                bool is_extensible);
 #endif /* JERRY_ESNEXT */
+
+bool ecma_op_validate_and_apply_property_descriptor (ecma_object_t *object_p,
+                                                     ecma_string_t *prop_name_p,
+                                                     const ecma_property_descriptor_t *desc_p,
+                                                     const ecma_property_descriptor_t *current_p,
+                                                     bool is_extensible);
 
 /**
  * @}

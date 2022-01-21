@@ -127,6 +127,39 @@ void ecma_module_cleanup_context (void);
 void ecma_module_release_module_names (ecma_module_names_t *module_name_p);
 void ecma_module_release_module (ecma_module_t *module_p);
 
+ecma_property_descriptor_t ecma_module_namespace_object_get_own_property (ecma_object_t *obj_p,
+                                                                          ecma_string_t *property_name_p);
+ecma_value_t ecma_module_namespace_object_define_own_property (ecma_object_t *object_p,
+                                                               ecma_string_t *property_name_p,
+                                                               const ecma_property_descriptor_t *property_desc_p);
+ecma_value_t
+ecma_module_namespace_object_get (ecma_object_t *obj_p, ecma_string_t *property_name_p, ecma_value_t receiver);
+ecma_value_t ecma_module_namespace_object_set (ecma_object_t *obj_p,
+                                               ecma_string_t *property_name_p,
+                                               ecma_value_t value,
+                                               ecma_value_t receiver,
+                                               bool is_throw);
+
+/**
+ * Virtual function table for module namespace object's internal methods
+ */
+#define ECMA_MODULE_NAMESPACE_OBJ_VTABLE                                                     \
+  [ECMA_OBJECT_CLASS_MODULE_NAMESPACE] = { NULL,                                             \
+                                           NULL,                                             \
+                                           NULL,                                             \
+                                           NULL,                                             \
+                                           ecma_module_namespace_object_get_own_property,    \
+                                           ecma_module_namespace_object_define_own_property, \
+                                           NULL,                                             \
+                                           ecma_module_namespace_object_get,                 \
+                                           ecma_module_namespace_object_set,                 \
+                                           ecma_ordinary_object_delete,                      \
+                                           NULL,                                             \
+                                           NULL,                                             \
+                                           NULL,                                             \
+                                           ecma_ordinary_object_list_lazy_property_keys,     \
+                                           ecma_ordinary_object_delete_lazy_property }
+
 #endif /* JERRY_MODULE_SYSTEM */
 
 #endif /* !ECMA_MODULE_H */

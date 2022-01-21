@@ -883,7 +883,7 @@ ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
 
   prop_desc.value = value;
 
-  return ecma_op_object_define_own_property (obj_p, name_p, &prop_desc);
+  return ecma_internal_method_define_own_property (obj_p, name_p, &prop_desc);
 } /* ecma_builtin_helper_def_prop */
 
 /**

@@ -186,7 +186,7 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
 
       ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-      return ecma_op_object_has_property (binding_obj_p, name_p);
+      return ecma_internal_method_has_property (binding_obj_p, name_p);
     }
   }
 } /* ecma_op_has_binding */
@@ -228,31 +228,19 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-#if JERRY_BUILTIN_PROXY && JERRY_BUILTIN_REALMS
-    if (ECMA_OBJECT_IS_PROXY (binding_obj_p))
+    ecma_value_t is_extensible = ecma_internal_method_is_extensible (binding_obj_p);
+
+#if JERRY_BUILTIN_PROXY
+    if (ECMA_IS_VALUE_ERROR (is_extensible))
     {
-      ecma_value_t result = ecma_proxy_object_is_extensible (binding_obj_p);
-
-      if (ECMA_IS_VALUE_ERROR (result))
-      {
-        return ECMA_PROPERTY_POINTER_ERROR;
-      }
-
-      if (result == ECMA_VALUE_FALSE)
-      {
-        return NULL;
-      }
+      return ECMA_PROPERTY_POINTER_ERROR;
     }
-    else if (!ecma_op_ordinary_object_is_extensible (binding_obj_p))
+#endif /* JERRY_BUILTIN_PROXY */
+
+    if (ecma_is_value_false (is_extensible))
     {
       return NULL;
     }
-#else /* !JERRY_BUILTIN_PROXY || !JERRY_BUILTIN_REALMS */
-    if (!ecma_op_ordinary_object_is_extensible (binding_obj_p))
-    {
-      return NULL;
-    }
-#endif /* JERRY_BUILTIN_PROXY && JERRY_BUILTIN_REALMS */
 
     const uint32_t flags = ECMA_PROPERTY_ENUMERABLE_WRITABLE | JERRY_PROP_SHOULD_THROW;
 
@@ -335,7 +323,8 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
 
       ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-      ecma_value_t completion = ecma_op_object_put (binding_obj_p, name_p, value, is_strict);
+      ecma_value_t completion =
+        ecma_internal_method_set (binding_obj_p, name_p, value, ecma_make_object_value (binding_obj_p), is_strict);
 
       if (ECMA_IS_VALUE_ERROR (completion))
       {
@@ -376,7 +365,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    ecma_value_t result = ecma_op_object_find (binding_obj_p, name_p);
+    ecma_value_t result = ecma_op_object_find (binding_obj_p, name_p, ecma_make_object_value (binding_obj_p));
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
@@ -448,7 +437,7 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    return ecma_op_object_delete (binding_obj_p, name_p, false);
+    return ecma_internal_method_delete (binding_obj_p, name_p, false);
   }
 } /* ecma_op_delete_binding */
 

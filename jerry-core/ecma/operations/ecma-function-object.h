@@ -76,58 +76,46 @@ ecma_object_t *ecma_op_create_arrow_function_object (ecma_object_t *scope_p,
                                                      const ecma_compiled_code_t *bytecode_data_p,
                                                      ecma_value_t this_binding);
 
-ecma_object_t *ecma_op_create_native_handler (ecma_native_handler_id_t id, size_t object_size);
-
 #endif /* JERRY_ESNEXT */
 
 ecma_object_t *ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, ecma_builtin_id_t default_proto_id);
 
 ecma_value_t ecma_op_function_has_instance (ecma_object_t *func_obj_p, ecma_value_t value);
 
-ecma_value_t ecma_op_function_validated_call (ecma_value_t callee,
-                                              ecma_value_t this_arg_value,
-                                              const ecma_value_t *arguments_list_p,
-                                              uint32_t arguments_list_len);
+ecma_property_descriptor_t ecma_function_object_get_own_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+ecma_value_t ecma_function_object_call (ecma_object_t *func_obj_p,
+                                        ecma_value_t this_value,
+                                        const ecma_value_t *arguments_list_p,
+                                        uint32_t arguments_list_len);
+ecma_value_t ecma_function_object_construct (ecma_object_t *func_obj_p,
+                                             ecma_object_t *new_target_p,
+                                             const ecma_value_t *arguments_list_p,
+                                             uint32_t arguments_list_len);
+void ecma_function_object_list_lazy_property_keys (ecma_object_t *object_p,
+                                                   ecma_collection_t *prop_names_p,
+                                                   ecma_property_counter_t *prop_counter_p,
+                                                   jerry_property_filter_t filter);
+void ecma_function_object_delete_lazy_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
 
-ecma_value_t ecma_op_function_call (ecma_object_t *func_obj_p,
-                                    ecma_value_t this_arg_value,
-                                    const ecma_value_t *arguments_list_p,
-                                    uint32_t arguments_list_len);
-
-ecma_value_t ecma_op_function_construct (ecma_object_t *func_obj_p,
-                                         ecma_object_t *new_target_p,
-                                         const ecma_value_t *arguments_list_p,
-                                         uint32_t arguments_list_len);
-
-ecma_property_t *ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p,
-                                                                    ecma_string_t *property_name_p);
-
-ecma_property_t *ecma_op_external_function_try_to_lazy_instantiate_property (ecma_object_t *object_p,
-                                                                             ecma_string_t *property_name_p);
-
-ecma_property_t *ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p,
-                                                                          ecma_string_t *property_name_p);
-
-#if JERRY_ESNEXT
-void ecma_op_function_delete_built_in_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-
-void ecma_op_bound_function_delete_built_in_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-#endif /* JERRY_ESNEXT */
-
-void ecma_op_function_list_lazy_property_names (ecma_object_t *object_p,
-                                                ecma_collection_t *prop_names_p,
-                                                ecma_property_counter_t *prop_counter_p,
-                                                jerry_property_filter_t filter);
-
-void ecma_op_external_function_list_lazy_property_names (ecma_object_t *object_p,
-                                                         ecma_collection_t *prop_names_p,
-                                                         ecma_property_counter_t *prop_counter_p,
-                                                         jerry_property_filter_t filter);
-
-void ecma_op_bound_function_list_lazy_property_names (ecma_object_t *object_p,
-                                                      ecma_collection_t *prop_names_p,
-                                                      ecma_property_counter_t *prop_counter_p,
-                                                      jerry_property_filter_t filter);
+/**
+ * Virtual function table for function object's internal methods
+ */
+#define ECMA_FUNCTION_OBJ_VTABLE                                                \
+  [ECMA_OBJECT_TYPE_FUNCTION] = { ecma_ordinary_object_get_prototype_of,        \
+                                  ecma_ordinary_object_set_prototype_of,        \
+                                  ecma_ordinary_object_is_extensible,           \
+                                  ecma_ordinary_object_prevent_extensions,      \
+                                  ecma_function_object_get_own_property,        \
+                                  ecma_ordinary_object_define_own_property,     \
+                                  ecma_ordinary_object_has_property,            \
+                                  ecma_ordinary_object_get,                     \
+                                  ecma_ordinary_object_set,                     \
+                                  ecma_ordinary_object_delete,                  \
+                                  ecma_ordinary_object_own_property_keys,       \
+                                  ecma_function_object_call,                    \
+                                  ecma_function_object_construct,               \
+                                  ecma_function_object_list_lazy_property_keys, \
+                                  ecma_function_object_delete_lazy_property }
 
 /**
  * @}

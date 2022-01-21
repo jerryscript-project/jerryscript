@@ -27,10 +27,31 @@
 
 ecma_value_t ecma_op_create_string_object (const ecma_value_t *arguments_list_p, uint32_t arguments_list_len);
 
-void ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p,
-                                              ecma_collection_t *prop_names_p,
-                                              ecma_property_counter_t *prop_counter_p,
-                                              jerry_property_filter_t filter);
+ecma_property_descriptor_t ecma_string_object_get_own_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+void ecma_string_object_list_lazy_property_keys (ecma_object_t *obj_p,
+                                                 ecma_collection_t *prop_names_p,
+                                                 ecma_property_counter_t *prop_counter_p,
+                                                 jerry_property_filter_t filter);
+
+/**
+ * Virtual function table for String object's internal methods
+ */
+#define ECMA_STRING_OBJ_VTABLE                                               \
+  [ECMA_OBJECT_CLASS_STRING] = { NULL,                                       \
+                                 NULL,                                       \
+                                 NULL,                                       \
+                                 NULL,                                       \
+                                 ecma_string_object_get_own_property,        \
+                                 ecma_ordinary_object_define_own_property,   \
+                                 NULL,                                       \
+                                 ecma_ordinary_object_get,                   \
+                                 ecma_ordinary_object_set,                   \
+                                 ecma_ordinary_object_delete,                \
+                                 NULL,                                       \
+                                 NULL,                                       \
+                                 NULL,                                       \
+                                 ecma_string_object_list_lazy_property_keys, \
+                                 ecma_ordinary_object_delete_lazy_property }
 
 /**
  * @}

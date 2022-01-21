@@ -50,22 +50,12 @@
 #define ECMA_REJECT(is_throw, msg)                  ((is_throw) ? ecma_raise_type_error (ECMA_ERR_EMPTY) : ECMA_VALUE_FALSE)
 #endif /* JERRY_ERROR_MESSAGES */
 
-ecma_value_t ecma_raise_property_redefinition (ecma_string_t *property_name_p, uint16_t flags);
+ecma_value_t ecma_raise_property_redefinition (ecma_string_t *property_name_p, uint32_t flags);
 ecma_value_t ecma_raise_readonly_assignment (ecma_string_t *property_name_p, bool is_throw);
+ecma_value_t ecma_raise_non_configurable_property (ecma_string_t *property_name_p, bool is_throw);
 
-ecma_property_t ecma_op_object_get_own_property (ecma_object_t *object_p,
-                                                 ecma_string_t *property_name_p,
-                                                 ecma_property_ref_t *property_ref_p,
-                                                 uint32_t options);
-ecma_value_t ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-ecma_value_t ecma_op_object_has_own_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-ecma_value_t ecma_op_object_has_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-ecma_value_t ecma_op_object_find_own (ecma_value_t base_value, ecma_object_t *object_p, ecma_string_t *property_name_p);
-ecma_value_t ecma_op_object_find (ecma_object_t *object_p, ecma_string_t *property_name_p);
+ecma_value_t ecma_op_object_find (ecma_object_t *obj_p, ecma_string_t *property_name_p, ecma_value_t base_value);
 ecma_value_t ecma_op_object_find_by_index (ecma_object_t *object_p, ecma_length_t index);
-ecma_value_t ecma_op_object_get (ecma_object_t *object_p, ecma_string_t *property_name_p);
-ecma_value_t
-ecma_op_object_get_with_receiver (ecma_object_t *object_p, ecma_string_t *property_name_p, ecma_value_t receiver);
 ecma_value_t ecma_op_object_get_length (ecma_object_t *object_p, ecma_length_t *length_p);
 ecma_value_t ecma_op_object_get_by_index (ecma_object_t *object_p, ecma_length_t index);
 ecma_value_t ecma_op_object_get_by_magic_id (ecma_object_t *object_p, lit_magic_string_id_t property_id);
@@ -76,36 +66,15 @@ ecma_value_t ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, lit_magic
 ecma_value_t ecma_op_get_method_by_symbol_id (ecma_value_t value, lit_magic_string_id_t symbol_id);
 ecma_value_t ecma_op_get_method_by_magic_id (ecma_value_t value, lit_magic_string_id_t magic_id);
 #endif /* JERRY_ESNEXT */
-ecma_value_t ecma_op_object_put_with_receiver (ecma_object_t *object_p,
-                                               ecma_string_t *property_name_p,
-                                               ecma_value_t value,
-                                               ecma_value_t receiver,
-                                               bool is_throw);
-ecma_value_t
-ecma_op_object_put (ecma_object_t *object_p, ecma_string_t *property_name_p, ecma_value_t value, bool is_throw);
-ecma_value_t ecma_op_object_put_with_receiver (ecma_object_t *object_p,
-                                               ecma_string_t *property_name_p,
-                                               ecma_value_t value,
-                                               ecma_value_t receiver,
-                                               bool is_throw);
 ecma_value_t
 ecma_op_object_put_by_index (ecma_object_t *object_p, ecma_length_t index, ecma_value_t value, bool is_throw);
-ecma_value_t ecma_op_object_delete (ecma_object_t *obj_p, ecma_string_t *property_name_p, bool is_throw);
 ecma_value_t ecma_op_object_delete_by_index (ecma_object_t *obj_p, ecma_length_t index, bool is_throw);
 ecma_value_t ecma_op_object_default_value (ecma_object_t *obj_p, ecma_preferred_type_hint_t hint);
-ecma_value_t ecma_op_object_define_own_property (ecma_object_t *obj_p,
-                                                 ecma_string_t *property_name_p,
-                                                 const ecma_property_descriptor_t *property_desc_p);
-ecma_value_t ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p,
-                                                         ecma_string_t *property_name_p,
-                                                         ecma_property_descriptor_t *prop_desc_p);
 ecma_value_t ecma_op_object_has_instance (ecma_object_t *obj_p, ecma_value_t value);
-ecma_object_t *ecma_op_object_get_prototype_of (ecma_object_t *obj_p);
 
 ecma_value_t ecma_op_object_is_prototype_of (ecma_object_t *base_p, ecma_object_t *target_p);
 ecma_collection_t *ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p,
                                                                  ecma_enumerable_property_names_options_t option);
-ecma_collection_t *ecma_op_object_own_property_keys (ecma_object_t *obj_p, jerry_property_filter_t filter);
 ecma_collection_t *ecma_op_object_enumerate (ecma_object_t *obj_p);
 
 lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *obj_p);
@@ -125,6 +94,7 @@ ecma_value_t ecma_op_invoke_by_symbol_id (ecma_value_t object,
 void ecma_op_object_set_weak (ecma_object_t *object_p, ecma_object_t *target_p);
 void ecma_op_object_unref_weak (ecma_object_t *object_p, ecma_value_t ref_holder);
 #endif /* JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_CONTAINER */
+ecma_value_t ecma_op_object_has_own_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
 ecma_value_t
 ecma_op_invoke (ecma_value_t object, ecma_string_t *property_name_p, ecma_value_t *args_p, uint32_t args_len);
 ecma_value_t ecma_op_invoke_by_magic_id (ecma_value_t object,
@@ -132,16 +102,47 @@ ecma_value_t ecma_op_invoke_by_magic_id (ecma_value_t object,
                                          ecma_value_t *args_p,
                                          uint32_t args_len);
 
-jmem_cpointer_t ecma_op_ordinary_object_get_prototype_of (ecma_object_t *obj_p);
-ecma_value_t ecma_op_ordinary_object_set_prototype_of (ecma_object_t *base_p, ecma_value_t proto);
-bool JERRY_ATTR_PURE ecma_op_ordinary_object_is_extensible (ecma_object_t *object_p);
-void ecma_op_ordinary_object_prevent_extensions (ecma_object_t *object_p);
+ecma_object_t *ecma_internal_method_get_prototype_of (ecma_object_t *obj_p);
+ecma_value_t ecma_internal_method_set_prototype_of (ecma_object_t *obj_p, ecma_value_t proto);
+ecma_value_t ecma_internal_method_is_extensible (ecma_object_t *obj_p);
+ecma_value_t ecma_internal_method_prevent_extensions (ecma_object_t *obj_p);
+ecma_property_descriptor_t ecma_internal_method_get_own_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+ecma_value_t ecma_internal_method_define_own_property (ecma_object_t *obj_p,
+                                                       ecma_string_t *property_name_p,
+                                                       const ecma_property_descriptor_t *property_desc_p);
+ecma_value_t ecma_internal_method_has_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+ecma_value_t ecma_internal_method_get (ecma_object_t *obj_p, ecma_string_t *property_name_p, ecma_value_t receiver);
+ecma_value_t ecma_internal_method_set (ecma_object_t *obj_p,
+                                       ecma_string_t *property_name_p,
+                                       ecma_value_t value,
+                                       ecma_value_t receiver,
+                                       bool is_throw);
+ecma_value_t ecma_internal_method_delete (ecma_object_t *obj_p, ecma_string_t *property_name_p, bool is_strict);
+ecma_collection_t *ecma_internal_method_own_property_keys (ecma_object_t *obj_p, jerry_property_filter_t filter);
 
-#if JERRY_BUILTIN_PROXY
-ecma_value_t ecma_op_get_own_property_descriptor (ecma_value_t target,
-                                                  ecma_string_t *property_name_p,
-                                                  ecma_property_descriptor_t *prop_desc_p);
-#endif /* JERRY_BUILTIN_PROXY */
+ecma_value_t ecma_internal_method_call (ecma_object_t *obj_p,
+                                        ecma_value_t this_value,
+                                        const ecma_value_t *arguments_list_p,
+                                        uint32_t arguments_list_len);
+
+ecma_value_t ecma_internal_method_validated_call (ecma_value_t callee,
+                                                  ecma_value_t this_value,
+                                                  const ecma_value_t *arguments_list_p,
+                                                  uint32_t arguments_list_len);
+
+ecma_value_t ecma_internal_method_construct (ecma_object_t *obj_p,
+                                             ecma_object_t *new_target_p,
+                                             const ecma_value_t *arguments_list_p,
+                                             uint32_t arguments_list_len);
+
+void ecma_internal_method_list_lazy_property_keys (ecma_object_t *obj_p,
+                                                   ecma_collection_t *prop_names_p,
+                                                   ecma_property_counter_t *prop_counter_p,
+                                                   jerry_property_filter_t filter);
+
+void ecma_internal_method_delete_lazy_property (ecma_object_t *obj_p, ecma_string_t *property_name_p);
+
+bool ecma_op_canonical_numeric_string (ecma_string_t *property_name_p);
 
 /**
  * @}

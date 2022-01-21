@@ -548,7 +548,7 @@ ecma_builtin_regexp_prototype_match_all (ecma_object_t *regexp_obj_p, /**< this 
   ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor);
   ecma_value_t flags_value = ecma_make_string_value (flags);
   ecma_value_t match_args[] = { ecma_make_object_value (regexp_obj_p), flags_value };
-  ecma_value_t matcher = ecma_op_function_construct (constructor_obj_p, constructor_obj_p, match_args, 2);
+  ecma_value_t matcher = ecma_internal_method_construct (constructor_obj_p, constructor_obj_p, match_args, 2);
 
   ecma_deref_object (constructor_obj_p);
 
@@ -586,8 +586,11 @@ ecma_builtin_regexp_prototype_match_all (ecma_object_t *regexp_obj_p, /**< this 
   /* 8. */
   ecma_object_t *matcher_obj_p = ecma_get_object_from_value (matcher);
   ecma_value_t last_index_value = ecma_make_length_value (last_index);
-  ecma_value_t set =
-    ecma_op_object_put (matcher_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL), last_index_value, true);
+  ecma_value_t set = ecma_internal_method_set (matcher_obj_p,
+                                               ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                               last_index_value,
+                                               ecma_make_object_value (matcher_obj_p),
+                                               true);
 
   ecma_free_value (last_index_value);
 

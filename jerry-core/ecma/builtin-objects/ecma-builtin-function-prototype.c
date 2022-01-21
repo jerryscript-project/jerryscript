@@ -211,7 +211,7 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
   /* 2. */
   if (ecma_is_value_null (arg2) || ecma_is_value_undefined (arg2))
   {
-    return ecma_op_function_call (func_obj_p, arg1, NULL, 0);
+    return ecma_internal_method_call (func_obj_p, arg1, NULL, 0);
   }
 
   /* 3. */
@@ -258,7 +258,7 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
   if (ecma_is_value_empty (ret_value))
   {
     JERRY_ASSERT (index == length);
-    ret_value = ecma_op_function_call (func_obj_p, arg1, arguments_list_p, (uint32_t) length);
+    ret_value = ecma_internal_method_call (func_obj_p, arg1, arguments_list_p, (uint32_t) length);
   }
 
   for (uint32_t remove_index = 0; remove_index < index; remove_index++)
@@ -288,13 +288,13 @@ ecma_builtin_function_prototype_object_call (ecma_object_t *func_obj_p, /**< thi
   if (arguments_number == 0)
   {
     /* Even a 'this' argument is missing. */
-    return ecma_op_function_call (func_obj_p, ECMA_VALUE_UNDEFINED, NULL, 0);
+    return ecma_internal_method_call (func_obj_p, ECMA_VALUE_UNDEFINED, NULL, 0);
   }
 
-  return ecma_op_function_call (func_obj_p,
-                                arguments_list_p[0],
-                                arguments_list_p + 1,
-                                (uint32_t) (arguments_number - 1u));
+  return ecma_internal_method_call (func_obj_p,
+                                    arguments_list_p[0],
+                                    arguments_list_p + 1,
+                                    (uint32_t) (arguments_number - 1u));
 } /* ecma_builtin_function_prototype_object_call */
 
 /**
@@ -317,33 +317,14 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p, /**<
 #if !JERRY_ESNEXT
   prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 #else /* JERRY_ESNEXT */
-#if JERRY_BUILTIN_PROXY
-  if (ECMA_OBJECT_IS_PROXY (this_arg_obj_p))
-  {
-    ecma_value_t proto = ecma_proxy_object_get_prototype_of (this_arg_obj_p);
+  prototype_obj_p = ecma_internal_method_get_prototype_of (this_arg_obj_p);
 
-    if (ECMA_IS_VALUE_ERROR (proto))
-    {
-      return proto;
-    }
-    prototype_obj_p = ecma_is_value_null (proto) ? NULL : ecma_get_object_from_value (proto);
-  }
-  else
-  {
-#endif /* JERRY_BUILTIN_PROXY */
-    jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (this_arg_obj_p);
-    if (proto_cp != JMEM_CP_NULL)
-    {
-      prototype_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
-      ecma_ref_object (prototype_obj_p);
-    }
-    else
-    {
-      prototype_obj_p = NULL;
-    }
 #if JERRY_BUILTIN_PROXY
+  if (prototype_obj_p == ECMA_OBJECT_POINTER_ERROR)
+  {
+    return ECMA_VALUE_ERROR;
   }
-#endif /* JERRY_BUILTIN_PROXY */
+#endif /* JERRY_BUILTIN_PROXY*/
 #endif /* !JERRY_ESNEXT */
 
   ecma_object_t *function_p;
@@ -399,21 +380,21 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p, /**<
   bound_func_p->target_length = ecma_make_integer_value (0);
 
   ecma_string_t *len_string = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-  ecma_property_descriptor_t prop_desc;
-  ecma_value_t status = ecma_op_object_get_own_property_descriptor (this_arg_obj_p, len_string, &prop_desc);
 
-#if JERRY_BUILTIN_PROXY
-  if (ECMA_IS_VALUE_ERROR (status))
+  ecma_property_descriptor_t prop_desc = ecma_internal_method_get_own_property (this_arg_obj_p, len_string);
+
+  if (ecma_property_descriptor_error (&prop_desc))
   {
     ecma_deref_object (function_p);
-    return status;
+    ecma_free_property_descriptor (&prop_desc);
+    return ECMA_VALUE_ERROR;
   }
-#endif /* JERRY_BUILTIN_PROXY */
 
-  if (ecma_is_value_true (status))
+  if (ecma_property_descriptor_found (&prop_desc))
   {
     ecma_free_property_descriptor (&prop_desc);
-    ecma_value_t len_value = ecma_op_object_get (this_arg_obj_p, len_string);
+    ecma_value_t len_value =
+      ecma_internal_method_get (this_arg_obj_p, len_string, ecma_make_object_value (this_arg_obj_p));
 
     if (ECMA_IS_VALUE_ERROR (len_value))
     {
@@ -429,6 +410,8 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p, /**<
     }
     ecma_free_value (len_value);
   }
+
+  ecma_free_property_descriptor (&prop_desc);
 
   /* 12. */
   ecma_value_t name_value = ecma_op_object_get_by_magic_id (this_arg_obj_p, LIT_MAGIC_STRING_NAME);

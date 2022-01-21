@@ -107,11 +107,11 @@ ecma_async_yield_call (ecma_value_t function, /**< function (takes reference) */
 
   if (argument == ECMA_VALUE_EMPTY)
   {
-    result = ecma_op_function_validated_call (function, iterator, NULL, 0);
+    result = ecma_internal_method_validated_call (function, iterator, NULL, 0);
   }
   else
   {
-    result = ecma_op_function_validated_call (function, iterator, &argument, 1);
+    result = ecma_internal_method_validated_call (function, iterator, &argument, 1);
   }
 
   ecma_free_value (function);

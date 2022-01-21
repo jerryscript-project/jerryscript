@@ -459,7 +459,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
       const ecma_value_t value = result;
 
       ecma_value_t arguments[] = { value };
-      result = ecma_op_function_call (adder_func_p, set_value, arguments, 1);
+      result = ecma_internal_method_call (adder_func_p, set_value, arguments, 1);
 
       ecma_free_value (value);
     }
@@ -499,7 +499,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
       const ecma_value_t value = result;
       ecma_value_t arguments[] = { key, value };
-      result = ecma_op_function_call (adder_func_p, set_value, arguments, 2);
+      result = ecma_internal_method_call (adder_func_p, set_value, arguments, 2);
 
       ecma_free_value (key);
       ecma_free_value (value);
@@ -745,7 +745,7 @@ ecma_op_container_foreach (ecma_extended_object_t *map_object_p, /**< map object
 
     ecma_value_t this_arg = ecma_make_object_value ((ecma_object_t *) map_object_p);
     ecma_value_t call_args[] = { value_arg, key_arg, this_arg };
-    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
+    ecma_value_t call_value = ecma_internal_method_call (func_object_p, predicate_this_arg, call_args, 3);
 
     if (ECMA_IS_VALUE_ERROR (call_value))
     {

@@ -25,8 +25,6 @@ ecma_value_t ecma_builtin_object_object_set_proto (ecma_value_t arg1, ecma_value
 
 ecma_value_t ecma_builtin_object_object_prevent_extensions (ecma_object_t *obj_p);
 
-ecma_value_t ecma_builtin_object_object_is_extensible (ecma_object_t *obj_p);
-
 ecma_value_t ecma_builtin_object_object_get_own_property_descriptor (ecma_object_t *obj_p, ecma_string_t *name_str_p);
 ecma_value_t
 ecma_builtin_object_object_define_property (ecma_object_t *obj_p, ecma_string_t *name_str_p, ecma_value_t arg3);

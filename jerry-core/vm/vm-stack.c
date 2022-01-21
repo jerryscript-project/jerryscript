@@ -375,7 +375,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         if (!ECMA_IS_VALUE_ERROR (result) && !ecma_is_value_undefined (result))
         {
           ecma_object_t *return_obj_p = ecma_get_object_from_value (result);
-          result = ecma_op_function_validated_call (result, iterator, NULL, 0);
+          result = ecma_internal_method_validated_call (result, iterator, NULL, 0);
           ecma_deref_object (return_obj_p);
 
           if (context_type == VM_CONTEXT_FOR_AWAIT_OF && !ECMA_IS_VALUE_ERROR (result))

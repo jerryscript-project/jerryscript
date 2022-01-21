@@ -117,7 +117,7 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
   if (JERRY_UNLIKELY (!ecma_is_value_undefined (has_instance_method)))
   {
     ecma_object_t *method_obj_p = ecma_get_object_from_value (has_instance_method);
-    ecma_value_t has_instance_result = ecma_op_function_call (method_obj_p, right_value, &left_value, 1);
+    ecma_value_t has_instance_result = ecma_internal_method_call (method_obj_p, right_value, &left_value, 1);
 
     ecma_free_value (has_instance_method);
 
@@ -164,7 +164,7 @@ opfunc_in (ecma_value_t left_value, /**< left value */
   }
 
   ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
-  ecma_value_t result = ecma_op_object_has_property (right_value_obj_p, property_name_p);
+  ecma_value_t result = ecma_internal_method_has_property (right_value_obj_p, property_name_p);
   ecma_deref_ecma_string (property_name_p);
   return result;
 } /* opfunc_in */

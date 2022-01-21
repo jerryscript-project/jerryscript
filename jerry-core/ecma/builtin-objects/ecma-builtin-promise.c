@@ -22,6 +22,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-iterator-object.h"
+#include "ecma-native-function.h"
 #include "ecma-number-object.h"
 #include "ecma-promise-object.h"
 
@@ -134,7 +135,7 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
     }
 
     /* h. */
-    ecma_value_t next_promise = ecma_op_function_call (resolve_func_p, ctor, &next_val, 1);
+    ecma_value_t next_promise = ecma_internal_method_call (resolve_func_p, ctor, &next_val, 1);
     ecma_free_value (next_val);
 
     if (ECMA_IS_VALUE_ERROR (next_promise))
@@ -235,10 +236,10 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
         }
 
         /* 2. */
-        ecma_value_t resolve_result = ecma_op_function_call (ecma_get_object_from_value (capability_p->resolve),
-                                                             ECMA_VALUE_UNDEFINED,
-                                                             &values_array,
-                                                             1);
+        ecma_value_t resolve_result = ecma_internal_method_call (ecma_get_object_from_value (capability_p->resolve),
+                                                                 ECMA_VALUE_UNDEFINED,
+                                                                 &values_array,
+                                                                 1);
         /* 3. */
         if (ECMA_IS_VALUE_ERROR (resolve_result))
         {
@@ -270,7 +271,7 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
     /* i. */
-    ecma_value_t next_promise = ecma_op_function_call (resolve_func_p, ctor, &next_value, 1);
+    ecma_value_t next_promise = ecma_internal_method_call (resolve_func_p, ctor, &next_value, 1);
     ecma_free_value (next_value);
 
     /* j. */
@@ -293,7 +294,7 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
     {
       /* k. */
       executor_func_p =
-        ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER, sizeof (ecma_promise_all_executor_t));
+        ecma_native_function_create (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER, sizeof (ecma_promise_all_executor_t));
 
       ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) executor_func_p;
 
@@ -339,7 +340,7 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
       }
 
       ecma_object_t *reject_func_p =
-        ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER, sizeof (ecma_promise_all_executor_t));
+        ecma_native_function_create (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER, sizeof (ecma_promise_all_executor_t));
 
       ecma_promise_all_executor_t *reject_p = (ecma_promise_all_executor_t *) reject_func_p;
       reject_p->index = idx;

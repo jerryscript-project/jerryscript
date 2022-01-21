@@ -69,6 +69,7 @@ ecma_collection_t *ecma_op_create_list_from_array_like (ecma_value_t arr, bool p
 
 ecma_object_t *ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_desc_p);
 ecma_value_t ecma_op_to_property_descriptor (ecma_value_t obj_value, ecma_property_descriptor_t *out_prop_desc_p);
+ecma_object_t *ecma_op_create_object_from_property_descriptor (const ecma_property_descriptor_t *prop_desc_p);
 
 /**
  * @}

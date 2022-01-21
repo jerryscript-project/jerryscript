@@ -475,7 +475,7 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg, const ecma_value_t *argum
   ecma_object_t *ctor_obj_p = ecma_get_object_from_value (ctor);
   ecma_value_t new_len_value = ecma_make_uint32_value (new_len);
 
-  ecma_value_t new_arraybuffer = ecma_op_function_construct (ctor_obj_p, ctor_obj_p, &new_len_value, 1);
+  ecma_value_t new_arraybuffer = ecma_internal_method_construct (ctor_obj_p, ctor_obj_p, &new_len_value, 1);
 
   ecma_deref_object (ctor_obj_p);
   ecma_free_value (new_len_value);

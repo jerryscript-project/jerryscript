@@ -20,6 +20,7 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+#include "ecma-ordinary-object.h"
 
 #include "js-lexer.h"
 
@@ -139,7 +140,7 @@ static void
 parser_tagged_template_literal_freeze_array (ecma_object_t *obj_p)
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
-  ecma_op_ordinary_object_prevent_extensions (obj_p);
+  ecma_ordinary_object_prevent_extensions (obj_p);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
   ext_obj_p->u.array.length_prop_and_hole_count &= (uint32_t) ~ECMA_PROPERTY_FLAG_WRITABLE;
 } /* parser_tagged_template_literal_freeze_array */

@@ -131,7 +131,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
     {
       ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor);
 
-      ecma_value_t array = ecma_op_function_construct (constructor_obj_p, constructor_obj_p, NULL, 0);
+      ecma_value_t array = ecma_internal_method_construct (constructor_obj_p, constructor_obj_p, NULL, 0);
 
       if (ecma_is_value_undefined (array) || ecma_is_value_null (array))
       {
@@ -186,8 +186,11 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
       {
         /* 6.g.iv.1 */
         ecma_value_t len_value = ecma_make_uint32_value (k);
-        ecma_value_t set_status =
-          ecma_op_object_put (array_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH), len_value, true);
+        ecma_value_t set_status = ecma_internal_method_set (array_obj_p,
+                                                            ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
+                                                            len_value,
+                                                            ecma_make_object_value (array_obj_p),
+                                                            true);
         ecma_free_value (len_value);
 
         /* 6.g.iv.2 */
@@ -220,7 +223,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
         /* 6.g.vii.1 */
         ecma_value_t args_p[2] = { next_value, ecma_make_uint32_value (k) };
         /* 6.g.vii.3 */
-        mapped_value = ecma_op_function_call (mapfn_obj_p, call_this_arg, args_p, 2);
+        mapped_value = ecma_internal_method_call (mapfn_obj_p, call_this_arg, args_p, 2);
         ecma_free_value (args_p[1]);
         ecma_free_value (next_value);
 
@@ -292,7 +295,7 @@ iterator_cleanup:
     ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor);
 
     len_value = ecma_make_length_value (len);
-    ecma_value_t array = ecma_op_function_construct (constructor_obj_p, constructor_obj_p, &len_value, 1);
+    ecma_value_t array = ecma_internal_method_construct (constructor_obj_p, constructor_obj_p, &len_value, 1);
     ecma_free_value (len_value);
 
     if (ecma_is_value_undefined (array) || ecma_is_value_null (array))
@@ -341,7 +344,7 @@ iterator_cleanup:
     {
       /* 16.d.i */
       ecma_value_t args_p[2] = { k_value, ecma_make_length_value (k) };
-      mapped_value = ecma_op_function_call (mapfn_obj_p, call_this_arg, args_p, 2);
+      mapped_value = ecma_internal_method_call (mapfn_obj_p, call_this_arg, args_p, 2);
       ecma_free_value (args_p[1]);
       ecma_free_value (k_value);
 
@@ -375,8 +378,11 @@ iterator_cleanup:
 
   /* 17. */
   len_value = ecma_make_length_value (k);
-  ecma_value_t set_status =
-    ecma_op_object_put (array_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH), len_value, true);
+  ecma_value_t set_status = ecma_internal_method_set (array_obj_p,
+                                                      ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
+                                                      len_value,
+                                                      ecma_make_object_value (array_obj_p),
+                                                      true);
   ecma_free_value (len_value);
 
   /* 18. */
@@ -417,8 +423,10 @@ ecma_builtin_array_object_of (ecma_value_t this_arg, /**< 'this' argument */
 
   ecma_value_t len = ecma_make_uint32_value (arguments_list_len);
 
-  ecma_value_t ret_val =
-    ecma_op_function_construct (ecma_get_object_from_value (this_arg), ecma_get_object_from_value (this_arg), &len, 1);
+  ecma_value_t ret_val = ecma_internal_method_construct (ecma_get_object_from_value (this_arg),
+                                                         ecma_get_object_from_value (this_arg),
+                                                         &len,
+                                                         1);
 
   if (ECMA_IS_VALUE_ERROR (ret_val))
   {
@@ -445,7 +453,11 @@ ecma_builtin_array_object_of (ecma_value_t this_arg, /**< 'this' argument */
     k++;
   }
 
-  ret_val = ecma_op_object_put (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH), len, true);
+  ret_val = ecma_internal_method_set (obj_p,
+                                      ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
+                                      len,
+                                      ecma_make_object_value (obj_p),
+                                      true);
 
   ecma_free_value (len);
 

@@ -32,17 +32,17 @@
  */
 typedef enum
 {
-  ECMA_ATOMICS_ADD, /**< Atomics add operation */
-  ECMA_ATOMICS_SUBTRACT, /**< Atomics subtract operation */
   ECMA_ATOMICS_AND, /**< Atomics and operation */
   ECMA_ATOMICS_OR, /**< Atomics or operation */
   ECMA_ATOMICS_XOR, /**< Atomics xor operation */
+  ECMA_ATOMICS_ADD, /**< Atomics add operation */
+  ECMA_ATOMICS_SUBTRACT, /**< Atomics subtract operation */
   ECMA_ATOMICS_EXCHANGE, /**< Atomics exchange operation */
   ECMA_ATOMICS_COMPARE_EXCHANGE /**< Atomics compare exchange operation */
 } ecma_atomics_op_t;
 
-ecma_value_t ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, bool waitable);
-ecma_value_t ecma_validate_atomic_access (ecma_value_t typedarray, ecma_value_t request_index);
+ecma_value_t ecma_validate_integer_typedarray (ecma_value_t typedarray, bool waitable);
+uint32_t ecma_validate_atomic_access (ecma_value_t typedarray, ecma_value_t request_index);
 ecma_value_t
 ecma_atomic_read_modify_write (ecma_value_t typedarray, ecma_value_t index, ecma_value_t value, ecma_atomics_op_t op);
 ecma_value_t ecma_atomic_load (ecma_value_t typedarray, ecma_value_t index);

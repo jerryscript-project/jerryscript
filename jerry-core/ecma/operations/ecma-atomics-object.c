@@ -40,15 +40,15 @@
  */
 
 /**
- * Atomics validate Shared integer typedArray
+ * Atomics validate integer typedArray
  *
- * See also: ES11 24.4.1.1
+ * See also: ES12 25.4.1.1
  *
  * @return ecma value
  */
 ecma_value_t
-ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArray argument */
-                                         bool waitable) /**< waitable argument */
+ecma_validate_integer_typedarray (ecma_value_t typedarray, /**< typedArray argument */
+                                  bool waitable) /**< waitable argument */
 {
   /* 2. */
   if (!ecma_is_typedarray (typedarray))
@@ -59,6 +59,11 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
   /* 3-4. */
   ecma_object_t *typedarray_p = ecma_get_object_from_value (typedarray);
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
+
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (target_info.array_buffer_p))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
   /* 5-6. */
   if (waitable)
@@ -83,13 +88,14 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
   /* 8-10. */
   ecma_object_t *buffer = ecma_typedarray_get_arraybuffer (typedarray_p);
 
-  if (!ecma_object_class_is (buffer, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER))
+  if (!ecma_object_class_is (buffer, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER)
+      && !ecma_object_class_is (buffer, ECMA_OBJECT_CLASS_ARRAY_BUFFER))
   {
-    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_NOT_SHARED_ARRAY_BUFFER);
+    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_NOT_ARRAY_BUFFER);
   }
 
   return ecma_make_object_value (buffer);
-} /* ecma_validate_shared_integer_typedarray */
+} /* ecma_validate_integer_typedarray */
 
 /**
  * Atomics validate Atomic Access
@@ -98,7 +104,7 @@ ecma_validate_shared_integer_typedarray (ecma_value_t typedarray, /**< typedArra
  *
  * @return ecma value
  */
-ecma_value_t
+uint32_t
 ecma_validate_atomic_access (ecma_value_t typedarray, /**< typedArray argument */
                              ecma_value_t request_index) /**< request_index argument */
 {
@@ -112,11 +118,16 @@ ecma_validate_atomic_access (ecma_value_t typedarray, /**< typedArray argument *
   ecma_number_t access_index;
   if (ECMA_IS_VALUE_ERROR (ecma_op_to_index (request_index, &access_index)))
   {
-    return ECMA_VALUE_ERROR;
+    return ECMA_STRING_NOT_ARRAY_INDEX;
   }
 
   /* 3. */
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
+
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (target_info.array_buffer_p))
+  {
+    return ECMA_STRING_NOT_ARRAY_INDEX;
+  }
 
   /* 4. */
   JERRY_ASSERT (access_index >= 0);
@@ -124,10 +135,11 @@ ecma_validate_atomic_access (ecma_value_t typedarray, /**< typedArray argument *
   /* 5-6. */
   if (JERRY_UNLIKELY (access_index >= target_info.length))
   {
-    return ecma_raise_range_error (ECMA_ERR_INVALID_LENGTH);
+    ecma_raise_range_error (ECMA_ERR_INVALID_LENGTH);
+    return ECMA_STRING_NOT_ARRAY_INDEX;
   }
 
-  return ecma_make_number_value (access_index);
+  return (uint32_t) access_index;
 } /* ecma_validate_atomic_access */
 
 /**
@@ -144,7 +156,7 @@ ecma_atomic_read_modify_write (ecma_value_t typedarray, /**< typedArray argument
                                ecma_atomics_op_t op) /**< operation argument */
 {
   /* 1. */
-  ecma_value_t buffer = ecma_validate_shared_integer_typedarray (typedarray, false);
+  ecma_value_t buffer = ecma_validate_integer_typedarray (typedarray, false);
 
   if (ECMA_IS_VALUE_ERROR (buffer))
   {
@@ -152,23 +164,30 @@ ecma_atomic_read_modify_write (ecma_value_t typedarray, /**< typedArray argument
   }
 
   /* 2. */
-  ecma_value_t idx = ecma_validate_atomic_access (typedarray, index);
+  uint32_t idx = ecma_validate_atomic_access (typedarray, index);
 
-  if (ECMA_IS_VALUE_ERROR (idx))
+  if (idx == ECMA_STRING_NOT_ARRAY_INDEX)
   {
-    return idx;
+    return ECMA_VALUE_ERROR;
   }
 
   /* 3. */
   ecma_object_t *typedarray_p = ecma_get_object_from_value (typedarray);
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
 
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (target_info.array_buffer_p))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_typedarray_type_t element_type = target_info.id;
+
   /* 4-5. */
   ecma_value_t val = ECMA_VALUE_ERROR;
   ecma_number_t tmp;
-  if (target_info.id == ECMA_BIGINT64_ARRAY || target_info.id == ECMA_BIGUINT64_ARRAY)
+  if (element_type == ECMA_BIGINT64_ARRAY || element_type == ECMA_BIGUINT64_ARRAY)
   {
-    val = ecma_bigint_to_bigint (value, true);
+    val = ecma_bigint_to_bigint (value, false);
   }
   else if (!ECMA_IS_VALUE_ERROR (ecma_op_to_integer (value, &tmp)))
   {
@@ -183,33 +202,26 @@ ecma_atomic_read_modify_write (ecma_value_t typedarray, /**< typedArray argument
   /* 6. */
   uint8_t element_size = target_info.element_size;
 
-  /* 7. */
-  ecma_typedarray_type_t element_type = target_info.id;
-
   /* 8. */
   uint32_t offset = target_info.offset;
 
   /* 9. */
-  uint32_t indexed_position = ecma_number_to_uint32 (idx) * element_size + offset;
-
-  ecma_free_value (idx);
-
-  JERRY_UNUSED (indexed_position);
-  JERRY_UNUSED (element_type);
-  JERRY_UNUSED (val);
-  JERRY_UNUSED (buffer);
-  JERRY_UNUSED (op);
-
-  ecma_free_value (val);
+  uint32_t indexed_position = idx * element_size + offset;
 
   /* 10. */
-  return ecma_make_uint32_value (0);
+  return ecma_arraybuffer_get_modify_set_value_in_buffer (buffer,
+                                                          indexed_position,
+                                                          val,
+                                                          op,
+                                                          element_type,
+                                                          ecma_get_typedarray_getter_fn (element_type),
+                                                          ecma_get_typedarray_setter_fn (element_type));
 } /* ecma_atomic_read_modify_write */
 
 /**
  * Atomics load
  *
- * See also: ES11 24.4.1.12
+ * See also: ES12 25.4.7
  *
  * @return ecma value
  */
@@ -217,24 +229,34 @@ ecma_value_t
 ecma_atomic_load (ecma_value_t typedarray, /**< typedArray argument */
                   ecma_value_t index) /**< index argument */
 {
-  ecma_value_t buffer = ecma_validate_shared_integer_typedarray (typedarray, false);
+  ecma_value_t buffer = ecma_validate_integer_typedarray (typedarray, false);
 
   if (ECMA_IS_VALUE_ERROR (buffer))
   {
     return buffer;
   }
 
-  /* 2. */
-  ecma_value_t idx = ecma_validate_atomic_access (typedarray, index);
-
-  if (ECMA_IS_VALUE_ERROR (idx))
+  if (ecma_arraybuffer_is_detached (ecma_get_object_from_value (buffer)))
   {
-    return idx;
+    ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
+  /* 2. */
+  uint32_t idx = ecma_validate_atomic_access (typedarray, index);
+
+  if (idx == ECMA_STRING_NOT_ARRAY_INDEX)
+  {
+    return ECMA_VALUE_ERROR;
   }
 
   /* 3. */
   ecma_object_t *typedarray_p = ecma_get_object_from_value (typedarray);
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
+
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (target_info.array_buffer_p))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
   /* 4. */
   uint8_t element_size = target_info.element_size;
@@ -246,14 +268,12 @@ ecma_atomic_load (ecma_value_t typedarray, /**< typedArray argument */
   uint32_t offset = target_info.offset;
 
   /* 7. */
-  uint32_t indexed_position = ecma_number_to_uint32 (idx) * element_size + offset;
+  uint32_t indexed_position = idx * element_size + offset;
 
-  JERRY_UNUSED (indexed_position);
-  JERRY_UNUSED (element_type);
-  JERRY_UNUSED (buffer);
+  ecma_typedarray_getter_fn_t typedarray_getter_cb = ecma_get_typedarray_getter_fn (element_type);
+  uint8_t *buffer_p = ecma_arraybuffer_get_buffer (ecma_get_object_from_value (buffer));
 
-  /* 8. */
-  return ecma_make_uint32_value (0);
+  return typedarray_getter_cb (buffer_p + indexed_position);
 } /* ecma_atomic_load */
 
 /**

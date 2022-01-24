@@ -15,6 +15,7 @@
 
 #include "ecma-arraybuffer-object.h"
 
+#include "ecma-bigint.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
@@ -27,6 +28,8 @@
 #include "ecma-typedarray-object.h"
 
 #include "jcontext.h"
+#include "jrt.h"
+#include "opcodes.h"
 
 #if JERRY_BUILTIN_TYPEDARRAY
 
@@ -552,6 +555,157 @@ free_new_arraybuffer:
 
   return ret_value;
 } /* ecma_builtin_arraybuffer_slice */
+
+/**
+ * Apply atomics operation on numbers.
+ *
+ * Note: ECMA_ATOMICS_COMPAREEXCHANGE is not handled here.
+ *
+ * @return ecma value
+ */
+static ecma_value_t
+ecma_atomics_operation_on_number (ecma_value_t stored_value, ecma_value_t val, ecma_atomics_op_t op)
+{
+  ecma_number_t result = ecma_get_number_from_value (stored_value);
+
+  switch (op)
+  {
+    case ECMA_ATOMICS_ADD:
+    {
+      result += ecma_get_number_from_value (val);
+      break;
+    }
+    case ECMA_ATOMICS_EXCHANGE:
+    {
+      result = ecma_get_number_from_value (val);
+      break;
+    }
+    case ECMA_ATOMICS_SUBTRACT:
+    {
+      result -= ecma_get_number_from_value (val);
+      break;
+    }
+    default:
+    {
+      JERRY_STATIC_ASSERT (
+        (number_bitwise_logic_op) ECMA_ATOMICS_AND == NUMBER_BITWISE_LOGIC_AND,
+        logical_operations_must_be_on_the_same_index_in_ecma_atomics_op_t_and_number_bitwise_logic_op);
+      JERRY_STATIC_ASSERT (
+        (number_bitwise_logic_op) ECMA_ATOMICS_OR == NUMBER_BITWISE_LOGIC_OR,
+        logical_operations_must_be_on_the_same_index_in_ecma_atomics_op_t_and_number_bitwise_logic_op);
+      JERRY_STATIC_ASSERT (
+        (number_bitwise_logic_op) ECMA_ATOMICS_XOR == NUMBER_BITWISE_LOGIC_XOR,
+        logical_operations_must_be_on_the_same_index_in_ecma_atomics_op_t_and_number_bitwise_logic_op);
+
+      ecma_value_t op_result = do_number_bitwise_logic ((number_bitwise_logic_op) (op), stored_value, val);
+      result = ecma_get_number_from_value (op_result);
+      ecma_free_value (op_result);
+      break;
+    }
+  }
+
+  return ecma_make_number_value (result);
+} /* ecma_atomics_operation_on_number */
+
+/**
+ * Apply atomics operation on numbers.
+ *
+ * Note: ECMA_ATOMICS_COMPAREEXCHANGE is not handled here.
+ *
+ * @return ecma value
+ */
+static ecma_value_t
+ecma_atomics_operation_on_bigint (ecma_value_t stored_value, ecma_value_t val, ecma_atomics_op_t op)
+{
+  switch (op)
+  {
+    case ECMA_ATOMICS_ADD:
+    {
+      return ecma_bigint_add_sub (stored_value, val, true);
+    }
+    case ECMA_ATOMICS_AND:
+    {
+      return ecma_bigint_and (stored_value, val);
+    }
+    case ECMA_ATOMICS_EXCHANGE:
+    {
+      return ecma_copy_value (val);
+    }
+    case ECMA_ATOMICS_OR:
+    {
+      return ecma_bigint_or (stored_value, val);
+    }
+    case ECMA_ATOMICS_SUBTRACT:
+    {
+      return ecma_bigint_add_sub (stored_value, val, false);
+    }
+    default:
+    {
+      JERRY_ASSERT (op == ECMA_ATOMICS_XOR);
+
+      return ecma_bigint_xor (stored_value, val);
+    }
+  }
+
+} /* ecma_atomics_operation_on_bigint */
+
+/**
+ * ArrayBuffer get, modify, set value in buffer
+ *
+ * See also: ES12 25.1.2.13
+ *
+ * @param buffer: arrayBuffer
+ * @param indexed_position: position of the element in buffer
+ * @param val: parameter of op, number or bigint
+ * @param op: the atomics operation to execute
+ * @param element_type: type of the elements stored in typedArray
+ * @param typedarray_getter_cb: getter callback of typedArray
+ * @param typedarray_setter_cb: setter callback of typedArray
+ *
+ * @return ecma value
+ */
+ecma_value_t
+ecma_arraybuffer_get_modify_set_value_in_buffer (ecma_value_t buffer,
+                                                 uint32_t indexed_position,
+                                                 ecma_value_t val,
+                                                 ecma_atomics_op_t op,
+                                                 ecma_typedarray_type_t element_type,
+                                                 ecma_typedarray_getter_fn_t typedarray_getter_cb,
+                                                 ecma_typedarray_setter_fn_t typedarray_setter_cb)
+{
+  /* 1. */
+  JERRY_ASSERT (!ecma_arraybuffer_is_detached (ecma_get_object_from_value (buffer)));
+
+  /* 3. */
+  JERRY_ASSERT (ecma_is_value_number (val) || ecma_is_value_bigint (val));
+
+  ecma_object_t *buffer_obj_p = ecma_get_object_from_value (buffer);
+  lit_utf8_byte_t *pos = ecma_arraybuffer_get_buffer (buffer_obj_p) + indexed_position;
+  ecma_value_t stored_value = typedarray_getter_cb (pos);
+  ecma_value_t op_result;
+
+  if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (element_type))
+  {
+    op_result = ecma_atomics_operation_on_bigint (stored_value, val, op);
+  }
+  else
+  {
+    op_result = ecma_atomics_operation_on_number (stored_value, val, op);
+  }
+
+  ecma_free_value (val);
+
+  if (ECMA_IS_VALUE_ERROR (op_result))
+  {
+    return op_result;
+  }
+
+  // TODO: Handle shared array buffers differently.
+  typedarray_setter_cb (pos, op_result);
+  ecma_free_value (op_result);
+
+  return stored_value;
+} /* ecma_arraybuffer_get_modify_set_value_in_buffer */
 
 /**
  * @}

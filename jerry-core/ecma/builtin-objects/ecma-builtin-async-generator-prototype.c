@@ -26,8 +26,6 @@
 #include "opcodes.h"
 #include "vm-defines.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -57,12 +55,12 @@ enum
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup asyncgenerator ECMA AsyncGenerator.prototype object built-in
+ * \addtogroup asyncgeneratorprototype ECMA AsyncGenerator.prototype object built-in
  * @{
  */
 
 /**
- * Convert routine type to operation type..
+ * Convert routine type to operation type.
  */
 #define ECMA_ASYNC_GENERATOR_ROUTINE_TO_OPERATION(type) \
   ((ecma_async_generator_operation_type_t) ((type) -ECMA_ASYNC_GENERATOR_PROTOTYPE_ROUTINE_NEXT))
@@ -150,5 +148,3 @@ ecma_builtin_async_generator_prototype_dispatch_routine (uint8_t builtin_routine
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

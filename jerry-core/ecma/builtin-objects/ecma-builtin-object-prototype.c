@@ -52,12 +52,12 @@ enum
   ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY,
   ECMA_OBJECT_PROTOTYPE_PROPERTY_IS_ENUMERABLE,
   ECMA_OBJECT_PROTOTYPE_SET_PROTO,
-#if JERRY_ESNEXT && JERRY_BUILTIN_ANNEXB
+#if JERRY_BUILTIN_ANNEXB
   ECMA_OBJECT_PROTOTYPE_DEFINE_GETTER,
   ECMA_OBJECT_PROTOTYPE_DEFINE_SETTER,
   ECMA_OBJECT_PROTOTYPE_LOOKUP_GETTER,
   ECMA_OBJECT_PROTOTYPE_LOOKUP_SETTER,
-#endif /* JERRY_ESNEXT && JERRY_BUILTIN_ANNEXB */
+#endif /* JERRY_BUILTIN_ANNEXB */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-object-prototype.inc.h"
@@ -193,7 +193,7 @@ ecma_builtin_object_prototype_object_property_is_enumerable (ecma_object_t *obj_
   return ecma_make_boolean_value (is_enumerable);
 } /* ecma_builtin_object_prototype_object_property_is_enumerable */
 
-#if JERRY_ESNEXT && JERRY_BUILTIN_ANNEXB
+#if JERRY_BUILTIN_ANNEXB
 /**
  * The Object.prototype object's '__defineGetter__' and '__defineSetter__' routine
  *
@@ -369,7 +369,7 @@ ecma_builtin_object_prototype_lookup_getter_setter (ecma_value_t this_arg, /**< 
 
   return ret_value;
 } /* ecma_builtin_object_prototype_lookup_getter_setter */
-#endif /* JERRY_ESNEXT && JERRY_BUILTIN_ANNEXB */
+#endif /* JERRY_BUILTIN_ANNEXB */
 
 /**
  * Dispatcher of the built-in's routines
@@ -427,13 +427,11 @@ ecma_builtin_object_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
 
     ecma_value_t ret_value;
 
-#if JERRY_ESNEXT
     if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_GET_PROTO)
     {
       ret_value = ecma_builtin_object_object_get_prototype_of (obj_p);
     }
     else
-#endif /* JERRY_ESNEXT */
     {
       ret_value = ecma_builtin_object_prototype_object_is_prototype_of (obj_p, arguments_list_p[0]);
     }
@@ -445,7 +443,6 @@ ecma_builtin_object_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
 
   JERRY_ASSERT (builtin_routine_id >= ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY);
 
-#if JERRY_ESNEXT
   if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_SET_PROTO)
   {
     return ecma_builtin_object_object_set_proto (this_arg, arguments_list_p[0]);
@@ -474,7 +471,6 @@ ecma_builtin_object_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
                                                                false);
   }
 #endif /* JERRY_BUILTIN_ANNEXB */
-#endif /* JERRY_ESNEXT*/
 
   ecma_string_t *prop_name_p = ecma_op_to_property_key (arguments_list_p[0]);
 

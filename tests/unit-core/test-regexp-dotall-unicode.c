@@ -23,15 +23,9 @@ main (void)
   TEST_INIT ();
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (!jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
-  {
-    jerry_log (JERRY_LOG_LEVEL_ERROR, "ES.next support is disabled\n");
-    jerry_cleanup ();
-    return 0;
-  }
-
   jerry_value_t undefined_this_arg = jerry_undefined ();
   char pattern2[] = "\\u{61}.\\u{62}";
+
   uint16_t flags = JERRY_REGEXP_FLAG_DOTALL | JERRY_REGEXP_FLAG_UNICODE | JERRY_REGEXP_FLAG_STICKY;
   jerry_value_t regex_obj = jerry_regexp_sz (pattern2, flags);
   TEST_ASSERT (jerry_value_is_object (regex_obj));

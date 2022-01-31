@@ -33,12 +33,6 @@
 int
 main (void)
 {
-  if (!jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
-  {
-    jerry_log (JERRY_LOG_LEVEL_ERROR, "Symbol support is disabled!\n");
-    return 0;
-  }
-
   jerry_init (JERRY_INIT_EMPTY);
 
   jerry_value_t object = jerry_object ();

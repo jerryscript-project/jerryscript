@@ -182,26 +182,23 @@ main (void)
     jerry_value_free (object);
   }
 
-  if (jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
-  {
-    object = create_object ("'use strict'\n"
-                            "var sym = Symbol();\n"
-                            "({ pp:sym, [sym]:'Prop' })");
+  object = create_object ("'use strict'\n"
+                          "var sym = Symbol();\n"
+                          "({ pp:sym, [sym]:'Prop' })");
 
-    found = false;
-    jerry_value_t symbol = jerry_object_find_own (object, pp_string, object, &found);
-    TEST_ASSERT (jerry_value_is_symbol (symbol));
-    TEST_ASSERT (found);
+  found = false;
+  jerry_value_t symbol = jerry_object_find_own (object, pp_string, object, &found);
+  TEST_ASSERT (jerry_value_is_symbol (symbol));
+  TEST_ASSERT (found);
 
-    found = false;
-    result = jerry_object_find_own (object, symbol, object, &found);
-    compare_string (result, "Prop");
-    TEST_ASSERT (found);
-    jerry_value_free (result);
+  found = false;
+  result = jerry_object_find_own (object, symbol, object, &found);
+  compare_string (result, "Prop");
+  TEST_ASSERT (found);
+  jerry_value_free (result);
 
-    jerry_value_free (symbol);
-    jerry_value_free (object);
-  }
+  jerry_value_free (symbol);
+  jerry_value_free (object);
 
   jerry_value_free (pp_string);
   jerry_value_free (qq_string);

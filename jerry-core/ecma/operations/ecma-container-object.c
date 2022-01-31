@@ -383,7 +383,6 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
   ecma_value_t set_value = ecma_make_object_value (object_p);
   ecma_value_t result = set_value;
 
-#if JERRY_ESNEXT
   if (arguments_list_len == 0)
   {
     return result;
@@ -525,7 +524,6 @@ cleanup_adder:
   ecma_deref_object (adder_func_p);
 cleanup_object:
   ecma_deref_object (object_p);
-#endif /* JERRY_ESNEXT */
 
   return result;
 } /* ecma_op_container_create */
@@ -875,8 +873,6 @@ ecma_op_container_remove_weak_entry (ecma_object_t *object_p, /**< internal cont
   ecma_op_internal_buffer_delete (container_p, (ecma_container_pair_t *) entry_p, map_object_p->u.cls.u2.container_id);
 } /* ecma_op_container_remove_weak_entry */
 
-#if JERRY_ESNEXT
-
 /**
  * The Create{Set, Map}Iterator Abstract operation
  *
@@ -1136,8 +1132,6 @@ ecma_builtin_container_dispatch_routine (uint16_t builtin_routine_id, /**< built
     }
   }
 } /* ecma_builtin_container_dispatch_routine */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

@@ -72,59 +72,52 @@
 #define JERRY_BUILTIN_STRING JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_STRING) */
 
-/**
- * ES2015+ related features, by default all of them are enabled.
- */
-#ifndef JERRY_ESNEXT
-#define JERRY_ESNEXT 1
-#endif /* !defined (JERRY_ESNEXT) */
-
 #ifndef JERRY_BUILTIN_BIGINT
-#define JERRY_BUILTIN_BIGINT JERRY_ESNEXT
+#define JERRY_BUILTIN_BIGINT JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_BIGINT) */
 
 #ifndef JERRY_BUILTIN_CONTAINER
-#define JERRY_BUILTIN_CONTAINER JERRY_ESNEXT
+#define JERRY_BUILTIN_CONTAINER JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_CONTAINER) */
 
 #ifndef JERRY_BUILTIN_DATAVIEW
-#define JERRY_BUILTIN_DATAVIEW JERRY_ESNEXT
+#define JERRY_BUILTIN_DATAVIEW JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_DATAVIEW) */
 
 #ifndef JERRY_BUILTIN_GLOBAL_THIS
-#define JERRY_BUILTIN_GLOBAL_THIS JERRY_ESNEXT
+#define JERRY_BUILTIN_GLOBAL_THIS JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_GLOBAL_THIS) */
 
 #ifndef JERRY_BUILTIN_PROXY
-#define JERRY_BUILTIN_PROXY JERRY_ESNEXT
+#define JERRY_BUILTIN_PROXY JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_PROXY) */
 
 #ifndef JERRY_BUILTIN_REALMS
-#define JERRY_BUILTIN_REALMS JERRY_ESNEXT
+#define JERRY_BUILTIN_REALMS JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_REALMS) */
 
 #ifndef JERRY_BUILTIN_REFLECT
-#define JERRY_BUILTIN_REFLECT JERRY_ESNEXT
+#define JERRY_BUILTIN_REFLECT JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_REFLECT) */
 
 #ifndef JERRY_BUILTIN_TYPEDARRAY
-#define JERRY_BUILTIN_TYPEDARRAY JERRY_ESNEXT
+#define JERRY_BUILTIN_TYPEDARRAY JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_TYPEDARRAY) */
 
 #ifndef JERRY_BUILTIN_SHAREDARRAYBUFFER
-#define JERRY_BUILTIN_SHAREDARRAYBUFFER JERRY_ESNEXT
+#define JERRY_BUILTIN_SHAREDARRAYBUFFER JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_SHAREDARRAYBUFFER) */
 
 #ifndef JERRY_BUILTIN_ATOMICS
-#define JERRY_BUILTIN_ATOMICS JERRY_ESNEXT
+#define JERRY_BUILTIN_ATOMICS JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_ATOMICS) */
 
 #ifndef JERRY_BUILTIN_WEAKREF
-#define JERRY_BUILTIN_WEAKREF JERRY_ESNEXT
+#define JERRY_BUILTIN_WEAKREF JERRY_BUILTINS
 #endif /* !defined (JERRY_BUILTIN_WEAKREF) */
 
 #ifndef JERRY_MODULE_SYSTEM
-#define JERRY_MODULE_SYSTEM JERRY_ESNEXT
+#define JERRY_MODULE_SYSTEM JERRY_BUILTINS
 #endif /* !defined (JERRY_MODULE_SYSTEM) */
 
 /**
@@ -541,13 +534,6 @@
 #if (JERRY_BUILTINS != 0) && (JERRY_BUILTINS != 1)
 #error "Invalid value for JERRY_BUILTINS macro."
 #endif /* (JERRY_BUILTINS != 0) && (JERRY_BUILTINS != 1) */
-
-/**
- * Check ES2015+ features
- */
-#if (JERRY_ESNEXT != 0) && (JERRY_ESNEXT != 1)
-#error "Invalid value for JERRY_ESNEXT macro."
-#endif /* (JERRY_ESNEXT != 0) && (JERRY_ESNEXT != 1) */
 #if (JERRY_BUILTIN_REALMS != 0) && (JERRY_BUILTIN_REALMS != 1)
 #error "Invalid value for JERRY_BUILTIN_REALMS macro."
 #endif /* (JERRY_BUILTIN_REALMS != 0) && (JERRY_BUILTIN_REALMS != 1) */
@@ -581,27 +567,6 @@
 #if (JERRY_MODULE_SYSTEM != 0) && (JERRY_MODULE_SYSTEM != 1)
 #error "Invalid value for JERRY_MODULE_SYSTEM macro."
 #endif /* (JERRY_MODULE_SYSTEM != 0) && (JERRY_MODULE_SYSTEM != 1) */
-#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_DATAVIEW == 1)
-#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_DATAVIEW macro."
-#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_DATAVIEW == 1) */
-#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_CONTAINER == 1)
-#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_CONTAINER macro."
-#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_CONTAINER == 1) */
-#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_PROXY == 1)
-#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_PROXY macro."
-#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_PROXY == 1) */
-#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_REFLECT == 1)
-#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_REFLECT macro."
-#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_REFLECT == 1) */
-#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_TYPEDARRAY == 1)
-#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_TYPEDARRAY macro."
-#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_TYPEDARRAY == 1) */
-#if (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_WEAKREF == 1)
-#error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_WEAKREF macro."
-#endif /* (JERRY_ESNEXT == 0) && (JERRY_BUILTIN_WEAKREF == 1) */
-#if (JERRY_ESNEXT == 0) && (JERRY_MODULE_SYSTEM == 1)
-#error "JERRY_ESNEXT should be enabled too to enable JERRY_MODULE_SYSTEM macro."
-#endif /* (JERRY_ESNEXT == 0) && (JERRY_MODULE_SYSTEM == 1) */
 #if (JERRY_BUILTIN_TYPEDARRAY == 0) && (JERRY_BUILTIN_SHAREDARRAYBUFFER == 1)
 #error "JERRY_BUILTIN_TYPEDARRAY should be enabled too to enable JERRY_BUILTIN_SHAREDARRAYBUFFER macro."
 #endif /* (JERRY_BUILTIN_TYPEDARRAY == 0) && (JERRY_BUILTIN_SHAREDARRAYBUFFER == 1) */
@@ -707,13 +672,6 @@
 #if JERRY_BUILTIN_DATE && !JERRY_NUMBER_TYPE_FLOAT64
 #error "Date does not support float32"
 #endif /* JERRY_BUILTIN_DATE && !JERRY_NUMBER_TYPE_FLOAT64 */
-
-/**
- * Promise support must be enabled if Promise callback support is enabled.
- */
-#if JERRY_PROMISE_CALLBACK && !JERRY_ESNEXT
-#error "Promise callback support depends on ESNext support"
-#endif /* JERRY_PROMISE_CALLBACK && !JERRY_ESNEXT */
 
 /**
  * Source name related types into a single guard

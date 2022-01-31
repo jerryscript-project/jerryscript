@@ -19,17 +19,13 @@
 
 #include "config.h"
 #include "lit-strings.h"
-#include "lit-unicode-ranges.inc.h"
-#if JERRY_ESNEXT
 #include "lit-unicode-ranges-sup.inc.h"
-#endif /* JERRY_ESNEXT */
+#include "lit-unicode-ranges.inc.h"
 
 #if JERRY_UNICODE_CASE_CONVERSION
-#include "lit-unicode-conversions.inc.h"
-#if JERRY_ESNEXT
 #include "lit-unicode-conversions-sup.inc.h"
+#include "lit-unicode-conversions.inc.h"
 #include "lit-unicode-folding.inc.h"
-#endif /* JERRY_ESNEXT */
 #endif /* JERRY_UNICODE_CASE_CONVERSION */
 
 #define NUM_OF_ELEMENTS(array) (sizeof (array) / sizeof ((array)[0]))
@@ -74,9 +70,7 @@
 
 LIT_SEARCH_CHAR_IN_ARRAY_FN (lit_search_char_in_array, ecma_char_t, uint16_t)
 
-#if JERRY_ESNEXT
 LIT_SEARCH_CHAR_IN_ARRAY_FN (lit_search_codepoint_in_array, lit_code_point_t, uint32_t)
-#endif /* JERRY_ESNEXT */
 
 /**
  * Binary search algorithm that searches a character in the given intervals.
@@ -120,9 +114,7 @@ LIT_SEARCH_CHAR_IN_ARRAY_FN (lit_search_codepoint_in_array, lit_code_point_t, ui
 
 LIT_SEARCH_CHAR_IN_INTERVAL_ARRAY_FN (lit_search_char_in_interval_array, ecma_char_t, uint16_t, uint8_t)
 
-#if JERRY_ESNEXT
 LIT_SEARCH_CHAR_IN_INTERVAL_ARRAY_FN (lit_search_codepoint_in_interval_array, lit_code_point_t, uint32_t, uint16_t)
-#endif /* JERRY_ESNEXT */
 
 /**
  * Check if specified character is one of the Whitespace characters including those that fall into
@@ -139,12 +131,7 @@ lit_char_is_white_space (lit_code_point_t c) /**< code point */
     return (c == LIT_CHAR_SP || (c >= LIT_CHAR_TAB && c <= LIT_CHAR_CR));
   }
 
-  if (c == LIT_CHAR_BOM
-#if !JERRY_ESNEXT
-      /* Mongolian Vowel Separator (u180e) used to be a whitespace character. */
-      || c == LIT_CHAR_MVS
-#endif /* !JERRY_ESNEXT */
-      || c == LIT_CHAR_LS || c == LIT_CHAR_PS)
+  if (c == LIT_CHAR_BOM || c == LIT_CHAR_LS || c == LIT_CHAR_PS)
   {
     return true;
   }
@@ -181,7 +168,6 @@ lit_char_is_line_terminator (ecma_char_t c) /**< code unit */
 static bool
 lit_char_is_unicode_id_start (lit_code_point_t code_point) /**< code unit */
 {
-#if JERRY_ESNEXT
   if (JERRY_UNLIKELY (code_point >= LIT_UTF8_4_BYTE_CODE_POINT_MIN))
   {
     return (lit_search_codepoint_in_interval_array (code_point,
@@ -192,10 +178,6 @@ lit_char_is_unicode_id_start (lit_code_point_t code_point) /**< code unit */
                                               lit_unicode_id_start_chars_sup,
                                               NUM_OF_ELEMENTS (lit_unicode_id_start_chars_sup)));
   }
-#else /* !JERRY_ESNEXT */
-  JERRY_ASSERT (code_point < LIT_UTF8_4_BYTE_CODE_POINT_MIN);
-#endif /* JERRY_ESNEXT */
-
   ecma_char_t c = (ecma_char_t) code_point;
 
   return (lit_search_char_in_interval_array (c,
@@ -223,7 +205,6 @@ lit_char_is_unicode_id_continue (lit_code_point_t code_point) /**< code unit */
     return true;
   }
 
-#if JERRY_ESNEXT
   if (JERRY_UNLIKELY (code_point >= LIT_UTF8_4_BYTE_CODE_POINT_MIN))
   {
     return (lit_search_codepoint_in_interval_array (code_point,
@@ -234,10 +215,6 @@ lit_char_is_unicode_id_continue (lit_code_point_t code_point) /**< code unit */
                                               lit_unicode_id_continue_chars_sup,
                                               NUM_OF_ELEMENTS (lit_unicode_id_continue_chars_sup)));
   }
-#else /* !JERRY_ESNEXT */
-  JERRY_ASSERT (code_point < LIT_UTF8_4_BYTE_CODE_POINT_MIN);
-#endif /* JERRY_ESNEXT */
-
   ecma_char_t c = (ecma_char_t) code_point;
 
   return (
@@ -322,7 +299,6 @@ lit_char_is_hex_digit (ecma_char_t c) /**< code unit */
               && LEXER_TO_ASCII_LOWERCASE (c) <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_END));
 } /* lit_char_is_hex_digit */
 
-#if JERRY_ESNEXT
 /**
  * Check if specified character is one of BinaryDigits characters (ECMA-262 v6, 11.8.3)
  *
@@ -333,7 +309,6 @@ lit_char_is_binary_digit (ecma_char_t c) /** code unit */
 {
   return (c == LIT_CHAR_0 || c == LIT_CHAR_1);
 } /* lit_char_is_binary_digit */
-#endif /* JERRY_ESNEXT */
 
 /**
  * @return radix value
@@ -347,7 +322,6 @@ lit_char_to_radix (lit_utf8_byte_t c) /** code unit */
     {
       return 16;
     }
-#if JERRY_ESNEXT
     case LIT_CHAR_LOWERCASE_O:
     {
       return 8;
@@ -356,7 +330,6 @@ lit_char_to_radix (lit_utf8_byte_t c) /** code unit */
     {
       return 2;
     }
-#endif /* JERRY_ESNEXT */
     default:
     {
       return 10;
@@ -595,14 +568,13 @@ lit_search_in_bidirectional_conversion_tables (lit_code_point_t cp, /**< code po
 {
   /* 1, Check if the specified character is part of the lit_unicode_character_case_ranges_{sup} table. */
   int number_of_case_ranges;
-#if JERRY_ESNEXT
   bool is_supplementary = cp > LIT_UTF16_CODE_UNIT_MAX;
+
   if (is_supplementary)
   {
     number_of_case_ranges = NUM_OF_ELEMENTS (lit_unicode_character_case_ranges_sup);
   }
   else
-#endif /* JERRY_ESNEXT */
   {
     number_of_case_ranges = NUM_OF_ELEMENTS (lit_unicode_character_case_ranges);
   }
@@ -618,14 +590,13 @@ lit_search_in_bidirectional_conversion_tables (lit_code_point_t cp, /**< code po
 
     size_t range_length;
     lit_code_point_t start_point;
-#if JERRY_ESNEXT
+
     if (is_supplementary)
     {
       range_length = lit_unicode_character_case_range_lengths_sup[conv_counter];
       start_point = lit_unicode_character_case_ranges_sup[i];
     }
     else
-#endif /* JERRY_ESNEXT */
     {
       range_length = lit_unicode_character_case_range_lengths[conv_counter];
       start_point = lit_unicode_character_case_ranges[i];
@@ -657,13 +628,11 @@ lit_search_in_bidirectional_conversion_tables (lit_code_point_t cp, /**< code po
       offset = i - 1;
     }
 
-#if JERRY_ESNEXT
     if (is_supplementary)
     {
       start_point = lit_unicode_character_case_ranges_sup[offset];
     }
     else
-#endif /* JERRY_ESNEXT */
     {
       start_point = lit_unicode_character_case_ranges[offset];
     }
@@ -673,12 +642,10 @@ lit_search_in_bidirectional_conversion_tables (lit_code_point_t cp, /**< code po
 
   /* Note: After this point based on the latest unicode standard(13.0.0.6) no conversion characters are
      defined for supplementary planes */
-#if JERRY_ESNEXT
   if (is_supplementary)
   {
     return cp;
   }
-#endif /* JERRY_ESNEXT */
 
   /* 2, Check if the specified character is part of the character_pair_ranges table. */
   int bottom = 0;
@@ -948,7 +915,6 @@ lit_char_to_upper_case (lit_code_point_t cp, /**< code point */
 #endif /* JERRY_UNICODE_CASE_CONVERSION */
 } /* lit_char_to_upper_case */
 
-#if JERRY_ESNEXT
 /*
  * Look up whether the character should be folded to the lowercase variant.
  *
@@ -994,7 +960,6 @@ lit_char_fold_to_upper (lit_code_point_t cp) /**< code point */
   return false;
 #endif /* JERRY_UNICODE_CASE_CONVERSION */
 } /* lit_char_fold_to_upper */
-#endif /* JERRY_ESNEXT */
 
 /**
  * Helper method to find a specific character in a string

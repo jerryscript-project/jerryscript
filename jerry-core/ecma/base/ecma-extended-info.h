@@ -25,8 +25,6 @@
 
 #include "ecma-globals.h"
 
-#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
-
 /**
  * Vlq encoding: flag which is set for all bytes except the last one.
  */
@@ -47,8 +45,6 @@ void ecma_extended_info_encode_vlq (uint8_t **buffer_p, uint32_t value);
 uint32_t ecma_extended_info_get_encoded_length (uint32_t value);
 
 uint8_t *ecma_compiled_code_resolve_extended_info (const ecma_compiled_code_t *bytecode_header_p);
-
-#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
 
 /**
  * @}

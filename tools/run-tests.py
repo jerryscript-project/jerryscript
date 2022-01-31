@@ -39,10 +39,8 @@ Options.__new__.__defaults__ = ([], [], False)
 def skip_if(condition, desc):
     return desc if condition else False
 
-OPTIONS_COMMON = ['--lto=off']
+OPTIONS_COMMON = ['--lto=off', '--function-to-string=on']
 OPTIONS_PROFILE_MIN = ['--profile=minimal']
-OPTIONS_PROFILE_ES51 = ['--profile=es5.1']
-OPTIONS_PROFILE_ESNEXT = ['--profile=es.next', '--function-to-string=on']
 OPTIONS_STACK_LIMIT = ['--stack-limit=96']
 OPTIONS_GC_MARK_LIMIT = ['--gc-mark-limit=16']
 OPTIONS_MEM_STRESS = ['--mem-stress-test=on']
@@ -50,57 +48,43 @@ OPTIONS_DEBUG = ['--debug']
 OPTIONS_SNAPSHOT = ['--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on']
 OPTIONS_UNITTESTS = ['--unittests=on', '--jerry-cmdline=off', '--error-messages=on',
                      '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on',
-                     '--vm-throw=on', '--line-info=on', '--mem-stats=on']
+                     '--vm-throw=on', '--line-info=on', '--mem-stats=on', '--promise-callback=on']
 OPTIONS_DOCTESTS = ['--doctests=on', '--jerry-cmdline=off', '--error-messages=on',
                     '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on']
+OPTIONS_PROMISE_CALLBACK = ['--promise-callback=on']
 
 # Test options for unittests
 JERRY_UNITTESTS_OPTIONS = [
-    Options('unittests-es.next',
-            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ESNEXT
-            + ['--promise-callback=on']),
-    Options('doctests-es.next',
-            OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROFILE_ESNEXT
-            + ['--promise-callback=on']),
-    Options('unittests-es5.1',
-            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES51),
-    Options('doctests-es5.1',
-            OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROFILE_ES51),
-    Options('unittests-es5.1-init-fini',
-            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES51
+    Options('doctests',
+            OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROMISE_CALLBACK),
+    Options('unittests',
+            OPTIONS_COMMON + OPTIONS_UNITTESTS),
+    Options('unittests-init-fini',
+            OPTIONS_COMMON + OPTIONS_UNITTESTS
             + ['--cmake-param=-DFEATURE_INIT_FINI=ON']),
-    Options('unittests-es5.1-math',
-            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES51
-            + ['--jerry-math=on']),
+    Options('unittests-math',
+            OPTIONS_COMMON + OPTIONS_UNITTESTS + ['--jerry-math=on']),
 ]
 
 # Test options for jerry-tests
 JERRY_TESTS_OPTIONS = [
-    Options('jerry_tests-es.next',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
-            + OPTIONS_MEM_STRESS),
-    Options('jerry_tests-es5.1',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT),
-    Options('jerry_tests-es5.1-snapshot',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT,
+    Options('jerry_tests',
+            OPTIONS_COMMON +  OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT + OPTIONS_MEM_STRESS),
+    Options('jerry_tests-snapshot',
+            OPTIONS_COMMON + OPTIONS_SNAPSHOT + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT,
             ['--snapshot']),
-    Options('jerry_tests-es5.1-cpointer_32bit',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
+    Options('jerry_tests-cpointer_32bit',
+            OPTIONS_COMMON + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
             + ['--cpointer-32bit=on', '--mem-heap=1024']),
-    Options('jerry_tests-es5.1-external_context',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
+    Options('jerry_tests-external_context',
+            OPTIONS_COMMON + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
             + ['--external-context=on']),
 ]
 
 # Test options for test262
 TEST262_TEST_SUITE_OPTIONS = [
-    Options('test262_tests', OPTIONS_PROFILE_ES51),
-]
-
-# Test options for test262-esnext
-TEST262_ESNEXT_TEST_SUITE_OPTIONS = [
-    Options('test262_tests_esnext', OPTIONS_PROFILE_ESNEXT
-            + ['--line-info=on', '--error-messages=on', '--mem-heap=20480']),
+    Options('test262',
+            OPTIONS_COMMON + ['--line-info=on', '--error-messages=on', '--mem-heap=20480']),
 ]
 
 # Test options for jerry-debugger
@@ -192,11 +176,9 @@ def get_arguments():
                         help='Run jerry-debugger tests')
     parser.add_argument('--jerry-tests', action='store_true',
                         help='Run jerry-tests')
-    parser.add_argument('--test262', action='store_true',
-                        help='Run test262 - ES5.1')
-    parser.add_argument('--test262-esnext', default=False, const='default',
+    parser.add_argument('--test262', default=False, const='default',
                         nargs='?', choices=['default', 'all', 'update'],
-                        help='Run test262 - ESnext. default: all tests except excludelist, ' +
+                        help='Run test262 - default: all tests except excludelist, ' +
                         'all: all tests, update: all tests and update excludelist')
     parser.add_argument('--test262-test-list', metavar='LIST',
                         help='Add a comma separated list of tests or directories to run in test262 test suite')
@@ -212,12 +194,6 @@ def get_arguments():
         sys.exit(1)
 
     script_args = parser.parse_args()
-
-    if script_args.test262_test_list and not \
-       (script_args.test262 or script_args.test262_esnext):
-        print("--test262-test-list is only allowed with --test262 or --test262-esnext\n")
-        parser.print_help()
-        sys.exit(1)
 
     return script_args
 
@@ -379,10 +355,10 @@ def run_jerry_tests(options):
 
         skip_list = []
 
-        if '--profile=es.next' in job.build_args:
-            skip_list.append(os.path.join('es5.1', ''))
-        else:
-            skip_list.append(os.path.join('es.next', ''))
+        if job.name == 'jerry_tests-snapshot':
+            with open(settings.SNAPSHOT_TESTS_SKIPLIST, 'r') as snapshot_skip_list:
+                for line in snapshot_skip_list:
+                    skip_list.append(line.rstrip())
 
         if options.skip_list:
             skip_list.append(options.skip_list)
@@ -400,11 +376,7 @@ def run_jerry_tests(options):
 def run_test262_test_suite(options):
     ret_build = ret_test = 0
 
-    jobs = []
-    if options.test262:
-        jobs.extend(TEST262_TEST_SUITE_OPTIONS)
-    if options.test262_esnext:
-        jobs.extend(TEST262_ESNEXT_TEST_SUITE_OPTIONS)
+    jobs = TEST262_TEST_SUITE_OPTIONS
 
     for job in jobs:
         ret_build, build_dir_path = create_binary(job, options)
@@ -416,14 +388,9 @@ def run_test262_test_suite(options):
             settings.TEST262_RUNNER_SCRIPT,
             '--engine', get_binary_path(build_dir_path),
             '--test262-object',
-            '--test-dir', settings.TEST262_TEST_SUITE_DIR
+            '--test-dir', settings.TEST262_TEST_SUITE_DIR,
+            '--mode', options.test262
         ]
-
-        if job.name.endswith('esnext'):
-            test_cmd.append('--esnext')
-            test_cmd.append(options.test262_esnext)
-        else:
-            test_cmd.append('--es51')
 
         if job.test_args:
             test_cmd.extend(job.test_args)
@@ -492,7 +459,7 @@ def main(options):
         Check(options.check_strings, run_check, [settings.STRINGS_SCRIPT]),
         Check(options.jerry_debugger, run_jerry_debugger_tests, options),
         Check(options.jerry_tests, run_jerry_tests, options),
-        Check(options.test262 or options.test262_esnext, run_test262_test_suite, options),
+        Check(options.test262, run_test262_test_suite, options),
         Check(options.unittests, run_unittests, options),
         Check(options.buildoption_test, run_buildoption_test, options),
     ]

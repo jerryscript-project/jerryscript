@@ -149,3 +149,13 @@ catch (e)
   assert (e instanceof ReferenceError);
   assert (e.message === "foo");
 }
+
+var str = "foo//bar/baz//foo";
+res = str.split("a", Infinity);
+assert (res.length === 0);
+
+res = str.split(/\/\//, -1);
+assert (res.length === 3);
+assert (res[0] === "foo");
+assert (res[1] === "bar/baz");
+assert (res[2] === "foo");

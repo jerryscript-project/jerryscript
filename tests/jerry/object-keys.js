@@ -88,3 +88,36 @@ props = Object.keys(o);
 assert(props.length === 2);
 assert(o[props[0]] === "OK");
 assert(o[props[1]] === "OK");
+
+var object = {};
+
+Object.defineProperties(object, {
+  a: {
+    value: "foo",
+    enumerable: false
+  },
+  b: {
+    value: "bar",
+    enumerable: true,
+    writable: false
+  }
+});
+
+var proxy = new Proxy(object, {
+  getOwnPropertyDescriptor: function(o, v) {
+    handlers.push("D");
+    return Object.getOwnPropertyDescriptor(o, v);
+  },
+  get: function(o, v) {
+    handlers.push("G");
+    return o[v];
+  }
+});
+
+var handlers = [];
+var keys = Object.keys(proxy);
+
+assert(keys.length === 1);
+assert(keys[0] === "b");
+assert(handlers.length === 2);
+assert(handlers.toString() === "D,D");

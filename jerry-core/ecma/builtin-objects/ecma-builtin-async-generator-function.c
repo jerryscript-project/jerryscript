@@ -15,8 +15,6 @@
 
 #include "ecma-globals.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 #include "ecma-function-object.h"
@@ -31,7 +29,7 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup asyncgenerator ECMA AsyncGeneratorFunction object built-in
+ * \addtogroup asyncgeneratorfunction ECMA AsyncGeneratorFunction object built-in
  * @{
  */
 
@@ -70,5 +68,3 @@ ecma_builtin_async_generator_function_dispatch_construct (const ecma_value_t *ar
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

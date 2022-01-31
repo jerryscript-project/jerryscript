@@ -866,8 +866,6 @@ main (void)
     jerry_cleanup ();
   }
 
-  /* Test parsing/executing scripts with lexically scoped global variables multiple times. */
-  if (jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
   {
     jerry_init (JERRY_INIT_EMPTY);
     const jerry_char_t scoped_src_p[] = "let a; this.b = 5";

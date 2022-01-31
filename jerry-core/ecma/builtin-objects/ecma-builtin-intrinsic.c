@@ -25,8 +25,6 @@
 
 #include "lit-char-helpers.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -106,7 +104,7 @@ ecma_builtin_intrinsic_array_prototype_values (ecma_value_t this_value) /**< thi
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_intrinsic_map_prototype_entries (ecma_value_t this_value)
+ecma_builtin_intrinsic_map_prototype_entries (ecma_value_t this_value) /**< this value */
 {
   ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_value, LIT_MAGIC_STRING_MAP_UL);
 
@@ -132,7 +130,7 @@ ecma_builtin_intrinsic_map_prototype_entries (ecma_value_t this_value)
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_intrinsic_set_prototype_values (ecma_value_t this_value)
+ecma_builtin_intrinsic_set_prototype_values (ecma_value_t this_value) /**< this value */
 {
   ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_value, LIT_MAGIC_STRING_SET_UL);
 
@@ -164,31 +162,10 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
 
   switch (builtin_routine_id)
   {
+#if JERRY_BUILTIN_ARRAY
     case ECMA_INTRINSIC_ARRAY_PROTOTYPE_VALUES:
     {
       return ecma_builtin_intrinsic_array_prototype_values (this_arg);
-    }
-    case ECMA_INTRINSIC_TYPEDARRAY_PROTOTYPE_VALUES:
-    {
-      if (!ecma_is_typedarray (this_arg))
-      {
-        return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_TYPED_ARRAY);
-      }
-
-      if (ecma_arraybuffer_is_detached (ecma_typedarray_get_arraybuffer (ecma_get_object_from_value (this_arg))))
-      {
-        return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
-      }
-
-      return ecma_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_VALUES);
-    }
-    case ECMA_INTRINSIC_SET_PROTOTYPE_VALUES:
-    {
-      return ecma_builtin_intrinsic_set_prototype_values (this_arg);
-    }
-    case ECMA_INTRINSIC_MAP_PROTOTYPE_ENTRIES:
-    {
-      return ecma_builtin_intrinsic_map_prototype_entries (this_arg);
     }
     case ECMA_INTRINSIC_ARRAY_TO_STRING:
     {
@@ -203,6 +180,34 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
 
       return result;
     }
+#endif /* JERRY_BUILTIN_ARRAY */
+#if JERRY_BUILTIN_TYPEDARRAY
+    case ECMA_INTRINSIC_TYPEDARRAY_PROTOTYPE_VALUES:
+    {
+      if (!ecma_is_typedarray (this_arg))
+      {
+        return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_TYPED_ARRAY);
+      }
+
+      if (ecma_arraybuffer_is_detached (ecma_typedarray_get_arraybuffer (ecma_get_object_from_value (this_arg))))
+      {
+        return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+      }
+
+      return ecma_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_VALUES);
+    }
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_BUILTIN_CONTAINER
+    case ECMA_INTRINSIC_SET_PROTOTYPE_VALUES:
+    {
+      return ecma_builtin_intrinsic_set_prototype_values (this_arg);
+    }
+    case ECMA_INTRINSIC_MAP_PROTOTYPE_ENTRIES:
+    {
+      return ecma_builtin_intrinsic_map_prototype_entries (this_arg);
+    }
+#endif /* JERRY_BUILTIN_CONTAINER */
+#if JERRY_BUILTIN_DATE
     case ECMA_INTRINSIC_DATE_TO_UTC_STRING:
     {
       if (!ecma_is_value_object (this_arg)
@@ -211,13 +216,7 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
         return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_DATE_OBJECT);
       }
 
-#if JERRY_ESNEXT
       ecma_number_t *date_value_p = &((ecma_date_object_t *) ecma_get_object_from_value (this_arg))->date_value;
-#else /* !JERRY_ESNEXT */
-      ecma_extended_object_t *arg_ext_object_p = (ecma_extended_object_t *) ecma_get_object_from_value (argument);
-      ecma_number_t *date_value_p =
-        ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, arg_ext_object_p->u.class_prop.u.date);
-#endif /* JERRY_ESNEXT */
 
       if (ecma_number_is_nan (*date_value_p))
       {
@@ -226,6 +225,8 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
 
       return ecma_date_value_to_utc_string (*date_value_p);
     }
+#endif /* JERRY_BUILTIN_DATE */
+#if JERRY_BUILTIN_STRING
     case ECMA_INTRINSIC_STRING_TRIM_START:
     case ECMA_INTRINSIC_STRING_TRIM_END:
     {
@@ -265,6 +266,7 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
       ecma_deref_ecma_string (to_str_p);
       return result;
     }
+#endif /* JERRY_BUILTIN_STRING */
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_INTRINSIC_PARSE_INT || builtin_routine_id == ECMA_INTRINSIC_PARSE_FLOAT);
@@ -301,5 +303,3 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

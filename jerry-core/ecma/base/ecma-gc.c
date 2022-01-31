@@ -43,9 +43,8 @@
 #if JERRY_BUILTIN_TYPEDARRAY
 #include "ecma-typedarray-object.h"
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
-#if JERRY_ESNEXT
+
 #include "ecma-promise-object.h"
-#endif /* JERRY_ESNEXT */
 
 /* TODO: Extract GC to a separate component */
 
@@ -176,12 +175,10 @@ ecma_gc_mark_global_object (ecma_global_object_t *global_object_p) /**< global o
   ecma_gc_set_object_visited (ecma_get_object_from_value (global_object_p->this_binding));
 #endif /* JERRY_BUILTIN_REALMS */
 
-#if JERRY_ESNEXT
   if (global_object_p->global_scope_cp != global_object_p->global_env_cp)
   {
     ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, global_object_p->global_scope_cp));
   }
-#endif /* JERRY_ESNEXT */
 
   jmem_cpointer_t *builtin_objects_p = global_object_p->builtin_objects;
 
@@ -311,7 +308,6 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
 
       switch (property_pair_p->names_cp[index])
       {
-#if JERRY_ESNEXT
         case LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD:
         {
           ecma_environment_record_t *environment_record_p;
@@ -349,7 +345,6 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
           }
           break;
         }
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_CONTAINER
         case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
         {
@@ -511,7 +506,6 @@ ecma_gc_mark_bound_function_object (ecma_object_t *object_p) /**< bound function
   }
 } /* ecma_gc_mark_bound_function_object */
 
-#if JERRY_ESNEXT
 /**
  * Mark objects referenced by Promise built-in.
  */
@@ -554,8 +548,6 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
     }
   }
 } /* ecma_gc_mark_promise_object */
-
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_CONTAINER
 /**
@@ -653,7 +645,6 @@ ecma_gc_mark_set_object (ecma_object_t *object_p) /**< object */
 } /* ecma_gc_mark_set_object */
 #endif /* JERRY_BUILTIN_CONTAINER */
 
-#if JERRY_ESNEXT
 /**
  * Mark objects referenced by inactive generator functions, async functions, etc.
  */
@@ -786,8 +777,6 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
   }
 } /* ecma_gc_mark_executable_object */
 
-#endif /* JERRY_ESNEXT */
-
 #if JERRY_BUILTIN_PROXY
 /**
  * Mark the objects referenced by a proxy object
@@ -831,7 +820,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
     switch (ecma_get_lex_env_type (object_p))
     {
-#if JERRY_ESNEXT
       case ECMA_LEXICAL_ENVIRONMENT_CLASS:
       {
 #if JERRY_MODULE_SYSTEM
@@ -848,7 +836,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #endif /* JERRY_MODULE_SYSTEM */
         /* FALLTHRU */
       }
-#endif /* JERRY_ESNEXT */
       case ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND:
       {
         ecma_object_t *binding_object_p = ecma_get_lex_env_binding_object (object_p);
@@ -1000,7 +987,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* JERRY_BUILTIN_CONTAINER */
-#if JERRY_ESNEXT
           case ECMA_OBJECT_CLASS_GENERATOR:
           case ECMA_OBJECT_CLASS_ASYNC_GENERATOR:
           {
@@ -1063,7 +1049,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* JERRY_BUILTIN_REGEXP */
-#endif /* JERRY_ESNEXT */
           default:
           {
             /* The ECMA_OBJECT_CLASS__MAX type represents an uninitialized class. */
@@ -1086,14 +1071,12 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-#if JERRY_ESNEXT
         if (JERRY_UNLIKELY (ext_object_p->u.array.length_prop_and_hole_count & ECMA_ARRAY_TEMPLATE_LITERAL))
         {
           /* Template objects are never marked. */
           JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
           return;
         }
-#endif /* JERRY_ESNEXT */
 
         if (ecma_op_array_is_fast_array (ext_object_p))
         {
@@ -1135,7 +1118,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
         const ecma_compiled_code_t *compiled_code_p = ecma_op_function_get_compiled_code (ext_func_p);
 
-#if JERRY_ESNEXT
         if (CBC_FUNCTION_IS_ARROW (compiled_code_p->status_flags))
         {
           ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
@@ -1150,7 +1132,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->new_target));
           }
         }
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_SNAPSHOT_EXEC
         if (JERRY_UNLIKELY (compiled_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
@@ -1169,18 +1150,15 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         ecma_gc_mark_bound_function_object (object_p);
         break;
       }
-#if JERRY_ESNEXT || JERRY_BUILTIN_REALMS
       case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
       {
         ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-#endif /* JERRY_ESNEXT || JERRY_BUILTIN_REALMS */
 
 #if JERRY_BUILTIN_REALMS
         ecma_value_t realm_value = ext_func_p->u.built_in.realm_value;
         ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, realm_value));
 #endif /* JERRY_BUILTIN_REALMS */
 
-#if JERRY_ESNEXT
         if (ext_func_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER)
         {
           switch (ext_func_p->u.built_in.routine_id)
@@ -1248,19 +1226,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             }
           }
         }
-#endif /* JERRY_ESNEXT */
-
-#if JERRY_ESNEXT || JERRY_BUILTIN_REALMS
         break;
       }
-#endif /* JERRY_ESNEXT || JERRY_BUILTIN_REALMS */
-#if JERRY_ESNEXT
       case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
       {
         ecma_gc_mark_compiled_code (((ecma_extended_object_t *) object_p)->u.constructor_function.script_value);
         break;
       }
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_REALMS
       case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
       {
@@ -1408,8 +1380,6 @@ ecma_free_fast_access_array (ecma_object_t *object_p) /**< fast access mode arra
   ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
 } /* ecma_free_fast_access_array */
 
-#if JERRY_ESNEXT
-
 /**
  * Free non-objects referenced by inactive generator functions, async functions, etc.
  *
@@ -1531,8 +1501,6 @@ ecma_gc_free_executable_object (ecma_object_t *object_p) /**< object */
   return size;
 } /* ecma_gc_free_executable_object */
 
-#endif /* JERRY_ESNEXT */
-
 JERRY_STATIC_ASSERT (!ECMA_PROPERTY_IS_RAW (ECMA_PROPERTY_TYPE_DELETED),
                      ecma_property_type_deleted_must_not_be_raw_property);
 JERRY_STATIC_ASSERT ((ECMA_PROPERTY_TYPE_DELETED & ECMA_PROPERTY_FLAG_LCACHED) == 0,
@@ -1601,7 +1569,6 @@ ecma_gc_free_property (ecma_object_t *object_p, /**< object */
 
   switch (name_cp)
   {
-#if JERRY_ESNEXT
     case LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD:
     {
       ecma_environment_record_t *environment_record_p;
@@ -1636,7 +1603,6 @@ ecma_gc_free_property (ecma_object_t *object_p, /**< object */
       ecma_compact_collection_destroy (compact_collection_p);
       break;
     }
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_CONTAINER
     case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
     {
@@ -1787,9 +1753,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       {
         case ECMA_OBJECT_CLASS_STRING:
         case ECMA_OBJECT_CLASS_NUMBER:
-#if JERRY_ESNEXT
         case ECMA_OBJECT_CLASS_SYMBOL:
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_BIGINT
         case ECMA_OBJECT_CLASS_BIGINT:
 #endif /* JERRY_BUILTIN_BIGINT */
@@ -1833,12 +1797,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if JERRY_BUILTIN_DATE
         case ECMA_OBJECT_CLASS_DATE:
         {
-#if JERRY_ESNEXT
           ext_object_size = sizeof (ecma_date_object_t);
-#else /* !JERRY_ESNEXT */
-          ecma_number_t *num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.cls.u3.date);
-          ecma_dealloc_number (num_p);
-#endif /* JERRY_ESNEXT */
           break;
         }
 #endif /* JERRY_BUILTIN_DATE */
@@ -1853,7 +1812,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* JERRY_BUILTIN_REGEXP */
-#if JERRY_ESNEXT
         case ECMA_OBJECT_CLASS_STRING_ITERATOR:
         {
           ecma_value_t iterated_value = ext_object_p->u.cls.u3.iterated_value;
@@ -1880,7 +1838,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* JERRY_BUILTIN_REGEXP */
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_TYPEDARRAY
         case ECMA_OBJECT_CLASS_ARRAY_BUFFER:
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
@@ -1932,7 +1889,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* JERRY_BUILTIN_DATAVIEW */
-#if JERRY_ESNEXT
         case ECMA_OBJECT_CLASS_GENERATOR:
         case ECMA_OBJECT_CLASS_ASYNC_GENERATOR:
         {
@@ -1959,7 +1915,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           ext_object_size = sizeof (ecma_async_from_sync_iterator_object_t);
           break;
         }
-#endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
         case ECMA_OBJECT_CLASS_MODULE:
         {
@@ -2013,14 +1968,12 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         ecma_compiled_code_t *byte_code_p =
           (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ext_func_p->u.function.bytecode_cp));
 
-#if JERRY_ESNEXT
         if (CBC_FUNCTION_IS_ARROW (byte_code_p->status_flags))
         {
           ecma_free_value_if_not_object (((ecma_arrow_function_t *) object_p)->this_binding);
           ecma_free_value_if_not_object (((ecma_arrow_function_t *) object_p)->new_target);
           ext_object_size = sizeof (ecma_arrow_function_t);
         }
-#endif /* JERRY_ESNEXT */
 
         ecma_bytecode_deref (byte_code_p);
 #if JERRY_SNAPSHOT_EXEC
@@ -2043,7 +1996,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         break;
       }
 
-#if JERRY_ESNEXT
       if (extended_func_p->u.built_in.id != ECMA_BUILTIN_ID_HANDLER)
       {
         break;
@@ -2096,7 +2048,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           JERRY_UNREACHABLE ();
         }
       }
-#endif /* JERRY_ESNEXT */
       break;
     }
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
@@ -2106,9 +2057,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
 
-#if JERRY_ESNEXT
       ecma_free_value (bound_func_p->target_length);
-#endif /* JERRY_ESNEXT */
 
       if (!ecma_is_value_integer_number (args_len_or_this))
       {
@@ -2128,13 +2077,11 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       ext_object_size += args_size;
       break;
     }
-#if JERRY_ESNEXT
     case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
     {
       ecma_script_deref (((ecma_extended_object_t *) object_p)->u.constructor_function.script_value);
       break;
     }
-#endif /* JERRY_ESNEXT */
     case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
     {
       ext_object_size = sizeof (ecma_native_function_t);

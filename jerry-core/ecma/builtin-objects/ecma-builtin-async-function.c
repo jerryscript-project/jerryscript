@@ -15,8 +15,6 @@
 
 #include "ecma-globals.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 #include "ecma-function-object.h"
@@ -68,5 +66,3 @@ ecma_builtin_async_function_dispatch_construct (const ecma_value_t *arguments_li
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

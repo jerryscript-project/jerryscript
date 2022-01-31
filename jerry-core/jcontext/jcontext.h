@@ -131,16 +131,12 @@ struct jerry_context_t
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
   jmem_cpointer_t ecma_gc_objects_cp; /**< List of currently alive objects. */
   jmem_cpointer_t string_list_first_cp; /**< first item of the literal string list */
-#if JERRY_ESNEXT
   jmem_cpointer_t symbol_list_first_cp; /**< first item of the global symbol list */
-#endif /* JERRY_ESNEXT */
   jmem_cpointer_t number_list_first_cp; /**< first item of the literal number list */
 #if JERRY_BUILTIN_BIGINT
   jmem_cpointer_t bigint_list_first_cp; /**< first item of the literal bigint list */
 #endif /* JERRY_BUILTIN_BIGINT */
-#if JERRY_ESNEXT
   jmem_cpointer_t global_symbols_cp[ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT]; /**< global symbols */
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_MODULE_SYSTEM
   ecma_module_t *module_current_p; /**< current module context */
@@ -182,8 +178,6 @@ struct jerry_context_t
 #if JERRY_BUILTIN_REGEXP
   uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */
 #endif /* JERRY_BUILTIN_REGEXP */
-
-#if JERRY_ESNEXT
   ecma_job_queue_item_t *job_queue_head_p; /**< points to the head item of the job queue */
   ecma_job_queue_item_t *job_queue_tail_p; /**< points to the tail item of the job queue */
 #if JERRY_PROMISE_CALLBACK
@@ -191,7 +185,6 @@ struct jerry_context_t
   void *promise_callback_user_p; /**< user pointer for promise callback */
   jerry_promise_event_cb_t promise_callback; /**< user function for tracking Promise object operations */
 #endif /* JERRY_PROMISE_CALLBACK */
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_TYPEDARRAY
   uint32_t arraybuffer_compact_allocation_limit; /**< maximum size of compact allocation */
@@ -247,14 +240,12 @@ struct jerry_context_t
   ecma_lcache_hash_entry_t lcache[ECMA_LCACHE_HASH_ROWS_COUNT][ECMA_LCACHE_HASH_ROW_LENGTH];
 #endif /* JERRY_LCACHE */
 
-#if JERRY_ESNEXT
   /**
    * Allowed values and it's meaning:
    * * NULL (0x0): the current "new.target" is undefined, that is the execution is inside a normal method.
    * * Any other valid function object pointer: the current "new.target" is valid and it is constructor call.
    */
   ecma_object_t *current_new_target_p;
-#endif /* JERRY_ESNEXT */
 };
 
 #if JERRY_EXTERNAL_CONTEXT

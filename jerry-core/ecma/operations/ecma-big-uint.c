@@ -1473,8 +1473,6 @@ ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p, /**< left Bi
   return ecma_big_uint_increase_result (result_value_p);
 } /* ecma_big_uint_shift_right */
 
-#if JERRY_ESNEXT
-
 /**
  * Compute the left value raised to the power of right value
  *
@@ -1544,8 +1542,6 @@ ecma_big_uint_pow (ecma_extended_primitive_t *left_value_p, /**< left BigUInt va
 
   return result_p;
 } /* ecma_big_uint_pow */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * Perform bitwise operations on two BigUInt numbers

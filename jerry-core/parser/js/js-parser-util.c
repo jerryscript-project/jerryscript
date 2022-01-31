@@ -752,8 +752,6 @@ parser_set_continues_to_current_position (parser_context_t *context_p, /**< cont
   }
 } /* parser_set_continues_to_current_position */
 
-#if JERRY_ESNEXT
-
 /**
  * Return the size of internal record corresponding to a class field
  *
@@ -866,8 +864,6 @@ parser_reverse_class_fields (parser_context_t *context_p, /**< context */
 
   parser_free (data_p, fields_size);
 } /* parser_reverse_class_fields */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

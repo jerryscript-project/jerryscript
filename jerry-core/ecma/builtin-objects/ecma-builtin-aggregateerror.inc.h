@@ -19,8 +19,6 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_ESNEXT
-
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
@@ -33,7 +31,5 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH, 2, ECMA_PROPERTY_FLAG_DEFAULT_LENGTH)
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE, ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE, ECMA_PROPERTY_FIXED)
 
 STRING_VALUE (LIT_MAGIC_STRING_NAME, LIT_MAGIC_STRING_AGGREGATE_ERROR_UL, ECMA_PROPERTY_FLAG_CONFIGURABLE)
-
-#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

@@ -22,12 +22,10 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
-
-#include "lit-strings.h"
-#if JERRY_ESNEXT
 #include "ecma-symbol-object.h"
-#endif /* JERRY_ESNEXT */
+
 #include "jrt.h"
+#include "lit-strings.h"
 
 #if JERRY_BUILTIN_STRING
 
@@ -117,8 +115,6 @@ ecma_builtin_string_object_from_char_code (const ecma_value_t args[], /**< argum
 
   return isError ? ECMA_VALUE_ERROR : ecma_make_string_value (ret_string_p);
 } /* ecma_builtin_string_object_from_char_code */
-
-#if JERRY_ESNEXT
 
 /**
  * The String object's 'raw' routine
@@ -332,8 +328,6 @@ ecma_builtin_string_object_from_code_point (const ecma_value_t args[], /**< argu
   return ecma_make_string_value (ret_str_p);
 } /* ecma_builtin_string_object_from_code_point */
 
-#endif /* JERRY_ESNEXT */
-
 /**
  * Handle calling [[Call]] of built-in String object
  *
@@ -355,13 +349,11 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   {
     ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
-#if JERRY_ESNEXT
   /* 2.a */
   else if (ecma_is_value_symbol (arguments_list_p[0]))
   {
     ret_value = ecma_get_symbol_descriptive_string (arguments_list_p[0]);
   }
-#endif /* JERRY_ESNEXT */
   /* 2.b */
   else
   {
@@ -412,7 +404,6 @@ ecma_builtin_string_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
     {
       return ecma_builtin_string_object_from_char_code (arguments_list_p, arguments_number);
     }
-#if JERRY_ESNEXT
     case ECMA_BUILTIN_STRING_OBJECT_FROM_CODE_POINT:
     {
       return ecma_builtin_string_object_from_code_point (arguments_list_p, arguments_number);
@@ -421,7 +412,6 @@ ecma_builtin_string_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
     {
       return ecma_builtin_string_object_raw (arguments_list_p, arguments_number);
     }
-#endif /* JERRY_ESNEXT */
     default:
     {
       JERRY_UNREACHABLE ();

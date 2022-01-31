@@ -26,8 +26,6 @@
 #include "opcodes.h"
 #include "vm-stack.h"
 
-#if JERRY_ESNEXT
-
 /**
  * Mask for job queue type.
  */
@@ -637,4 +635,3 @@ ecma_free_all_enqueued_jobs (void)
  * @}
  * @}
  */
-#endif /* JERRY_ESNEXT */

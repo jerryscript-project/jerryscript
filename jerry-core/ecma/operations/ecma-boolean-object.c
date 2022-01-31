@@ -56,7 +56,6 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (proto_id);
 
-#if JERRY_ESNEXT
   ecma_object_t *new_target = JERRY_CONTEXT (current_new_target_p);
   if (new_target)
   {
@@ -67,7 +66,7 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
       return ECMA_VALUE_ERROR;
     }
   }
-#endif /* JERRY_ESNEXT */
+
   ecma_object_t *object_p =
     ecma_create_object (prototype_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
@@ -75,12 +74,10 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
   ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_BOOLEAN;
   ext_object_p->u.cls.u3.value = ecma_make_boolean_value (boolean_value);
 
-#if JERRY_ESNEXT
   if (new_target)
   {
     ecma_deref_object (prototype_obj_p);
   }
-#endif /* JERRY_ESNEXT */
 
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_boolean_object */

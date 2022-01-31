@@ -39,12 +39,9 @@ typedef enum
   SCANNER_TYPE_WHILE, /**< while statement */
   SCANNER_TYPE_FOR, /**< for statement */
   SCANNER_TYPE_FOR_IN, /**< for-in statement */
-#if JERRY_ESNEXT
   SCANNER_TYPE_FOR_OF, /**< for-of statement */
-#endif /* JERRY_ESNEXT */
   SCANNER_TYPE_SWITCH, /**< switch statement */
   SCANNER_TYPE_CASE, /**< case statement */
-#if JERRY_ESNEXT
   SCANNER_TYPE_INITIALIZER, /**< destructuring binding or assignment pattern with initializer */
   SCANNER_TYPE_LITERAL_FLAGS, /**< object or array literal with non-zero flags (stored in u8_arg) */
   SCANNER_TYPE_CLASS_CONSTRUCTOR, /**< class constructor */
@@ -54,7 +51,6 @@ typedef enum
   SCANNER_TYPE_ERR_REDECLARED, /**< syntax error: a variable is redeclared */
   SCANNER_TYPE_ERR_ASYNC_FUNCTION, /**< an invalid async function follows */
   SCANNER_TYPE_EXPORT_MODULE_SPECIFIER, /**< export with module specifier */
-#endif /* JERRY_ESNEXT */
 } scanner_info_type_t;
 
 /**
@@ -167,10 +163,8 @@ typedef enum
   SCANNER_STREAM_HAS_ESCAPE = (1 << 6), /**< binding has escape */
   SCANNER_STREAM_NO_REG = (1 << 5), /**< binding cannot be stored in register */
   SCANNER_STREAM_EARLY_CREATE = (1 << 4), /**< binding must be created with ECMA_VALUE_UNINITIALIZED */
-#if JERRY_ESNEXT
   SCANNER_STREAM_LOCAL_ARGUMENTS = SCANNER_STREAM_EARLY_CREATE, /**< arguments is redeclared
                                                                  *   as let/const binding later */
-#endif /* JERRY_ESNEXT */
   /* Update SCANNER_STREAM_TYPE_MASK macro if more bits are added. */
 } scanner_compressed_stream_flags_t;
 
@@ -182,35 +176,27 @@ typedef enum
   SCANNER_STREAM_TYPE_END, /**< end of scanner data */
   SCANNER_STREAM_TYPE_HOLE, /**< no name is assigned to this argument */
   SCANNER_STREAM_TYPE_ARGUMENTS, /**< arguments object should be created */
-#if JERRY_ESNEXT
   SCANNER_STREAM_TYPE_ARGUMENTS_FUNC, /**< arguments object should be created which
                                        *   is later initialized with a function */
-#endif /* JERRY_ESNEXT */
   SCANNER_STREAM_TYPE_VAR, /**< var declaration */
-#if JERRY_ESNEXT
   SCANNER_STREAM_TYPE_LET, /**< let declaration */
   SCANNER_STREAM_TYPE_CONST, /**< const declaration */
   SCANNER_STREAM_TYPE_LOCAL, /**< local declaration (e.g. catch block) */
-#endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
   SCANNER_STREAM_TYPE_IMPORT, /**< module import */
 #endif /* JERRY_MODULE_SYSTEM */
   /* The next four types must be in this order (see SCANNER_STREAM_TYPE_IS_ARG). */
   SCANNER_STREAM_TYPE_ARG, /**< argument declaration */
-#if JERRY_ESNEXT
   SCANNER_STREAM_TYPE_ARG_VAR, /**< argument declaration which is later copied
                                 *   into a variable declared by var statement */
   SCANNER_STREAM_TYPE_DESTRUCTURED_ARG, /**< destructuring argument declaration */
   SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_VAR, /**< destructuring argument declaration which is later
                                              *   copied into a variable declared by var statement */
-#endif /* JERRY_ESNEXT */
   /* Function types should be at the end. See the SCANNER_STREAM_TYPE_IS_FUNCTION macro. */
   SCANNER_STREAM_TYPE_ARG_FUNC, /**< argument declaration which
                                  *   is later initialized with a function */
-#if JERRY_ESNEXT
   SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC, /**< destructuring argument declaration which
                                               *   is later initialized with a function */
-#endif /* JERRY_ESNEXT */
   SCANNER_STREAM_TYPE_FUNC, /**< function declaration */
 } scanner_compressed_stream_types_t;
 
@@ -223,8 +209,6 @@ typedef enum
  * Checks whether the decoded type represents a function declaration.
  */
 #define SCANNER_STREAM_TYPE_IS_FUNCTION(type) ((type) >= SCANNER_STREAM_TYPE_ARG_FUNC)
-
-#if JERRY_ESNEXT
 
 /**
  * Checks whether the decoded type represents a function argument.
@@ -244,25 +228,6 @@ typedef enum
 #define SCANNER_STREAM_TYPE_IS_ARGUMENTS(type) \
   ((type) == SCANNER_STREAM_TYPE_ARGUMENTS || (type) == SCANNER_STREAM_TYPE_ARGUMENTS_FUNC)
 
-#else /* !JERRY_ESNEXT */
-
-/**
- * Checks whether the decoded type represents a function argument.
- */
-#define SCANNER_STREAM_TYPE_IS_ARG(type)       ((type) == SCANNER_STREAM_TYPE_ARG)
-
-/**
- * Checks whether the decoded type represents both a function argument and a function declaration.
- */
-#define SCANNER_STREAM_TYPE_IS_ARG_FUNC(type)  ((type) == SCANNER_STREAM_TYPE_ARG_FUNC)
-
-/**
- * Checks whether the decoded type represents an arguments declaration
- */
-#define SCANNER_STREAM_TYPE_IS_ARGUMENTS(type) ((type) == SCANNER_STREAM_TYPE_ARGUMENTS)
-
-#endif /* JERRY_ESNEXT */
-
 /**
  * Constants for u8_arg flags in scanner_function_info_t.
  */
@@ -270,12 +235,10 @@ typedef enum
 {
   SCANNER_FUNCTION_ARGUMENTS_NEEDED = (1 << 0), /**< arguments object needs to be created */
   SCANNER_FUNCTION_HAS_COMPLEX_ARGUMENT = (1 << 1), /**< function has complex (ES2015+) argument definition */
-#if JERRY_ESNEXT
   SCANNER_FUNCTION_LEXICAL_ENV_NEEDED = (1 << 2), /**< lexical environment is needed for the function body */
   SCANNER_FUNCTION_STATEMENT = (1 << 3), /**< function is function statement (not arrow expression)
                                           *   this flag must be combined with the type of function (e.g. async) */
   SCANNER_FUNCTION_ASYNC = (1 << 4), /**< function is async function */
-#endif /* JERRY_ESNEXT */
   SCANNER_FUNCTION_IS_STRICT = (1 << 5), /**< function is strict */
 } scanner_function_flags_t;
 
@@ -306,8 +269,6 @@ typedef enum
   SCANNER_PRIVATE_FIELD_PROPERTY_GETTER_SETTER = (SCANNER_PRIVATE_FIELD_PROPERTY | SCANNER_PRIVATE_FIELD_GETTER_SETTER),
 } scanner_private_field_flags_t;
 
-#if JERRY_ESNEXT
-
 /**
  * Object or array literal constants for u8_arg flags in scanner_info_t.
  */
@@ -320,8 +281,6 @@ typedef enum
   SCANNER_LITERAL_OBJECT_HAS_SUPER = (1 << 2), /**< super keyword is used in the object literal */
   SCANNER_LITERAL_OBJECT_HAS_REST = (1 << 3), /**< the object literal has a member prefixed with three dots */
 } scanner_literal_flags_t;
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * Option bits for scanner_create_variables function.

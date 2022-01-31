@@ -26,8 +26,6 @@
 
 #include "lit-char-helpers.h"
 
-#if JERRY_ESNEXT
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -172,7 +170,6 @@ ecma_symbol_this_value (ecma_value_t this_arg) /**< this argument value */
   /* 3. */
   return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_SYMBOL);
 } /* ecma_symbol_this_value */
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

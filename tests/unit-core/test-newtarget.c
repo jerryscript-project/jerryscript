@@ -108,13 +108,6 @@ construct_handler (const jerry_call_info_t *call_info_p, /**< call information *
 int
 main (void)
 {
-  /* Test JERRY_FEATURE_SYMBOL feature as it is a must-have in ES.next */
-  if (!jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
-  {
-    jerry_log (JERRY_LOG_LEVEL_ERROR, "Skipping test, ES.next support is disabled.\n");
-    return 0;
-  }
-
   jerry_init (JERRY_INIT_EMPTY);
 
   jerry_value_t demo_func = register_js_function ("Demo", construct_handler);

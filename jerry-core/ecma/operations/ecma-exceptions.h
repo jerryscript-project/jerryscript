@@ -42,10 +42,8 @@ ecma_value_t ecma_raise_uri_error (ecma_error_msg_t msg);
 #if (JERRY_STACK_LIMIT != 0)
 ecma_value_t ecma_raise_maximum_callstack_error (void);
 #endif /* (JERRY_STACK_LIMIT != 0) */
-#if JERRY_ESNEXT
 ecma_value_t ecma_new_aggregate_error (ecma_value_t error_list_val, ecma_value_t message_val);
 ecma_value_t ecma_raise_aggregate_error (ecma_value_t error_list_val, ecma_value_t message_val);
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

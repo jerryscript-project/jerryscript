@@ -100,12 +100,10 @@ ecma_builtin_global_object_eval (ecma_value_t x) /**< routine's first argument *
     parse_opts |= ECMA_PARSE_STRICT_MODE;
   }
 
-#if JERRY_ESNEXT
   if (vm_is_direct_eval_form_call ())
   {
     parse_opts |= ECMA_GET_LOCAL_PARSE_OPTS ();
   }
-#endif /* JERRY_ESNEXT */
 
   /* steps 2 to 8 */
   return ecma_op_eval (x, parse_opts);

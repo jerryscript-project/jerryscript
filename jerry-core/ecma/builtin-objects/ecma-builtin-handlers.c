@@ -13,24 +13,26 @@
  * limitations under the License.
  */
 
-#include "ecma-globals.h"
-
-#if JERRY_ESNEXT
-
 #include "ecma-builtin-handlers.h"
+
+#include "ecma-globals.h"
 #include "ecma-iterator-object.h"
 #include "ecma-promise-object.h"
 
 static const ecma_builtin_handler_t ecma_native_handlers[] = {
+/** @cond doxygen_suppress */
 #define ECMA_NATIVE_HANDLER(id, handler, length) handler,
 #include "ecma-builtin-handlers.inc.h"
 #undef ECMA_NATIVE_HANDLER
+  /** @endcond */
 };
 
 static const uint8_t ecma_native_handler_lengths[] = {
+/** @cond doxygen_suppress */
 #define ECMA_NATIVE_HANDLER(id, handler, length) length,
 #include "ecma-builtin-handlers.inc.h"
 #undef ECMA_NATIVE_HANDLER
+  /** @endcond */
 };
 
 /**
@@ -56,5 +58,3 @@ ecma_builtin_handler_get_length (ecma_native_handler_id_t id) /**< handler id */
   JERRY_ASSERT (id != ECMA_NATIVE_HANDLER_START && id < ECMA_NATIVE_HANDLER__COUNT);
   return ecma_native_handler_lengths[id - 1];
 } /* ecma_builtin_handler_get_length */
-
-#endif /* JERRY_ESNEXT */

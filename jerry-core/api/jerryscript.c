@@ -74,12 +74,10 @@ JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
                      re_flags_t_must_be_equal_to_jerry_regexp_flags_t);
 #endif /* JERRY_BUILTIN_REGEXP */
 
-#if JERRY_ESNEXT
 /* The internal ECMA_PROMISE_STATE_* values are "one byte away" from the API values */
 JERRY_STATIC_ASSERT ((int) ECMA_PROMISE_IS_PENDING == (int) JERRY_PROMISE_STATE_PENDING
                        && (int) ECMA_PROMISE_IS_FULFILLED == (int) JERRY_PROMISE_STATE_FULFILLED,
                      promise_internal_state_matches_external);
-#endif /* JERRY_ESNEXT */
 
 /**
  * Offset between internal and external arithmetic operator types
@@ -221,9 +219,7 @@ jerry_cleanup (void)
     }
   }
 
-#if JERRY_ESNEXT
   ecma_free_all_enqueued_jobs ();
-#endif /* JERRY_ESNEXT */
   ecma_finalize ();
   jerry_api_disable ();
 
@@ -1079,11 +1075,7 @@ jerry_run_jobs (void)
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   return jerry_return (ecma_process_all_enqueued_jobs ());
-#else /* !JERRY_ESNEXT */
-  return ECMA_VALUE_UNDEFINED;
-#endif /* JERRY_ESNEXT */
 } /* jerry_run_jobs */
 
 /**
@@ -1234,7 +1226,6 @@ jerry_value_is_async_function (const jerry_value_t value) /**< api value */
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   if (ecma_is_value_object (value))
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
@@ -1248,9 +1239,6 @@ jerry_value_is_async_function (const jerry_value_t value) /**< api value */
       return (type == CBC_FUNCTION_ASYNC || type == CBC_FUNCTION_ASYNC_ARROW || type == CBC_FUNCTION_ASYNC_GENERATOR);
     }
   }
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (value);
-#endif /* JERRY_ESNEXT */
 
   return false;
 } /* jerry_value_is_async_function */
@@ -1307,12 +1295,8 @@ bool
 jerry_value_is_promise (const jerry_value_t value) /**< api value */
 {
   jerry_assert_api_enabled ();
-#if JERRY_ESNEXT
+
   return (ecma_is_value_object (value) && ecma_is_promise (ecma_get_object_from_value (value)));
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (value);
-  return false;
-#endif /* JERRY_ESNEXT */
 } /* jerry_value_is_promise */
 
 /**
@@ -1358,12 +1342,7 @@ jerry_value_is_symbol (const jerry_value_t value) /**< api value */
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   return ecma_is_value_symbol (value);
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (value);
-  return false;
-#endif /* JERRY_ESNEXT */
 } /* jerry_value_is_symbol */
 
 /**
@@ -1436,12 +1415,10 @@ jerry_value_type (const jerry_value_t value) /**< input value to check */
     {
       return JERRY_TYPE_STRING;
     }
-#if JERRY_ESNEXT
     case LIT_MAGIC_STRING_SYMBOL:
     {
       return JERRY_TYPE_SYMBOL;
     }
-#endif /* JERRY_ESNEXT */
     case LIT_MAGIC_STRING_FUNCTION:
     {
       return JERRY_TYPE_FUNCTION;
@@ -1478,8 +1455,7 @@ static const uint8_t jerry_class_object_type[] = {
   JERRY_OBJECT_TYPE_MODULE_NAMESPACE, /**< type of ECMA_OBJECT_CLASS_MODULE_NAMESPACE */
 #endif /* JERRY_MODULE_SYSTEM */
 
-/* These objects are marked by Garbage Collector. */
-#if JERRY_ESNEXT
+  /* These objects are marked by Garbage Collector. */
   JERRY_OBJECT_TYPE_GENERATOR, /**< type of ECMA_OBJECT_CLASS_GENERATOR */
   JERRY_OBJECT_TYPE_GENERATOR, /**< type of ECMA_OBJECT_CLASS_ASYNC_GENERATOR */
   JERRY_OBJECT_TYPE_ITERATOR, /**< type of ECMA_OBJECT_CLASS_ARRAY_ITERATOR */
@@ -1488,15 +1464,12 @@ static const uint8_t jerry_class_object_type[] = {
 #if JERRY_BUILTIN_REGEXP
   JERRY_OBJECT_TYPE_ITERATOR, /**< type of ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR */
 #endif /* JERRY_BUILTIN_REGEXP */
-#endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
   JERRY_OBJECT_TYPE_MODULE, /**< type of ECMA_OBJECT_CLASS_MODULE */
 #endif /* JERRY_MODULE_SYSTEM */
-#if JERRY_ESNEXT
   JERRY_OBJECT_TYPE_PROMISE, /**< type of ECMA_OBJECT_CLASS_PROMISE */
   JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_PROMISE_CAPABILITY */
   JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR */
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_DATAVIEW
   JERRY_OBJECT_TYPE_DATAVIEW, /**< type of ECMA_OBJECT_CLASS_DATAVIEW */
 #endif /* JERRY_BUILTIN_DATAVIEW */
@@ -1518,10 +1491,8 @@ static const uint8_t jerry_class_object_type[] = {
 #if JERRY_BUILTIN_REGEXP
   JERRY_OBJECT_TYPE_REGEXP, /**< type of ECMA_OBJECT_CLASS_REGEXP */
 #endif /* JERRY_BUILTIN_REGEXP */
-#if JERRY_ESNEXT
   JERRY_OBJECT_TYPE_SYMBOL, /**< type of ECMA_OBJECT_CLASS_SYMBOL */
   JERRY_OBJECT_TYPE_ITERATOR, /**< type of ECMA_OBJECT_CLASS_STRING_ITERATOR */
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_TYPEDARRAY
   JERRY_OBJECT_TYPE_ARRAYBUFFER, /**< type of ECMA_OBJECT_CLASS_ARRAY_BUFFER */
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
@@ -1571,12 +1542,10 @@ jerry_object_type (const jerry_value_t value) /**< input value to check */
     {
       return JERRY_OBJECT_TYPE_ARRAY;
     }
-#if JERRY_ESNEXT
     case ECMA_OBJECT_TYPE_PROXY:
     {
       return JERRY_OBJECT_TYPE_PROXY;
     }
-#endif /* JERRY_ESNEXT */
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
@@ -1626,7 +1595,6 @@ jerry_function_type (const jerry_value_t value) /**< input value to check */
 
         switch (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags))
         {
-#if JERRY_ESNEXT
           case CBC_FUNCTION_ARROW:
           case CBC_FUNCTION_ASYNC_ARROW:
           {
@@ -1637,7 +1605,6 @@ jerry_function_type (const jerry_value_t value) /**< input value to check */
           {
             return JERRY_FUNCTION_TYPE_GENERATOR;
           }
-#endif /* JERRY_ESNEXT */
           case CBC_FUNCTION_ACCESSOR:
           {
             return JERRY_FUNCTION_TYPE_ACCESSOR;
@@ -1670,7 +1637,6 @@ jerry_iterator_type (const jerry_value_t value) /**< input value to check */
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   if (ecma_is_value_object (value))
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
@@ -1705,9 +1671,6 @@ jerry_iterator_type (const jerry_value_t value) /**< input value to check */
       }
     }
   }
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (value);
-#endif /* JERRY_ESNEXT */
 
   return JERRY_ITERATOR_TYPE_NONE;
 } /* jerry_iterator_type */
@@ -1760,9 +1723,6 @@ jerry_feature_enabled (const jerry_feature_t feature) /**< feature to check */
 #if JERRY_BUILTIN_JSON
           || feature == JERRY_FEATURE_JSON
 #endif /* JERRY_BUILTIN_JSON */
-#if JERRY_ESNEXT
-          || feature == JERRY_FEATURE_PROMISE || feature == JERRY_FEATURE_SYMBOL
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_TYPEDARRAY
           || feature == JERRY_FEATURE_TYPEDARRAY
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
@@ -2610,12 +2570,8 @@ jerry_promise (void)
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   return jerry_return (ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, NULL));
-#else /* !JERRY_ESNEXT */
-  return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_PROMISE_NOT_SUPPORTED));
-#endif /* JERRY_ESNEXT */
-} /* jerry_promise */
+} /* jerry_create_promise */
 
 /**
  * Create a new Proxy object with the given target and handler
@@ -2797,12 +2753,8 @@ jerry_symbol_with_description (const jerry_value_t value) /**< api value */
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
-#if JERRY_ESNEXT
   return jerry_return (ecma_op_create_symbol (&value, 1));
-#else /* !JERRY_ESNEXT */
-  return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_SYMBOL_NOT_SUPPORTED));
-#endif /* JERRY_ESNEXT */
-} /* jerry_symbol_with_description */
+} /* jerry_create_symbol */
 
 /**
  * Create BigInt from a sequence of uint64 digits.
@@ -4772,7 +4724,6 @@ jerry_promise_resolve (jerry_value_t promise, /**< the promise value */
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   if (!jerry_value_is_promise (promise))
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
@@ -4784,12 +4735,6 @@ jerry_promise_resolve (jerry_value_t promise, /**< the promise value */
   }
 
   return ecma_fulfill_promise_with_checks (promise, argument);
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (promise);
-  JERRY_UNUSED (argument);
-
-  return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_PROMISE_NOT_SUPPORTED));
-#endif /* JERRY_ESNEXT */
 } /* jerry_promise_resolve */
 
 /**
@@ -4804,7 +4749,6 @@ jerry_promise_reject (jerry_value_t promise, /**< the promise value */
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   if (!jerry_value_is_promise (promise))
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
@@ -4816,12 +4760,6 @@ jerry_promise_reject (jerry_value_t promise, /**< the promise value */
   }
 
   return ecma_reject_promise_with_checks (promise, argument);
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (promise);
-  JERRY_UNUSED (argument);
-
-  return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_PROMISE_NOT_SUPPORTED));
-#endif /* JERRY_ESNEXT */
 } /* jerry_promise_reject */
 
 /**
@@ -4835,18 +4773,13 @@ jerry_promise_result (const jerry_value_t promise) /**< promise object to get th
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   if (!jerry_value_is_promise (promise))
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
   }
 
   return ecma_promise_get_result (ecma_get_object_from_value (promise));
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (promise);
-  return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_PROMISE_NOT_SUPPORTED));
-#endif /* JERRY_ESNEXT */
-} /* jerry_promise_result */
+} /* jerry_get_promise_result */
 
 /**
  * Get the state of a promise object.
@@ -4860,7 +4793,6 @@ jerry_promise_state (const jerry_value_t promise) /**< promise object to get the
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   if (!jerry_value_is_promise (promise))
   {
     return JERRY_PROMISE_STATE_NONE;
@@ -4870,11 +4802,7 @@ jerry_promise_state (const jerry_value_t promise) /**< promise object to get the
   flags &= (ECMA_PROMISE_IS_PENDING | ECMA_PROMISE_IS_FULFILLED);
 
   return (flags ? flags : JERRY_PROMISE_STATE_REJECTED);
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (promise);
-  return JERRY_PROMISE_STATE_NONE;
-#endif /* JERRY_ESNEXT */
-} /* jerry_promise_state */
+} /* jerry_get_promise_state */
 
 /**
  * Sets a callback for tracking Promise and async operations.
@@ -4889,7 +4817,7 @@ jerry_promise_on_event (jerry_promise_event_filter_t filters, /**< combination o
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT && JERRY_PROMISE_CALLBACK
+#if JERRY_PROMISE_CALLBACK
   if (filters == JERRY_PROMISE_EVENT_FILTER_DISABLE || callback == NULL)
   {
     JERRY_CONTEXT (promise_callback_filters) = JERRY_PROMISE_EVENT_FILTER_DISABLE;
@@ -4899,12 +4827,12 @@ jerry_promise_on_event (jerry_promise_event_filter_t filters, /**< combination o
   JERRY_CONTEXT (promise_callback_filters) = (uint32_t) filters;
   JERRY_CONTEXT (promise_callback) = callback;
   JERRY_CONTEXT (promise_callback_user_p) = user_p;
-#else /* !JERRY_ESNEXT && !JERRY_PROMISE_CALLBACK */
+#else /* !JERRY_PROMISE_CALLBACK */
   JERRY_UNUSED (filters);
   JERRY_UNUSED (callback);
   JERRY_UNUSED (user_p);
-#endif /* JERRY_ESNEXT && JERRY_PROMISE_CALLBACK */
-} /* jerry_promise_on_event */
+#endif /* JERRY_PROMISE_CALLBACK */
+} /* jerry_promise_set_callback */
 
 /**
  * Get the well-knwon symbol represented by the given `symbol` enum value.
@@ -4920,7 +4848,6 @@ jerry_symbol (jerry_well_known_symbol_t symbol) /**< jerry_well_known_symbol_t e
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   lit_magic_string_id_t id = (lit_magic_string_id_t) (LIT_GLOBAL_SYMBOL__FIRST + symbol);
 
   if (!LIT_IS_GLOBAL_SYMBOL (id))
@@ -4929,12 +4856,7 @@ jerry_symbol (jerry_well_known_symbol_t symbol) /**< jerry_well_known_symbol_t e
   }
 
   return ecma_make_symbol_value (ecma_op_get_global_symbol (id));
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (symbol);
-
-  return ECMA_VALUE_UNDEFINED;
-#endif /* JERRY_ESNEXT */
-} /* jerry_symbol */
+} /* jerry_get_well_known_symbol */
 
 /**
  * Returns the description internal property of a symbol.
@@ -4950,7 +4872,6 @@ jerry_symbol_description (const jerry_value_t symbol) /**< symbol value */
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   if (!ecma_is_value_symbol (symbol))
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
@@ -4958,12 +4879,7 @@ jerry_symbol_description (const jerry_value_t symbol) /**< symbol value */
 
   /* Note: This operation cannot throw an error */
   return ecma_copy_value (ecma_get_symbol_description (ecma_get_symbol_from_value (symbol)));
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (symbol);
-
-  return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_SYMBOL_NOT_SUPPORTED));
-#endif /* JERRY_ESNEXT */
-} /* jerry_symbol_description */
+} /* jerry_get_symbol_description */
 
 /**
  * Call the SymbolDescriptiveString ecma builtin operation on the symbol value.
@@ -4979,7 +4895,6 @@ jerry_symbol_descriptive_string (const jerry_value_t symbol) /**< symbol value *
 {
   jerry_assert_api_enabled ();
 
-#if JERRY_ESNEXT
   if (!ecma_is_value_symbol (symbol))
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
@@ -4987,12 +4902,7 @@ jerry_symbol_descriptive_string (const jerry_value_t symbol) /**< symbol value *
 
   /* Note: This operation cannot throw an error */
   return ecma_get_symbol_descriptive_string (symbol);
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (symbol);
-
-  return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_SYMBOL_NOT_SUPPORTED));
-#endif /* JERRY_ESNEXT */
-} /* jerry_symbol_descriptive_string */
+} /* jerry_get_symbol_descriptive_string */
 
 /**
  * Get the number of uint64 digits of a BigInt value
@@ -5775,12 +5685,10 @@ jerry_source_info (const jerry_value_t value) /**< jerry api value */
           uint8_t *extended_info_p = ecma_compiled_code_resolve_extended_info (bytecode_p);
           uint8_t extended_info = *extended_info_p;
 
-#if JERRY_ESNEXT
           if (extended_info & CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH)
           {
             ecma_extended_info_decode_vlq (&extended_info_p);
           }
-#endif /* JERRY_ESNEXT */
 
           if (extended_info & CBC_EXTENDED_CODE_FLAGS_SOURCE_CODE_IN_ARGUMENTS)
           {
@@ -5819,14 +5727,12 @@ jerry_source_info (const jerry_value_t value) /**< jerry api value */
           ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, ext_object_p->u.bound_function.target_function);
         continue;
       }
-#if JERRY_ESNEXT
       case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
       {
         ecma_value_t script_value = ((ecma_extended_object_t *) object_p)->u.constructor_function.script_value;
         script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
         break;
       }
-#endif /* JERRY_ESNEXT */
       default:
       {
         return NULL;
@@ -5989,9 +5895,8 @@ jerry_realm_set_this (jerry_value_t realm, /**< realm value */
       ecma_object_t *global_lex_env_p = ecma_create_object_lex_env (NULL, ecma_get_object_from_value (this_value));
 
       ECMA_SET_NON_NULL_POINTER (global_object_p->global_env_cp, global_lex_env_p);
-#if JERRY_ESNEXT
       global_object_p->global_scope_cp = global_object_p->global_env_cp;
-#endif /* JERRY_ESNEXT */
+
       ecma_deref_object (global_lex_env_p);
       return ECMA_VALUE_TRUE;
     }

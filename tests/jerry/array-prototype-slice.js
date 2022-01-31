@@ -189,3 +189,45 @@ var value = array.slice(1, {
 })
 
 array_check(value, []);
+
+// Constructor creates longer array than expected.
+class LongArray extends Array {
+  constructor(len) {
+      super (42);
+      this.fill ("foo");
+  }
+}
+
+var a = new LongArray (5);
+a.length = 5;
+var sliced = a.slice ();
+assert (sliced.length == 5);
+assert (JSON.stringify (sliced) == '["foo","foo","foo","foo","foo"]')
+
+// Constructor creates shorter array than expected.
+class ShortArray extends Array {
+  constructor(len) {
+      super (2);
+      this.fill ("bar");
+  }
+}
+
+var b = new ShortArray (8);
+b.length = 8;
+b.fill ("asd", 2);
+var sliced2 = b.slice ();
+assert (sliced2.length == 8);
+assert (JSON.stringify (sliced2) == '["bar","bar","asd","asd","asd","asd","asd","asd"]');
+
+// Constructor creates array of the expected size.
+class ExactArray extends Array {
+  constructor(len) {
+      super (len);
+      this.fill ("baz");
+  }
+}
+
+var c = new ExactArray (5);
+var sliced3 = c.slice();
+assert (sliced3.length == 5);
+assert (JSON.stringify (sliced3) == '["baz","baz","baz","baz","baz"]');

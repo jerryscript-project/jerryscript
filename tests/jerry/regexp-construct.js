@@ -128,3 +128,47 @@ assert (r.multiline == false);
 
 /* RegExp properties */
 assert (RegExp.length === 2);
+
+var r = RegExp ("a","gim");
+var r2 = RegExp (r,"gim");
+var r3 = RegExp (r);
+
+assert(r2.source === 'a');
+assert(r2.global === true);
+assert(r2.ignoreCase === true);
+assert(r2.multiline === true);
+
+assert(r3.source === 'a');
+assert(r3.global === true);
+assert(r3.ignoreCase === true);
+assert(r3.multiline === true);
+
+var obj = { get source() { throw 5 }, [Symbol.match] : true }
+
+try {
+  new RegExp (obj);
+  assert(false)
+} catch (e) {
+  assert(e === 5);
+}
+
+r = new RegExp ("a","gimuy");
+assert (r.global === true);
+assert (r.ignoreCase === true);
+assert (r.multiline === true);
+assert (r.unicode === true);
+assert (r.sticky === true);
+
+try {
+  new RegExp ("a", "uu");
+  assert (false);
+} catch (e) {
+  assert (e instanceof SyntaxError);
+}
+
+try {
+  new RegExp ("a", "yy");
+  assert (false);
+} catch (e) {
+  assert (e instanceof SyntaxError);
+}

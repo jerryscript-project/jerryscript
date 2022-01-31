@@ -21,20 +21,17 @@
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-iterator-object.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
 #include "ecma-proxy-object.h"
 
-#include "jrt.h"
-#if JERRY_ESNEXT
-#include "ecma-function-object.h"
-#include "ecma-iterator-object.h"
-
 #include "jcontext.h"
-#endif /* JERRY_ESNEXT */
+#include "jrt.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -126,7 +123,6 @@ ecma_value_t
 ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                         uint32_t arguments_list_len) /**< number of arguments */
 {
-#if JERRY_ESNEXT
   if (JERRY_CONTEXT (current_new_target_p) != ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT))
   {
     ecma_object_t *prototype_obj_p =
@@ -141,7 +137,7 @@ ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
     return ecma_make_object_value (object_p);
   }
-#endif /* JERRY_ESNEXT */
+
   return ecma_builtin_object_dispatch_call (arguments_list_p, arguments_list_len);
 } /* ecma_builtin_object_dispatch_construct */
 
@@ -176,7 +172,6 @@ ecma_builtin_object_object_get_prototype_of (ecma_object_t *obj_p) /**< routine'
   return ECMA_VALUE_NULL;
 } /* ecma_builtin_object_object_get_prototype_of */
 
-#if JERRY_ESNEXT
 /**
  * The Object object's 'setPrototypeOf' routine
  *
@@ -303,7 +298,6 @@ ecma_builtin_object_object_set_proto (ecma_value_t arg1, /**< routine's first ar
 
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_builtin_object_object_set_proto */
-#endif /* JERRY_ESNEXT */
 
 /**
  * SetIntegrityLevel operation
@@ -731,7 +725,6 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_object_t *obj_p, /*
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_builtin_object_object_get_own_property_descriptor */
 
-#if JERRY_ESNEXT
 /**
  * The Object object's 'getOwnPropertyDescriptors' routine
  *
@@ -799,7 +792,6 @@ ecma_builtin_object_object_get_own_property_descriptors (ecma_object_t *obj_p) /
 
   return ecma_make_object_value (descriptors_p);
 } /* ecma_builtin_object_object_get_own_property_descriptors */
-#endif /* JERRY_ESNEXT */
 
 /**
  * The Object object's 'defineProperties' routine
@@ -852,12 +844,10 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
     ecma_property_descriptor_t prop_desc;
     ecma_value_t get_desc = ecma_op_object_get_own_property_descriptor (props_p, prop_name_p, &prop_desc);
 
-#if JERRY_ESNEXT
     if (ECMA_IS_VALUE_ERROR (get_desc))
     {
       goto cleanup;
     }
-#endif /* JERRY_ESNEXT */
 
     if (ecma_is_value_true (get_desc))
     {
@@ -1023,8 +1013,6 @@ ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's
 
   return ecma_make_object_value (obj_p);
 } /* ecma_builtin_object_object_define_property */
-
-#if JERRY_ESNEXT
 
 /**
  * The Object object's 'assign' routine
@@ -1286,8 +1274,6 @@ cleanup_iterator:
   return result;
 } /* ecma_builtin_object_from_entries */
 
-#endif /* JERRY_ESNEXT */
-
 /**
  * GetOwnPropertyKeys abstract method
  *
@@ -1301,7 +1287,6 @@ static ecma_value_t
 ecma_op_object_get_own_property_keys (ecma_value_t this_arg, /**< this argument */
                                       uint16_t type) /**< routine type */
 {
-#if JERRY_ESNEXT
   /* 1. */
   ecma_value_t object = ecma_op_to_object (this_arg);
 
@@ -1351,12 +1336,6 @@ ecma_op_object_get_own_property_keys (ecma_value_t this_arg, /**< this argument 
   ecma_collection_free (props_p);
 
   return result_array;
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (type);
-  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-  ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_ALL);
-  return ecma_op_new_array_object_from_collection (props_p, false);
-#endif /* JERRY_ESNEXT */
 } /* ecma_op_object_get_own_property_keys */
 
 /**
@@ -1384,7 +1363,6 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
     {
       return ecma_builtin_object_object_create (arg1, arg2);
     }
-#if JERRY_ESNEXT
     case ECMA_OBJECT_ROUTINE_SET_PROTOTYPE_OF:
     {
       return ecma_builtin_object_object_set_prototype_of (arg1, arg2);
@@ -1393,7 +1371,6 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
     {
       return ecma_builtin_object_object_is (arg1, arg2);
     }
-#endif /* JERRY_ESNEXT */
     default:
     {
       break;
@@ -1401,21 +1378,13 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
   }
 
   ecma_object_t *obj_p;
-#if !JERRY_ESNEXT
-  if (!ecma_is_value_object (arg1))
-  {
-    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
-  }
-#endif /* !JERRY_ESNEXT */
 
   if (builtin_routine_id <= ECMA_OBJECT_ROUTINE_DEFINE_PROPERTIES)
   {
-#if JERRY_ESNEXT
     if (!ecma_is_value_object (arg1))
     {
       return ecma_raise_type_error (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
     }
-#endif /* JERRY_ESNEXT */
 
     obj_p = ecma_get_object_from_value (arg1);
 
@@ -1439,7 +1408,6 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
   }
   else if (builtin_routine_id <= ECMA_OBJECT_ROUTINE_ENTRIES)
   {
-#if JERRY_ESNEXT
     ecma_value_t object = ecma_op_to_object (arg1);
     if (ECMA_IS_VALUE_ERROR (object))
     {
@@ -1447,9 +1415,6 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
     }
 
     obj_p = ecma_get_object_from_value (object);
-#else /* !JERRY_ESNEXT */
-    obj_p = ecma_get_object_from_value (arg1);
-#endif /* JERRY_ESNEXT */
 
     ecma_value_t result;
     switch (builtin_routine_id)
@@ -1459,7 +1424,6 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
         result = ecma_builtin_object_object_get_prototype_of (obj_p);
         break;
       }
-#if JERRY_ESNEXT
       case ECMA_OBJECT_ROUTINE_ASSIGN:
       {
         result = ecma_builtin_object_object_assign (obj_p, arguments_list_p + 1, arguments_number - 1);
@@ -1467,7 +1431,6 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
       }
       case ECMA_OBJECT_ROUTINE_ENTRIES:
       case ECMA_OBJECT_ROUTINE_VALUES:
-#endif /* JERRY_ESNEXT */
       case ECMA_OBJECT_ROUTINE_KEYS:
       {
         JERRY_ASSERT (builtin_routine_id - ECMA_OBJECT_ROUTINE_KEYS < ECMA_ENUMERABLE_PROPERTY__COUNT);
@@ -1491,7 +1454,6 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
         ecma_deref_ecma_string (prop_name_p);
         break;
       }
-#if JERRY_ESNEXT
       case ECMA_OBJECT_ROUTINE_HAS_OWN:
       {
         ecma_string_t *prop_name_p = ecma_op_to_property_key (arg2);
@@ -1516,16 +1478,13 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
         result = ecma_builtin_object_from_entries (arg1);
         break;
       }
-#endif /* JERRY_ESNEXT */
       default:
       {
         JERRY_UNREACHABLE ();
       }
     }
 
-#if JERRY_ESNEXT
     ecma_deref_object (obj_p);
-#endif /* JERRY_ESNEXT */
     return result;
   }
   else if (builtin_routine_id <= ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_SYMBOLS)
@@ -1534,12 +1493,10 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
   }
   else if (builtin_routine_id <= ECMA_OBJECT_ROUTINE_SEAL)
   {
-#if JERRY_ESNEXT
     if (!ecma_is_value_object (arg1))
     {
       return ecma_copy_value (arg1);
     }
-#endif /* JERRY_ESNEXT */
 
     obj_p = ecma_get_object_from_value (arg1);
     switch (builtin_routine_id)
@@ -1565,12 +1522,11 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
   else
   {
     JERRY_ASSERT (builtin_routine_id <= ECMA_OBJECT_ROUTINE_IS_SEALED);
-#if JERRY_ESNEXT
+
     if (!ecma_is_value_object (arg1))
     {
       return ecma_make_boolean_value (builtin_routine_id != ECMA_OBJECT_ROUTINE_IS_EXTENSIBLE);
     }
-#endif /* JERRY_ESNEXT */
 
     obj_p = ecma_get_object_from_value (arg1);
     switch (builtin_routine_id)

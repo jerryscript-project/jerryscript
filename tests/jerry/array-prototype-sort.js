@@ -184,3 +184,14 @@ try {
 } catch (e) {
   assert(e instanceof TypeError);
 }
+
+var proxy = new Proxy({length: 5}, {
+  getOwnPropertyDescriptor() { throw 42.5; }
+})
+
+try {
+  Array.prototype.sort.call(proxy);
+  assert(false);
+} catch (e) {
+  assert(e === 42.5);
+}

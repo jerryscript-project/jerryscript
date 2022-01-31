@@ -388,7 +388,6 @@ re_count_groups (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context */
   }
 } /* re_count_groups */
 
-#if JERRY_ESNEXT
 /**
  * Check if a code point is a Syntax character
  *
@@ -403,7 +402,6 @@ re_is_syntax_char (lit_code_point_t cp) /**< code point */
           || cp == LIT_CHAR_RIGHT_PAREN || cp == LIT_CHAR_LEFT_SQUARE || cp == LIT_CHAR_RIGHT_SQUARE
           || cp == LIT_CHAR_LEFT_BRACE || cp == LIT_CHAR_RIGHT_BRACE || cp == LIT_CHAR_VLINE);
 } /* re_is_syntax_char */
-#endif /* JERRY_ESNEXT */
 
 /**
  * Parse a Character Escape or a Character Class Escape.
@@ -429,12 +427,10 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
       return ECMA_VALUE_EMPTY;
     }
 
-#if JERRY_ESNEXT
     if (re_ctx_p->flags & RE_FLAG_UNICODE)
     {
       return ecma_raise_syntax_error (ECMA_ERR_INVALID_ESCAPE_SEQUENCE);
     }
-#endif /* JERRY_ESNEXT */
 
     /* Legacy octal escape sequence */
     if (lit_char_is_octal_digit (*re_ctx_p->input_curr_p))
@@ -531,12 +527,10 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
         }
       }
 
-#if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
         return ecma_raise_syntax_error (ECMA_ERR_INVALID_CONTROL_ESCAPE_SEQUENCE);
       }
-#endif /* JERRY_ESNEXT */
 
       re_ctx_p->token.value = LIT_CHAR_BACKSLASH;
       re_ctx_p->input_curr_p--;
@@ -554,12 +548,10 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
         break;
       }
 
-#if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
         return ecma_raise_syntax_error (ECMA_ERR_INVALID_HEX_ESCAPE_SEQUENCE);
       }
-#endif /* JERRY_ESNEXT */
 
       re_ctx_p->token.value = LIT_CHAR_LOWERCASE_X;
       break;
@@ -573,7 +565,6 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
         re_ctx_p->token.value = hex_value;
         re_ctx_p->input_curr_p += 4;
 
-#if JERRY_ESNEXT
         if (re_ctx_p->flags & RE_FLAG_UNICODE && lit_is_code_point_utf16_high_surrogate (re_ctx_p->token.value)
             && re_ctx_p->input_curr_p + 6 <= re_ctx_p->input_end_p && re_ctx_p->input_curr_p[0] == '\\'
             && re_ctx_p->input_curr_p[1] == 'u')
@@ -586,12 +577,10 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
             re_ctx_p->input_curr_p += 6;
           }
         }
-#endif /* JERRY_ESNEXT */
 
         break;
       }
 
-#if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
         if (re_ctx_p->input_curr_p + 1 < re_ctx_p->input_end_p && re_ctx_p->input_curr_p[0] == LIT_CHAR_LEFT_BRACE
@@ -620,7 +609,6 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
 
         return ecma_raise_syntax_error (ECMA_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE);
       }
-#endif /* JERRY_ESNEXT */
 
       re_ctx_p->token.value = LIT_CHAR_LOWERCASE_U;
       break;
@@ -628,13 +616,11 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
     /* Identity escape */
     default:
     {
-#if JERRY_ESNEXT
       /* Must be '/', or one of SyntaxCharacter */
       if (re_ctx_p->flags & RE_FLAG_UNICODE && ch != LIT_CHAR_SLASH && !re_is_syntax_char (ch))
       {
         return ecma_raise_syntax_error (ECMA_ERR_INVALID_ESCAPE);
       }
-#endif /* JERRY_ESNEXT */
       re_ctx_p->token.value = ch;
     }
   }
@@ -811,12 +797,10 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
         return ecma_raise_syntax_error (ECMA_ERR_NOTHING_TO_REPEAT);
       }
 
-#if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
         return ecma_raise_syntax_error (ECMA_ERR_LONE_QUANTIFIER_BRACKET);
       }
-#endif /* JERRY_ESNEXT */
 
       re_ctx_p->input_curr_p++;
       re_ctx_p->token.type = RE_TOK_CHAR;
@@ -825,7 +809,6 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
       /* Check quantifier */
       break;
     }
-#if JERRY_ESNEXT
     case LIT_CHAR_RIGHT_SQUARE:
     case LIT_CHAR_RIGHT_BRACE:
     {
@@ -836,13 +819,11 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
 
       /* FALLTHRU */
     }
-#endif /* JERRY_ESNEXT */
     default:
     {
       re_ctx_p->token.type = RE_TOK_CHAR;
       re_ctx_p->token.value = ch;
 
-#if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE && lit_is_code_point_utf16_high_surrogate (ch)
           && re_ctx_p->input_curr_p < re_ctx_p->input_end_p)
       {
@@ -853,7 +834,6 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
           re_ctx_p->input_curr_p += LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
         }
       }
-#endif /* JERRY_ESNEXT */
 
       /* Check quantifier */
       break;
@@ -974,13 +954,11 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
         re_ctx_p->input_curr_p++;
         current = LIT_CHAR_BS;
       }
-#if JERRY_ESNEXT
       else if (*re_ctx_p->input_curr_p == LIT_CHAR_MINUS)
       {
         re_ctx_p->input_curr_p++;
         current = LIT_CHAR_MINUS;
       }
-#endif /* JERRY_ESNEXT */
       else if ((re_ctx_p->flags & RE_FLAG_UNICODE) == 0 && *re_ctx_p->input_curr_p == LIT_CHAR_LOWERCASE_C
                && re_ctx_p->input_curr_p + 1 < re_ctx_p->input_end_p
                && (lit_char_is_decimal_digit (*(re_ctx_p->input_curr_p + 1))
@@ -1009,12 +987,10 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
         }
       }
     }
-#if JERRY_ESNEXT
     else if (re_ctx_p->flags & RE_FLAG_UNICODE)
     {
       current = ecma_regexp_unicode_advance (&re_ctx_p->input_curr_p, re_ctx_p->input_end_p);
     }
-#endif /* JERRY_ESNEXT */
     else
     {
       current = lit_cesu8_read_next (&re_ctx_p->input_curr_p);
@@ -1036,12 +1012,10 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
         continue;
       }
 
-#if JERRY_ESNEXT
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
         return ecma_raise_syntax_error (ECMA_ERR_INVALID_CHARACTER_CLASS);
       }
-#endif /* JERRY_ESNEXT */
 
       if (start != RE_INVALID_CP)
       {
@@ -1180,12 +1154,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       }
       case RE_TOK_PERIOD:
       {
-#if JERRY_ESNEXT
         re_append_opcode (re_ctx_p, (re_ctx_p->flags & RE_FLAG_UNICODE) ? RE_OP_UNICODE_PERIOD : RE_OP_PERIOD);
-#else /* !JERRY_ESNEXT */
-        re_append_opcode (re_ctx_p, RE_OP_PERIOD);
-#endif /* !JERRY_ESNEXT */
-
         re_insert_atom_iterator (re_ctx_p, atom_offset);
         break;
       }
@@ -1232,7 +1201,6 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
           return result;
         }
 
-#if JERRY_ESNEXT
         if (re_ctx_p->flags & RE_FLAG_UNICODE)
         {
           re_ctx_p->token.qmin = 1;
@@ -1240,7 +1208,6 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
           re_ctx_p->token.greedy = true;
         }
         else
-#endif /* JERRY_ESNEXT */
         {
           re_parse_quantifier (re_ctx_p);
 

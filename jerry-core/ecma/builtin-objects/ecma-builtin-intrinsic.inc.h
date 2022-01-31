@@ -19,8 +19,6 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_ESNEXT
-
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_INTERNAL_MAGIC_STRING_ARRAY_PROTOTYPE_VALUES, ECMA_INTRINSIC_ARRAY_PROTOTYPE_VALUES, 0, 0)
@@ -33,5 +31,5 @@ ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ECMA_INTRINSIC_ARRAY_TO_STRING, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_TO_UTC_STRING_UL, ECMA_INTRINSIC_DATE_TO_UTC_STRING, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_PARSE_FLOAT, ECMA_INTRINSIC_PARSE_FLOAT, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_PARSE_INT, ECMA_INTRINSIC_PARSE_INT, 2, 2)
-#endif /* JERRY_ESNEXT */
+
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

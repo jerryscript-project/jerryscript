@@ -164,10 +164,8 @@ typedef enum
   VM_OC_ERROR, /**< error while the vm_loop is suspended */
 
   VM_OC_JUMP, /**< jump */
-#if JERRY_ESNEXT
   VM_OC_BRANCH_IF_NULLISH, /** branch if undefined or null */
   VM_OC_POP_REFERENCE, /** prop identifier or property reference from the stack */
-#endif /* JERRY_ESNEXT */
   VM_OC_BRANCH_IF_STRICT_EQUAL, /**< branch if strict equal */
 
   /* These four opcodes must be in this order. */
@@ -189,9 +187,7 @@ typedef enum
   VM_OC_MUL, /**< mul */
   VM_OC_DIV, /**< div */
   VM_OC_MOD, /**< mod */
-#if JERRY_ESNEXT
   VM_OC_EXP, /**< exponentiation */
-#endif /* JERRY_ESNEXT */
 
   VM_OC_EQUAL, /**< equal */
   VM_OC_NOT_EQUAL, /**< not equal */
@@ -227,17 +223,14 @@ typedef enum
   VM_OC_CREATE_ARGUMENTS, /**< create arguments object */
   VM_OC_SET_BYTECODE_PTR, /**< setting bytecode pointer */
   VM_OC_VAR_EVAL, /**< variable and function evaluation */
-#if JERRY_ESNEXT
   VM_OC_EXT_VAR_EVAL, /**< variable and function evaluation for
                        *   functions with separate argument context */
-#endif /* JERRY_ESNEXT */
   VM_OC_INIT_ARG_OR_FUNC, /**< create and init a function or argument binding */
 
 #if JERRY_DEBUGGER
   VM_OC_BREAKPOINT_ENABLED, /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED, /**< disabled breakpoint for debugger */
 #endif /* JERRY_DEBUGGER */
-#if JERRY_ESNEXT
   VM_OC_CLASS_CALL_STATIC_BLOCK, /**< call the class static block */
   VM_OC_DEFINE_FIELD, /**< define class field  */
   VM_OC_PRIVATE_PROP_REFERENCE, /**< reference to class private method */
@@ -310,7 +303,6 @@ typedef enum
   VM_OC_SET__PROTO__, /**< set prototype when __proto__: form is used */
   VM_OC_PUSH_STATIC_FIELD_FUNC, /**< push static field initializer function */
   VM_OC_ADD_COMPUTED_FIELD, /**< add computed field name */
-#endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
   VM_OC_MODULE_IMPORT, /**< module dynamic import */
   VM_OC_MODULE_IMPORT_META, /**< module import.meta */
@@ -324,91 +316,10 @@ typedef enum
  */
 typedef enum
 {
-#if !JERRY_ESNEXT
-  VM_OC_EXP = VM_OC_NONE, /**< exponentiation */
-  VM_OC_BRANCH_IF_NULLISH = VM_OC_NONE, /** branch if undefined or null */
-  VM_OC_POP_REFERENCE = VM_OC_NONE, /** prop identifier or property reference from the stack */
-#endif /* !JERRY_ESNEXT */
 #if !JERRY_DEBUGGER
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE, /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE, /**< disabled breakpoint for debugger is unused */
 #endif /* !JERRY_DEBUGGER */
-#if !JERRY_ESNEXT
-  VM_OC_CLASS_CALL_STATIC_BLOCK = VM_OC_NONE, /**< call the class static block */
-  VM_OC_DEFINE_FIELD = VM_OC_NONE, /**< define class field */
-  VM_OC_PRIVATE_PROP_REFERENCE = VM_OC_NONE, /* reference to class private method  */
-  VM_OC_ASSIGN_PRIVATE = VM_OC_NONE, /**< assign to private field */
-  VM_OC_PRIVATE_FIELD_ADD = VM_OC_NONE, /**< add private field */
-  VM_OC_PRIVATE_PROP_GET = VM_OC_NONE, /**< get private field */
-  VM_OC_PRIVATE_IN = VM_OC_NONE, /**< 'in' opcode handler for private identifiers */
-  VM_OC_COLLECT_PRIVATE_PROPERTY = VM_OC_NONE, /**< collect private properties */
-  VM_OC_EXT_VAR_EVAL = VM_OC_NONE, /**< variable and function evaluation for
-                                    *   functions with separate argument context */
-  VM_OC_CHECK_VAR = VM_OC_NONE, /**< check redeclared vars in the global scope */
-  VM_OC_CHECK_LET = VM_OC_NONE, /**< check redeclared lets in the global scope */
-  VM_OC_ASSIGN_LET_CONST = VM_OC_NONE, /**< assign values to let/const declarations */
-  VM_OC_INIT_BINDING = VM_OC_NONE, /**< create and intialize a binding */
-  VM_OC_THROW_CONST_ERROR = VM_OC_NONE, /**< throw invalid assignment to const variable error */
-  VM_OC_COPY_TO_GLOBAL = VM_OC_NONE, /**< copy value to global lex env */
-  VM_OC_COPY_FROM_ARG = VM_OC_NONE, /**< copy value from arg lex env */
-  VM_OC_CLONE_CONTEXT = VM_OC_NONE, /**< clone lexical environment with let/const declarations */
-  VM_OC_COPY_DATA_PROPERTIES = VM_OC_NONE, /**< copy data properties of an object */
-  VM_OC_SET_COMPUTED_PROPERTY = VM_OC_NONE, /**< set computed property is unused */
-
-  VM_OC_FOR_OF_INIT = VM_OC_NONE, /**< for-of init context */
-  VM_OC_FOR_OF_GET_NEXT = VM_OC_NONE, /**< for-of get next */
-  VM_OC_FOR_OF_HAS_NEXT = VM_OC_NONE, /**< for-of has next */
-  VM_OC_FOR_AWAIT_OF_INIT = VM_OC_NONE, /**< for-await-of init context */
-  VM_OC_FOR_AWAIT_OF_HAS_NEXT = VM_OC_NONE, /**< for-await-of has next */
-
-  VM_OC_LOCAL_EVAL = VM_OC_NONE, /**< eval in local context */
-  VM_OC_SUPER_CALL = VM_OC_NONE, /**< call the 'super' constructor */
-  VM_OC_PUSH_CLASS_ENVIRONMENT = VM_OC_NONE, /**< push class environment */
-  VM_OC_PUSH_IMPLICIT_CTOR = VM_OC_NONE, /**< create implicit class constructor */
-  VM_OC_INIT_CLASS = VM_OC_NONE, /**< initialize class */
-  VM_OC_FINALIZE_CLASS = VM_OC_NONE, /**< finalize class */
-  VM_OC_SET_FIELD_INIT = VM_OC_NONE, /**< store the class field initializer function */
-  VM_OC_SET_STATIC_FIELD_INIT = VM_OC_NONE, /**< store the static class field initializer function */
-  VM_OC_RUN_FIELD_INIT = VM_OC_NONE, /**< run the class field initializer function */
-  VM_OC_RUN_STATIC_FIELD_INIT = VM_OC_NONE, /**< run the static class field initializer function */
-  VM_OC_SET_NEXT_COMPUTED_FIELD = VM_OC_NONE, /**< set the next computed field of a class */
-  VM_OC_PUSH_SUPER_CONSTRUCTOR = VM_OC_NONE, /**< getSuperConstructor operation */
-  VM_OC_RESOLVE_LEXICAL_THIS = VM_OC_NONE, /**< resolve this_binding from from the lexical environment */
-  VM_OC_SUPER_REFERENCE = VM_OC_NONE, /**< push super reference */
-  VM_OC_SET_HOME_OBJECT = VM_OC_NONE, /**< set the [[HomeObject]] internal property in an object literal */
-  VM_OC_OBJECT_LITERAL_HOME_ENV = VM_OC_NONE, /**< create/destroy [[HomeObject]] environment of an object literal */
-  VM_OC_SET_FUNCTION_NAME = VM_OC_NONE, /**< set function name property */
-
-  VM_OC_PUSH_SPREAD_ELEMENT = VM_OC_NONE, /**< push spread element */
-  VM_OC_PUSH_REST_OBJECT = VM_OC_NONE, /**< push rest object */
-  VM_OC_ITERATOR_CONTEXT_CREATE = VM_OC_NONE, /**< create iterator context */
-  VM_OC_ITERATOR_STEP = VM_OC_NONE, /**< IteratorStep abstract operation */
-  VM_OC_ITERATOR_CONTEXT_END = VM_OC_NONE, /**< finalize iterator cotnext */
-  VM_OC_OBJ_INIT_CONTEXT_CREATE = VM_OC_NONE, /**< create object initializer context */
-  VM_OC_OBJ_INIT_CONTEXT_END = VM_OC_NONE, /**< finalize object initializer context */
-  VM_OC_OBJ_INIT_PUSH_REST = VM_OC_NONE, /**< push the object with the rest properties */
-  VM_OC_INITIALIZER_PUSH_NAME = VM_OC_NONE, /**< append string to name list array and push the string */
-  VM_OC_DEFAULT_INITIALIZER = VM_OC_NONE, /**< default initializer inside a pattern */
-  VM_OC_REST_INITIALIZER = VM_OC_NONE, /**< create rest object inside an array pattern */
-  VM_OC_INITIALIZER_PUSH_PROP = VM_OC_NONE, /**< push property for object initializer */
-  VM_OC_SPREAD_ARGUMENTS = VM_OC_NONE, /**< perform function call/construct with spreaded arguments */
-  VM_OC_CREATE_GENERATOR = VM_OC_NONE, /**< create a generator object */
-  VM_OC_YIELD = VM_OC_NONE, /**< yield operation */
-  VM_OC_ASYNC_YIELD = VM_OC_NONE, /**< async yield operation */
-  VM_OC_ASYNC_YIELD_ITERATOR = VM_OC_NONE, /**< async yield iterator operation */
-  VM_OC_AWAIT = VM_OC_NONE, /**< await operation */
-  VM_OC_GENERATOR_AWAIT = VM_OC_NONE, /**< generator await operation */
-  VM_OC_EXT_RETURN = VM_OC_NONE, /**< return which also clears the stack */
-  VM_OC_ASYNC_EXIT = VM_OC_NONE, /**< return from async function */
-  VM_OC_STRING_CONCAT = VM_OC_NONE, /**< string concatenation */
-  VM_OC_GET_TEMPLATE_OBJECT = VM_OC_NONE, /**< GetTemplateObject operation */
-  VM_OC_PUSH_NEW_TARGET = VM_OC_NONE, /**< push new.target onto the stack */
-  VM_OC_REQUIRE_OBJECT_COERCIBLE = VM_OC_NONE, /**< RequireObjectCoercible opretaion */
-  VM_OC_ASSIGN_SUPER = VM_OC_NONE, /**< assign super reference */
-  VM_OC_SET__PROTO__ = VM_OC_NONE, /**< set prototype when __proto__: form is used */
-  VM_OC_PUSH_STATIC_FIELD_FUNC = VM_OC_NONE, /**< push static field initializer function */
-  VM_OC_ADD_COMPUTED_FIELD = VM_OC_NONE, /**< add computed field name */
-#endif /* !JERRY_ESNEXT */
 #if !JERRY_MODULE_SYSTEM
   VM_OC_MODULE_IMPORT = VM_OC_NONE, /**< module dynamic import */
   VM_OC_MODULE_IMPORT_META = VM_OC_NONE, /**< module import.meta */

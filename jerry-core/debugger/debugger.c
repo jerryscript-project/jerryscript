@@ -1445,13 +1445,11 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
       string_id = LIT_MAGIC_STRING_TYPE_ERROR_UL;
       break;
     }
-#if JERRY_ESNEXT
     case ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE:
     {
       string_id = LIT_MAGIC_STRING_AGGREGATE_ERROR_UL;
       break;
     }
-#endif /* JERRY_ESNEXT */
     case ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE:
     {
       string_id = LIT_MAGIC_STRING_URI_ERROR_UL;

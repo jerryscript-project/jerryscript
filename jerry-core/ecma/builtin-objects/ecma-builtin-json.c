@@ -653,13 +653,11 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
     /* 3.a */
     ecma_value_t is_array = ecma_is_value_array (value);
 
-#if JERRY_ESNEXT
     if (ECMA_IS_VALUE_ERROR (is_array))
     {
       ecma_free_value (value);
       return is_array;
     }
-#endif /* JERRY_ESNEXT */
 
     ecma_object_t *object_p = ecma_get_object_from_value (value);
 
@@ -702,15 +700,12 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
     {
       ecma_collection_t *props_p =
         ecma_op_object_get_enumerable_property_names (object_p, ECMA_ENUMERABLE_PROPERTY_KEYS);
-#if JERRY_ESNEXT
+
       if (JERRY_UNLIKELY (props_p == NULL))
       {
         ecma_deref_object (object_p);
         return ECMA_VALUE_ERROR;
       }
-#else /* !JERRY_ESNEXT */
-      JERRY_ASSERT (props_p != NULL);
-#endif /* JERRY_ESNEXT */
 
       ecma_value_t *buffer_p = props_p->buffer_p;
 
@@ -773,12 +768,10 @@ ecma_builtin_json_internalize_process_property (ecma_object_t *reviver_p, /**< r
     /* ES11: 2.b.iii.2.a / 2.c.ii.2.a */
     ecma_value_t delete_val = ecma_op_object_delete (object_p, prop_name, false);
 
-#if JERRY_ESNEXT
     if (ECMA_IS_VALUE_ERROR (delete_val))
     {
       return delete_val;
     }
-#endif /* JERRY_ESNEXT */
 
     JERRY_ASSERT (ecma_is_value_boolean (delete_val));
   }
@@ -789,12 +782,10 @@ ecma_builtin_json_internalize_process_property (ecma_object_t *reviver_p, /**< r
       ecma_builtin_helper_def_prop (object_p, prop_name, new_element, ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
     ecma_free_value (new_element);
 
-#if JERRY_ESNEXT
     if (ECMA_IS_VALUE_ERROR (def_value))
     {
       return def_value;
     }
-#endif /* JERRY_ESNEXT */
 
     JERRY_ASSERT (ecma_is_value_boolean (def_value));
   }
@@ -900,7 +891,6 @@ ecma_builtin_json_quote (ecma_stringbuilder_t *builder_p, /**< builder for the r
 
     bool should_escape = false;
 
-#if JERRY_ESNEXT
     if (lit_is_code_point_utf16_high_surrogate (c))
     {
       if (str_p < str_end_p)
@@ -922,7 +912,6 @@ ecma_builtin_json_quote (ecma_stringbuilder_t *builder_p, /**< builder for the r
     {
       should_escape = true;
     }
-#endif /* JERRY_ESNEXT */
 
     if (c == LIT_CHAR_BACKSLASH || c == LIT_CHAR_DOUBLE_QUOTE)
     {
@@ -1571,12 +1560,10 @@ ecma_builtin_json_stringify (ecma_value_t arg1, /**< value */
     {
       ecma_value_t is_array = ecma_is_value_array (arg2);
 
-#if JERRY_ESNEXT
       if (ECMA_IS_VALUE_ERROR (is_array))
       {
         return is_array;
       }
-#endif /* JERRY_ESNEXT */
 
       if (ecma_is_value_true (is_array))
       {

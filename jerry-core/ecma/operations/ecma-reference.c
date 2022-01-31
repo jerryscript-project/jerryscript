@@ -72,8 +72,6 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
   }
 } /* ecma_op_resolve_reference_base */
 
-#if JERRY_ESNEXT
-
 /**
  * Check if the passed lexical environment is a global lexical environment
  *
@@ -192,8 +190,6 @@ ecma_op_is_prop_unscopable (ecma_object_t *binding_obj_p, /**< binding object */
   return ECMA_VALUE_FALSE;
 } /* ecma_op_is_prop_unscopable */
 
-#endif /* JERRY_ESNEXT */
-
 /**
  * Helper method for HasBindig operation
  *
@@ -244,9 +240,7 @@ ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env
       return found_binding;
     }
 
-#if JERRY_ESNEXT
     if (JERRY_LIKELY (ecma_op_is_global_environment (lex_env_p)))
-#endif /* JERRY_ESNEXT */
     {
       return found_binding;
     }
@@ -254,7 +248,6 @@ ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env
   }
 #endif /* JERRY_BUILTIN_PROXY */
 
-#if JERRY_ESNEXT
   ecma_value_t blocked = ecma_op_is_prop_unscopable (binding_obj_p, name_p);
 
   if (ecma_is_value_false (blocked))
@@ -276,7 +269,6 @@ ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env
 #endif /* JERRY_BUILTIN_PROXY */
 
   return ECMA_IS_VALUE_ERROR (blocked) ? blocked : ECMA_VALUE_NOT_FOUND;
-#endif /* JERRY_ESNEXT */
 } /* ecma_op_object_bound_environment_resolve_reference_value */
 
 /**
@@ -305,16 +297,13 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
         ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-#if JERRY_ESNEXT
         if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
         {
           return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
         }
-#endif /* JERRY_ESNEXT */
 
         return ecma_fast_copy_value (property_value_p->value);
       }
-#if JERRY_ESNEXT
       case ECMA_LEXICAL_ENVIRONMENT_CLASS:
       {
 #if JERRY_MODULE_SYSTEM
@@ -344,17 +333,11 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 #endif /* JERRY_MODULE_SYSTEM */
         break;
       }
-#endif /* JERRY_ESNEXT */
       default:
       {
         JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-#if JERRY_ESNEXT
-        bool lcache_lookup_allowed = ecma_op_is_global_environment (lex_env_p);
-#else /* !JERRY_ESNEXT*/
-        bool lcache_lookup_allowed = true;
-#endif /* JERRY_ESNEXT */
 
-        if (lcache_lookup_allowed)
+        if (ecma_op_is_global_environment (lex_env_p))
         {
 #if JERRY_LCACHE
           ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);

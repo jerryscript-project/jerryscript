@@ -46,7 +46,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_ARRAY,
                  array)
 #endif /* JERRY_BUILTIN_ARRAY */
 
-#if JERRY_ESNEXT
 #if JERRY_BUILTIN_DATE
 /* The Date.prototype object (20.3.4) */
 BUILTIN (ECMA_BUILTIN_ID_DATE_PROTOTYPE,
@@ -64,25 +63,6 @@ BUILTIN (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
          true,
          regexp_prototype)
 #endif /* JERRY_BUILTIN_REGEXP */
-#else /* !JERRY_ESNEXT */
-#if JERRY_BUILTIN_DATE
-/* The Date.prototype object (15.9.4) */
-BUILTIN (ECMA_BUILTIN_ID_DATE_PROTOTYPE,
-         ECMA_OBJECT_TYPE_BUILT_IN_CLASS,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         date_prototype)
-#endif /* JERRY_BUILTIN_DATE */
-
-#if JERRY_BUILTIN_REGEXP
-/* The RegExp.prototype object (15.10.6) */
-BUILTIN (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
-         ECMA_OBJECT_TYPE_BUILT_IN_CLASS,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         regexp_prototype)
-#endif /* JERRY_BUILTIN_REGEXP */
-#endif /* !JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_STRING
 /* The String.prototype object (15.5.4) */
@@ -185,11 +165,7 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_REGEXP,
                  regexp)
 #endif /* JERRY_BUILTIN_REGEXP */
 
-#if JERRY_ESNEXT
 #define ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID ECMA_BUILTIN_ID_ERROR
-#else /* !JERRY_ESNEXT */
-#define ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE
-#endif /* JERRY_ESNEXT */
 
 /* The Error object (15.11.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_ERROR,
@@ -276,7 +252,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_TYPE_ERROR,
                  true,
                  type_error)
 
-#if JERRY_ESNEXT
 /* The AggregateError.prototype object (15.11.6.5) */
 BUILTIN (ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_BUILT_IN_GENERAL,
@@ -290,7 +265,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_AGGREGATE_ERROR,
                  ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID,
                  true,
                  aggregate_error)
-#endif /* JERRY_ESNEXT */
 
 /* The URIError.prototype object (15.11.6.6) */
 BUILTIN (ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE,
@@ -503,8 +477,6 @@ BUILTIN (ECMA_BUILTIN_ID_BIGUINT64ARRAY_PROTOTYPE,
 #endif /* JERRY_BUILTIN_BIGINT */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 
-#if JERRY_ESNEXT
-
 BUILTIN (ECMA_BUILTIN_ID_PROMISE_PROTOTYPE,
          ECMA_OBJECT_TYPE_BUILT_IN_GENERAL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
@@ -516,8 +488,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_PROMISE,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  promise)
-
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_CONTAINER
 
@@ -597,8 +567,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_PROXY,
                  true,
                  proxy)
 #endif /* JERRY_BUILTIN_PROXY */
-
-#if JERRY_ESNEXT
 
 /* Intrinsic hidden builtin object  */
 BUILTIN (ECMA_BUILTIN_ID_INTRINSIC_OBJECT,
@@ -741,8 +709,6 @@ BUILTIN (ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
          true,
          map_iterator_prototype)
 #endif /* JERRY_BUILTIN_CONTAINER */
-
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_BIGINT
 /* The %BigInt.prototype% object */

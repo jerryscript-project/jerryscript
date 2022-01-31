@@ -48,9 +48,7 @@ enum
   ECMA_FUNCTION_PROTOTYPE_CALL,
   ECMA_FUNCTION_PROTOTYPE_APPLY,
   ECMA_FUNCTION_PROTOTYPE_BIND,
-#if JERRY_ESNEXT
   ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE,
-#endif /* JERRY_ESNEXT */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-function-prototype.inc.h"
@@ -103,12 +101,10 @@ ecma_builtin_function_prototype_object_to_string (ecma_object_t *func_obj_p) /**
 
     if (extended_info & CBC_EXTENDED_CODE_FLAGS_HAS_SOURCE_CODE_RANGE)
     {
-#if JERRY_ESNEXT
       if (extended_info & CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH)
       {
         ecma_extended_info_decode_vlq (&extended_info_p);
       }
-#endif /* JERRY_ESNEXT */
 
       uint32_t range_start = ecma_extended_info_decode_vlq (&extended_info_p);
       uint32_t range_size = ecma_extended_info_decode_vlq (&extended_info_p);
@@ -159,7 +155,6 @@ ecma_builtin_function_prototype_object_to_string (ecma_object_t *func_obj_p) /**
 
   lit_magic_string_id_t header_id = LIT_MAGIC_STRING_FUNCTION_TO_STRING_ANON;
 
-#if JERRY_ESNEXT
   switch (CBC_FUNCTION_GET_TYPE (bytecode_p->status_flags))
   {
     case CBC_FUNCTION_GENERATOR:
@@ -178,7 +173,6 @@ ecma_builtin_function_prototype_object_to_string (ecma_object_t *func_obj_p) /**
       break;
     }
   }
-#endif /* JERRY_ESNEXT */
 
   ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (ecma_get_magic_string (header_id));
   ecma_value_t function_arguments = CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, script_p->refs_and_type);
@@ -314,9 +308,6 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p, /**<
   /* 4. 11. 18. */
   ecma_object_t *prototype_obj_p;
 
-#if !JERRY_ESNEXT
-  prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
-#else /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_PROXY
   if (ECMA_OBJECT_IS_PROXY (this_arg_obj_p))
   {
@@ -344,7 +335,6 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p, /**<
 #if JERRY_BUILTIN_PROXY
   }
 #endif /* JERRY_BUILTIN_PROXY */
-#endif /* !JERRY_ESNEXT */
 
   ecma_object_t *function_p;
   ecma_bound_function_t *bound_func_p;
@@ -390,7 +380,6 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p, /**<
     bound_func_p->header.u.bound_function.args_len_or_this = args_len_or_this;
   }
 
-#if JERRY_ESNEXT
   if (prototype_obj_p != NULL)
   {
     ecma_deref_object (prototype_obj_p);
@@ -461,7 +450,6 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p, /**<
                                                        NULL);
 
   name_prop_value_p->value = bound_function_name;
-#endif /* JERRY_ESNEXT */
 
   /*
    * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.
@@ -516,12 +504,10 @@ ecma_builtin_function_prototype_dispatch_routine (uint8_t builtin_routine_id, /*
 {
   if (!ecma_op_is_callable (this_arg))
   {
-#if JERRY_ESNEXT
     if (JERRY_UNLIKELY (builtin_routine_id == ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE))
     {
       return ECMA_VALUE_FALSE;
     }
-#endif /* JERRY_ESNEXT */
 
     return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_FUNCTION);
   }
@@ -546,12 +532,10 @@ ecma_builtin_function_prototype_dispatch_routine (uint8_t builtin_routine_id, /*
     {
       return ecma_builtin_function_prototype_object_bind (func_obj_p, arguments_list_p, arguments_number);
     }
-#if JERRY_ESNEXT
     case ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE:
     {
       return ecma_op_object_has_instance (func_obj_p, arguments_list_p[0]);
     }
-#endif /* JERRY_ESNEXT */
     default:
     {
       JERRY_UNREACHABLE ();

@@ -29,14 +29,12 @@
 JERRY_STATIC_ASSERT ((int) ECMA_PARSE_STRICT_MODE == (int) PARSER_IS_STRICT,
                      ecma_parse_strict_mode_must_be_equal_to_parser_is_strict);
 
-#if JERRY_ESNEXT
 JERRY_STATIC_ASSERT (PARSER_SAVE_STATUS_FLAGS (PARSER_ALLOW_SUPER) == 0x1, incorrect_saving_of_ecma_parse_allow_super);
 JERRY_STATIC_ASSERT (PARSER_RESTORE_STATUS_FLAGS (ECMA_PARSE_ALLOW_SUPER) == PARSER_ALLOW_SUPER,
                      incorrect_restoring_of_ecma_parse_allow_super);
 
 JERRY_STATIC_ASSERT (PARSER_RESTORE_STATUS_FLAGS (ECMA_PARSE_FUNCTION_CONTEXT) == 0,
                      ecma_parse_function_context_must_not_be_transformed);
-#endif /* JERRY_ESNEXT */
 
 /** \addtogroup parser Parser
  * @{
@@ -590,7 +588,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   ecma_value_t *literal_pool_p;
   uint8_t *dst_p;
 
-#if JERRY_ESNEXT
   if ((context_p->status_flags & (PARSER_IS_FUNCTION | PARSER_LEXICAL_BLOCK_NEEDED))
       == (PARSER_IS_FUNCTION | PARSER_LEXICAL_BLOCK_NEEDED))
   {
@@ -629,7 +626,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
     JERRY_ASSERT (!(context_p->status_flags & PARSER_NO_END_LABEL));
   }
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_LINE_INFO
   JERRY_ASSERT (context_p->line_info_p != NULL);
@@ -867,12 +863,10 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     context_p->status_flags &= (uint32_t) ~PARSER_NO_END_LABEL;
 
-#if JERRY_ESNEXT
     if (PARSER_IS_NORMAL_ASYNC_FUNCTION (context_p->status_flags))
     {
       length++;
     }
-#endif /* JERRY_ESNEXT */
 
     length++;
   }
@@ -896,7 +890,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     total_size += context_p->argument_count * sizeof (ecma_value_t);
   }
 
-#if JERRY_ESNEXT
   /* function.name */
   if (!(context_p->status_flags & PARSER_CLASS_CONSTRUCTOR))
   {
@@ -907,24 +900,17 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     total_size += sizeof (ecma_value_t);
   }
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_LINE_INFO
   total_size += sizeof (ecma_value_t);
 #endif /* JERRY_LINE_INFO */
-
-#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
   uint8_t extended_info = 0;
-#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
 
-#if JERRY_ESNEXT
   if (context_p->argument_length != UINT16_MAX)
   {
     extended_info |= CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH;
     total_size += ecma_extended_info_get_encoded_length (context_p->argument_length);
   }
-#endif /* JERRY_ESNEXT */
-
 #if JERRY_FUNCTION_TO_STRING
   if (context_p->last_context_p != NULL)
   {
@@ -946,16 +932,12 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     total_size += ecma_extended_info_get_encoded_length ((uint32_t) (context_p->function_end_p - function_start_p));
   }
 #endif /* JERRY_FUNCTION_TO_STRING */
-
-#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
   if (extended_info != 0)
   {
     total_size += sizeof (uint8_t);
   }
-#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
 
   total_size = JERRY_ALIGNUP (total_size, JMEM_ALIGNMENT);
-
   compiled_code_p = (ecma_compiled_code_t *) parser_malloc (context_p, total_size);
 
 #if JERRY_SNAPSHOT_SAVE || JERRY_PARSER_DUMP_BYTE_CODE
@@ -972,13 +954,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   compiled_code_p->refs = 1;
   compiled_code_p->status_flags = 0;
 
-#if JERRY_ESNEXT
   if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
   {
     JERRY_ASSERT (context_p->argument_count > 0);
     context_p->argument_count--;
   }
-#endif /* JERRY_ESNEXT */
 
   if (needs_uint16_arguments)
   {
@@ -1050,7 +1030,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_SCRIPT);
   }
-#if JERRY_ESNEXT
   else if (context_p->status_flags & PARSER_IS_ARROW_FUNCTION)
   {
     if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
@@ -1091,7 +1070,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     JERRY_ASSERT (!(context_p->status_flags & PARSER_IS_FUNCTION));
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED;
   }
-#endif /* JERRY_ESNEXT */
 
   compiled_code_p->status_flags |= function_type;
 
@@ -1266,14 +1244,12 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     *dst_p++ = CBC_RETURN_FUNCTION_END;
 
-#if JERRY_ESNEXT
     if (PARSER_IS_NORMAL_ASYNC_FUNCTION (context_p->status_flags))
     {
       dst_p[-1] = CBC_EXT_OPCODE;
       dst_p[0] = CBC_EXT_ASYNC_EXIT;
       dst_p++;
     }
-#endif /* JERRY_ESNEXT */
   }
   JERRY_ASSERT (dst_p == byte_code_p + length);
 
@@ -1345,7 +1321,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     }
   }
 
-#if JERRY_ESNEXT
   if (!(context_p->status_flags & PARSER_CLASS_CONSTRUCTOR))
   {
     *(--base_p) = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
@@ -1356,13 +1331,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_HAS_TAGGED_LITERALS;
     *(--base_p) = (ecma_value_t) context_p->tagged_template_literal_cp;
   }
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_LINE_INFO
   ECMA_SET_INTERNAL_VALUE_POINTER (base_p[-1], line_info_p);
 #endif /* JERRY_LINE_INFO */
 
-#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
   if (extended_info != 0)
   {
 #if JERRY_LINE_INFO
@@ -1374,12 +1347,10 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_HAS_EXTENDED_INFO;
     *extended_info_p = extended_info;
 
-#if JERRY_ESNEXT
     if (context_p->argument_length != UINT16_MAX)
     {
       ecma_extended_info_encode_vlq (&extended_info_p, context_p->argument_length);
     }
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_FUNCTION_TO_STRING
     if (context_p->last_context_p != NULL)
@@ -1398,7 +1369,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     }
 #endif /* JERRY_FUNCTION_TO_STRING */
   }
-#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
@@ -1422,7 +1392,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #undef PARSER_NEXT_BYTE
 #undef PARSER_NEXT_BYTE_UPDATE
 
-#if JERRY_ESNEXT
 /**
  * Resolve private identifier in direct eval context
  */
@@ -1589,7 +1558,6 @@ parser_restore_private_context (parser_context_t *context_p, /**< context */
   scanner_release_private_fields (context_p->private_context_p->members_p);
   context_p->private_context_p = private_ctx_p->prev_p;
 } /* parser_restore_private_context */
-#endif /* JERRY_ESNEXT */
 
 /**
  * Free identifiers and literals.
@@ -1618,7 +1586,6 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 {
   JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
-#if JERRY_ESNEXT
   JERRY_ASSERT (context_p->status_flags & PARSER_IS_FUNCTION);
   JERRY_ASSERT (!(context_p->status_flags & PARSER_LEXICAL_BLOCK_NEEDED));
 
@@ -1634,11 +1601,9 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     context_p->context_stack_depth = PARSER_TRY_CONTEXT_STACK_ALLOCATION;
 #endif /* !JERRY_NDEBUG */
   }
-#endif /* JERRY_ESNEXT */
 
   if (context_p->token.type == end_type)
   {
-#if JERRY_ESNEXT
     context_p->status_flags &= (uint32_t) ~PARSER_DISALLOW_AWAIT_YIELD;
 
     if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
@@ -1649,26 +1614,21 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_BODY);
       return;
     }
-#endif /* JERRY_ESNEXT */
+
     scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
     return;
   }
 
-#if JERRY_ESNEXT
   bool has_complex_argument = (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_HAS_COMPLEX_ARGUMENT) != 0;
-#endif /* JERRY_ESNEXT */
   bool is_strict = (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_IS_STRICT) != 0;
 
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_ARGS);
   scanner_set_active (context_p);
 
-#if JERRY_ESNEXT
   context_p->status_flags |= PARSER_FUNCTION_IS_PARSING_ARGS;
-#endif /* JERRY_ESNEXT */
 
   while (true)
   {
-#if JERRY_ESNEXT
     if (context_p->token.type == LEXER_THREE_DOTS)
     {
       if (context_p->status_flags & PARSER_IS_PROPERTY_SETTER)
@@ -1771,7 +1731,6 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       }
       continue;
     }
-#endif /* JERRY_ESNEXT */
 
     if (context_p->token.type != LEXER_LITERAL || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
     {
@@ -1787,14 +1746,12 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
     if (JERRY_UNLIKELY (context_p->lit_object.literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT))
     {
-#if JERRY_ESNEXT
       if ((context_p->status_flags & PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT)
           || (context_p->status_flags & PARSER_IS_ARROW_FUNCTION))
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
       has_duplicated_arg_names = true;
-#endif /* JERRY_ESNEXT */
 
       context_p->status_flags |= PARSER_HAS_NON_STRICT_ARG;
     }
@@ -1805,7 +1762,6 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
     lexer_next_token (context_p);
 
-#if JERRY_ESNEXT
     uint16_t literal_index = context_p->lit_object.index;
 
     if (context_p->token.type == LEXER_ASSIGN)
@@ -1887,7 +1843,6 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
                                      (uint16_t) (PARSER_REGISTER_START + context_p->argument_count),
                                      literal_index);
     }
-#endif /* JERRY_ESNEXT */
 
     context_p->argument_count++;
     if (context_p->argument_count >= PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
@@ -1907,26 +1862,21 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       break;
     }
 
-#if JERRY_ESNEXT
     if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
     {
       parser_raise_error (context_p, PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER);
     }
-#endif /* JERRY_ESNEXT */
 
     lexer_next_token (context_p);
 
-#if JERRY_ESNEXT
     if (context_p->token.type == end_type)
     {
       break;
     }
-#endif /* JERRY_ESNEXT */
   }
 
   scanner_revert_active (context_p);
 
-#if JERRY_ESNEXT
   JERRY_ASSERT (has_complex_argument || !(context_p->status_flags & PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT));
 
   if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
@@ -1957,8 +1907,6 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   }
 
   context_p->status_flags &= (uint32_t) ~(PARSER_DISALLOW_AWAIT_YIELD | PARSER_FUNCTION_IS_PARSING_ARGS);
-#endif /* JERRY_ESNEXT */
-
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_BODY);
 
   if (is_strict)
@@ -2044,10 +1992,8 @@ parser_parse_source (void *source_p, /**< source code */
   context.status_flags = parse_opts & PARSER_STRICT_MODE_MASK;
   context.global_status_flags = parse_opts;
 
-#if JERRY_ESNEXT
   context.status_flags |= PARSER_RESTORE_STATUS_FLAGS (parse_opts);
   context.tagged_template_literal_cp = JMEM_CP_NULL;
-#endif /* JERRY_ESNEXT */
 
   context.stack_depth = 0;
   context.stack_limit = 0;
@@ -2081,7 +2027,7 @@ parser_parse_source (void *source_p, /**< source code */
     JERRY_ASSERT (ecma_is_value_string (context.argument_list));
 
     context.status_flags |= PARSER_IS_FUNCTION;
-#if JERRY_ESNEXT
+
     if (parse_opts & ECMA_PARSE_GENERATOR_FUNCTION)
     {
       context.status_flags |= PARSER_IS_GENERATOR_FUNCTION;
@@ -2090,7 +2036,6 @@ parser_parse_source (void *source_p, /**< source code */
     {
       context.status_flags |= PARSER_IS_ASYNC_FUNCTION;
     }
-#endif /* JERRY_ESNEXT */
 
     ecma_string_t *string_p = ecma_get_string_from_value (context.argument_list);
     uint8_t flags = ECMA_STRING_FLAG_EMPTY;
@@ -2179,9 +2124,7 @@ parser_parse_source (void *source_p, /**< source code */
   context.last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
 
   context.argument_count = 0;
-#if JERRY_ESNEXT
   context.argument_length = UINT16_MAX;
-#endif /* JERRY_ESNEXT */
   context.register_count = 0;
   context.literal_count = 0;
 
@@ -2194,11 +2137,9 @@ parser_parse_source (void *source_p, /**< source code */
   context.scope_stack_size = 0;
   context.scope_stack_top = 0;
   context.scope_stack_reg_top = 0;
-#if JERRY_ESNEXT
   context.scope_stack_global_end = 0;
   context.tagged_template_literal_cp = JMEM_CP_NULL;
   context.private_context_p = NULL;
-#endif /* JERRY_ESNEXT */
 
 #ifndef JERRY_NDEBUG
   context.context_stack_depth = 0;
@@ -2323,7 +2264,6 @@ parser_parse_source (void *source_p, /**< source code */
       JERRY_ASSERT (context.next_scanner_info_p->source_p == context.source_start_p
                     && context.next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
-#if JERRY_ESNEXT
       if (scanner_is_context_needed (&context, PARSER_CHECK_GLOBAL_CONTEXT))
       {
         context.status_flags |= PARSER_LEXICAL_BLOCK_NEEDED;
@@ -2333,7 +2273,6 @@ parser_parse_source (void *source_p, /**< source code */
       {
         scanner_check_variables (&context);
       }
-#endif /* JERRY_ESNEXT */
 
       scanner_create_variables (&context, SCANNER_CREATE_VARS_IS_SCRIPT);
     }
@@ -2578,12 +2517,10 @@ parser_save_context (parser_context_t *context_p, /**< context */
   }
 #endif /* JERRY_DEBUGGER */
 
-#if JERRY_ESNEXT
   if (context_p->status_flags & PARSER_FUNCTION_IS_PARSING_ARGS)
   {
     context_p->status_flags |= PARSER_LEXICAL_BLOCK_NEEDED;
   }
-#endif /* JERRY_ESNEXT */
 
   /* Save private part of the context. */
 
@@ -2594,9 +2531,7 @@ parser_save_context (parser_context_t *context_p, /**< context */
   saved_context_p->last_statement = context_p->last_statement;
 
   saved_context_p->argument_count = context_p->argument_count;
-#if JERRY_ESNEXT
   saved_context_p->argument_length = context_p->argument_length;
-#endif /* JERRY_ESNEXT */
   saved_context_p->register_count = context_p->register_count;
   saved_context_p->literal_count = context_p->literal_count;
 
@@ -2607,10 +2542,8 @@ parser_save_context (parser_context_t *context_p, /**< context */
   saved_context_p->scope_stack_size = context_p->scope_stack_size;
   saved_context_p->scope_stack_top = context_p->scope_stack_top;
   saved_context_p->scope_stack_reg_top = context_p->scope_stack_reg_top;
-#if JERRY_ESNEXT
   saved_context_p->scope_stack_global_end = context_p->scope_stack_global_end;
   saved_context_p->tagged_template_literal_cp = context_p->tagged_template_literal_cp;
-#endif /* JERRY_ESNEXT */
 
 #ifndef JERRY_NDEBUG
   saved_context_p->context_stack_depth = context_p->context_stack_depth;
@@ -2633,9 +2566,7 @@ parser_save_context (parser_context_t *context_p, /**< context */
   context_p->last_statement.current_p = NULL;
 
   context_p->argument_count = 0;
-#if JERRY_ESNEXT
   context_p->argument_length = UINT16_MAX;
-#endif /* JERRY_ESNEXT */
   context_p->register_count = 0;
   context_p->literal_count = 0;
 
@@ -2646,10 +2577,8 @@ parser_save_context (parser_context_t *context_p, /**< context */
   context_p->scope_stack_size = 0;
   context_p->scope_stack_top = 0;
   context_p->scope_stack_reg_top = 0;
-#if JERRY_ESNEXT
   context_p->scope_stack_global_end = 0;
   context_p->tagged_template_literal_cp = JMEM_CP_NULL;
-#endif /* JERRY_ESNEXT */
 
 #ifndef JERRY_NDEBUG
   context_p->context_stack_depth = 0;
@@ -2689,9 +2618,7 @@ parser_restore_context (parser_context_t *context_p, /**< context */
   context_p->last_statement = saved_context_p->last_statement;
 
   context_p->argument_count = saved_context_p->argument_count;
-#if JERRY_ESNEXT
   context_p->argument_length = saved_context_p->argument_length;
-#endif /* JERRY_ESNEXT */
   context_p->register_count = saved_context_p->register_count;
   context_p->literal_count = saved_context_p->literal_count;
 
@@ -2702,10 +2629,8 @@ parser_restore_context (parser_context_t *context_p, /**< context */
   context_p->scope_stack_size = saved_context_p->scope_stack_size;
   context_p->scope_stack_top = saved_context_p->scope_stack_top;
   context_p->scope_stack_reg_top = saved_context_p->scope_stack_reg_top;
-#if JERRY_ESNEXT
   context_p->scope_stack_global_end = saved_context_p->scope_stack_global_end;
   context_p->tagged_template_literal_cp = saved_context_p->tagged_template_literal_cp;
-#endif /* JERRY_ESNEXT */
 
 #ifndef JERRY_NDEBUG
   context_p->context_stack_depth = saved_context_p->context_stack_depth;
@@ -2731,19 +2656,13 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (status_flags & PARSER_IS_FUNCTION);
   parser_save_context (context_p, &saved_context);
   context_p->status_flags |= status_flags;
-#if JERRY_ESNEXT
   context_p->status_flags |= PARSER_ALLOW_NEW_TARGET;
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
-#if JERRY_ESNEXT
     JERRY_DEBUG_MSG ("\n--- %s parsing start ---\n\n",
                      (context_p->status_flags & PARSER_CLASS_CONSTRUCTOR) ? "Class constructor" : "Function");
-#else /* !JERRY_ESNEXT */
-    JERRY_DEBUG_MSG ("\n--- Function parsing start ---\n\n");
-#endif /* JERRY_ESNEXT */
   }
 #endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
@@ -2776,13 +2695,11 @@ parser_parse_function (parser_context_t *context_p, /**< context */
     parser_raise_error (context_p, PARSER_ERR_ONE_ARGUMENT_EXPECTED);
   }
 
-#if JERRY_ESNEXT
   if ((context_p->status_flags & (PARSER_CLASS_CONSTRUCTOR | PARSER_ALLOW_SUPER_CALL)) == PARSER_CLASS_CONSTRUCTOR)
   {
     parser_emit_cbc_ext (context_p, CBC_EXT_RUN_FIELD_INIT);
     parser_flush_cbc (context_p);
   }
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes && (context_p->status_flags & PARSER_HAS_NON_STRICT_ARG))
@@ -2803,12 +2720,8 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #if JERRY_PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
-#if JERRY_ESNEXT
     JERRY_DEBUG_MSG ("\n--- %s parsing end ---\n\n",
                      (context_p->status_flags & PARSER_CLASS_CONSTRUCTOR) ? "Class constructor" : "Function");
-#else /* !JERRY_ESNEXT */
-    JERRY_DEBUG_MSG ("\n--- Function parsing end ---\n\n");
-#endif /* JERRY_ESNEXT */
   }
 #endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
@@ -2816,8 +2729,6 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 
   return compiled_code_p;
 } /* parser_parse_function */
-
-#if JERRY_ESNEXT
 
 /**
  * Parse static class block code
@@ -3330,8 +3241,6 @@ parser_compiled_code_set_function_name (parser_context_t *context_p, /**< contex
   }
 } /* parser_compiled_code_set_function_name */
 
-#endif /* JERRY_ESNEXT */
-
 /**
  * Raise a parse error.
  */
@@ -3367,14 +3276,12 @@ parser_raise_error (parser_context_t *context_p, /**< context */
       parser_free_jumps (saved_context_p->last_statement);
     }
 
-#if JERRY_ESNEXT
     if (saved_context_p->tagged_template_literal_cp != JMEM_CP_NULL)
     {
       ecma_collection_t *collection =
         ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, saved_context_p->tagged_template_literal_cp);
       ecma_collection_free_template_literal (collection);
     }
-#endif /* JERRY_ESNEXT  */
 
 #if JERRY_LINE_INFO
     parser_line_info_free (saved_context_p->line_info_p);
@@ -3383,7 +3290,6 @@ parser_raise_error (parser_context_t *context_p, /**< context */
     saved_context_p = saved_context_p->prev_context_p;
   }
 
-#if JERRY_ESNEXT
   parser_free_private_fields (context_p);
 
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
@@ -3392,7 +3298,6 @@ parser_raise_error (parser_context_t *context_p, /**< context */
       ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, context_p->tagged_template_literal_cp);
     ecma_collection_free_template_literal (collection);
   }
-#endif /* JERRY_ESNEXT  */
 
   context_p->error = error;
   PARSER_THROW (context_p->try_buffer);

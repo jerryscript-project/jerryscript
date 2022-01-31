@@ -27,8 +27,6 @@
 #include "jcontext.h"
 #include "jrt.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -253,5 +251,3 @@ ecma_builtin_symbol_key_for (ecma_value_t this_arg, /**< this argument */
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

@@ -137,3 +137,58 @@ assert(bound.length === 1);
 bound = foo.bind(null, 9, 8);
 assert(bound.length === 0);
 
+/* extended class */
+(function() {
+  class C extends Function {}
+  var c = new C("x", "y", "return this.foo + x + y;").bind({foo : 1}, 2);
+  assert(c(3) === 6);
+  assert(c instanceof C);
+})();
+
+function boundPrototypeChecker(f, proto) {
+  Object.setPrototypeOf(f, proto);
+
+  var boundFunc = Function.prototype.bind.call(f, null);
+  assert(Object.getPrototypeOf(boundFunc) === proto);
+}
+
+/* generator function */
+(function() {
+  var f = function*(){};
+  boundPrototypeChecker(f, Function.prototype)
+  boundPrototypeChecker(f, {})
+  boundPrototypeChecker(f, null);
+})();
+
+/* arrow function */
+(function() {
+  var f = () => 5;
+  boundPrototypeChecker(f, Function.prototype)
+  boundPrototypeChecker(f, {})
+  boundPrototypeChecker(f, null);
+})();
+
+/* simple class */
+(function() {
+  class C {};
+  boundPrototypeChecker(C, Function.prototype)
+  boundPrototypeChecker(C, {})
+  boundPrototypeChecker(C, null);
+})();
+
+/* subclasses */
+(function() {
+  function boundPrototypeChecker(superclass) {
+    class C extends superclass {
+      constructor() {
+        return Object.create(null);
+      }
+    }
+    var boundF = Function.prototype.bind.call(C, null);
+    assert(Object.getPrototypeOf(boundF) === Object.getPrototypeOf(C));
+  }
+
+  boundPrototypeChecker(function(){});
+  boundPrototypeChecker(Array);
+  boundPrototypeChecker(null);
+})();

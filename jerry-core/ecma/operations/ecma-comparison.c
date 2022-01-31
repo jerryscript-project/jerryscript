@@ -196,7 +196,6 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     return ecma_make_boolean_value (is_equal);
   }
 
-#if JERRY_ESNEXT
   if (JERRY_UNLIKELY (ecma_is_value_symbol (x)))
   {
     if (!ecma_is_value_object (y))
@@ -209,14 +208,10 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     y ^= x;
     x ^= y;
   }
-#endif /* JERRY_ESNEXT */
 
   JERRY_ASSERT (ecma_is_value_object (x));
 
-  if (ecma_is_value_string (y)
-#if JERRY_ESNEXT
-      || ecma_is_value_symbol (y)
-#endif /* JERRY_ESNEXT */
+  if (ecma_is_value_string (y) || ecma_is_value_symbol (y)
 #if JERRY_BUILTIN_BIGINT
       || ecma_is_value_bigint (y)
 #endif /* JERRY_BUILTIN_BIGINT */
@@ -254,10 +249,7 @@ bool
 ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
                                  ecma_value_t y) /**< second operand */
 {
-  if (ecma_is_value_direct (x) || ecma_is_value_direct (y)
-#if JERRY_ESNEXT
-      || ecma_is_value_symbol (x) || ecma_is_value_symbol (y)
-#endif /* JERRY_ESNEXT */
+  if (ecma_is_value_direct (x) || ecma_is_value_direct (y) || ecma_is_value_symbol (x) || ecma_is_value_symbol (y)
       || ecma_is_value_object (x) || ecma_is_value_object (y))
   {
     JERRY_ASSERT (!ecma_is_value_direct (x) || ecma_is_value_undefined (x) || ecma_is_value_null (x)

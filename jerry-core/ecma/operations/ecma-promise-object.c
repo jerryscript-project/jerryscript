@@ -31,8 +31,6 @@
 
 #include "jcontext.h"
 
-#if JERRY_ESNEXT
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -1331,4 +1329,3 @@ ecma_promise_perform_then (ecma_value_t promise, /**< the promise which call 'th
  * @}
  * @}
  */
-#endif /* JERRY_ESNEXT */

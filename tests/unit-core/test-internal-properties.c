@@ -29,31 +29,17 @@ main (void)
   jerry_value_t prop_name_2 = jerry_string_sz ("non_hidden_prop");
   jerry_value_t prop_name_3;
 
-  if (jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
-  {
-    jerry_value_t prop_name_3_desc = jerry_string_sz ("bar");
-    prop_name_3 = jerry_symbol_with_description (prop_name_3_desc);
-    jerry_value_free (prop_name_3_desc);
-  }
-  else
-  {
-    prop_name_3 = jerry_string_sz ("non_hidden_string_prop");
-  }
+  jerry_value_t prop_name_3_desc = jerry_string_sz ("bar");
+  prop_name_3 = jerry_symbol_with_description (prop_name_3_desc);
+  jerry_value_free (prop_name_3_desc);
 
   jerry_value_t internal_prop_name_1 = jerry_string_sz ("hidden_foo");
   jerry_value_t internal_prop_name_2 = jerry_string_sz ("hidden_prop");
   jerry_value_t internal_prop_name_3;
 
-  if (jerry_feature_enabled (JERRY_FEATURE_SYMBOL))
-  {
-    jerry_value_t internal_prop_name_3_desc = jerry_string_sz ("bar");
-    internal_prop_name_3 = jerry_symbol_with_description (internal_prop_name_3_desc);
-    jerry_value_free (internal_prop_name_3_desc);
-  }
-  else
-  {
-    internal_prop_name_3 = jerry_string_sz ("hidden_string_prop");
-  }
+  jerry_value_t internal_prop_name_3_desc = jerry_string_sz ("bar");
+  internal_prop_name_3 = jerry_symbol_with_description (internal_prop_name_3_desc);
+  jerry_value_free (internal_prop_name_3_desc);
 
   jerry_value_t prop_value_1 = jerry_number (5.5);
   jerry_value_t prop_value_2 = jerry_number (6.5);

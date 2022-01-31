@@ -1438,8 +1438,6 @@ ecma_bigint_shift (ecma_value_t left_value, /**< left BigInt value */
   return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
 } /* ecma_bigint_shift */
 
-#if JERRY_ESNEXT
-
 /**
  * Compute the left value raised to the power of right value
  *
@@ -1527,8 +1525,6 @@ ecma_bigint_pow (ecma_value_t left_value, /**< left BigInt value */
 
   return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
 } /* ecma_bigint_pow */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * Convert the result to an ecma value

@@ -107,13 +107,6 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (!jerry_feature_enabled (JERRY_FEATURE_PROMISE))
-  {
-    jerry_log (JERRY_LOG_LEVEL_ERROR, "Promise is disabled!\n");
-    jerry_cleanup ();
-    return 0;
-  }
-
   register_js_function ("create_promise1", create_promise1_handler);
   register_js_function ("create_promise2", create_promise2_handler);
   register_js_function ("assert", assert_handler);

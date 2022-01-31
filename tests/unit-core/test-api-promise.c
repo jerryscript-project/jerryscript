@@ -181,12 +181,6 @@ test_promise_from_js (void)
 int
 main (void)
 {
-  if (!jerry_feature_enabled (JERRY_FEATURE_PROMISE))
-  {
-    jerry_log (JERRY_LOG_LEVEL_ERROR, "Promise is disabled!\n");
-    return 0;
-  }
-
   jerry_init (JERRY_INIT_EMPTY);
 
   test_promise_resolve_fail ();

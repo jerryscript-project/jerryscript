@@ -33,8 +33,6 @@
 #include "opcodes.h"
 #include "vm-defines.h"
 
-#if JERRY_ESNEXT
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -64,7 +62,7 @@ enum
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup generator ECMA %AsyncFromSyncIteratorPrototype% object built-in
+ * \addtogroup asyncfromsynciteratorprototype ECMA %AsyncFromSyncIteratorPrototype% object built-in
  * @{
  */
 
@@ -355,5 +353,3 @@ ecma_builtin_async_from_sync_iterator_prototype_dispatch_routine (uint8_t builti
  * @}
  * @}
  */
-
-#endif /* JERRY_ESNEXT */

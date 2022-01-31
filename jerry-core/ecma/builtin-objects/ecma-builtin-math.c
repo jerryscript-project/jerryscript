@@ -62,7 +62,6 @@ enum
   ECMA_MATH_OBJECT_SIN, /* ECMA-262 v5, 15.8.2.16 */
   ECMA_MATH_OBJECT_SQRT, /* ECMA-262 v5, 15.8.2.17 */
   ECMA_MATH_OBJECT_TAN, /* ECMA-262 v5, 15.8.2.18 */
-#if JERRY_ESNEXT
   ECMA_MATH_OBJECT_ACOSH, /* ECMA-262 v6, 20.2.2.3  */
   ECMA_MATH_OBJECT_ASINH, /* ECMA-262 v6, 20.2.2.5  */
   ECMA_MATH_OBJECT_ATANH, /* ECMA-262 v6, 20.2.2.7  */
@@ -78,19 +77,14 @@ enum
   ECMA_MATH_OBJECT_SINH, /* ECMA-262 v6, 20.2.2.31  */
   ECMA_MATH_OBJECT_TANH, /* ECMA-262 v6, 20.2.2.34  */
   ECMA_MATH_OBJECT_TRUNC, /* ECMA-262 v6, 20.2.2.35  */
-#endif /* JERRY_ESNEXT */
   ECMA_MATH_OBJECT_ATAN2,
-/* ECMA-262 v5, 15.8.2.5 */ /* first routine with 2 arguments */
-#if JERRY_ESNEXT
+  /* ECMA-262 v5, 15.8.2.5 */ /* first routine with 2 arguments */
   ECMA_MATH_OBJECT_IMUL, /* ECMA-262 v6, 20.2.2.19  */
-#endif /* JERRY_ESNEXT */
   ECMA_MATH_OBJECT_POW,
   /* ECMA-262 v5, 15.8.2.13 */ /* last routine with 1 or 2 arguments*/
   ECMA_MATH_OBJECT_MAX, /* ECMA-262 v5, 15.8.2.11 */
   ECMA_MATH_OBJECT_MIN, /* ECMA-262 v5, 15.8.2.12 */
-#if JERRY_ESNEXT
   ECMA_MATH_OBJECT_HYPOT, /* ECMA-262 v6, 20.2.2.18  */
-#endif /* JERRY_ESNEXT */
   ECMA_MATH_OBJECT_RANDOM, /* ECMA-262 v5, 15.8.2.14 */
 };
 
@@ -164,7 +158,6 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
   return ecma_make_number_value (result_num);
 } /* ecma_builtin_math_object_max_min */
 
-#if JERRY_ESNEXT
 /**
  * The Math object's 'hypot' routine
  *
@@ -269,8 +262,6 @@ ecma_builtin_math_object_sign (ecma_number_t arg)
 
   return (ecma_number_t) 1.0;
 } /* ecma_builtin_math_object_sign */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * The Math object's 'random' routine.
@@ -384,7 +375,6 @@ ecma_builtin_math_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
         x = DOUBLE_TO_ECMA_NUMBER_T (log (x));
         break;
       }
-#if JERRY_ESNEXT
       case ECMA_MATH_OBJECT_TRUNC:
       {
         x = ecma_builtin_math_object_trunc (x);
@@ -395,7 +385,6 @@ ecma_builtin_math_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
         x = ecma_builtin_math_object_sign (x);
         break;
       }
-#endif /* JERRY_ESNEXT */
       case ECMA_MATH_OBJECT_ROUND:
       {
         if (ecma_number_is_nan (x) || ecma_number_is_zero (x) || ecma_number_is_infinity (x))
@@ -456,7 +445,6 @@ ecma_builtin_math_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
         x = ecma_number_pow (x, y);
         break;
       }
-#if JERRY_ESNEXT
       case ECMA_MATH_OBJECT_ACOSH:
       {
         x = DOUBLE_TO_ECMA_NUMBER_T (acosh (x));
@@ -543,7 +531,6 @@ ecma_builtin_math_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
         x = (int32_t) (ecma_number_to_uint32 (x) * ecma_number_to_uint32 (y));
         break;
       }
-#endif /* JERRY_ESNEXT */
     }
     return ecma_make_number_value (x);
   } /* if (builtin_routine_id <= ECMA_MATH_OBJECT_POW) */
@@ -555,12 +542,10 @@ ecma_builtin_math_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
                                              arguments_number);
   }
 
-#if JERRY_ESNEXT
   if (builtin_routine_id == ECMA_MATH_OBJECT_HYPOT)
   {
     return ecma_builtin_math_object_hypot (arguments_list, arguments_number);
   }
-#endif /* JERRY_ESNEXT */
 
   JERRY_ASSERT (builtin_routine_id == ECMA_MATH_OBJECT_RANDOM);
 

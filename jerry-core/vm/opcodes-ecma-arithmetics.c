@@ -105,13 +105,11 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
         result = ecma_number_remainder (left_number, right_number);
         break;
       }
-#if JERRY_ESNEXT
       case NUMBER_ARITHMETIC_EXPONENTIATION:
       {
         result = ecma_number_pow (left_number, right_number);
         break;
       }
-#endif /* JERRY_ESNEXT */
     }
 
     ret_value = ecma_make_number_value (result);
@@ -150,13 +148,11 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
         ret_value = ecma_bigint_div_mod (left_value, right_value, true);
         break;
       }
-#if JERRY_ESNEXT
       case NUMBER_ARITHMETIC_EXPONENTIATION:
       {
         ret_value = ecma_bigint_pow (left_value, right_value);
         break;
       }
-#endif /* JERRY_ESNEXT */
     }
 
     ecma_free_value (left_value);

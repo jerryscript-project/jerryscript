@@ -78,11 +78,7 @@ main (void)
   ecma_free_value (negative);
 
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
-#if JERRY_ESNEXT
   TEST_ASSERT (num == 0);
-#else /* !JERRY_ESNEXT */
-  TEST_ASSERT (num == 4294967270);
-#endif /* JERRY_ESNEXT */
 
   /* +infinity */
   ecma_value_t positive_infinity = ecma_make_number_value (ecma_number_make_infinity (false));
@@ -92,11 +88,7 @@ main (void)
   ecma_free_value (positive_infinity);
 
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
-#if JERRY_ESNEXT
   TEST_ASSERT ((ecma_number_t) num == ECMA_NUMBER_MAX_SAFE_INTEGER);
-#else /* !JERRY_ESNEXT */
-  TEST_ASSERT (num == 0);
-#endif /* JERRY_ESNEXT */
 
   /* -infinity */
   ecma_value_t negative_infinity = ecma_make_number_value (ecma_number_make_infinity (true));

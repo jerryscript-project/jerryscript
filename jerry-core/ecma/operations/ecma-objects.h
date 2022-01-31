@@ -69,13 +69,11 @@ ecma_op_object_get_with_receiver (ecma_object_t *object_p, ecma_string_t *proper
 ecma_value_t ecma_op_object_get_length (ecma_object_t *object_p, ecma_length_t *length_p);
 ecma_value_t ecma_op_object_get_by_index (ecma_object_t *object_p, ecma_length_t index);
 ecma_value_t ecma_op_object_get_by_magic_id (ecma_object_t *object_p, lit_magic_string_id_t property_id);
-#if JERRY_ESNEXT
 ecma_string_t *ecma_op_get_global_symbol (lit_magic_string_id_t property_id);
 bool ecma_op_compare_string_to_global_symbol (ecma_string_t *string_p, lit_magic_string_id_t property_id);
 ecma_value_t ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, lit_magic_string_id_t property_id);
 ecma_value_t ecma_op_get_method_by_symbol_id (ecma_value_t value, lit_magic_string_id_t symbol_id);
 ecma_value_t ecma_op_get_method_by_magic_id (ecma_value_t value, lit_magic_string_id_t magic_id);
-#endif /* JERRY_ESNEXT */
 ecma_value_t ecma_op_object_put_with_receiver (ecma_object_t *object_p,
                                                ecma_string_t *property_name_p,
                                                ecma_value_t value,
@@ -112,7 +110,6 @@ lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *obj_p);
 #if JERRY_BUILTIN_REGEXP
 bool ecma_object_is_regexp_object (ecma_value_t arg);
 #endif /* JERRY_BUILTIN_REGEXP */
-#if JERRY_ESNEXT
 ecma_value_t ecma_op_is_concat_spreadable (ecma_value_t arg);
 ecma_value_t ecma_op_is_regexp (ecma_value_t arg);
 ecma_value_t ecma_op_species_constructor (ecma_object_t *this_value, ecma_builtin_id_t default_constructor_id);
@@ -120,7 +117,6 @@ ecma_value_t ecma_op_invoke_by_symbol_id (ecma_value_t object,
                                           lit_magic_string_id_t magic_string_id,
                                           ecma_value_t *args_p,
                                           uint32_t args_len);
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_CONTAINER
 void ecma_op_object_set_weak (ecma_object_t *object_p, ecma_object_t *target_p);
 void ecma_op_object_unref_weak (ecma_object_t *object_p, ecma_value_t ref_holder);

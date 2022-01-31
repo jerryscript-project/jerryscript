@@ -87,13 +87,12 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
       break;
     }
 
-#if JERRY_ESNEXT
     case JERRY_ERROR_AGGREGATE:
     {
       prototype_id = ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE;
       break;
     }
-#endif /* JERRY_ESNEXT */
+
     case JERRY_ERROR_URI:
     {
       prototype_id = ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE;
@@ -169,7 +168,6 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
   return error_object_p;
 } /* ecma_new_standard_error */
 
-#if JERRY_ESNEXT
 /**
  * aggregate-error object constructor.
  *
@@ -273,8 +271,6 @@ ecma_new_aggregate_error (ecma_value_t error_list_val, /**< errors list */
   return ecma_make_object_value (new_error_object_p);
 } /* ecma_new_aggregate_error */
 
-#endif /* JERRY_ESNEXT */
-
 /**
  * Return the error type for an Error object.
  *
@@ -364,13 +360,11 @@ ecma_raise_standard_error_with_format (jerry_error_t error_type, /**< error type
         lit_magic_string_id_t class_name = ecma_object_get_class_name (arg_object_p);
         arg_string_p = ecma_get_magic_string (class_name);
       }
-#if JERRY_ESNEXT
       else if (ecma_is_value_symbol (arg_val))
       {
         ecma_value_t symbol_desc_value = ecma_get_symbol_descriptive_string (arg_val);
         arg_string_p = ecma_get_string_from_value (symbol_desc_value);
       }
-#endif /* JERRY_ESNEXT */
       else
       {
         arg_string_p = ecma_op_to_string (arg_val);
@@ -504,8 +498,6 @@ ecma_raise_maximum_callstack_error (void)
 } /* ecma_raise_maximum_callstack_error */
 #endif /* (JERRY_STACK_LIMIT != 0) */
 
-#if JERRY_ESNEXT
-
 /**
  * Raise a AggregateError with the given errors and message.
  *
@@ -521,8 +513,6 @@ ecma_raise_aggregate_error (ecma_value_t error_list_val, /**< errors list */
 
   return ECMA_VALUE_ERROR;
 } /* ecma_raise_aggregate_error */
-
-#endif /* JERRY_ESNEXT */
 
 /**
  * @}

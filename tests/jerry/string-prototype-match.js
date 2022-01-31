@@ -106,3 +106,72 @@ var re = /a/g;
 re.lastIndex = 3;
 
 assert (match_equals ("a".match(re), ["a"]));
+
+class NewRegExp extends RegExp {
+  [Symbol.match](str) {
+      var result = RegExp.prototype[Symbol.match].call(this, str);
+      var successful = 0;
+      if (result) {
+          successful = 1;
+      }
+      return successful;
+  }
+}
+
+var str = 'This is a random string.';
+var regexp = new NewRegExp(/[A-Z]/g);
+assert(str.match(regexp) === 1);
+
+try {
+String.prototype.match.call(null, regexp);
+assert(false);
+} catch (e) {
+assert(e instanceof TypeError);
+}
+
+var regexp2 = /[A-Z]/g;
+regexp2[Symbol.match] = "foo";
+
+try {
+str.match(regexp2);
+assert(false);
+} catch (e) {
+assert(e instanceof TypeError);
+}
+
+Object.defineProperty (regexp2, Symbol.match, { get () { throw 5 }});
+
+try {
+str.match(regexp2);
+assert(false);
+} catch (e) {
+assert(e === 5);
+}
+
+var wrong_sytnax = "str.match(/[A-5]/g";
+
+try {
+eval(wrong_sytnax);
+assert(false);
+} catch (e) {
+assert(e instanceof SyntaxError);
+}
+
+delete(RegExp.prototype[Symbol.match]);
+
+try {
+str.match(regexp);
+assert(false);
+} catch (e) {
+assert(e instanceof TypeError);
+}
+
+var regexp3 = "foo";
+RegExp.prototype[Symbol.match] = 3;
+
+try {
+str.match(regexp3);
+assert(false);
+} catch (e) {
+assert(e instanceof TypeError);
+}

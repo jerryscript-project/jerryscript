@@ -293,12 +293,6 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
                                      uint32_t radix, /**< radix */
                                      uint32_t options) /**< option flags */
 {
-#if JERRY_ESNEXT
-  bool allow_underscore = (options & ECMA_CONVERSION_ALLOW_UNDERSCORE);
-#else /* !JERRY_ESNEXT */
-  JERRY_UNUSED (options);
-#endif /* !JERRY_ESNEXT */
-
   JERRY_ASSERT (radix == 2 || radix == 8 || radix == 16);
   JERRY_ASSERT (*str_p == LIT_CHAR_0);
 
@@ -319,12 +313,10 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
   {
     lit_utf8_byte_t digit = *str_p++;
 
-#if JERRY_ESNEXT
-    if (digit == LIT_CHAR_UNDERSCORE && allow_underscore)
+    if (digit == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
     {
       continue;
     }
-#endif /* JERRY_ESNEXT */
 
     if (!lit_char_is_hex_digit (digit))
     {
@@ -405,13 +397,11 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   /* Parsing integer part */
   while (str_p < end_p)
   {
-#if JERRY_ESNEXT
     if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
     {
       str_p++;
       continue;
     }
-#endif /* JERRY_ESNEXT */
 
     if (!lit_char_is_decimal_digit (*str_p))
     {
@@ -444,13 +434,11 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 
     while (str_p < end_p)
     {
-#if JERRY_ESNEXT
       if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
       {
         str_p++;
         continue;
       }
-#endif /* JERRY_ESNEXT */
 
       if (!lit_char_is_decimal_digit (*str_p))
       {
@@ -506,13 +494,11 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 
     while (str_p < end_p)
     {
-#if JERRY_ESNEXT
       if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
       {
         str_p++;
         continue;
       }
-#endif /* JERRY_ESNEXT */
 
       if (!lit_char_is_decimal_digit (*str_p))
       {

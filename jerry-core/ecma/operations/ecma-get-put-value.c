@@ -62,18 +62,15 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
           *ref_base_lex_env_p = lex_env_p;
           ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-#if JERRY_ESNEXT
           if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
           {
             return ecma_raise_reference_error (ECMA_ERR_LET_CONST_NOT_INITIALIZED);
           }
-#endif /* JERRY_ESNEXT */
 
           return ecma_fast_copy_value (property_value_p->value);
         }
         break;
       }
-#if JERRY_ESNEXT
       case ECMA_LEXICAL_ENVIRONMENT_CLASS:
       {
 #if JERRY_MODULE_SYSTEM
@@ -102,7 +99,6 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 #endif /* JERRY_MODULE_SYSTEM */
         break;
       }
-#endif /* JERRY_ESNEXT */
       default:
       {
         JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
@@ -188,12 +184,10 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
       id = ECMA_BUILTIN_ID_NUMBER_PROTOTYPE;
 #endif /* JERRY_BUILTIN_NUMBER */
     }
-#if JERRY_ESNEXT
     else if (ecma_is_value_symbol (base_value))
     {
       id = ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE;
     }
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_BIGINT
     else if (ecma_is_value_bigint (base_value))
     {
@@ -234,7 +228,6 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
   {
     switch (ecma_get_lex_env_type (lex_env_p))
     {
-#if JERRY_ESNEXT
       case ECMA_LEXICAL_ENVIRONMENT_CLASS:
       {
         if (!ECMA_LEX_ENV_CLASS_IS_MODULE (lex_env_p))
@@ -243,14 +236,12 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
         }
         /* FALLTHRU */
       }
-#endif /* JERRY_ESNEXT */
       case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
       {
         ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
         if (property_p != NULL)
         {
-#if JERRY_ESNEXT
           ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
           JERRY_ASSERT (!(*property_p & ECMA_PROPERTY_FLAG_WRITABLE) || (*property_p & ECMA_PROPERTY_FLAG_DATA));
@@ -260,14 +251,6 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
             ecma_named_data_property_assign_value (lex_env_p, property_value_p, value);
             return ECMA_VALUE_EMPTY;
           }
-#else /* JERRY_ESNEXT */
-          if (ecma_is_property_writable (*property_p))
-          {
-            ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
-            ecma_named_data_property_assign_value (lex_env_p, property_value_p, value);
-            return ECMA_VALUE_EMPTY;
-          }
-#endif /* JERRY_ESNEXT */
 
           return ecma_op_raise_set_binding_error (property_p, is_strict);
         }

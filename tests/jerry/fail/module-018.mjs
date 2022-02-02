@@ -14,4 +14,4 @@
  */
 
 /* An import statement can have either a NameSpaceImport or NamedIpmorts */
-import * as mod, { b } from "../es.next/module-export-01.mjs"
+import * as mod, { b } from "../module-export-01.mjs"

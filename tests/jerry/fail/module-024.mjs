@@ -15,4 +15,4 @@
 
 export function ns() {}
 /* Duplicated export. */
-export * as ns from "../es.next/module-export-fail-test.mjs"
+export * as ns from "../module-export-fail-test.mjs"

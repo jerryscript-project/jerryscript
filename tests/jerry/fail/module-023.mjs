@@ -14,4 +14,4 @@
  */
 
 /* Namespace imports must have a local name. */
-import * from "../es.next/module-export-01.mjs"
+import * from "../module-export-01.mjs"

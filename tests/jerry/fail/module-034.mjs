@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-import { a } from "../es.next/module-export-fail-test.mjs";
+import { a } from "../module-export-fail-test.mjs";
 class a {};

@@ -14,4 +14,4 @@
  */
 
 /* Can't have duplicate local bindings */
-import { c as a, d as a } from "../es.next/module-export-01.mjs";
+import { c as a, d as a } from "../module-export-01.mjs";

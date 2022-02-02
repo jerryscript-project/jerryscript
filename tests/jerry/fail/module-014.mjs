@@ -15,5 +15,5 @@
 
 /* Import/export statements must be in the global scope. */
 if (true) {
-  import { c } from "../es.next/module-export-01.mjs";
+  import { c } from "../module-export-01.mjs";
 }

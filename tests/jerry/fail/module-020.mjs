@@ -14,4 +14,4 @@
  */
 
 /* '*' is not valid inside NamedImports. */
-import { *, d } from "../es.next/module-imported-01.mjs"
+import { *, d } from "../module-imported-01.mjs"

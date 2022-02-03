@@ -14,4 +14,4 @@
  */
 
 /* NamedImports must always be followed by a FromClause. */
-import { b }, from "../es.next/module-export-01.mjs"
+import { b }, from "../module-export-01.mjs"

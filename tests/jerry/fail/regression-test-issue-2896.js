@@ -13,4 +13,4 @@
 // limitations under the License.
 
 export {} from "dummy.mjs";
-export {} from "../es.next/module-export-04.mjs";
+export {} from "../module-export-04.mjs";

@@ -14,4 +14,4 @@
  */
 
 /* Import/export statements must be in the global scope. */
-eval ('import { c } from "../es.next/module-export-01.mjs";');
+eval ('import { c } from "../module-export-01.mjs";');

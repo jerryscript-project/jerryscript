@@ -700,7 +700,7 @@ ecma_snapshot_get_literal (const uint8_t *literal_base_p, /**< literal start */
  * Compute the start of the serializable ecma-values of the bytecode
  * Related values:
  *  - function argument names, if CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED is present
- *  - function name, if CBC_CODE_FLAGS_CLASS_CONSTRUCTOR is not present and ES.next profile is enabled
+ *  - function name, if CBC_CODE_FLAGS_CLASS_CONSTRUCTOR is not present and es.next profile is enabled
  *
  * @return pointer to the beginning of the serializable ecma-values
  */

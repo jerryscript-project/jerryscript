@@ -80,11 +80,8 @@ jerry_port_init (void)
   }
 } /* jerry_port_init */
 
-/**
- * Default implementation of jerry_port_sleep, uses 'Sleep'.
- */
 void
-jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
+jerry_port_sleep (uint32_t sleep_time)
 {
   Sleep (sleep_time);
 } /* jerry_port_sleep */

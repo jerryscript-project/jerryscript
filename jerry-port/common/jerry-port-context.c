@@ -27,13 +27,6 @@
  */
 static jerry_context_t *current_context_p = NULL;
 
-/**
- * Allocate a new external context.
- *
- * @param context_size: requested context size
- *
- * @return total allcoated size
- */
 size_t JERRY_ATTR_WEAK
 jerry_port_context_alloc (size_t context_size)
 {
@@ -43,20 +36,12 @@ jerry_port_context_alloc (size_t context_size)
   return total_size;
 } /* jerry_port_context_alloc */
 
-/**
- * Get the current context.
- *
- * @return the pointer to the current context
- */
 jerry_context_t *JERRY_ATTR_WEAK
 jerry_port_context_get (void)
 {
   return current_context_p;
 } /* jerry_port_context_get */
 
-/**
- * Free the currently allocated external context.
- */
 void JERRY_ATTR_WEAK
 jerry_port_context_free (void)
 {

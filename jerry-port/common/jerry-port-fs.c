@@ -41,13 +41,8 @@ jerry_port_get_file_size (FILE *file_p) /**< opened file */
   return (jerry_size_t) size;
 } /* jerry_port_get_file_size */
 
-/**
- * Opens file with the given path and reads its source.
- * @return the source of the file
- */
 jerry_char_t *JERRY_ATTR_WEAK
-jerry_port_source_read (const char *file_name_p, /**< file name */
-                        jerry_size_t *out_size_p) /**< [out] read bytes */
+jerry_port_source_read (const char *file_name_p, jerry_size_t *out_size_p)
 {
   /* TODO(dbatyai): Temporary workaround for nuttx target
    * The nuttx target builds and copies the jerryscript libraries as a separate build step, which causes linking issues
@@ -92,11 +87,8 @@ jerry_port_source_read (const char *file_name_p, /**< file name */
   return buffer_p;
 } /* jerry_port_source_read */
 
-/**
- * Release the previously opened file's content.
- */
 void JERRY_ATTR_WEAK
-jerry_port_source_free (uint8_t *buffer_p) /**< buffer to free */
+jerry_port_source_free (uint8_t *buffer_p)
 {
   free (buffer_p);
 } /* jerry_port_source_free */
@@ -107,15 +99,8 @@ jerry_port_source_free (uint8_t *buffer_p) /**< buffer to free */
  */
 #if defined(JERRY_WEAK_SYMBOL_SUPPORT) && !(defined(__unix__) || defined(__APPLE__) || defined(_WIN32))
 
-/**
- * Normalize a file path.
- *
- * @return a newly allocated buffer with the normalized path if the operation is successful,
- *         NULL otherwise
- */
 jerry_char_t *JERRY_ATTR_WEAK
-jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
-                           jerry_size_t path_size) /**< size of the path */
+jerry_port_path_normalize (const jerry_char_t *path_p, jerry_size_t path_size)
 {
   jerry_char_t *buffer_p = (jerry_char_t *) malloc (path_size + 1);
 
@@ -128,26 +113,16 @@ jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
   memcpy (buffer_p, path_p, path_size + 1);
 
   return buffer_p;
-} /* jerry_port_normalize_path */
+} /* jerry_port_path_normalize */
 
-/**
- * Free a path buffer returned by jerry_port_path_normalize.
- *
- * @param path_p: the path to free
- */
 void JERRY_ATTR_WEAK
 jerry_port_path_free (jerry_char_t *path_p)
 {
   free (path_p);
-} /* jerry_port_normalize_path */
+} /* jerry_port_path_free */
 
-/**
- * Computes the end of the directory part of a path.
- *
- * @return end of the directory part of a path.
- */
 jerry_size_t JERRY_ATTR_WEAK
-jerry_port_path_base (const jerry_char_t *path_p) /**< path */
+jerry_port_path_base (const jerry_char_t *path_p)
 {
   const jerry_char_t *basename_p = (jerry_char_t *) strrchr ((char *) path_p, '/') + 1;
 
@@ -157,6 +132,6 @@ jerry_port_path_base (const jerry_char_t *path_p) /**< path */
   }
 
   return (jerry_size_t) (basename_p - path_p);
-} /* jerry_port_get_directory_end */
+} /* jerry_port_path_base */
 
 #endif /* defined(JERRY_WEAK_SYMBOL_SUPPORT) && !(defined(__unix__) || defined(__APPLE__) || defined(_WIN32)) */

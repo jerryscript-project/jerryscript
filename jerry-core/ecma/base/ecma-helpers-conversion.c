@@ -289,7 +289,7 @@ ecma_uint64_normalize_shift (uint64_t n) /**< integer to count leading zeros in 
  */
 ecma_number_t
 ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 string */
-                                     const lit_utf8_size_t string_size, /**< end of utf-8 string  */
+                                     lit_utf8_size_t string_size, /**< end of utf-8 string  */
                                      uint32_t radix, /**< radix */
                                      uint32_t options) /**< option flags */
 {
@@ -721,7 +721,7 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
   JERRY_ASSERT (num_in_uint32_range < uint64_2_pow_32);
   uint32_t uint32_num = (uint32_t) num_in_uint32_range;
 
-  const uint32_t ret = sign ? -uint32_num : uint32_num;
+  const uint32_t ret = sign ? (0 - uint32_num) : uint32_num;
 
 #ifndef JERRY_NDEBUG
   if (sign && uint32_num != 0)

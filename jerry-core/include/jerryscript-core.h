@@ -602,7 +602,7 @@ jerry_value_t jerry_object_find_own (const jerry_value_t object,
  * @{
  */
 jerry_value_t jerry_object_delete (jerry_value_t object, const jerry_value_t key);
-jerry_value_t jerry_object_delete_sz (const jerry_value_t object, const char *key_p);
+jerry_value_t jerry_object_delete_sz (jerry_value_t object, const char *key_p);
 jerry_value_t jerry_object_delete_index (jerry_value_t object, uint32_t index);
 bool jerry_object_delete_internal (jerry_value_t object, const jerry_value_t key);
 bool jerry_object_delete_native_ptr (jerry_value_t object, const jerry_object_native_info_t *native_info_p);

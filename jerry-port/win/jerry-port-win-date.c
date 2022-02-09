@@ -44,7 +44,7 @@ unix_time_to_filetime (double t, LPFILETIME ft_p)
 
   ft_p->dwLowDateTime = (DWORD) ll;
   ft_p->dwHighDateTime = (DWORD) (ll >> 32);
-} /* unix_time_to_file_time */
+} /* unix_time_to_filetime */
 
 /**
  * Convert a FILETIME to a unix time value.
@@ -58,14 +58,8 @@ filetime_to_unix_time (LPFILETIME ft_p)
   date.HighPart = ft_p->dwHighDateTime;
   date.LowPart = ft_p->dwLowDateTime;
   return (double) (((LONGLONG) date.QuadPart - UNIX_EPOCH_IN_TICKS) / TICKS_PER_MS);
-} /* FileTimeToUnixTimeMs */
+} /* filetime_to_unix_time */
 
-/**
- * Default implementation of jerry_port_local_tza.
- *
- * @return offset between UTC and local time at the given unix timestamp, if
- *         available. Otherwise, returns 0, assuming UTC time.
- */
 int32_t
 jerry_port_local_tza (double unix_ms)
 {
@@ -86,11 +80,6 @@ jerry_port_local_tza (double unix_ms)
   return 0;
 } /* jerry_port_local_tza */
 
-/**
- * Default implementation of jerry_port_current_time.
- *
- * @return milliseconds since Unix epoch
- */
 double
 jerry_port_current_time (void)
 {

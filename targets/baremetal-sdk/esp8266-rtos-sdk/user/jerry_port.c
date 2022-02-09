@@ -21,18 +21,12 @@
 
 #include "esp_common.h"
 
-/**
- * Provide log message implementation for the engine.
- */
 void
-jerry_port_log (const char *message_p) /**< message */
+jerry_port_log (const char *message_p)
 {
   fputs (message_p, stderr);
 } /* jerry_port_log */
 
-/**
- * Provide fatal message implementation for the engine.
- */
 void
 jerry_port_fatal (jerry_fatal_code_t code)
 {
@@ -45,11 +39,6 @@ jerry_port_fatal (jerry_fatal_code_t code)
   }
 } /* jerry_port_fatal */
 
-/**
- * Implementation of jerry_port_current_time.
- *
- * @return current timer's counter value in milliseconds
- */
 double
 jerry_port_current_time (void)
 {
@@ -57,11 +46,6 @@ jerry_port_current_time (void)
   return (double) rtc_time;
 } /* jerry_port_current_time */
 
-/**
- * Dummy function to get the time zone adjustment.
- *
- * @return 0
- */
 int32_t
 jerry_port_local_tza (double unix_ms)
 {

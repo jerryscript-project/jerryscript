@@ -17,12 +17,8 @@
 
 #include "jerryscript-port.h"
 
-/**
- * Default implementation of jerry_port_fatal. Calls 'abort' if exit code is
- * non-zero, 'exit' otherwise.
- */
 void JERRY_ATTR_WEAK
-jerry_port_fatal (jerry_fatal_code_t code) /**< cause of error */
+jerry_port_fatal (jerry_fatal_code_t code)
 {
   if (code != 0 && code != JERRY_FATAL_OUT_OF_MEMORY)
   {

@@ -30,35 +30,22 @@
 
 static const char TAG[] = "JS";
 
-/**
- * Default implementation of jerry_port_fatal. Calls 'abort' if exit code is
- * non-zero, 'exit' otherwise.
- */
 void
-jerry_port_fatal (jerry_fatal_code_t code) /**< cause of error */
+jerry_port_fatal (jerry_fatal_code_t code)
 {
   ESP_LOGE (TAG, "Fatal error %d", code);
   vTaskSuspend (NULL);
   abort ();
 } /* jerry_port_fatal */
 
-/**
- * Default implementation of jerry_port_sleep. Uses 'nanosleep' or 'usleep' if
- * available on the system, does nothing otherwise.
- */
 void
-jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
+jerry_port_sleep (uint32_t sleep_time)
 {
   vTaskDelay (sleep_time / portTICK_PERIOD_MS);
 } /* jerry_port_sleep */
 
-/**
- * Opens file with the given path and reads its source.
- * @return the source of the file
- */
 jerry_char_t *
-jerry_port_source_read (const char *file_name_p, /**< file name */
-                        jerry_size_t *out_size_p) /**< [out] read bytes */
+jerry_port_source_read (const char *file_name_p, jerry_size_t *out_size_p)
 {
   FILE *file_p = fopen (file_name_p, "rb");
 
@@ -93,23 +80,12 @@ jerry_port_source_read (const char *file_name_p, /**< file name */
   return buffer_p;
 } /* jerry_port_source_read */
 
-/**
- * Release the previously opened file's content.
- */
 void
-jerry_port_source_free (uint8_t *buffer_p) /**< buffer to free */
+jerry_port_source_free (uint8_t *buffer_p)
 {
   free (buffer_p);
 } /* jerry_port_source_free */
 
-/**
- * Default implementation of jerry_port_local_tza. Uses the 'tm_gmtoff' field
- * of 'struct tm' (a GNU extension) filled by 'localtime_r' if available on the
- * system, does nothing otherwise.
- *
- * @return offset between UTC and local time at the given unix timestamp, if
- *         available. Otherwise, returns 0, assuming UTC time.
- */
 int32_t
 jerry_port_local_tza (double unix_ms)
 {
@@ -122,14 +98,6 @@ jerry_port_local_tza (double unix_ms)
   return -atoi (buf) * 3600 * 1000 / 100;
 } /* jerry_port_local_tza */
 
-/**
- * Default implementation of jerry_port_current_time. Uses 'gettimeofday' if
- * available on the system, does nothing otherwise.
- *
- * @return milliseconds since Unix epoch - if 'gettimeofday' is available and
- *                                         executed successfully,
- *         0 - otherwise.
- */
 double
 jerry_port_current_time (void)
 {

@@ -20,37 +20,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-/**
- * Normalize a file path.
- *
- * @return a newly allocated buffer with the normalized path if the operation is successful,
- *         NULL otherwise
- */
 jerry_char_t *
-jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
-                           jerry_size_t path_size) /**< size of the path */
+jerry_port_path_normalize (const jerry_char_t *path_p, jerry_size_t path_size)
 {
   (void) path_size;
 
   return (jerry_char_t *) _fullpath (NULL, path_p, _MAX_PATH);
 } /* jerry_port_path_normalize */
 
-/**
- * Free a path buffer returned by jerry_port_path_normalize.
- */
 void
 jerry_port_path_free (jerry_char_t *path_p)
 {
   free (path_p);
 } /* jerry_port_path_free */
 
-/**
- * Get the end of the directory part of the input path.
- *
- * @param path_p: input zero-terminated path string
- *
- * @return offset of the directory end in the input path string
- */
 jerry_size_t
 jerry_port_path_base (const jerry_char_t *path_p)
 {

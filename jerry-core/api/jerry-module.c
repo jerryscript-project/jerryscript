@@ -123,6 +123,35 @@ static const jerry_context_data_manager_t jerry_module_manager JERRY_ATTR_CONST_
   .bytes_needed = sizeof (jerry_module_manager_t)
 };
 
+/**
+ * Get the offset of the basename component in the input path.
+ *
+ * The implementation should return the offset of the first character after the last path separator found in the path.
+ * This is used by the caller to split the path into a directory name and a file name.
+ *
+ * @param path_p: input zero-terminated path string
+ * @param path_size: size of the input path string in bytes, excluding terminating zero
+ *
+ * @return offset of the basename component in the input path
+ */
+static jerry_size_t
+jerry_module_path_base (const jerry_char_t *path_p, jerry_size_t path_size)
+{
+  const jerry_char_t *end_p = path_p + path_size;
+
+  while (end_p > path_p)
+  {
+    if (jerry_port_path_is_separator (end_p[-1]))
+    {
+      return (jerry_size_t) (end_p - path_p);
+    }
+
+    end_p--;
+  }
+
+  return 0;
+} /* jerry_module_path_base */
+
 #endif /* JERRY_MODULE_SYSTEM */
 
 /**
@@ -157,7 +186,19 @@ jerry_module_resolve (const jerry_value_t specifier, /**< module specifier strin
   jerry_string_to_buffer (specifier, JERRY_ENCODING_UTF8, reference_path_p + directory_size, specifier_size);
   reference_path_p[reference_size] = '\0';
 
-  jerry_char_t *path_p = jerry_port_path_normalize (reference_path_p, reference_size);
+  jerry_char_t *specifier_path_p = reference_path_p + directory_size;
+
+  jerry_size_t path_size;
+  jerry_char_t *path_p;
+  if (jerry_port_path_root (specifier_path_p, specifier_size) > 0)
+  {
+    path_p = jerry_port_path_normalize (specifier_path_p, specifier_size, &path_size);
+  }
+  else
+  {
+    path_p = jerry_port_path_normalize (reference_path_p, reference_size, &path_size);
+  }
+
   jerry_heap_free (reference_path_p, reference_size + 1);
 
   if (path_p == NULL)
@@ -185,7 +226,7 @@ jerry_module_resolve (const jerry_value_t specifier, /**< module specifier strin
   }
 
   jerry_size_t source_size;
-  jerry_char_t *source_p = jerry_port_source_read ((const char *) path_p, &source_size);
+  jerry_char_t *source_p = jerry_port_source_read (path_p, path_size, &source_size);
 
   if (source_p == NULL)
   {
@@ -215,7 +256,7 @@ jerry_module_resolve (const jerry_value_t specifier, /**< module specifier strin
 
   module_p->next_p = manager_p->module_head_p;
   module_p->path_p = path_p;
-  module_p->basename_offset = jerry_port_path_base (module_p->path_p);
+  module_p->basename_offset = jerry_module_path_base (module_p->path_p, path_size);
   module_p->realm = realm;
   module_p->module = jerry_value_copy (ret_value);
 

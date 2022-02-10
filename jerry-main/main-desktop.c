@@ -129,18 +129,19 @@ restart:
   for (uint32_t source_index = 0; source_index < arguments.source_count; source_index++)
   {
     main_source_t *source_file_p = sources_p + source_index;
-    const char *file_path_p = argv[source_file_p->path_index];
+    const jerry_char_t *file_path_p = (const jerry_char_t *) argv[source_file_p->path_index];
+    jerry_size_t file_path_size = (jerry_size_t) strlen ((const char *) file_path_p);
 
     switch (source_file_p->type)
     {
       case SOURCE_MODULE:
       {
-        result = jerryx_source_exec_module (file_path_p);
+        result = jerryx_source_exec_module (file_path_p, file_path_size);
         break;
       }
       case SOURCE_SNAPSHOT:
       {
-        result = jerryx_source_exec_snapshot (file_path_p, source_file_p->snapshot_index);
+        result = jerryx_source_exec_snapshot (file_path_p, file_path_size, source_file_p->snapshot_index);
         break;
       }
       default:
@@ -149,11 +150,11 @@ restart:
 
         if ((arguments.option_flags & OPT_FLAG_PARSE_ONLY) != 0)
         {
-          result = jerryx_source_parse_script (file_path_p);
+          result = jerryx_source_parse_script (file_path_p, file_path_size);
         }
         else
         {
-          result = jerryx_source_exec_script (file_path_p);
+          result = jerryx_source_exec_script (file_path_p, file_path_size);
         }
 
         break;

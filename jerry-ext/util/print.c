@@ -263,7 +263,8 @@ jerryx_print_unhandled_exception (jerry_value_t exception) /**< exception value 
       *path_str_end_p = '\0';
 
       jerry_size_t source_size;
-      jerry_char_t *source_p = jerry_port_source_read (path_str_p, &source_size);
+      jerry_size_t path_size = (jerry_size_t) (path_str_end_p - path_str_p);
+      jerry_char_t *source_p = jerry_port_source_read ((const jerry_char_t *) path_str_p, path_size, &source_size);
 
       /* Revert the error message. */
       *path_str_end_p = ':';

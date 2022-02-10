@@ -20,10 +20,10 @@
 
 JERRY_C_API_BEGIN
 
-jerry_value_t jerryx_source_parse_script (const char* path);
-jerry_value_t jerryx_source_exec_script (const char* path);
-jerry_value_t jerryx_source_exec_module (const char* path);
-jerry_value_t jerryx_source_exec_snapshot (const char* path, size_t function_index);
+jerry_value_t jerryx_source_parse_script (const jerry_char_t* path_p, jerry_size_t path_size);
+jerry_value_t jerryx_source_exec_script (const jerry_char_t* path_p, jerry_size_t path_size);
+jerry_value_t jerryx_source_exec_module (const jerry_char_t* path_p, jerry_size_t path_size);
+jerry_value_t jerryx_source_exec_snapshot (const jerry_char_t* path_p, jerry_size_t path_size, size_t function_index);
 jerry_value_t jerryx_source_exec_stdin (void);
 
 JERRY_C_API_END

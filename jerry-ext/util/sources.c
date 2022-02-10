@@ -27,10 +27,10 @@
 #include "jerryscript-ext/print.h"
 
 jerry_value_t
-jerryx_source_parse_script (const char *path_p)
+jerryx_source_parse_script (const jerry_char_t *path_p, jerry_size_t path_size)
 {
   jerry_size_t source_size;
-  jerry_char_t *source_p = jerry_port_source_read (path_p, &source_size);
+  jerry_char_t *source_p = jerry_port_source_read (path_p, path_size, &source_size);
 
   if (source_p == NULL)
   {
@@ -46,8 +46,7 @@ jerryx_source_parse_script (const char *path_p)
 
   jerry_parse_options_t parse_options;
   parse_options.options = JERRY_PARSE_HAS_SOURCE_NAME;
-  parse_options.source_name =
-    jerry_string ((const jerry_char_t *) path_p, (jerry_size_t) strlen (path_p), JERRY_ENCODING_UTF8);
+  parse_options.source_name = jerry_string (path_p, path_size, JERRY_ENCODING_UTF8);
 
   jerry_value_t result = jerry_parse (source_p, source_size, &parse_options);
 
@@ -58,9 +57,9 @@ jerryx_source_parse_script (const char *path_p)
 } /* jerryx_source_parse_script */
 
 jerry_value_t
-jerryx_source_exec_script (const char *path_p)
+jerryx_source_exec_script (const jerry_char_t *path_p, jerry_size_t path_size)
 {
-  jerry_value_t result = jerryx_source_parse_script (path_p);
+  jerry_value_t result = jerryx_source_parse_script (path_p, path_size);
 
   if (!jerry_value_is_exception (result))
   {
@@ -73,10 +72,9 @@ jerryx_source_exec_script (const char *path_p)
 } /* jerryx_source_exec_script */
 
 jerry_value_t
-jerryx_source_exec_module (const char *path_p)
+jerryx_source_exec_module (const jerry_char_t *path_p, jerry_size_t path_size)
 {
-  jerry_value_t specifier =
-    jerry_string ((const jerry_char_t *) path_p, (jerry_size_t) strlen (path_p), JERRY_ENCODING_UTF8);
+  jerry_value_t specifier = jerry_string (path_p, path_size, JERRY_ENCODING_UTF8);
   jerry_value_t referrer = jerry_undefined ();
 
   jerry_value_t module = jerry_module_resolve (specifier, referrer, NULL);
@@ -110,10 +108,10 @@ jerryx_source_exec_module (const char *path_p)
 } /* jerryx_source_exec_module */
 
 jerry_value_t
-jerryx_source_exec_snapshot (const char *path_p, size_t function_index)
+jerryx_source_exec_snapshot (const jerry_char_t *path_p, jerry_size_t path_size, size_t function_index)
 {
   jerry_size_t source_size;
-  jerry_char_t *source_p = jerry_port_source_read (path_p, &source_size);
+  jerry_char_t *source_p = jerry_port_source_read (path_p, path_size, &source_size);
 
   if (source_p == NULL)
   {

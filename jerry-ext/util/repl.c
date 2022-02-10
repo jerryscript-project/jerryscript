@@ -23,13 +23,13 @@
 #include "jerryscript-ext/print.h"
 
 void
-jerryx_repl (const char *prompt_p)
+jerryx_repl (const char *prompt_p, size_t prompt_size)
 {
   jerry_value_t result;
 
   while (true)
   {
-    jerryx_print_string (prompt_p);
+    jerryx_print_string (prompt_p, prompt_size);
 
     jerry_size_t length;
     jerry_char_t *line_p = jerry_port_line_read (&length);

@@ -1455,22 +1455,17 @@ jerry_save_literals_sort (ecma_string_t *literals[], /**< array of literals */
 static uint8_t *
 jerry_append_chars_to_buffer (uint8_t *buffer_p, /**< buffer */
                               uint8_t *buffer_end_p, /**< the end of the buffer */
-                              const char *chars, /**< string */
-                              lit_utf8_size_t string_size) /**< string size */
+                              const jerry_char_t *chars, /**< string */
+                              jerry_size_t string_size) /**< string size */
 {
   if (buffer_p > buffer_end_p)
   {
     return buffer_p;
   }
 
-  if (string_size == 0)
-  {
-    string_size = (lit_utf8_size_t) strlen (chars);
-  }
-
   if (buffer_p + string_size <= buffer_end_p)
   {
-    memcpy ((char *) buffer_p, chars, string_size);
+    memcpy ((char *) buffer_p, (const char *) chars, string_size);
 
     return buffer_p + string_size;
   }
@@ -1492,8 +1487,10 @@ jerry_append_ecma_string_to_buffer (uint8_t *buffer_p, /**< buffer */
   ECMA_STRING_TO_UTF8_STRING (string_p, str_buffer_p, str_buffer_size);
 
   /* Append the string to the buffer. */
-  uint8_t *new_buffer_p =
-    jerry_append_chars_to_buffer (buffer_p, buffer_end_p, (const char *) str_buffer_p, str_buffer_size);
+  uint8_t *new_buffer_p = jerry_append_chars_to_buffer (buffer_p,
+                                                        buffer_end_p,
+                                                        (const jerry_char_t *) str_buffer_p,
+                                                        (jerry_size_t) str_buffer_size);
 
   ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
 
@@ -1516,7 +1513,10 @@ jerry_append_number_to_buffer (uint8_t *buffer_p, /**< buffer */
 
   JERRY_ASSERT (utf8_str_size <= ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
 
-  return jerry_append_chars_to_buffer (buffer_p, buffer_end_p, (const char *) uint32_to_str_buffer, utf8_str_size);
+  return jerry_append_chars_to_buffer (buffer_p,
+                                       buffer_end_p,
+                                       (const jerry_char_t *) uint32_to_str_buffer,
+                                       (jerry_size_t) utf8_str_size);
 } /* jerry_append_number_to_buffer */
 
 #endif /* JERRY_SNAPSHOT_SAVE */
@@ -1609,26 +1609,27 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
   if (is_c_format)
   {
     /* Save literal count. */
-    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "jerry_length_t literal_count = ", 0);
+    lit_buf_p =
+      jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("jerry_length_t literal_count = "));
 
     lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, literal_count);
 
     /* Save the array of literals. */
-    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, ";\n\njerry_char_t *literals[", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG (";\n\njerry_char_t *literals["));
 
     lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, literal_count);
-    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "] =\n{\n", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("] =\n{\n"));
 
     for (lit_utf8_size_t i = 0; i < literal_count; i++)
     {
-      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "  \"", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("  \""));
       ECMA_STRING_TO_UTF8_STRING (literal_array[i], str_buffer_p, str_buffer_size);
       for (lit_utf8_size_t j = 0; j < str_buffer_size; j++)
       {
         uint8_t byte = str_buffer_p[j];
         if (byte < 32 || byte > 127)
         {
-          lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\\x", 0);
+          lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("\\x"));
           ecma_char_t hex_digit = (ecma_char_t) (byte >> 4);
           *lit_buf_p++ = (lit_utf8_byte_t) ((hex_digit > 9) ? (hex_digit + ('A' - 10)) : (hex_digit + '0'));
           hex_digit = (lit_utf8_byte_t) (byte & 0xf);
@@ -1645,20 +1646,21 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
       }
 
       ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
-      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\"", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("\""));
 
       if (i < literal_count - 1)
       {
-        lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, ",", 0);
+        lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG (","));
       }
 
-      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\n", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("\n"));
     }
 
-    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "};\n\njerry_length_t literal_sizes[", 0);
+    lit_buf_p =
+      jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("};\n\njerry_length_t literal_sizes["));
 
     lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, literal_count);
-    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "] =\n{\n", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("] =\n{\n"));
   }
 
   /* Save the literal sizes respectively. */
@@ -1668,22 +1670,22 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
 
     if (is_c_format)
     {
-      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "  ", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("  "));
     }
 
     lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, str_size);
-    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, " ", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG (" "));
 
     if (is_c_format)
     {
       /* Show the given string as a comment. */
-      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "/* ", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("/* "));
       lit_buf_p = jerry_append_ecma_string_to_buffer (lit_buf_p, buffer_end_p, literal_array[i]);
-      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, " */", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG (" */"));
 
       if (i < literal_count - 1)
       {
-        lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, ",", 0);
+        lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG (","));
       }
     }
     else
@@ -1691,12 +1693,12 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
       lit_buf_p = jerry_append_ecma_string_to_buffer (lit_buf_p, buffer_end_p, literal_array[i]);
     }
 
-    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\n", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("\n"));
   }
 
   if (is_c_format)
   {
-    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "};\n", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("};\n"));
   }
 
   JMEM_FINALIZE_LOCAL_ARRAY (literal_array);

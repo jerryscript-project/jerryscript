@@ -222,8 +222,14 @@ restart:
   }
   else if (arguments.source_count == 0)
   {
-    const char *prompt_p = (arguments.option_flags & OPT_FLAG_NO_PROMPT) ? "" : "jerry> ";
-    jerryx_repl (prompt_p);
+    if ((arguments.option_flags & OPT_FLAG_NO_PROMPT))
+    {
+      jerryx_repl (JERRY_ZSTR_ARG (""));
+    }
+    else
+    {
+      jerryx_repl (JERRY_ZSTR_ARG ("jerry> "));
+    }
   }
 
   result = jerry_run_jobs ();

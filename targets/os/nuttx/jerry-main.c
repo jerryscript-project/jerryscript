@@ -206,7 +206,7 @@ jerry_main (int argc, char *argv[])
 
   if (files_counter == 0)
   {
-    jerryx_repl ("jerry> ");
+    jerryx_repl (JERRY_ZSTR_ARG ("jerry> "));
   }
   else
   {

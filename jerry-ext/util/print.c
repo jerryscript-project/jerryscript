@@ -61,7 +61,7 @@ jerryx_buffered_print (uint32_t value, void *user_p)
     jerryx_print_buffer (buffer_p->data, buffer_p->index);
     buffer_p->index = 0;
 
-    jerryx_print_string ("\\u0000");
+    jerryx_print_buffer (JERRY_ZSTR_ARG ("\\u0000"));
     return;
   }
 
@@ -112,20 +112,6 @@ jerryx_print_value (const jerry_value_t value)
 } /* jerryx_print */
 
 /**
- * Print a character to standard output, also sending it to the debugger, if connected.
- *
- * @param ch: input character
- */
-void
-jerryx_print_byte (jerry_char_t byte)
-{
-  jerry_port_print_byte (byte);
-#if JERRY_DEBUGGER
-  jerry_debugger_send_output (&byte, 1);
-#endif /* JERRY_DEBUGGER */
-} /* jerryx_print_char */
-
-/**
  * Print a buffer to standard output, also sending it to the debugger, if connected.
  *
  * @param buffer_p: inptut string buffer
@@ -139,24 +125,6 @@ jerryx_print_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
   jerry_debugger_send_output (buffer_p, buffer_size);
 #endif /* JERRY_DEBUGGER */
 } /* jerryx_print_buffer */
-
-/**
- * Print a zero-terminated string to standard output, also sending it to the debugger, if connected.
- *
- * @param buffer_p: inptut string buffer
- * @param buffer_size: size of the string
- */
-void
-jerryx_print_string (const char *str_p)
-{
-  const jerry_char_t *buffer_p = (jerry_char_t *) str_p;
-  jerry_size_t buffer_size = (jerry_size_t) (strlen (str_p));
-
-  jerry_port_print_buffer (buffer_p, buffer_size);
-#if JERRY_DEBUGGER
-  jerry_debugger_send_output (buffer_p, buffer_size);
-#endif /* JERRY_DEBUGGER */
-} /* jerryx_print_string */
 
 /**
  * Print backtrace as log messages up to a specific depth.

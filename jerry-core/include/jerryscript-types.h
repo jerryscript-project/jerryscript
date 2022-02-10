@@ -857,6 +857,11 @@ typedef void (*jerry_arraybuffer_free_cb_t) (jerry_arraybuffer_type_t buffer_typ
                                              void *user_p);
 
 /**
+ * Helper to expand string literal to [string pointer, string size] argument pair.
+ */
+#define JERRY_ZSTR_ARG(str) ((const jerry_char_t *) (str)), ((jerry_size_t) (sizeof (str) - 1))
+
+/**
  * @}
  */
 

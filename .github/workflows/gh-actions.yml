@@ -271,15 +271,25 @@ jobs:
       - run: make -f ./targets/os/riot/Makefile.travis install-noapt
       - run: make -f ./targets/os/riot/Makefile.travis script
 
-  ESP8266_Build_Test:
+  ESP8266_RTOS_SDK_Build_Test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '2.7' # needed due to ESP8266_RTOS_SDK/tools/gen_appbin.py
-      - run: make -f ./targets/baremetal-sdk/esp8266-rtos-sdk/Makefile.travis install-noapt
-      - run: make -f ./targets/baremetal-sdk/esp8266-rtos-sdk/Makefile.travis script
+          python-version: '3.8'
+      - run: make -f ./targets/baremetal-sdk/espressif/esp8266-rtos-sdk/Makefile.travis install-noapt
+      - run: make -f ./targets/baremetal-sdk/espressif/esp8266-rtos-sdk/Makefile.travis script
+
+  ESP_IDF_Build_Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis install-noapt
+      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis script
 
   Notification:
     runs-on: ubuntu-latest

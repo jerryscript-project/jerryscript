@@ -25,17 +25,18 @@ all:
 install-apt-get-deps:
 	sudo apt-get install -q -y wget
 
-# Fetch and build crosstool-NG with support for Xtensa.
-install-xtensa-kx106-gcc:
-	wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz -O ../xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz --no-check-certificate
-	cd .. && tar xvfz xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz
+# Fetch and extract Xtensa toolchain.
+install-xtensa-lx106-gcc:
+	wget https://dl.espressif.com/dl/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz --no-check-certificate --directory-prefix /tmp
+	tar xvfz /tmp/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz --directory /tmp
 
-# Fetch Espressif SDK and Xtensa libraries.
+# Fetch Espressif SDK and install its dependencies.
 install-espressif-sdk:
-	git clone https://github.com/espressif/ESP8266_RTOS_SDK.git ../ESP8266_RTOS_SDK -b v2.1.0
+	git clone https://github.com/espressif/ESP8266_RTOS_SDK.git /tmp/ESP8266_RTOS_SDK -b release/v3.4
+	python -m pip install --user -r /tmp/ESP8266_RTOS_SDK/requirements.txt
 
-# Perform all the necessary (JerryScript-independent) installation steps.
-install-noapt: install-xtensa-kx106-gcc install-espressif-sdk
+# Perform all the necessary (JerryScript-independent) installation steps. - edited -
+install-noapt: install-xtensa-lx106-gcc install-espressif-sdk
 install: install-apt-get-deps install-noapt
 
 
@@ -43,4 +44,8 @@ install: install-apt-get-deps install-noapt
 
 # Build the firmware (ESP8266 with JerryScript).
 script:
-	PATH=$(CURDIR)/../xtensa-lx106-elf/bin:$$PATH $(MAKE) -f ./targets/baremetal-sdk/esp8266-rtos-sdk/Makefile.esp8266 BIN_PATH=build/obj-esp8266 SDK_PATH=$(CURDIR)/../ESP8266_RTOS_SDK
+	PATH=/tmp/xtensa-lx106-elf/bin:$(PATH) \
+	python /tmp/ESP8266_RTOS_SDK/tools/idf.py \
+		--project-dir ./targets/baremetal-sdk/espressif \
+		--build-dir ./build/esp8266-rtos-sdk \
+		all

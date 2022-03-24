@@ -347,6 +347,7 @@ def amalgamate_jerry_ext(output_dir):
     amalgamate(
         base_dir=JERRY_EXT,
         input_files=[
+            os.path.join(JERRY_EXT, 'common', 'jext-common.h'),
             os.path.join(JERRY_EXT, 'include', 'jerryscript-ext', 'arg.h'),
             os.path.join(JERRY_EXT, 'arg', 'arg-internal.h'),
             os.path.join(JERRY_EXT, 'include', 'jerryscript-ext', 'arg.impl.h'),

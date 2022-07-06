@@ -58,8 +58,17 @@ endmacro()
 
 # Jerry with libfuzzer support
 if(JERRY_LIBFUZZER)
-  jerry_create_executable("jerry-libfuzzer" "main-libfuzzer.c")
-  target_link_libraries("jerry-libfuzzer" jerry-port-fsanitize=fuzzer)
+  jerry_create_executable("libfuzzer-parse" "main-libfuzzer-parse.c")
+  target_link_libraries("libfuzzer-parse" jerry-core jerry-port -fsanitize=fuzzer)
+
+  jerry_create_executable("libfuzzer-eval" "main-libfuzzer-eval.c")
+  target_link_libraries("libfuzzer-eval" jerry-core jerry-port -fsanitize=fuzzer)
+
+  jerry_create_executable("libfuzzer-json" "main-libfuzzer-json.c")
+  target_link_libraries("libfuzzer-json" jerry-core jerry-port -fsanitize=fuzzer)
+
+  jerry_create_executable("libfuzzer-regexp" "main-libfuzzer-regexp.c")
+  target_link_libraries("libfuzzer-regexp" jerry-core jerry-port -fsanitize=fuzzer)
 endif()
 
 # Jerry standalones

@@ -238,13 +238,21 @@ jerryx_print_unhandled_exception (jerry_value_t exception) /**< exception value 
           current_p++;
         }
 
-        path_str_end_p = (char *) current_p++;
+        path_str_end_p = (char *) current_p;
 
-        err_line = (unsigned int) strtol ((char *) current_p, (char **) &current_p, 10);
+        if (current_p == string_end_p)
+        {
+          break;
+        }
 
-        current_p++;
+        err_line = (unsigned int) strtol ((char *) current_p + 1, (char **) &current_p, 10);
 
-        err_col = (unsigned int) strtol ((char *) current_p, NULL, 10);
+        if (current_p == string_end_p)
+        {
+          break;
+        }
+
+        err_col = (unsigned int) strtol ((char *) current_p + 1, NULL, 10);
         break;
       }
     } /* for */

@@ -677,7 +677,9 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
   ecma_gc_set_object_visited (executable_object_p->frame_ctx.lex_env_p);
   ecma_gc_set_object_visited (executable_object_p->shared.function_object_p);
 
-  if (!ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED (executable_object_p))
+  if (!ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED (executable_object_p)
+      && !(executable_object_p->extended_object.u.cls.u2.executable_obj_flags
+           & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD))
   {
     /* All objects referenced by running executable objects are strong roots,
      * and a finished executable object cannot refer to other values. */

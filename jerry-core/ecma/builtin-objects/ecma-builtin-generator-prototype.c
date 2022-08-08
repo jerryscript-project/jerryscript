@@ -91,12 +91,20 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *generator_ob
   {
     if (generator_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
     {
+      if (generator_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_RUNNING)
+      {
+        return ecma_raise_type_error (ECMA_ERR_GENERATOR_IS_CURRENTLY_UNDER_EXECUTION);
+      }
+
       ecma_value_t iterator = generator_object_p->iterator;
       ecma_value_t next_method = generator_object_p->frame_ctx.stack_top_p[-1];
 
       bool done = false;
+
+      generator_object_p->extended_object.u.cls.u2.executable_obj_flags |= ECMA_EXECUTABLE_OBJECT_RUNNING;
       ecma_value_t result = ecma_op_iterator_do (resume_mode, iterator, next_method, arg, &done);
       ecma_free_value (arg);
+      generator_object_p->extended_object.u.cls.u2.executable_obj_flags &= (uint8_t) ~ECMA_EXECUTABLE_OBJECT_RUNNING;
 
       if (ECMA_IS_VALUE_ERROR (result))
       {

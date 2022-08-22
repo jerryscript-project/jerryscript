@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <jrt.h>
+#include "jrt.h"
 
 static jerry_log_level_t jerry_log_level = JERRY_LOG_LEVEL_ERROR;
 

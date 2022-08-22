@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <lit-magic-strings.h>
-#include <lit-strings.h>
+#include "lit-magic-strings.h"
+#include "lit-strings.h"
 
 #include "jerryscript-core.h"
 #include "jerryscript-port.h"

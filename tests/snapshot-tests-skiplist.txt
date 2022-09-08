@@ -43,6 +43,7 @@ tests/jerry/module-import-04.mjs
 tests/jerry/module-import-05.mjs
 tests/jerry/module-import-06.mjs
 tests/jerry/module-import-07.mjs
+tests/jerry/module-import-global.mjs
 tests/jerry/module-namespace-01.mjs
 tests/jerry/module-namespace-02.mjs
 tests/jerry/module-namespace-03.mjs

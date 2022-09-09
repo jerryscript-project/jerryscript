@@ -932,34 +932,13 @@ ecma_module_connect_imports (ecma_module_t *module_p)
   {
     ecma_module_names_t *import_names_p = import_node_p->module_names_p;
 
+    JERRY_ASSERT (local_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK);
+
     while (import_names_p != NULL)
     {
-      ecma_object_t *lex_env_p = local_env_p;
-      ecma_property_t *binding_p = NULL;
-
-      if (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK)
-      {
-        binding_p = ecma_find_named_property (lex_env_p, import_names_p->local_name_p);
-
-        JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
-        lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
-      }
+      ecma_property_t *binding_p = ecma_find_named_property (local_env_p, import_names_p->local_name_p);
 
       if (binding_p != NULL)
-      {
-        return ecma_raise_syntax_error (ECMA_ERR_IMPORTED_BINDING_SHADOWS_LOCAL_VARIABLE);
-      }
-
-      ecma_value_t status = ecma_op_has_binding (lex_env_p, import_names_p->local_name_p);
-
-#if JERRY_BUILTIN_PROXY
-      if (ECMA_IS_VALUE_ERROR (status))
-      {
-        return status;
-      }
-#endif /* JERRY_BUILTIN_PROXY */
-
-      if (ecma_is_value_true (status))
       {
         return ecma_raise_syntax_error (ECMA_ERR_IMPORTED_BINDING_SHADOWS_LOCAL_VARIABLE);
       }

@@ -186,6 +186,11 @@ void *__cdecl _alloca (size_t _Size);
 #endif /* !JERRY_VLA */
 
 /**
+ * Helper to expand string literal to (string pointer, string size) arg pair.
+ */
+#define JERRY_ZSTR_ARG(str) (str), (sizeof (str) - 1)
+
+/**
  * @}
  */
 

@@ -61,7 +61,7 @@ jerryx_buffered_print (uint32_t value, void *user_p)
     jerryx_print_buffer (buffer_p->data, buffer_p->index);
     buffer_p->index = 0;
 
-    jerryx_print_string ("\\u0000");
+    jerryx_print_string (JERRY_ZSTR_ARG ("\\u0000"));
     return;
   }
 
@@ -141,21 +141,15 @@ jerryx_print_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
 } /* jerryx_print_buffer */
 
 /**
- * Print a zero-terminated string to standard output, also sending it to the debugger, if connected.
+ * Print a string with length to standard output, also sending it to the debugger, if connected.
  *
- * @param buffer_p: inptut string buffer
- * @param buffer_size: size of the string
+ * @param str_p: inptut string
+ * @param str_size: size of the string
  */
 void
-jerryx_print_string (const char *str_p)
+jerryx_print_string (const char *str_p, size_t str_size)
 {
-  const jerry_char_t *buffer_p = (jerry_char_t *) str_p;
-  jerry_size_t buffer_size = (jerry_size_t) (strlen (str_p));
-
-  jerry_port_print_buffer (buffer_p, buffer_size);
-#if JERRY_DEBUGGER
-  jerry_debugger_send_output (buffer_p, buffer_size);
-#endif /* JERRY_DEBUGGER */
+  jerryx_print_buffer ((const jerry_char_t *) str_p, (jerry_size_t) str_size);
 } /* jerryx_print_string */
 
 /**

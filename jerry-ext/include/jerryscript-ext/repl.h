@@ -20,7 +20,7 @@
 
 JERRY_C_API_BEGIN
 
-void jerryx_repl (const char* prompt_p);
+void jerryx_repl (const char* prompt_p, size_t prompt_size);
 
 JERRY_C_API_END
 

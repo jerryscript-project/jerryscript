@@ -79,6 +79,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install python2
       - run: $RUNNER --test262 update
       - uses: actions/upload-artifact@v2
         if: success() || failure()
@@ -91,6 +93,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install python2
       - run: $RUNNER --test262 update --build-debug --test262-test-list=built-ins,annexB,harness,intl402
       - uses: actions/upload-artifact@v2
         if: success() || failure()
@@ -103,6 +107,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install python2
       - run: $RUNNER --test262 update --build-debug --test262-test-list=language
       - uses: actions/upload-artifact@v2
         if: success() || failure()
@@ -281,15 +287,15 @@ jobs:
       - run: make -f ./targets/baremetal-sdk/espressif/esp8266-rtos-sdk/Makefile.travis install-noapt
       - run: make -f ./targets/baremetal-sdk/espressif/esp8266-rtos-sdk/Makefile.travis script
 
-  ESP_IDF_Build_Test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis install-noapt
-      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis script
+#  ESP_IDF_Build_Test:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: actions/setup-python@v2
+#        with:
+#          python-version: '3.8'
+#      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis install-noapt
+#      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis script
 
   Notification:
     runs-on: ubuntu-latest

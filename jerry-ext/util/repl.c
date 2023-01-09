@@ -15,6 +15,7 @@
 
 #include "jerryscript-ext/repl.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include "jerryscript-port.h"
@@ -30,6 +31,7 @@ jerryx_repl (const char *prompt_p)
   while (true)
   {
     jerryx_print_string (prompt_p);
+    fflush (stdout);
 
     jerry_size_t length;
     jerry_char_t *line_p = jerry_port_line_read (&length);

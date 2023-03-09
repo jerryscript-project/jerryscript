@@ -104,7 +104,7 @@ void ecma_line_info_get (uint8_t *line_info_p, uint32_t offset, jerry_frame_loca
 void ecma_line_info_dump (uint8_t *line_info_p);
 #endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
-#endif /* ECMA_LINE_INFO_H */
+#endif /* JERRY_LINE_INFO */
 
 /**
  * @}

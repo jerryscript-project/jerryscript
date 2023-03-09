@@ -679,7 +679,7 @@ ecma_set_typedarray_element (ecma_typedarray_info_t *info_p, /**< typedarray inf
     }
   }
   else
-#endif /* JERRY_BUILTIN_BIGINT */
+#endif  /* JERRY_BUILTIN_BIGINT */
   {
     ecma_number_t result_num;
     to_num = ecma_op_to_numeric (value, &result_num, ECMA_TO_NUMERIC_NO_OPTS);

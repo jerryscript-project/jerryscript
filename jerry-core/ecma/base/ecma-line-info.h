@@ -23,9 +23,10 @@
  * @{
  */
 
+#include "ecma-globals.h"
+
 #if JERRY_LINE_INFO
 
-#include "ecma-globals.h"
 
 /**
  * Increase the current value of line or column.

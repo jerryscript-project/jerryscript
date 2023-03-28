@@ -42,6 +42,7 @@
 
 from __future__ import print_function
 
+import codecs
 import logging
 import optparse
 import os
@@ -402,13 +403,13 @@ class TempFile(object):
             text=self.text)
 
     def write(self, string):
-        os.write(self.file_desc, string)
+        os.write(self.file_desc, string.encode("utf8", "ignore"))
 
     def read(self):
-        file_desc = file(self.name)
+        file_desc = open(self.name, "rb")
         result = file_desc.read()
         file_desc.close()
-        return result
+        return result.decode("utf8", "ignore")
 
     def close(self):
         if not self.is_closed:
@@ -460,12 +461,12 @@ class TestResult(object):
     def write_output(self, target):
         out = self.stdout.strip()
         if out:
-            target.write("--- output --- \n %s" % out)
+            target.write(u"--- output --- \n %s" % out)
         error = self.stderr.strip()
         if error:
-            target.write("--- errors ---  \n %s" % error)
+            target.write(u"--- errors ---  \n %s" % error)
 
-        target.write("\n--- exit code: %d ---\n" % self.exit_code)
+        target.write(u"\n--- exit code: %d ---\n" % self.exit_code)
 
     def has_failed(self):
         return self.exit_code != 0
@@ -496,7 +497,7 @@ class TestCase(object):
         self.full_path = full_path
         self.strict_mode = strict_mode
         with open(self.full_path, "rb") as file_desc:
-            self.contents = file_desc.read()
+            self.contents = file_desc.read().decode("utf8", "ignore")
         test_record = parse_test_record(self.contents, name)
         self.test = test_record["test"]
         del test_record["test"]
@@ -762,8 +763,8 @@ class TestSuite(object):
         if not name in self.include_cache:
             static = path.join(self.lib_root, name)
             if path.exists(static):
-                with open(static) as file_desc:
-                    contents = file_desc.read()
+                with open(static, "rb") as file_desc:
+                    contents = file_desc.read().decode("utf8", "ignore")
                     contents = re.sub(r'\r\n', '\n', contents)
                     self.include_cache[name] = contents + "\n"
             else:
@@ -851,7 +852,7 @@ class TestSuite(object):
             report_error("No tests to run")
         progress = ProgressIndicator(len(cases))
         if logname:
-            self.logf = open(logname, "w")
+            self.logf = codecs.open(logname, "w", encoding="utf8", errors="ignore")
 
         if job_count == 1:
             for case in cases:

@@ -79,6 +79,7 @@ def execute_test_command(test_cmd):
     kwargs = {}
     if sys.version_info.major >= 3:
         kwargs['encoding'] = 'unicode_escape'
+        kwargs['errors'] = 'ignore'
     process = subprocess.Popen(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                universal_newlines=True, **kwargs)
     stdout = process.communicate()[0]

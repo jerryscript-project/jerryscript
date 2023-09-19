@@ -70,7 +70,7 @@ class RawPacket(object):
 
         while True:
             if len(self.data_buffer) >= 1:
-                size = ord(self.data_buffer[0])
+                size = self.data_buffer[0]
                 if size == 0:
                     raise Exception("Unexpected data frame")
 

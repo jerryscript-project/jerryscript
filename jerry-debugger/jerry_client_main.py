@@ -113,6 +113,7 @@ JERRY_DEBUGGER_VALUE_FUNCTION = 7
 JERRY_DEBUGGER_VALUE_ARRAY = 8
 JERRY_DEBUGGER_VALUE_OBJECT = 9
 
+
 def arguments_parse():
     parser = argparse.ArgumentParser(description="JerryScript debugger client")
 
@@ -290,8 +291,8 @@ class JerryDebugger(object):
         self.src_offset = 0
         self.src_offset_diff = 0
         self.non_interactive = False
-        self.current_out = b""
-        self.current_log = b""
+        self.current_out = ""
+        self.current_log = ""
         self.channel = channel
 
         config_size = 8
@@ -303,12 +304,12 @@ class JerryDebugger(object):
         # cpointer_size [1]
         result = self.channel.connect(config_size)
 
-        if len(result) != config_size or ord(result[0]) != JERRY_DEBUGGER_CONFIGURATION:
+        if len(result) != config_size or result[0] != JERRY_DEBUGGER_CONFIGURATION:
             raise Exception("Unexpected configuration")
 
-        self.little_endian = ord(result[1]) & JERRY_DEBUGGER_LITTLE_ENDIAN
-        self.max_message_size = ord(result[6])
-        self.cp_size = ord(result[7])
+        self.little_endian = result[1] & JERRY_DEBUGGER_LITTLE_ENDIAN
+        self.max_message_size = result[6]
+        self.cp_size = result[7]
 
         if self.little_endian:
             self.byte_order = "<"
@@ -396,7 +397,7 @@ class JerryDebugger(object):
                    "to clear all the given breakpoints\n "
         elif args in ['all', 'pending', 'active']:
             if args != "pending":
-                for i in self.active_breakpoint_list.values():
+                for i in list(self.active_breakpoint_list.values()):
                     breakpoint = self.active_breakpoint_list[i.active_index]
                     del self.active_breakpoint_list[i.active_index]
                     breakpoint.active_index = -1
@@ -557,6 +558,7 @@ class JerryDebugger(object):
         self._exec_command(JERRY_DEBUGGER_MEMSTATS)
 
     def _send_string(self, args, message_type, index=0):
+        args = args.encode('utf8')
 
         # 1: length of type byte
         # 4: length of an uint32 value
@@ -680,7 +682,7 @@ class JerryDebugger(object):
             if not data:  # Break the while loop if there is no more data.
                 return DebuggerAction(DebuggerAction.END, "")
 
-            buffer_type = ord(data[0])
+            buffer_type = data[0]
             buffer_size = len(data) -1
 
             logging.debug("Main buffer type: %d, message size: %d", buffer_type, buffer_size)
@@ -733,11 +735,8 @@ class JerryDebugger(object):
                 self.prompt = True
                 return DebuggerAction(DebuggerAction.TEXT, result)
 
-            elif buffer_type == JERRY_DEBUGGER_EXCEPTION_STR:
-                self.exception_string += data[1:]
-
-            elif buffer_type == JERRY_DEBUGGER_EXCEPTION_STR_END:
-                self.exception_string += data[1:]
+            elif buffer_type in [JERRY_DEBUGGER_EXCEPTION_STR, JERRY_DEBUGGER_EXCEPTION_STR_END]:
+                self.exception_string += data[1:].decode('utf8')
 
             elif buffer_type == JERRY_DEBUGGER_BACKTRACE_TOTAL:
                 total = struct.unpack(self.byte_order + self.idx_format, data[1:])[0]
@@ -804,7 +803,7 @@ class JerryDebugger(object):
                 return DebuggerAction(DebuggerAction.TEXT, result)
 
             elif buffer_type in [JERRY_DEBUGGER_SCOPE_VARIABLES, JERRY_DEBUGGER_SCOPE_VARIABLES_END]:
-                self.scope_vars += "".join(data[1:])
+                self.scope_vars += data[1:].decode('utf8')
 
                 if buffer_type == JERRY_DEBUGGER_SCOPE_VARIABLES_END:
                     result = self._process_scope_variables()
@@ -860,9 +859,9 @@ class JerryDebugger(object):
 
     # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     def _parse_source(self, data):
-        source_code = ""
-        source_code_name = ""
-        function_name = ""
+        source_code = b""
+        source_code_name = b""
+        function_name = b""
         stack = [{"line": 1,
                   "column": 1,
                   "name": "",
@@ -875,7 +874,7 @@ class JerryDebugger(object):
             if data is None:
                 return "Error: connection lost during source code receiving"
 
-            buffer_type = ord(data[0])
+            buffer_type = data[0]
             buffer_size = len(data) - 1
 
             logging.debug("Parser buffer type: %d, message size: %d", buffer_type, buffer_size)
@@ -894,19 +893,20 @@ class JerryDebugger(object):
                 function_name += data[1:]
 
             elif buffer_type == JERRY_DEBUGGER_PARSE_FUNCTION:
-                logging.debug("Source name: %s, function name: %s", source_code_name, function_name)
+                logging.debug("Source name: %s, function name: %s", source_code_name.decode('utf8'),
+                              function_name.decode('utf8'))
 
                 position = struct.unpack(self.byte_order + self.idx_format + self.idx_format,
                                          data[1: 1 + 4 + 4])
 
-                stack.append({"source": source_code,
-                              "source_name": source_code_name,
+                stack.append({"source": source_code.decode('utf8'),
+                              "source_name": source_code_name.decode('utf8'),
                               "line": position[0],
                               "column": position[1],
-                              "name": function_name,
+                              "name": function_name.decode('utf8'),
                               "lines": [],
                               "offsets": []})
-                function_name = ""
+                function_name = b""
 
             elif buffer_type in [JERRY_DEBUGGER_BREAKPOINT_LIST, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST]:
                 name = "lines"
@@ -933,8 +933,8 @@ class JerryDebugger(object):
 
                 # We know the last item in the list is the general byte code.
                 if not stack:
-                    func_desc["source"] = source_code
-                    func_desc["source_name"] = source_code_name
+                    func_desc["source"] = source_code.decode('utf8')
+                    func_desc["source_name"] = source_code_name.decode('utf8')
 
                 function = JerryFunction(stack,
                                          byte_code_cp,
@@ -985,7 +985,7 @@ class JerryDebugger(object):
             logging.debug("Pending breakpoints available")
             bp_list = self.pending_breakpoint_list
 
-            for breakpoint_index, breakpoint in bp_list.items():
+            for breakpoint_index, breakpoint in list(bp_list.items()):
                 source_lines = 0
                 for src in new_function_list.values():
                     if (src.source_name == breakpoint.source_name or
@@ -1123,19 +1123,19 @@ class JerryDebugger(object):
         return (function.offsets[nearest_offset], False)
 
     def _process_incoming_text(self, buffer_type, data):
-        message = b""
+        message = ""
         msg_type = buffer_type
         while True:
             if buffer_type in [JERRY_DEBUGGER_EVAL_RESULT_END,
                                JERRY_DEBUGGER_OUTPUT_RESULT_END]:
-                subtype = ord(data[-1])
-                message += data[1:-1]
+                subtype = data[-1]
+                message += data[1:-1].decode('utf8')
                 break
             else:
-                message += data[1:]
+                message += data[1:].decode('utf8')
 
             data = self.channel.get_message(True)
-            buffer_type = ord(data[0])
+            buffer_type = data[0]
             # Checks if the next frame would be an invalid data frame.
             # If it is not the message type, or the end type of it, an exception is thrown.
             if buffer_type not in [msg_type, msg_type + 1]:
@@ -1176,17 +1176,17 @@ class JerryDebugger(object):
 
         while buff_pos != buff_size:
             # Process name
-            name_length = ord(self.scope_vars[buff_pos:buff_pos + 1])
+            name_length = ord(self.scope_vars[buff_pos])
             buff_pos += 1
             name = self.scope_vars[buff_pos:buff_pos + name_length]
             buff_pos += name_length
 
             # Process type
-            value_type = ord(self.scope_vars[buff_pos:buff_pos + 1])
+            value_type = ord(self.scope_vars[buff_pos])
 
             buff_pos += 1
 
-            value_length = ord(self.scope_vars[buff_pos:buff_pos + 1])
+            value_length = ord(self.scope_vars[buff_pos])
             buff_pos += 1
             value = self.scope_vars[buff_pos: buff_pos + value_length]
             buff_pos += value_length
@@ -1217,16 +1217,16 @@ class JerryDebugger(object):
         table = [['level', 'type']]
 
         for i, level in enumerate(self.scope_data):
-            if ord(level) == JERRY_DEBUGGER_SCOPE_WITH:
+            if level == JERRY_DEBUGGER_SCOPE_WITH:
                 table.append([str(i), 'with'])
-            elif ord(level) == JERRY_DEBUGGER_SCOPE_GLOBAL:
+            elif level == JERRY_DEBUGGER_SCOPE_GLOBAL:
                 table.append([str(i), 'global'])
-            elif ord(level) == JERRY_DEBUGGER_SCOPE_NON_CLOSURE:
+            elif level == JERRY_DEBUGGER_SCOPE_NON_CLOSURE:
                 # Currently it is only marks the catch closure.
                 table.append([str(i), 'catch'])
-            elif ord(level) == JERRY_DEBUGGER_SCOPE_LOCAL:
+            elif level == JERRY_DEBUGGER_SCOPE_LOCAL:
                 table.append([str(i), 'local'])
-            elif ord(level) == JERRY_DEBUGGER_SCOPE_CLOSURE:
+            elif level == JERRY_DEBUGGER_SCOPE_CLOSURE:
                 table.append([str(i), 'closure'])
             else:
                 raise Exception("Unexpected scope chain element")

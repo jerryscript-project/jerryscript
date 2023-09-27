@@ -86,6 +86,7 @@ def execute_test_command(test_cmd):
 
 
 def main(args):
+    util.setup_stdio()
     tests = get_tests(args.test_dir, args.test_list, args.skip_list)
     total = len(tests)
     if total == 0:

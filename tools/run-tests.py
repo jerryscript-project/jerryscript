@@ -448,6 +448,7 @@ def run_buildoption_test(options):
 Check = collections.namedtuple('Check', ['enabled', 'runner', 'arg'])
 
 def main(options):
+    util.setup_stdio()
     checks = [
         Check(options.check_signed_off, run_check, [settings.SIGNED_OFF_SCRIPT]
               + {'tolerant': ['--tolerant'], 'gh-actions': ['--gh-actions']}.get(options.check_signed_off, [])),

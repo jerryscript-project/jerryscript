@@ -17,12 +17,12 @@ jobs:
           python-version: '3.10'
       - run: sudo apt update
 # TODO: update checkers to current versions available in ubuntu 22.04
-#      - run: sudo apt install doxygen clang-format-10 cppcheck python-serial
-      - run: sudo apt install pylint
+#      - run: sudo apt install clang-format-10 cppcheck python-serial
+      - run: sudo apt install pylint doxygen
       - run: $RUNNER --check-signed-off=gh-actions
         if: ${{ always() }}
-#      - run: $RUNNER --check-doxygen
-#        if: ${{ always() }}
+      - run: $RUNNER --check-doxygen
+        if: ${{ always() }}
 #      - run: $RUNNER --check-format
 #        if: ${{ always() }}
       - run: $RUNNER --check-license

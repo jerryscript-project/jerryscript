@@ -23,7 +23,7 @@
 
 #include "js-lexer.h"
 
-/* \addtogroup parser Parser
+/** \addtogroup parser Parser
  * @{
  *
  * \addtogroup jsparser JavaScript
@@ -135,7 +135,7 @@ parser_new_tagged_template_literal (ecma_object_t **raw_strings_p) /**< [out] ra
  * Set integrity level of the given template array object to "frozen"
  */
 static void
-parser_tagged_template_literal_freeze_array (ecma_object_t *obj_p)
+parser_tagged_template_literal_freeze_array (ecma_object_t *obj_p /**< template object */)
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
   ecma_op_ordinary_object_prevent_extensions (obj_p);

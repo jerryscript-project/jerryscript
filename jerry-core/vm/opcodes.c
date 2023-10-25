@@ -1181,6 +1181,8 @@ opfunc_create_implicit_class_constructor (uint8_t opcode, /**< current cbc opcod
 
 /**
  * Set the [[HomeObject]] attribute of the given functon object
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 opfunc_set_home_object (ecma_object_t *func_p, /**< function object */
@@ -1636,9 +1638,6 @@ opfunc_collect_private_properties (ecma_value_t constructor, /**< constructor */
  * ClassDefinitionEvaluation environment initialization part
  *
  * See also: ECMAScript v6, 14.5.14
- *
- * @return - ECMA_VALUE_ERROR - if the operation fails
- *           ECMA_VALUE_EMPTY - otherwise
  */
 void
 opfunc_push_class_environment (vm_frame_ctx_t *frame_ctx_p, /**< frame context */

@@ -31,6 +31,10 @@
 #include "lit-char-helpers.h"
 #include "re-compiler.h"
 
+/** \addtogroup jerrysnapshot Jerry snapshot operations
+ * @{
+ */
+
 #if JERRY_SNAPSHOT_SAVE || JERRY_SNAPSHOT_EXEC
 
 /**
@@ -88,9 +92,6 @@ typedef struct
   bool class_found;
 } snapshot_globals_t;
 
-/** \addtogroup jerrysnapshot Jerry snapshot operations
- * @{
- */
 
 /**
  * Write data into the specified buffer.
@@ -1045,10 +1046,6 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
 #endif /* JERRY_SNAPSHOT_EXEC */
 } /* jerry_exec_snapshot */
 
-/**
- * @}
- */
-
 #if JERRY_SNAPSHOT_SAVE
 
 /**
@@ -1716,3 +1713,7 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
   return 0;
 #endif /* JERRY_SNAPSHOT_SAVE */
 } /* jerry_get_literals_from_snapshot */
+
+/**
+ * @}
+ */

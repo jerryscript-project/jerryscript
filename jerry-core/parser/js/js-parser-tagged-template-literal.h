@@ -16,7 +16,7 @@
 #ifndef ECMA_TAGGED_TEMPLATE_LITERAL_H
 #define ECMA_TAGGED_TEMPLATE_LITERAL_H
 
-/* \addtogroup parser Parser
+/** \addtogroup parser Parser
  * @{
  *
  * \addtogroup jsparser JavaScript
@@ -40,10 +40,10 @@ void parser_tagged_template_literal_append_strings (parser_context_t *context_p,
 
 void parser_tagged_template_literal_finalize (ecma_object_t *template_obj_p, ecma_object_t *raw_strings_p);
 
-#endif /* ECMA_TAGGED_TEMPLATE_LITERAL_H */
-
 /**
  * @}
  * @}
  * @}
  */
+
+#endif /* ECMA_TAGGED_TEMPLATE_LITERAL_H */

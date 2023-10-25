@@ -48,7 +48,14 @@
 #define JMEM_HEAP_GET_OFFSET_FROM_ADDR(p) ((uint32_t) (p))
 #define JMEM_HEAP_GET_ADDR_FROM_OFFSET(u) ((jmem_heap_free_t *) (u))
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+/**
+ * Get heap offset from address
+ */
 #define JMEM_HEAP_GET_OFFSET_FROM_ADDR(p) ((uint32_t) ((uint8_t *) (p) -JERRY_HEAP_CONTEXT (area)))
+
+/**
+ * Get heap address from offset
+ */
 #define JMEM_HEAP_GET_ADDR_FROM_OFFSET(u) ((jmem_heap_free_t *) (JERRY_HEAP_CONTEXT (area) + (u)))
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 /**
@@ -302,6 +309,9 @@ jmem_heap_gc_and_alloc_block (const size_t size, /**< required memory size */
 
 /**
  * Internal method for allocating a memory block.
+ *
+ * @return NULL, if the required memory size is 0 or not enough memory, or
+ *         pointer to the allocated memory block, if allocation is successful
  */
 extern inline void *JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
 jmem_heap_alloc_block_internal (const size_t size) /**< required memory size */
@@ -449,10 +459,12 @@ jmem_heap_insert_block (jmem_heap_free_t *block_p, /**< block to insert */
 
 /**
  * Internal method for freeing a memory block.
+ *
+ * @return void
  */
 void JERRY_ATTR_HOT
 jmem_heap_free_block_internal (void *ptr, /**< pointer to beginning of data space of the block */
-                               const size_t size) /**< size of allocated region */
+                               const size_t size /**< size of allocated region */)
 {
   JERRY_ASSERT (size > 0);
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_limit) >= JERRY_CONTEXT (jmem_heap_allocated_size));
@@ -683,6 +695,8 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
 
 /**
  * Free memory block
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
 jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the block */

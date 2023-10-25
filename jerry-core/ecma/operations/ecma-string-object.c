@@ -98,8 +98,6 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
 /**
  * List names of a String object's lazy instantiated properties
- *
- * @return string values collection
  */
 void
 ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String object */

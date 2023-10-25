@@ -16,7 +16,7 @@
 #ifndef JS_SCANNER_INTERNAL_H
 #define JS_SCANNER_INTERNAL_H
 
-/* \addtogroup parser Parser
+/** \addtogroup parser Parser
  * @{
  *
  * \addtogroup jsparser JavaScript
@@ -355,7 +355,6 @@ scanner_literal_pool_t *
 scanner_push_literal_pool (parser_context_t *context_p, scanner_context_t *scanner_context_p, uint16_t status_flags);
 void scanner_pop_literal_pool (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_filter_arguments (parser_context_t *context_p, scanner_context_t *scanner_context_p);
-void scanner_construct_global_block (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 lexer_lit_location_t *scanner_add_custom_literal (parser_context_t *context_p,
                                                   scanner_literal_pool_t *literal_pool_p,
                                                   const lexer_lit_location_t *literal_location_p);

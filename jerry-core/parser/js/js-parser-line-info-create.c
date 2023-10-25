@@ -17,11 +17,7 @@
 
 #include "js-parser-internal.h"
 
-#if JERRY_PARSER
-
-#if JERRY_LINE_INFO
-
-/* \addtogroup parser Parser
+/** \addtogroup parser Parser
  * @{
  *
  * \addtogroup jsparser JavaScript
@@ -30,6 +26,10 @@
  * \addtogroup jsparser_line_info_create Create line info data
  * @{
  */
+
+#if JERRY_PARSER
+
+#if JERRY_LINE_INFO
 
 /*
  * The line-info data structure uses two number encodings:

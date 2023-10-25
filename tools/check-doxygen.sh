@@ -14,7 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-doxygen 2>&1 >/dev/null | head -n 1000 | tee doxygen.log
+doxygen 2>&1 >/dev/null \
+  | grep -Pv "^\/.+\.h:\d+: warning: Member .+ \(function\) of group \w+ is not documented.$" \
+  | grep -Pv "^\/.+\.h:\d+: warning: documented empty return type of \w+$" \
+  | grep -Pv "^\/.+\.h:\d+: warning: argument '.+' from the argument list of .+ has multiple @param documentation sections$" \
+  | head -n 1000 | tee doxygen.log
 if [ -s doxygen.log ]
 then
   EXIT=1

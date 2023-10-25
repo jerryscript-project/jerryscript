@@ -18,14 +18,14 @@
 
 #include "ecma-globals.h"
 
-#if JERRY_BUILTIN_SHAREDARRAYBUFFER
-
 /** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmasharedarraybufferobject ECMA SharedArrayBuffer object related routines
  * @{
  */
+
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
 
 ecma_value_t ecma_op_create_shared_arraybuffer_object (const ecma_value_t *, uint32_t);
 

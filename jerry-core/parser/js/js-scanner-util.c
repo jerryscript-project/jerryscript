@@ -59,7 +59,7 @@ JERRY_STATIC_ASSERT (PARSER_SCOPE_STACK_IS_CONST_REG == PARSER_SCOPE_STACK_IS_LO
  * Raise a scanner error.
  */
 void
-scanner_raise_error (parser_context_t *context_p) /**< context */
+scanner_raise_error (parser_context_t *context_p /**< context */)
 {
   PARSER_THROW (context_p->try_buffer);
   /* Should never been reached. */

@@ -849,6 +849,8 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
 /**
  * Increase reference counter of non-direct ecma-string.
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_ref_ecma_string_non_direct (ecma_string_t *string_p) /**< string descriptor */
@@ -895,6 +897,8 @@ ecma_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
 /**
  * Decrease reference counter and deallocate a non-direct ecma-string
  * if the counter becomes zero.
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_deref_ecma_string_non_direct (ecma_string_t *string_p) /**< ecma-string */
@@ -1168,6 +1172,8 @@ ecma_string_copy_to_buffer (const ecma_string_t *string_p, /**< ecma-string desc
  * Convert ecma-string's contents to a cesu-8 string and put it to the buffer.
  * It is the caller's responsibility to make sure that the string fits in the buffer.
  * Check if the size of the string is equal with the size of the buffer.
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_string_to_cesu8_bytes (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
@@ -2292,6 +2298,8 @@ ecma_string_trim_back (const lit_utf8_byte_t *start_p, /**< current string's sta
  * Used by:
  *        - ecma_string_trim
  *        - ecma_utf8_string_to_number
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p, /**< [in, out] current string position */

@@ -55,9 +55,9 @@ ecma_json_has_object_in_stack (ecma_json_occurrence_stack_item_t *stack_p, /**< 
   return false;
 } /* ecma_json_has_object_in_stack */
 
-#endif /* JERRY_BUILTIN_JSON */
-
 /**
  * @}
  * @}
  */
+
+#endif /* JERRY_BUILTIN_JSON */

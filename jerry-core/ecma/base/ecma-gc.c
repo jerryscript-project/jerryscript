@@ -128,6 +128,8 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 
 /**
  * Increase reference counter of an object
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_ref_object_inline (ecma_object_t *object_p) /**< object */
@@ -153,6 +155,8 @@ ecma_ref_object (ecma_object_t *object_p) /**< object */
 
 /**
  * Decrease reference counter of an object
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_deref_object (ecma_object_t *object_p) /**< object */
@@ -466,6 +470,8 @@ ecma_gc_mark_compiled_code (ecma_value_t script_value) /**< script value */
 
 /**
  * Mark objects referenced by bound function object.
+ *
+ * @return void
  */
 static void JERRY_ATTR_NOINLINE
 ecma_gc_mark_bound_function_object (ecma_object_t *object_p) /**< bound function object */

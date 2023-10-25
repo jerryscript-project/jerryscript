@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import argparse
 import os
 import re
@@ -32,7 +30,8 @@ def main():
     )
     _ = parser.parse_args()
 
-    with open(os.path.join(settings.PROJECT_DIR, 'jerry-core', 'include', 'jerryscript.h'), 'r') as header:
+    with open(os.path.join(settings.PROJECT_DIR, 'jerry-core', 'include', 'jerryscript.h'), 'r',
+              encoding='utf8') as header:
         version = {}
         version_re = re.compile(r'\s*#define\s+JERRY_API_(?P<key>MAJOR|MINOR|PATCH)_VERSION\s+(?P<value>\S+)')
         for line in header:
@@ -40,7 +39,7 @@ def main():
             if match:
                 version[match.group('key')] = match.group('value')
 
-    print('%(MAJOR)s.%(MINOR)s.%(PATCH)s' % version)
+    print(f'{version["MAJOR"]}.{version["MINOR"]}.{version["PATCH"]}')
 
 
 if __name__ == "__main__":

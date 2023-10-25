@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +16,7 @@ import struct
 
 MAX_BUFFER_SIZE = 256
 
-class RawPacket(object):
+class RawPacket:
     """ Simplified transmission layer. """
     def __init__(self, protocol):
         self.protocol = protocol

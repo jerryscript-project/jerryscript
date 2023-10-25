@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +16,7 @@ import socket
 import select
 
 # pylint: disable=too-many-arguments,superfluous-parens
-class Socket(object):
+class Socket:
     """ Create a new socket using the given address family, socket type and protocol number. """
     def __init__(self, address, socket_family=socket.AF_INET, socket_type=socket.SOCK_STREAM, proto=0, fileno=None):
         self.address = address
@@ -29,7 +27,7 @@ class Socket(object):
         Connect to a remote socket at address (host, port).
         The format of address depends on the address family.
         """
-        print("Connecting to: %s:%s" % (self.address[0], self.address[1]))
+        print(f"Connecting to: {self.address[0]}:{self.address[1]}")
         self.socket.connect(self.address)
 
     def close(self):

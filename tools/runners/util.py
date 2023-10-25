@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 import signal
 import subprocess
 import sys
@@ -46,13 +43,13 @@ def set_sighdl_to_reset_timezone(timezone):
 
 
 def print_test_summary(summary_string, total, passed, failed):
-    print("\n[summary] %s\n" % summary_string)
-    print("TOTAL: %d" % total)
-    print("%sPASS: %d%s" % (TERM_GREEN, passed, TERM_NORMAL))
-    print("%sFAIL: %d%s\n" % (TERM_RED, failed, TERM_NORMAL))
+    print(f"\n[summary] {summary_string}\n")
+    print(f"TOTAL: {total}")
+    print(f"{TERM_GREEN}PASS: {passed}{TERM_NORMAL}")
+    print(f"{TERM_RED}FAIL: {failed}{TERM_NORMAL}\n")
 
     success_color = TERM_GREEN if passed == total else TERM_RED
-    print("%sSuccess: %d%%%s" % (success_color, passed*100/total, TERM_NORMAL))
+    print(f"{success_color}Success: {passed*100/total}{TERM_NORMAL}")
 
 
 def print_test_result(tested, total, is_passed, passed_string, test_path, is_snapshot_generation=None):
@@ -64,7 +61,7 @@ def print_test_result(tested, total, is_passed, passed_string, test_path, is_sna
         snapshot_string = ' (execute snapshot)'
 
     color = TERM_GREEN if is_passed else TERM_RED
-    print("[%4d/%4d] %s%s: %s%s%s" % (tested, total, color, passed_string, test_path, snapshot_string, TERM_NORMAL))
+    print(f"[{tested:>4}/{total:>4}] {color}{passed_string}: {test_path}{snapshot_string}{TERM_NORMAL}")
 
 
 def get_platform_cmd_prefix():

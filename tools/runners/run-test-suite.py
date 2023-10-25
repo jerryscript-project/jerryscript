@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 import argparse
 import os
 import subprocess
@@ -22,7 +21,7 @@ import sys
 
 import util
 
-def get_arguments():
+def get_args():
     execution_runtime = os.environ.get('RUNTIME')
     parser = argparse.ArgumentParser()
     parser.add_argument('-q', '--quiet', action='store_true',
@@ -60,7 +59,7 @@ def get_tests(test_dir, test_list, skip_list):
 
     if test_list:
         dirname = os.path.dirname(test_list)
-        with open(test_list, "r") as test_list_fd:
+        with open(test_list, "r", encoding='utf8') as test_list_fd:
             for test in test_list_fd:
                 tests.append(os.path.normpath(os.path.join(dirname, test.rstrip())))
 
@@ -79,10 +78,10 @@ def execute_test_command(test_cmd):
     kwargs = {}
     if sys.version_info.major >= 3:
         kwargs['encoding'] = 'unicode_escape'
-    process = subprocess.Popen(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                               universal_newlines=True, **kwargs)
-    stdout = process.communicate()[0]
-    return (process.returncode, stdout)
+    with subprocess.Popen(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                          universal_newlines=True, **kwargs) as process:
+        stdout, _ = process.communicate()
+        return process.returncode, stdout
 
 
 def main(args):
@@ -142,10 +141,10 @@ def run_normal_tests(args, tests):
         if (returncode == 0 and not is_expected_to_fail) or (returncode == 1 and is_expected_to_fail):
             passed += 1
             if not args.quiet:
-                passed_string = 'PASS' + (' (XFAIL)' if is_expected_to_fail else '')
+                passed_string = f"PASS{' (XFAIL)' if is_expected_to_fail else ''}"
                 util.print_test_result(tested, total, True, passed_string, test_path)
         else:
-            passed_string = 'FAIL%s (%d)' % (' (XPASS)' if returncode == 0 and is_expected_to_fail else '', returncode)
+            passed_string = f"FAIL{' (XPASS)' if returncode == 0 and is_expected_to_fail else ''} ({returncode})"
             util.print_test_result(tested, total, False, passed_string, test_path)
             print("================================================")
             print(stdout)
@@ -183,7 +182,7 @@ def run_snapshot_tests(args, tests):
                 passed_string = 'PASS' + (' (XFAIL)' if returncode else '')
                 util.print_test_result(tested, total, True, passed_string, test_path, True)
         else:
-            util.print_test_result(tested, total, False, 'FAIL (%d)' % (returncode), test_path, True)
+            util.print_test_result(tested, total, False, f'FAIL ({returncode})', test_path, True)
             print("================================================")
             print(stdout)
             print("================================================")
@@ -199,10 +198,10 @@ def run_snapshot_tests(args, tests):
         if (returncode == 0 and not is_expected_to_fail) or (returncode == 1 and is_expected_to_fail):
             passed += 1
             if not args.quiet:
-                passed_string = 'PASS' + (' (XFAIL)' if is_expected_to_fail else '')
+                passed_string = f"PASS{' (XFAIL)' if is_expected_to_fail else ''}"
                 util.print_test_result(tested, total, True, passed_string, test_path, False)
         else:
-            passed_string = 'FAIL%s (%d)' % (' (XPASS)' if returncode == 0 and is_expected_to_fail else '', returncode)
+            passed_string = f"FAIL{' (XPASS)' if returncode == 0 and is_expected_to_fail else ''} ({returncode})"
             util.print_test_result(tested, total, False, passed_string, test_path, False)
             print("================================================")
             print(stdout)
@@ -212,4 +211,4 @@ def run_snapshot_tests(args, tests):
 
 
 if __name__ == "__main__":
-    sys.exit(main(get_arguments()))
+    sys.exit(main(get_args()))

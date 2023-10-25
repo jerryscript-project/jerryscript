@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import io
 import os
 import re
@@ -78,9 +76,9 @@ def main():
             for fname in files:
                 if any(fname.endswith(ext) for ext in EXTENSIONS):
                     fpath = os.path.join(root, fname)
-                    with io.open(fpath, 'r', errors='ignore') as curr_file:
+                    with io.open(fpath, 'r', errors='ignore', encoding='utf8') as curr_file:
                         if not LICENSE.search(curr_file.read()):
-                            print('%s: incorrect license' % fpath)
+                            print(f'{fpath}: incorrect license')
                             is_ok = False
 
     if not is_ok:

@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import argparse
 import collections
 import hashlib
@@ -26,7 +24,7 @@ import sys
 import settings
 
 if sys.version_info.major >= 3:
-    import runners.util as util  # pylint: disable=import-error
+    from runners import util
 else:
     sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/runners')
     import util
@@ -205,17 +203,19 @@ TERM_BLUE = '\033[1;34m'
 TERM_RED = '\033[1;31m'
 
 def report_command(cmd_type, cmd, env=None):
-    sys.stderr.write('%s%s%s\n' % (TERM_BLUE, cmd_type, TERM_NORMAL))
+    sys.stderr.write(f'{TERM_BLUE}{cmd_type}{TERM_NORMAL}\n')
     if env is not None:
-        sys.stderr.write(''.join('%s%s=%r \\%s\n' % (TERM_BLUE, var, val, TERM_NORMAL)
+        sys.stderr.write(''.join(f'{TERM_BLUE}{var}={val!r} \\{TERM_NORMAL}\n'
                                  for var, val in sorted(env.items())))
-    sys.stderr.write('%s%s%s\n' % (TERM_BLUE, (' \\%s\n\t%s' % (TERM_NORMAL, TERM_BLUE)).join(cmd), TERM_NORMAL))
+    sys.stderr.write(f"{TERM_BLUE}" +
+                     f" \\{TERM_NORMAL}\n\t{TERM_BLUE}".join(cmd) +
+                     f"{TERM_NORMAL}\n")
 
 def report_skip(job):
-    sys.stderr.write('%sSkipping: %s' % (TERM_YELLOW, job.name))
+    sys.stderr.write(f'{TERM_YELLOW}Skipping: {job.name}')
     if job.skip:
-        sys.stderr.write(' (%s)' % job.skip)
-    sys.stderr.write('%s\n' % TERM_NORMAL)
+        sys.stderr.write(f' ({job.skip})')
+    sys.stderr.write(f'{TERM_NORMAL}\n')
 
 def create_binary(job, options):
     build_args = job.build_args[:]
@@ -232,20 +232,20 @@ def create_binary(job, options):
     build_cmd.append(settings.BUILD_SCRIPT)
     build_cmd.extend(build_args)
 
-    build_cmd.append('--builddir=%s' % build_dir_path)
+    build_cmd.append(f'--builddir={build_dir_path}')
 
     install_dir_path = os.path.join(build_dir_path, 'local')
-    build_cmd.append('--install=%s' % install_dir_path)
+    build_cmd.append(f'--install={install_dir_path}')
 
     if options.toolchain:
-        build_cmd.append('--toolchain=%s' % options.toolchain)
+        build_cmd.append(f'--toolchain={options.toolchain}')
 
     report_command('Build command:', build_cmd)
 
     binary_key = tuple(sorted(build_args))
     if binary_key in BINARY_CACHE:
         ret, build_dir_path = BINARY_CACHE[binary_key]
-        sys.stderr.write('(skipping: already built at %s with returncode %d)\n' % (build_dir_path, ret))
+        sys.stderr.write(f'(skipping: already built at {build_dir_path} with returncode {ret})\n')
         return ret, build_dir_path
 
     try:
@@ -282,19 +282,17 @@ def iterate_test_runner_jobs(jobs, options):
             yield job, ret_build, None
 
         if build_dir_path in tested_paths:
-            sys.stderr.write('(skipping: already tested with %s)\n' % build_dir_path)
+            sys.stderr.write(f'(skipping: already tested with {build_dir_path})\n')
             continue
-        else:
-            tested_paths.add(build_dir_path)
+        tested_paths.add(build_dir_path)
 
         bin_path = get_binary_path(build_dir_path)
         bin_hash = hash_binary(bin_path)
 
         if bin_hash in tested_hashes:
-            sys.stderr.write('(skipping: already tested with equivalent %s)\n' % tested_hashes[bin_hash])
+            sys.stderr.write(f'(skipping: already tested with equivalent {tested_hashes[bin_hash]})\n')
             continue
-        else:
-            tested_hashes[bin_hash] = build_dir_path
+        tested_hashes[bin_hash] = build_dir_path
 
         test_cmd = util.get_python_cmd_prefix()
         test_cmd.extend([settings.TEST_RUNNER_SCRIPT, '--engine', bin_path])
@@ -309,16 +307,16 @@ def run_check(runnable, env=None):
         full_env.update(env)
         env = full_env
 
-    proc = subprocess.Popen(runnable, env=env)
-    proc.wait()
-    return proc.returncode
+    with subprocess.Popen(runnable, env=env) as proc:
+        proc.wait()
+        return proc.returncode
 
 def run_jerry_debugger_tests(options):
     ret_build = ret_test = 0
     for job in DEBUGGER_TEST_OPTIONS:
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
-            print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
+            print(f"\n{TERM_RED}Build failed{TERM_NORMAL}\n")
             break
 
         for channel in ["websocket", "rawpacket"]:
@@ -356,7 +354,7 @@ def run_jerry_tests(options):
         skip_list = []
 
         if job.name == 'jerry_tests-snapshot':
-            with open(settings.SNAPSHOT_TESTS_SKIPLIST, 'r') as snapshot_skip_list:
+            with open(settings.SNAPSHOT_TESTS_SKIPLIST, 'r', encoding='utf8') as snapshot_skip_list:
                 for line in snapshot_skip_list:
                     skip_list.append(line.rstrip())
 
@@ -381,7 +379,7 @@ def run_test262_test_suite(options):
     for job in jobs:
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
-            print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
+            print(f"\n{TERM_RED}Build failed{TERM_NORMAL}\n")
             break
 
         test_cmd = util.get_python_cmd_prefix() + [
@@ -411,7 +409,7 @@ def run_unittests(options):
             continue
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
-            print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
+            print(f"\n{TERM_RED}Build failed{TERM_NORMAL}\n")
             break
 
         if sys.platform == 'win32':
@@ -440,7 +438,7 @@ def run_buildoption_test(options):
 
         ret, _ = create_binary(job, options)
         if ret:
-            print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
+            print(f"\n{TERM_RED}Build failed{TERM_NORMAL}\n")
             break
 
     return ret

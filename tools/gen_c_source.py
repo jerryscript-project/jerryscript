@@ -33,11 +33,11 @@ def format_code(code, indent, digit_number=4):
     def regroup(list_to_group, num):
         return [list_to_group[i:i+num] for i in range(0, len(list_to_group), num)]
 
-    def hex_format(char, digit_number):
+    def hex_format(char, padding):
         if isinstance(char, str):
             char = ord(char)
 
-        return ("0x{:0%sx}" % digit_number).format(char)
+        return f"{char:#0{padding + 2}x}"
 
     lines = []
 

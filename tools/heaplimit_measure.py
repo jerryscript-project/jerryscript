@@ -13,9 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
-# force // operator to be integer division in Python 2
-from __future__ import division
 
 import argparse
 import json
@@ -53,7 +50,7 @@ def check_files(opts):
     files = [JERRY_BUILDER, opts.testfile]
     for _file in files:
         if not os.path.isfile(_file):
-            sys.exit("File not found: %s" % _file)
+            sys.exit(f"File not found: {_file}")
 
 
 def build_bin(heapsize, opts):
@@ -68,7 +65,7 @@ def build_bin(heapsize, opts):
     if opts.buildtype == 'debug':
         command.append(FLAG_DEBUG)
 
-    print('Building JerryScript with: %s' % (' '.join(command)))
+    print(f"Building JerryScript with: {' '.join(command)}")
     subprocess.check_output(command)
 
 

@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import argparse
 import fileinput
 import os
@@ -24,7 +22,7 @@ import shlex
 import sys
 
 
-class DoctestExtractor(object):
+class DoctestExtractor:
     """
     An extractor to process Markdown files and find doctests inside.
     """
@@ -50,7 +48,7 @@ class DoctestExtractor(object):
         :param message: a description of the problem.
         :param lineno: the location that triggered the warning.
         """
-        print('%s:%d: %s' % (self._infile, lineno, message), file=sys.stderr)
+        print(f'{self._infile}:{lineno}: {message}', file=sys.stderr)
 
     def _process_decl(self, params):
         """
@@ -72,7 +70,7 @@ class DoctestExtractor(object):
             decl[tokens[i]] = tokens[i + 2].strip('\'"')
 
         if 'name' not in decl:
-            decl['name'] = '%s%d.c' % (self._outname_base, self._outname_cnt)
+            decl['name'] = f'{self._outname_base}{self._outname_cnt}.c'
             self._outname_cnt += 1
 
         if 'test' not in decl:
@@ -87,7 +85,7 @@ class DoctestExtractor(object):
         :return: a tuple of a list (of the first line(s) of the doctest) and the
             line number of the start of the code block.
         """
-        return ['#line %d "%s"\n' % (fileinput.filelineno() + 1, self._infile)], fileinput.filelineno()
+        return [f'#line {fileinput.filelineno() + 1} "{self._infile}"\n'], fileinput.filelineno()
 
     def _process_code_end(self, decl, code):
         """
@@ -99,9 +97,9 @@ class DoctestExtractor(object):
         outname = os.path.join(self._outdir, decl['name']).replace('\\', '/')
         action = decl['test']
         if self._dry:
-            print('%s %s' % (action, outname))
+            print(f'{action} {outname}')
         else:
-            with open(outname, 'w') as outfile:
+            with open(outname, 'w', encoding='utf8') as outfile:
                 outfile.writelines(code)
 
     def process(self, infile):

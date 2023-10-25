@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 import argparse
 import glob
 import os
@@ -71,7 +70,7 @@ def main(args):
                 util.print_test_result(tested, total, True, 'PASS', test_path)
         except subprocess.CalledProcessError as err:
             failed += 1
-            util.print_test_result(tested, total, False, 'FAIL (%d)' % err.returncode, test_path)
+            util.print_test_result(tested, total, False, f'FAIL ({err.returncode})', test_path)
             print("================================================")
             print(err.output)
             print("================================================")

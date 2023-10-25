@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import argparse
 import multiprocessing
 import os
@@ -32,7 +30,7 @@ def default_toolchain():
     (sysname, _, _, _, machine) = os.uname()
     toolchain = os.path.join(settings.PROJECT_DIR,
                              'cmake',
-                             'toolchain_%s_%s.cmake' % (sysname.lower(), machine.lower()))
+                             f'toolchain_{sysname.lower()}_{machine.lower()}.cmake')
     return toolchain if os.path.isfile(toolchain) else None
 
 def get_arguments():
@@ -179,7 +177,7 @@ def generate_build_options(arguments):
 
     def build_options_append(cmakeopt, cliarg):
         if cliarg:
-            build_options.append('-D%s=%s' % (cmakeopt, cliarg))
+            build_options.append(f'-D{cmakeopt}={cliarg}')
 
     # general build options
     build_options_append('CMAKE_BUILD_TYPE', arguments.build_type)
@@ -231,7 +229,7 @@ def generate_build_options(arguments):
     build_options_append('JERRY_VM_THROW', arguments.vm_throw)
 
     if arguments.gc_mark_limit is not None:
-        build_options.append('-D%s=%s' % ('JERRY_GC_MARK_LIMIT', arguments.gc_mark_limit))
+        build_options.append(f'-DJERRY_GC_MARK_LIMIT={arguments.gc_mark_limit}')
 
     # jerry-main options
     build_options_append('ENABLE_LINK_MAP', arguments.link_map)
@@ -261,7 +259,7 @@ def configure_jerry(arguments):
     cmake_cmd = ['cmake', '-B' + arguments.builddir, '-H' + settings.PROJECT_DIR]
 
     if arguments.install:
-        cmake_cmd.append('-DCMAKE_INSTALL_PREFIX=%s' % arguments.install)
+        cmake_cmd.append(f'-DCMAKE_INSTALL_PREFIX={arguments.install}')
 
     cmake_cmd.extend(build_options)
 
@@ -271,11 +269,10 @@ def make_jerry(arguments):
     make_cmd = ['cmake', '--build', arguments.builddir, '--config', arguments.build_type]
     env = dict(os.environ)
     env['CMAKE_BUILD_PARALLEL_LEVEL'] = str(arguments.jobs)
-    env['MAKEFLAGS'] = '-j%d' % (arguments.jobs) # Workaround for CMake < 3.12
-    proc = subprocess.Popen(make_cmd, env=env)
-    proc.wait()
-
-    return proc.returncode
+    env['MAKEFLAGS'] = f'-j{arguments.jobs}'  # Workaround for CMake < 3.12
+    with subprocess.Popen(make_cmd, env=env) as proc:
+        proc.wait()
+        return proc.returncode
 
 def install_jerry(arguments):
     install_target = 'INSTALL' if os.path.exists(os.path.join(arguments.builddir, 'Jerry.sln')) else 'install'
@@ -285,7 +282,7 @@ def install_jerry(arguments):
 def print_result(ret):
     print('=' * 30)
     if ret:
-        print('Build failed with exit code: %s' % (ret))
+        print(f'Build failed with exit code: {ret}')
     else:
         print('Build succeeded!')
     print('=' * 30)

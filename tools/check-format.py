@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import argparse
 import multiprocessing
 import subprocess
@@ -48,7 +46,7 @@ def get_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--fix', action='store_true', dest='fix',
                         help='fix source code stlye')
-    parser.add_argument('--clang-format', dest='clang_format', default='clang-format-%d' % CLANG_FORMAT_MIN_VERSION,
+    parser.add_argument('--clang-format', dest='clang_format', default=f'clang-format-{CLANG_FORMAT_MIN_VERSION}',
                         help='path to clang-format executable')
 
     script_args = parser.parse_args()
@@ -65,14 +63,13 @@ def check_clang_format(args, source_file_name):
 
     cmd.append(source_file_name)
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    _, error = proc.communicate()
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+        _, error = proc.communicate()
 
-    if proc.returncode == 0:
-        return 0
+        if proc.returncode == 0:
+            return 0
 
-    print(error.decode('utf8'))
+        print(error.decode('utf8'))
 
     return 1
 
@@ -111,26 +108,24 @@ def check_clang_format_version(args):
 
 def main(args):
     if check_clang_format_version(args) != 0:
-        print("clang-format >= %d is not installed." %
-              CLANG_FORMAT_MIN_VERSION)
+        print(f"clang-format >= {CLANG_FORMAT_MIN_VERSION} is not installed.")
         return 1
 
-    pool = multiprocessing.Pool()
-    failed = 0
+    with multiprocessing.Pool() as pool:
+        failed = 0
 
-    for folder in FOLDERS:
-        # pylint: disable=unexpected-keyword-arg
-        files = sum(([glob(path.join(PROJECT_DIR, folder, "**/*.%s" % e), recursive=True)
-                      for e in ['c', 'h']]), [])
+        for folder in FOLDERS:
+            # pylint: disable=unexpected-keyword-arg
+            files = sum(([glob(path.join(PROJECT_DIR, folder, f"**/*.{e}"), recursive=True)
+                          for e in ['c', 'h']]), [])
 
-        failed += run_pass(pool, check_clang_format,
-                           [(args, sourece_file) for sourece_file in files])
-        failed += run_pass(pool, check_comments,
-                           [([RE_DIRECTIVE_COMMENT, RE_FUNCTION_NAME_COMMENT], sourece_file) for sourece_file in files])
+            failed += run_pass(pool, check_clang_format,
+                               [(args, sourece_file) for sourece_file in files])
+            failed += run_pass(pool, check_comments,
+                               [([RE_DIRECTIVE_COMMENT, RE_FUNCTION_NAME_COMMENT], sourece_file) for sourece_file in
+                                files])
 
-    pool.close()
-
-    return 1 if failed else 0
+        return 1 if failed else 0
 
 
 if __name__ == "__main__":

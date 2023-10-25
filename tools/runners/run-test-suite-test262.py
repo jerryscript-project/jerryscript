@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 import argparse
 import os
 import re
@@ -78,7 +77,7 @@ def update_exclude_list(args):
     passing_tests = set()
     failing_tests = set()
     new_passing_tests = set()
-    with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'r') as report_file:
+    with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'r', encoding='utf8') as report_file:
         for line in report_file:
             match = re.match('(=== )?(.*) (?:failed|passed) in (?:non-strict|strict)', line)
             if match:
@@ -92,7 +91,7 @@ def update_exclude_list(args):
     # Tests pass in strict-mode but fail in non-strict-mode (or vice versa) should be considered as failures
     passing_tests = passing_tests - failing_tests
 
-    with open(args.excludelist_path, 'r+') as exclude_file:
+    with open(args.excludelist_path, 'r+', encoding='utf8') as exclude_file:
         lines = exclude_file.readlines()
         exclude_file.seek(0)
         exclude_file.truncate()
@@ -167,41 +166,38 @@ def main(args):
     if args.test262_test_list:
         test262_command.extend(args.test262_test_list.split(','))
 
-    proc = subprocess.Popen(test262_command,
-                            universal_newlines=True,
-                            stdout=subprocess.PIPE,
-                            **kwargs)
+    with subprocess.Popen(test262_command, universal_newlines=True, stdout=subprocess.PIPE, **kwargs) as proc:
 
-    return_code = 1
-    with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'w') as output_file:
-        counter = 0
-        summary_found = False
-        summary_end_found = False
-        while True:
-            output = proc.stdout.readline()
-            if not output:
-                break
-            output_file.write(output)
+        return_code = 1
+        with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'w', encoding='utf8') as output_file:
+            counter = 0
+            summary_found = False
+            summary_end_found = False
+            while True:
+                output = proc.stdout.readline()
+                if not output:
+                    break
+                output_file.write(output)
 
-            if output.startswith('=== Summary ==='):
-                summary_found = True
-                print('')
+                if output.startswith('=== Summary ==='):
+                    summary_found = True
+                    print('')
 
-            if summary_found:
-                if not summary_end_found:
-                    print(output, end='')
-                    if not output.strip():
-                        summary_end_found = True
-                if 'All tests succeeded' in output:
-                    return_code = 0
-            elif re.search('in (non-)?strict mode', output):
-                counter += 1
-                if (counter % 100) == 0:
-                    print(".", end='')
-                if (counter % 5000) == 0:
-                    print(" Executed %d tests." % counter)
+                if summary_found:
+                    if not summary_end_found:
+                        print(output, end='')
+                        if not output.strip():
+                            summary_end_found = True
+                    if 'All tests succeeded' in output:
+                        return_code = 0
+                elif re.search('in (non-)?strict mode', output):
+                    counter += 1
+                    if (counter % 100) == 0:
+                        print(".", end='')
+                    if (counter % 5000) == 0:
+                        print(f" Executed {counter} tests.")
 
-    proc.wait()
+        proc.wait()
 
     if sys.platform == 'win32':
         util.set_timezone(original_timezone)

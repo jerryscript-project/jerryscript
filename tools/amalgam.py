@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import argparse
 import fnmatch
 import json
@@ -30,7 +28,7 @@ JERRY_PORT = os.path.join(ROOT_DIR, 'jerry-port')
 JERRY_MATH = os.path.join(ROOT_DIR, 'jerry-math')
 
 
-class Amalgamator(object):
+class Amalgamator:
     # pylint: disable=too-many-instance-attributes
 
     _RE_INCLUDE = re.compile(r'\s*#include ("|<)(.*?)("|>)\n$')
@@ -70,7 +68,7 @@ class Amalgamator(object):
             return
 
         normalized_path = repr(os.path.normpath(filename))[1:-1]
-        line_info = '#line %d "%s"\n' % (line_number, normalized_path)
+        line_info = f'#line {line_number} "{normalized_path}"\n'
 
         if self._output and self._output[-1].startswith('#line'):
             # Avoid emitting multiple line infos in sequence, just overwrite the last one
@@ -92,7 +90,7 @@ class Amalgamator(object):
         self._emit_lineinfo(1, filename)
 
         line_idx = 0
-        with open(filename, 'r') as input_file:
+        with open(filename, 'r', encoding='utf8') as input_file:
             in_copyright = False
             for line in input_file:
                 line_idx += 1
@@ -166,7 +164,7 @@ class Amalgamator(object):
             out_fp.write(line)
 
         for include in self._extra_includes:
-            out_fp.write('#include "%s"\n' % include)
+            out_fp.write(f'#include "{include}"\n')
 
         for line in self._output:
             out_fp.write(line)
@@ -242,7 +240,7 @@ def amalgamate(base_dir, input_files=(), output_file=None,
         for fname in sorted(c_files.values(), reverse=True):
             amalgam.add_file(fname)
 
-    with open(output_file, 'w') as output:
+    with open(output_file, 'w', encoding='utf8') as output:
         amalgam.write_output(output)
 
 

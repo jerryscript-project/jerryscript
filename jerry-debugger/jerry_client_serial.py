@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +15,7 @@
 import select
 import serial
 
-class Serial(object):
+class Serial:
     """ Create a new socket using the given address family, socket type and protocol number. """
     def __init__(self, serial_config):
         config = serial_config.split(',')

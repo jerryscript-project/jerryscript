@@ -49,6 +49,8 @@ ecma_new_collection (void)
 
 /**
  * Deallocate a collection of ecma values without freeing it's values
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_collection_destroy (ecma_collection_t *collection_p) /**< value collection */

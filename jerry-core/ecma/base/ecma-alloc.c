@@ -61,6 +61,8 @@ ecma_alloc_number (void)
 
 /**
  * Dealloc memory from an ecma-number
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_number (ecma_number_t *number_p) /**< number to be freed */
@@ -85,6 +87,8 @@ ecma_alloc_object (void)
 
 /**
  * Dealloc memory from an ecma-object
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_object (ecma_object_t *object_p) /**< object to be freed */
@@ -113,6 +117,8 @@ ecma_alloc_extended_object (size_t size) /**< size of object */
 
 /**
  * Dealloc memory of an extended object
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_extended_object (ecma_object_t *object_p, /**< extended object */
@@ -142,6 +148,8 @@ ecma_alloc_string (void)
 
 /**
  * Dealloc memory from ecma-string descriptor
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_string (ecma_string_t *string_p) /**< string to be freed */
@@ -170,6 +178,8 @@ ecma_alloc_extended_string (void)
 
 /**
  * Dealloc memory from extended ecma-string descriptor
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_extended_string (ecma_extended_string_t *ext_string_p) /**< extended string to be freed */
@@ -198,6 +208,8 @@ ecma_alloc_external_string (void)
 
 /**
  * Dealloc memory from external ecma-string descriptor
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_external_string (ecma_external_string_t *ext_string_p) /**< external string to be freed */
@@ -226,6 +238,8 @@ ecma_alloc_string_buffer (size_t size) /**< size of string */
 
 /**
  * Dealloc memory of a string with character data
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_string_buffer (ecma_string_t *string_p, /**< string with data */
@@ -255,6 +269,8 @@ ecma_alloc_property_pair (void)
 
 /**
  * Dealloc memory of an ecma-property
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_property_pair (ecma_property_pair_t *property_pair_p) /**< property pair to be freed */

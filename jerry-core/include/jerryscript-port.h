@@ -55,9 +55,8 @@ typedef enum
  *
  * A libc-based port may implement this with exit() or abort(), or both.
  *
- * Note: This function is expected to not return.
- *
  * @param code: the cause of the error.
+ * @return This function is expected to not return.
  */
 void JERRY_ATTR_NORETURN jerry_port_fatal (jerry_fatal_code_t code);
 
@@ -115,8 +114,6 @@ struct jerry_context_t *jerry_port_context_get (void);
  *
  * This port function is called by jerry_cleanup when JERRY_EXTERNAL_CONTEXT is enabled.
  * Otherwise this function is not used.
- *
- * @return the pointer to the engine context.
  */
 void jerry_port_context_free (void);
 

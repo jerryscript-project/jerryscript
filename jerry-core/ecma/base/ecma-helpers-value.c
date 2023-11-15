@@ -939,6 +939,8 @@ ecma_copy_value_if_not_object (ecma_value_t value) /**< value description */
 
 /**
  * Increase reference counter of a value if it is an object.
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_ref_if_object (ecma_value_t value) /**< value description */
@@ -951,6 +953,8 @@ ecma_ref_if_object (ecma_value_t value) /**< value description */
 
 /**
  * Decrease reference counter of a value if it is an object.
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_deref_if_object (ecma_value_t value) /**< value description */
@@ -1136,6 +1140,8 @@ ecma_free_value (ecma_value_t value) /**< value description */
  *   faster for direct values since no function call is performed.
  *   It also increases the binary size so it is recommended for
  *   critical code paths only.
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_fast_free_value (ecma_value_t value) /**< value description */
@@ -1160,6 +1166,8 @@ ecma_free_value_if_not_object (ecma_value_t value) /**< value description */
 
 /**
  * Free an ecma-value object
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_free_object (ecma_value_t value) /**< value description */
@@ -1169,6 +1177,8 @@ ecma_free_object (ecma_value_t value) /**< value description */
 
 /**
  * Free an ecma-value number
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_free_number (ecma_value_t value) /**< value description */

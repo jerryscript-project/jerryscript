@@ -24,6 +24,16 @@
 #include "js-parser-internal.h"
 #include "lit-char-helpers.h"
 
+/** \addtogroup parser Parser
+ * @{
+ *
+ * \addtogroup jsparser JavaScript
+ * @{
+ *
+ * \addtogroup jsparser_parser Parser
+ * @{
+ */
+
 #if JERRY_PARSER
 
 JERRY_STATIC_ASSERT ((int) ECMA_PARSE_STRICT_MODE == (int) PARSER_IS_STRICT,
@@ -35,16 +45,6 @@ JERRY_STATIC_ASSERT (PARSER_RESTORE_STATUS_FLAGS (ECMA_PARSE_ALLOW_SUPER) == PAR
 
 JERRY_STATIC_ASSERT (PARSER_RESTORE_STATUS_FLAGS (ECMA_PARSE_FUNCTION_CONTEXT) == 0,
                      ecma_parse_function_context_must_not_be_transformed);
-
-/** \addtogroup parser Parser
- * @{
- *
- * \addtogroup jsparser JavaScript
- * @{
- *
- * \addtogroup jsparser_parser Parser
- * @{
- */
 
 /**
  * Compute real literal indicies.

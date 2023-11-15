@@ -114,6 +114,8 @@ jmem_pools_alloc (size_t size) /**< size of the chunk */
 
 /**
  * Free the chunk
+ *
+ * @return void
  */
 extern inline void JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
 jmem_pools_free (void *chunk_p, /**< pointer to the chunk */

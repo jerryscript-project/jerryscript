@@ -3267,6 +3267,8 @@ ecma_op_ordinary_object_is_extensible (ecma_object_t *object_p) /**< object */
 
 /**
  * Set value of [[Extensible]] object's internal property.
+ *
+ * @return void
  */
 void JERRY_ATTR_NOINLINE
 ecma_op_ordinary_object_prevent_extensions (ecma_object_t *object_p) /**< object */

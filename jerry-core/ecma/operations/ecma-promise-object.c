@@ -68,6 +68,8 @@ ecma_promise_get_result (ecma_object_t *obj_p) /**< points to promise object */
 
 /**
  * Set the PromiseResult of promise.
+ *
+ * @return void
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
@@ -97,6 +99,8 @@ ecma_promise_get_flags (ecma_object_t *obj_p) /**< points to promise object */
 
 /**
  * Set the PromiseState of promise.
+ *
+ * @return void
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_promise_set_state (ecma_object_t *obj_p, /**< points to promise object */

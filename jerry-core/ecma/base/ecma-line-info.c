@@ -17,14 +17,14 @@
 
 #include "ecma-helpers.h"
 
-#if JERRY_LINE_INFO
-
 /** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmalineinfo Line info
  * @{
  */
+
+#if JERRY_LINE_INFO
 
 /* The layout of the structure is defined in js-parser-line-info-create.c */
 

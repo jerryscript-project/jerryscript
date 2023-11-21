@@ -110,11 +110,11 @@ main (void)
   TEST_ASSERT (num == ecma_number_make_infinity (false));
 
   /* 5 */
-  ecma_value_t floor = ecma_make_number_value (3.001f);
+  ecma_value_t floor_val = ecma_make_number_value (3.001f);
 
-  result = ecma_op_to_integer (floor, &num);
+  result = ecma_op_to_integer (floor_val, &num);
 
-  ecma_free_value (floor);
+  ecma_free_value (floor_val);
 
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
   TEST_ASSERT (num == 3);

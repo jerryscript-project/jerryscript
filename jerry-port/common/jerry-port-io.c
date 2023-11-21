@@ -71,6 +71,10 @@ jerry_port_line_read (jerry_size_t *out_size_p)
   {
     allocated += 64;
     line_p = realloc (line_p, allocated);
+    if (line_p == NULL)
+    {
+      jerry_port_fatal (JERRY_FATAL_OUT_OF_MEMORY);
+    }
 
     while (bytes < allocated - 1)
     {

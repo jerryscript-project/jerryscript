@@ -146,6 +146,10 @@ jerryx_source_exec_stdin (void)
 
     jerry_size_t new_size = source_size + line_size;
     source_p = realloc (source_p, new_size);
+    if (source_p == NULL)
+    {
+      return jerry_throw_sz (JERRY_ERROR_COMMON, "Out of memory.");
+    }
 
     memcpy (source_p + source_size, line_p, line_size);
     jerry_port_line_free (line_p);

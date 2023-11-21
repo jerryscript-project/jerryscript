@@ -254,10 +254,7 @@ jerryx_escape_handle_internal (jerryx_escapable_handle_scope scope,
      * Escape handle to parent scope
      */
     *result = jerryx_handle_scope_add_handle_to (found_handle, parent);
-  }
 
-  if (should_promote)
-  {
     scope->escaped = true;
   }
   return jerryx_handle_scope_ok;

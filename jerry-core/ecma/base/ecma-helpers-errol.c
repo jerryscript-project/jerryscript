@@ -143,7 +143,7 @@ ecma_errol0_dtoa (double val, /**< ecma number */
                   int32_t *exp_p) /**< [out] exponent */
 {
   double power_of_10 = 1.0;
-  int32_t exp = 1;
+  int32_t exponent = 1;
 
   /* normalize the midpoint */
   ecma_high_prec_t mid;
@@ -151,16 +151,16 @@ ecma_errol0_dtoa (double val, /**< ecma number */
   mid.value = val;
   mid.offset = 0.0;
 
-  while (((mid.value > 10.0) || ((mid.value == 10.0) && (mid.offset >= 0.0))) && (exp < 308))
+  while (((mid.value > 10.0) || ((mid.value == 10.0) && (mid.offset >= 0.0))) && (exponent < 308))
   {
-    exp++;
+    exponent++;
     ecma_divide_high_prec_by_10 (&mid);
     power_of_10 /= 10.0;
   }
 
-  while (((mid.value < 1.0) || ((mid.value == 1.0) && (mid.offset < 0.0))) && (exp > -307))
+  while (((mid.value < 1.0) || ((mid.value == 1.0) && (mid.offset < 0.0))) && (exponent > -307))
   {
-    exp--;
+    exponent--;
     ecma_multiply_high_prec_by_10 (&mid);
     power_of_10 *= 10.0;
   }
@@ -185,14 +185,14 @@ ecma_errol0_dtoa (double val, /**< ecma number */
 
   while (high_bound.value > 10.0 || (high_bound.value == 10.0 && (high_bound.offset >= 0.0)))
   {
-    exp++;
+    exponent++;
     ecma_divide_high_prec_by_10 (&high_bound);
     ecma_divide_high_prec_by_10 (&low_bound);
   }
 
   while (high_bound.value < 1.0 || (high_bound.value == 1.0 && (high_bound.offset < 0.0)))
   {
-    exp--;
+    exponent--;
     ecma_multiply_high_prec_by_10 (&high_bound);
     ecma_multiply_high_prec_by_10 (&low_bound);
   }
@@ -234,7 +234,7 @@ ecma_errol0_dtoa (double val, /**< ecma number */
   double mdig = (high_bound.value + low_bound.value) / 2.0 + 0.5;
   *dst_p++ = (lit_utf8_byte_t) ('0' + (uint8_t) mdig);
 
-  *exp_p = exp;
+  *exp_p = exponent;
 
   return (lit_utf8_size_t) (dst_p - buffer_p);
 } /* ecma_errol0_dtoa */

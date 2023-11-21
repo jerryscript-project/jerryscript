@@ -709,12 +709,12 @@ main (void)
   if (jerry_feature_enabled (JERRY_FEATURE_PROXY))
   {
     jerry_value_t target = jerry_object ();
-    jerry_value_t handler = jerry_object ();
-    jerry_value_t proxy = jerry_proxy (target, handler);
+    jerry_value_t proxy_handler = jerry_object ();
+    jerry_value_t proxy = jerry_proxy (target, proxy_handler);
     jerry_value_t obj_proto = jerry_eval ((jerry_char_t *) "Object.prototype", 16, JERRY_PARSE_NO_OPTS);
 
     jerry_value_free (target);
-    jerry_value_free (handler);
+    jerry_value_free (proxy_handler);
     proto_val = jerry_object_proto (proxy);
     TEST_ASSERT (!jerry_value_is_exception (proto_val));
     TEST_ASSERT (proto_val == obj_proto);
@@ -745,8 +745,8 @@ main (void)
   if (jerry_feature_enabled (JERRY_FEATURE_PROXY))
   {
     jerry_value_t target = jerry_object ();
-    jerry_value_t handler = jerry_object ();
-    jerry_value_t proxy = jerry_proxy (target, handler);
+    jerry_value_t proxy_handler = jerry_object ();
+    jerry_value_t proxy = jerry_proxy (target, proxy_handler);
     new_proto = jerry_eval ((jerry_char_t *) "Function.prototype", 18, JERRY_PARSE_NO_OPTS);
 
     res = jerry_object_set_proto (proxy, new_proto);
@@ -755,7 +755,7 @@ main (void)
     TEST_ASSERT (target_proto == new_proto);
 
     jerry_value_free (target);
-    jerry_value_free (handler);
+    jerry_value_free (proxy_handler);
     jerry_value_free (proxy);
     jerry_value_free (new_proto);
     jerry_value_free (target_proto);

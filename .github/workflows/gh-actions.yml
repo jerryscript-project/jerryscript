@@ -17,8 +17,8 @@ jobs:
           python-version: '3.10'
       - run: sudo apt update
 # TODO: update checkers to current versions available in ubuntu 22.04
-#      - run: sudo apt install clang-format-10 cppcheck python-serial
-      - run: sudo apt install pylint doxygen
+#      - run: sudo apt install clang-format-10 python-serial
+      - run: sudo apt install pylint doxygen cppcheck
       - run: $RUNNER --check-signed-off=gh-actions
         if: ${{ always() }}
       - run: $RUNNER --check-doxygen
@@ -31,8 +31,8 @@ jobs:
 #        if: ${{ always() }}
       - run: $RUNNER --check-pylint
         if: ${{ always() }}
-#      - run: $RUNNER --check-cppcheck
-#        if: ${{ always() }}
+      - run: $RUNNER --check-cppcheck
+        if: ${{ always() }}
 
   Linux_x86-64_Build_Correctness_Debugger_Tests:
     runs-on: ubuntu-latest

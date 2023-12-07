@@ -1850,9 +1850,9 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
       prop_desc_p->value = property_ref.virtual_value;
     }
 
-    prop_desc_p->flags |= (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE_DEFINED);
-    prop_desc_p->flags = (uint16_t) (
-      prop_desc_p->flags | (ecma_is_property_writable (property) ? JERRY_PROP_IS_WRITABLE : JERRY_PROP_NO_OPTS));
+    prop_desc_p->flags |=
+      (uint16_t) (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE_DEFINED
+                  | (ecma_is_property_writable (property) ? JERRY_PROP_IS_WRITABLE : JERRY_PROP_NO_OPTS));
   }
   else
   {

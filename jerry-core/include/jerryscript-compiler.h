@@ -64,9 +64,9 @@ JERRY_C_API_BEGIN
 /*
  * Compiler-specific macros relevant for Microsoft Visual C/C++ Compiler.
  */
-#define JERRY_ATTR_DEPRECATED __declspec(deprecated)
-#define JERRY_ATTR_NOINLINE   __declspec(noinline)
-#define JERRY_ATTR_NORETURN   __declspec(noreturn)
+#define JERRY_ATTR_DEPRECATED __declspec (deprecated)
+#define JERRY_ATTR_NOINLINE   __declspec (noinline)
+#define JERRY_ATTR_NORETURN   __declspec (noreturn)
 
 /*
  * Microsoft Visual C/C++ Compiler doesn't support for VLA, using _alloca

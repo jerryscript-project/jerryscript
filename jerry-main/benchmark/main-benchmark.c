@@ -162,19 +162,19 @@ run (void)
 #endif /* !(defined ( __linux__) && __linux__) */
 
 #if defined(__x86_64__)
-#define STACK_SAVE(TARGET)                          \
-  {                                                 \
-    __asm volatile("mov %%rsp, %0" : "=m"(TARGET)); \
+#define STACK_SAVE(TARGET)                           \
+  {                                                  \
+    __asm volatile ("mov %%rsp, %0" : "=m"(TARGET)); \
   }
 #elif defined(__i386__)
-#define STACK_SAVE(TARGET)                          \
-  {                                                 \
-    __asm volatile("mov %%esp, %0" : "=m"(TARGET)); \
+#define STACK_SAVE(TARGET)                           \
+  {                                                  \
+    __asm volatile ("mov %%esp, %0" : "=m"(TARGET)); \
   }
 #elif defined(__arm__)
-#define STACK_SAVE(TARGET)                       \
-  {                                              \
-    __asm volatile("mov %0, sp" : "=r"(TARGET)); \
+#define STACK_SAVE(TARGET)                        \
+  {                                               \
+    __asm volatile ("mov %0, sp" : "=r"(TARGET)); \
   }
 #else /* !defined (__x86_64__) && !defined (__i386__) && !defined (__arm__) */
 #error "Unsupported stack measurement target!"

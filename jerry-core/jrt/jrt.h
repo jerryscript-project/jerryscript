@@ -217,7 +217,7 @@ void jerry_jrt_set_log_level (jerry_log_level_t level);
  */
 #if defined(__clang__) || defined(__GNUC__)
 /* Clang/GCC will not tail call given inline volatile assembly. */
-#define JERRY_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__("")
+#define JERRY_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__ ("")
 #else /* !defined(__clang__) && !defined(__GNUC__) */
 /* On GCC 10.x this version also works. */
 #define JERRY_BLOCK_TAIL_CALL_OPTIMIZATION()                 \

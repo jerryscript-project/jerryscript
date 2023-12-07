@@ -62,10 +62,10 @@ typedef struct jerryx_native_module_t
 #pragma section(".CRT$XCU", read)
 #pragma section(".CRT$XTU", read)
 
-#define JERRYX_MSVC_FUNCTION_ON_SECTION(sec_name, f)                               \
-  static void f (void);                                                            \
-  __pragma (JERRYX_MSVC_INCLUDE_SYM (f##_section)) __declspec(allocate (sec_name)) \
-    JERRYX_MSCV_EXTERN_C void (*f##_section) (void) = f;                           \
+#define JERRYX_MSVC_FUNCTION_ON_SECTION(sec_name, f)                                \
+  static void f (void);                                                             \
+  __pragma (JERRYX_MSVC_INCLUDE_SYM (f##_section)) __declspec (allocate (sec_name)) \
+    JERRYX_MSCV_EXTERN_C void (*f##_section) (void) = f;                            \
   static void f (void)
 
 #define JERRYX_MODULE_CONSTRUCTOR(f) JERRYX_MSVC_FUNCTION_ON_SECTION (".CRT$XCU", f)

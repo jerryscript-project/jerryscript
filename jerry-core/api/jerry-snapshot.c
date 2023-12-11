@@ -92,7 +92,6 @@ typedef struct
   bool class_found;
 } snapshot_globals_t;
 
-
 /**
  * Write data into the specified buffer.
  *

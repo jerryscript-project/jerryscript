@@ -30,7 +30,7 @@ RE_DIRECTIVE_COMMENT = re.compile(r"^#\s*(else|endif)$", re.MULTILINE)
 RE_FUNCTION_NAME_COMMENT = re.compile(
     r"^\}(?!(?:\s\/\*\s\w+\s\*\/$|\s?\w*;))", re.MULTILINE)
 
-CLANG_FORMAT_MIN_VERSION = 10
+CLANG_FORMAT_MIN_VERSION = 15
 
 FOLDERS = ["jerry-core",
            "jerry-ext",

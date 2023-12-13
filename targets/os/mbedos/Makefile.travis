@@ -22,12 +22,13 @@ all:
 ## Targets for installing build dependencies of the Mbed OS JerryScript target.
 
 install-mbedos:
-	git clone https://github.com/ARMmbed/mbed-os.git ../mbed-os -b mbed-os-6.15.0
+	git clone https://github.com/ARMmbed/mbed-os.git ../mbed-os -b mbed-os-6.17.0
 
 # Deploy Mbed and install Mbed Python dependencies.
 install-mbedos-deps:
-	pip install mbed-cli
-	pip install -r ../mbed-os/requirements.txt
+	pip3 install --upgrade pip
+	pip3 install mbed-tools setuptools
+	pip3 install -r ../mbed-os/requirements.txt
 
 install: install-mbedos install-mbedos-deps
 

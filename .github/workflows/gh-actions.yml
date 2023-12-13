@@ -273,19 +273,17 @@ jobs:
           $RUNNER -q --jerry-tests --build-debug
           --buildoptions=--toolchain=cmake/toolchain_linux_aarch64.cmake,--linker-flag=-static
 
-# TODO: update to ubuntu-22.04
-#  MbedOS_K64F_Build_Test:
-#    runs-on: ubuntu-18.04 # needed due to ppa:team-gcc-arm-embedded/ppa
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: actions/setup-python@v2
-#        with:
-#          python-version: '3.8' # needed due to 'intelhex' module
-#      - run: sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
-#      - run: sudo apt update
-#      - run: sudo apt install gcc-arm-embedded python3-setuptools mercurial
-#      - run: make -f ./targets/os/mbedos/Makefile.travis install
-#      - run: make -f ./targets/os/mbedos/Makefile.travis script
+  MbedOS_K64F_Build_Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '>=3.6'
+      - run: sudo apt update
+      - run: sudo apt install gcc-arm-none-eabi ninja-build
+      - run: make -f ./targets/os/mbedos/Makefile.travis install
+      - run: make -f ./targets/os/mbedos/Makefile.travis script
 
   Zephyr_STM32F4_Build_Test:
     runs-on: ubuntu-latest
@@ -311,18 +309,15 @@ jobs:
       - run: make -f ./targets/os/nuttx/Makefile.travis install-noapt
       - run: make -f ./targets/os/nuttx/Makefile.travis script
 
-# TODO: update to ubuntu-22.04
-#  RIOT_STM32F4_Build_Test:
-#    runs-on: ubuntu-18.04 # needed due to ppa:team-gcc-arm-embedded/ppa
-#    env:
-#      CC: clang
-#    steps:
-#      - uses: actions/checkout@v2
-#      - run: sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
-#      - run: sudo apt update
-#      - run: sudo apt install clang gcc-arm-embedded gcc-multilib
-#      - run: make -f ./targets/os/riot/Makefile.travis install-noapt
-#      - run: make -f ./targets/os/riot/Makefile.travis script
+  RIOT_STM32F4_Build_Test:
+    runs-on: ubuntu-latest
+    env:
+      CC: clang
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt -y install clang gcc-arm-none-eabi
+      - run: make -f ./targets/os/riot/Makefile.travis install-noapt
+      - run: make -f ./targets/os/riot/Makefile.travis script
 
   ESP8266_RTOS_SDK_Build_Test:
     runs-on: ubuntu-latest
@@ -334,15 +329,15 @@ jobs:
       - run: make -f ./targets/baremetal-sdk/espressif/esp8266-rtos-sdk/Makefile.travis install-noapt
       - run: make -f ./targets/baremetal-sdk/espressif/esp8266-rtos-sdk/Makefile.travis script
 
-#  ESP_IDF_Build_Test:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: actions/setup-python@v2
-#        with:
-#          python-version: '3.8'
-#      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis install-noapt
-#      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis script
+  ESP_IDF_Build_Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '==3.8'
+      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis install-noapt
+      - run: make -f ./targets/baremetal-sdk/espressif/esp-idf/Makefile.travis script
 
   Notification:
     runs-on: ubuntu-latest

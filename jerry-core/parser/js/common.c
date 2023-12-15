@@ -455,30 +455,47 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
     cbc_ext_opcode_t ext_opcode = CBC_EXT_NOP;
     size_t cbc_offset = (size_t) (byte_code_p - byte_code_start_p);
 
-    if (opcode != CBC_EXT_OPCODE)
+#if JERRY_SNAPSHOT_EXEC
+    if (opcode == CBC_SET_BYTECODE_PTR)
     {
+      // The next 4 bytes is the actual byte address
+      memcpy (&byte_code_p, byte_code_p + 1, sizeof (uint8_t *));
+      size_t new_cbc_offset = (size_t) (byte_code_p - byte_code_start_p);
+
       flags = cbc_flags[opcode];
       JERRY_DEBUG_MSG (" %3d : %s", (int) cbc_offset, cbc_names[opcode]);
-      byte_code_p++;
+      JERRY_DEBUG_MSG (" new offset:%d ", (int) new_cbc_offset);
+
+      // Reset the start pointer so that the next offset at
+      // computed starting from the new code block
+      byte_code_start_p = byte_code_p;
     }
     else
-    {
-      if (byte_code_p + 1 >= byte_code_end_p)
+#endif /* JERRY_SNAPSHOT_EXEC */
+      if (opcode != CBC_EXT_OPCODE)
       {
-        break;
+        flags = cbc_flags[opcode];
+        JERRY_DEBUG_MSG (" %3d : %s", (int) cbc_offset, cbc_names[opcode]);
+        byte_code_p++;
       }
-
-      ext_opcode = (cbc_ext_opcode_t) byte_code_p[1];
-
-      if (ext_opcode == CBC_EXT_NOP)
+      else
       {
-        break;
-      }
+        if (byte_code_p + 1 >= byte_code_end_p)
+        {
+          break;
+        }
 
-      flags = cbc_ext_flags[ext_opcode];
-      JERRY_DEBUG_MSG (" %3d : %s", (int) cbc_offset, cbc_ext_names[ext_opcode]);
-      byte_code_p += 2;
-    }
+        ext_opcode = (cbc_ext_opcode_t) byte_code_p[1];
+
+        if (ext_opcode == CBC_EXT_NOP)
+        {
+          break;
+        }
+
+        flags = cbc_ext_flags[ext_opcode];
+        JERRY_DEBUG_MSG (" %3d : %s", (int) cbc_offset, cbc_ext_names[ext_opcode]);
+        byte_code_p += 2;
+      }
 
     if (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
     {

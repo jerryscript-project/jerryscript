@@ -27,8 +27,8 @@ install-apt-get-deps:
 
 # Fetch and extract Xtensa toolchain.
 install-xtensa-esp32-gcc:
-	wget https://github.com/espressif/crosstool-NG/releases/download/esp-2021r2-patch3/xtensa-esp32-elf-gcc8_4_0-esp-2021r2-patch3-linux-amd64.tar.gz --no-check-certificate --directory-prefix /tmp
-	tar xvfz /tmp/xtensa-esp32-elf-gcc8_4_0-esp-2021r2-patch3-linux-amd64.tar.gz --directory /tmp
+	wget https://github.com/espressif/crosstool-NG/releases/download/esp-2021r2-patch5/xtensa-esp32-elf-gcc8_4_0-esp-2021r2-patch5-linux-amd64.tar.gz --no-check-certificate --directory-prefix /tmp
+	tar xvfz /tmp/xtensa-esp32-elf-gcc8_4_0-esp-2021r2-patch5-linux-amd64.tar.gz --directory /tmp
 
 # Fetch Espressif IoT Development Framework and install its dependencies.
 install-esp-idf:

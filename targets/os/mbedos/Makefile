@@ -32,21 +32,18 @@ JERRY_HEAP_SIZE ?= 70
 
 define MBED_CLI_FLAGS
 	--clean
-	--build $(BUILD_DIR)
-	--source $(MBED_OS_DIR)
-	--source $(JERRY_ROOT_DIR)
-	--source $(JERRY_TARGET_DIR)
+	--mbed-os-path $(MBED_OS_DIR)
+	--program-path $(JERRY_ROOT_DIR)
 	--toolchain $(TOOLCHAIN)
-	--target $(BOARD)
-	--artifact-name mbedos
-	--macro JERRY_GLOBAL_HEAP_SIZE=$(JERRY_HEAP_SIZE)
+	--mbed-target $(BOARD)
+	--app-config $(JERRY_ROOT_DIR)/mbed_lib.json
 endef
 
 .PHONY: all
 all: .build
 
 .PHONY: clean
-clean: .mbedignore-remove
+clean: .extra-files-remove
 	rm -rf $(JERRY_ROOT_DIR)/build/mbed-os
 
 .PHONY: flash
@@ -57,17 +54,18 @@ flash: .mbed-set-flash-flag .build
 	$(eval MBED_CLI_FLAGS += --flash)
 
 .PHONY: .build
-.build: .mbedignore-copy .mbed-build .mbedignore-remove
+.build: .extra-files-copy .mbed-build .extra-files-remove
 
 .PHONY: .mbed-build
 .mbed-build:
-	mbed config -G MBED_OS_DIR $(MBED_OS_DIR)
-	mbed compile $(strip $(MBED_CLI_FLAGS))
+	mbed-tools compile $(strip $(MBED_CLI_FLAGS))
 
-.PHONY: .mbedignore-copy
-.mbedignore-copy:
+.PHONY: .extra-files-copy
+.extra-files-copy:
 	cp mbedignore.txt $(JERRY_ROOT_DIR)/.mbedignore
+	cp mbed_lib.json $(JERRY_ROOT_DIR)/mbed_lib.json
 
-.PHONY: .mbedignore-remove
-.mbedignore-remove:
+.PHONY: .extra-files-remove
+.extra-files-remove:
 	rm -f $(JERRY_ROOT_DIR)/.mbedignore
+	rm -f $(JERRY_ROOT_DIR)/mbed_lib.json

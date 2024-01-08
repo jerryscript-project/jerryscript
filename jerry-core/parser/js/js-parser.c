@@ -2829,6 +2829,7 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (context_p->token.type == LEXER_ARROW);
 
   lexer_next_token (context_p);
+  bool next_token_needed = false;
 
   if (context_p->token.type == LEXER_LEFT_BRACE)
   {
@@ -2839,7 +2840,7 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
 
     /* Unlike normal function, arrow functions consume their close brace. */
     JERRY_ASSERT (context_p->token.type == LEXER_RIGHT_BRACE);
-    lexer_next_token (context_p);
+    next_token_needed = true;
   }
   else
   {
@@ -2877,6 +2878,11 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
 #endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
   parser_restore_context (context_p, &saved_context);
+
+  if (next_token_needed)
+  {
+    lexer_next_token (context_p);
+  }
 
   return compiled_code_p;
 } /* parser_parse_arrow_function */

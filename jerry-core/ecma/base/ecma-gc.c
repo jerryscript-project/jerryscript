@@ -742,7 +742,11 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
 
         do
         {
-          ecma_gc_set_object_visited (ecma_get_object_from_value (*(--context_top_p)));
+          --context_top_p;
+          if (ecma_is_value_object (*context_top_p))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (*context_top_p));
+          }
         } while (context_top_p > last_item_p);
 
         continue;

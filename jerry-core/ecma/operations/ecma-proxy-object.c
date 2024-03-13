@@ -1170,7 +1170,9 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
   ecma_value_t args[] = { proxy_obj_p->target, prop_value, receiver };
 
   /* 9. */
+  ecma_ref_object (obj_p);
   ecma_value_t trap_result = ecma_op_function_call (func_obj_p, handler, args, 3);
+  ecma_deref_object (obj_p);
 
   ecma_deref_object (func_obj_p);
 

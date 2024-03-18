@@ -1010,6 +1010,8 @@ ecma_op_function_call_constructor (vm_frame_ctx_shared_args_t *shared_args_p, /*
                                    ecma_object_t *scope_p, /**< lexical environment to use */
                                    ecma_value_t this_binding) /**< value of 'ThisBinding' */
 {
+  ECMA_CHECK_STACK_USAGE ();
+
   shared_args_p->header.status_flags |= VM_FRAME_CTX_SHARED_NON_ARROW_FUNC;
 
   ecma_value_t ret_value;
@@ -1079,6 +1081,8 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
                               uint32_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
+
+  ECMA_CHECK_STACK_USAGE ();
 
   vm_frame_ctx_shared_args_t shared_args;
   shared_args.header.status_flags = VM_FRAME_CTX_SHARED_HAS_ARG_LIST;
@@ -1205,6 +1209,8 @@ ecma_op_function_call_native_built_in (ecma_object_t *func_obj_p, /**< Function 
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 
+  ECMA_CHECK_STACK_USAGE ();
+
 #if JERRY_BUILTIN_REALMS
   ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
 
@@ -1234,6 +1240,8 @@ ecma_op_function_call_native (ecma_object_t *func_obj_p, /**< Function object */
                               uint32_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
+
+  ECMA_CHECK_STACK_USAGE ();
 
   ecma_native_function_t *native_function_p = (ecma_native_function_t *) func_obj_p;
 

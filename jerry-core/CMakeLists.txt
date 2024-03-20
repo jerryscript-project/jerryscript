@@ -40,6 +40,7 @@ set(JERRY_SYSTEM_ALLOCATOR          OFF          CACHE BOOL   "Enable system all
 set(JERRY_VALGRIND                  OFF          CACHE BOOL   "Enable Valgrind support?")
 set(JERRY_VM_HALT                   OFF          CACHE BOOL   "Enable VM execution stop callback?")
 set(JERRY_VM_THROW                  OFF          CACHE BOOL   "Enable VM throw callback?")
+set(JERRY_LIT_HASHMAP               OFF          CACHE BOOL   "Enable literal hashmap storage?")
 set(JERRY_GLOBAL_HEAP_SIZE          "(512)"      CACHE STRING "Size of memory heap, in kilobytes")
 set(JERRY_GC_LIMIT                  "(0)"        CACHE STRING "Heap usage limit to trigger garbage collection")
 set(JERRY_STACK_LIMIT               "(0)"        CACHE STRING "Maximum stack usage size, in kilobytes")
@@ -304,6 +305,7 @@ set(SOURCE_CORE_FILES
   lit/lit-char-helpers.c
   lit/lit-magic-strings.c
   lit/lit-strings.c
+  lit/lit-hashmap.c
   parser/js/byte-code.c
   parser/js/common.c
   parser/js/js-lexer.c

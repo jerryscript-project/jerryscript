@@ -158,6 +158,8 @@ def get_arguments():
                          help='enable VM execution stop callback (%(choices)s)')
     coregrp.add_argument('--vm-throw', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='enable VM throw callback (%(choices)s)')
+    coregrp.add_argument('--lit-hashmap', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='Enable literal hashmap storage (%(choices)s)')
 
     maingrp = parser.add_argument_group('jerry-main options')
     maingrp.add_argument('--link-map', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -227,6 +229,7 @@ def generate_build_options(arguments):
     build_options_append('JERRY_VALGRIND', arguments.valgrind)
     build_options_append('JERRY_VM_HALT', arguments.vm_exec_stop)
     build_options_append('JERRY_VM_THROW', arguments.vm_throw)
+    build_options_append('JERRY_LIT_HASHMAP', arguments.lit_hashmap)
 
     if arguments.gc_mark_limit is not None:
         build_options.append(f'-DJERRY_GC_MARK_LIMIT={arguments.gc_mark_limit}')

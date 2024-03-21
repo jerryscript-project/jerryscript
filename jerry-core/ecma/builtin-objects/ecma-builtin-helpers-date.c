@@ -74,6 +74,9 @@ ecma_date_day_from_time (ecma_number_t time) /**< time value */
 static int32_t
 ecma_date_day_from_year (int32_t year) /**< year value */
 {
+  JERRY_ASSERT (fabs (365.0 * (year - 1970) + ((year - 1969) / 4.0) - ((year - 1901) / 100.0) + ((year - 1601) / 400.0))
+                < INT32_MAX);
+
   if (JERRY_LIKELY (year >= 1970))
   {
     return (int32_t) (365 * (year - 1970) + ((year - 1969) / 4) - ((year - 1901) / 100) + ((year - 1601) / 400));
@@ -420,19 +423,23 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
                     ecma_number_t date) /**< date value */
 {
   /* 1. */
-  if (!ecma_number_is_finite (year) || !ecma_number_is_finite (month) || !ecma_number_is_finite (date)
-      || fabs (year) > INT32_MAX)
+  if (!ecma_number_is_finite (year) || !ecma_number_is_finite (month) || !ecma_number_is_finite (date))
   {
     return ecma_number_make_nan ();
   }
 
   /* 2., 3., 4. */
-  int32_t y = (int32_t) (year);
   ecma_number_t m = ecma_number_trunc (month);
   ecma_number_t dt = ecma_number_trunc (date);
 
   /* 5. */
-  int32_t ym = y + (int32_t) (floor (m / 12));
+  year += (floor (m / 12));
+  if (fabs (year) > ECMA_DATE_YEAR_LIMIT)
+  {
+    return ecma_number_make_nan ();
+  }
+
+  int32_t int_year = (int32_t) year;
 
   /* 6. */
   int32_t mn = (int32_t) fmod (m, 12);
@@ -443,7 +450,8 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
   }
 
   /* 7. */
-  ecma_number_t days = (ecma_date_day_from_year (ym) + first_day_in_month[ecma_date_in_leap_year (ym)][mn] + (dt - 1));
+  ecma_number_t days =
+    (ecma_date_day_from_year (int_year) + first_day_in_month[ecma_date_in_leap_year (int_year)][mn] + (dt - 1));
   return days * ECMA_DATE_MS_PER_DAY;
 } /* ecma_date_make_day */
 

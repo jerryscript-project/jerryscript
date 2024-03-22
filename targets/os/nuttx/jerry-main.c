@@ -70,8 +70,7 @@ print_help (char *name)
  * @return converted number
  */
 static uint32_t
-str_to_uint (const char *num_str_p, /**< string to convert */
-             char **out_p) /**< [out] end of the number */
+str_to_uint (const char *num_str_p) /**< string to convert */
 {
   assert (jerry_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES));
 
@@ -82,11 +81,6 @@ str_to_uint (const char *num_str_p, /**< string to convert */
     result *= 10;
     result += (uint32_t) (*num_str_p - '0');
     num_str_p++;
-  }
-
-  if (out_p != NULL)
-  {
-    *out_p = num_str_p;
   }
 
   return result;
@@ -176,7 +170,7 @@ jerry_main (int argc, char *argv[])
     {
       if (++i < argc)
       {
-        debug_port = str_to_uint (argv[i], NULL);
+        debug_port = str_to_uint (argv[i]);
       }
       else
       {

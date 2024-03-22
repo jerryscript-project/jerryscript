@@ -20,22 +20,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-/**
- * Normalize a file path using realpath.
- *
- * @param path_p: input path
- * @param path_size: input path size
- *
- * @return a newly allocated buffer with the normalized path if the operation is successful,
- *         NULL otherwise
- */
 jerry_char_t *
-jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
-                           jerry_size_t path_size) /**< size of the path */
+jerry_port_path_normalize (const jerry_char_t *path_p, jerry_size_t path_size, jerry_size_t *out_size_p)
 {
   (void) path_size;
 
-  return (jerry_char_t *) realpath ((char *) path_p, NULL);
+  char *full_path_p = realpath ((char *) path_p, NULL);
+  /* TODO: implement realpath properly */
+  if (full_path_p != NULL)
+  {
+    *out_size_p = (jerry_size_t) strlen (full_path_p);
+  }
+  else
+  {
+    *out_size_p = 0;
+  }
+  return (jerry_char_t *) full_path_p;
 } /* jerry_port_path_normalize */
 
 /**
@@ -46,18 +46,5 @@ jerry_port_path_free (jerry_char_t *path_p)
 {
   free (path_p);
 } /* jerry_port_path_free */
-
-/**
- * Computes the end of the directory part of a path.
- *
- * @return end of the directory part of a path.
- */
-jerry_size_t JERRY_ATTR_WEAK
-jerry_port_path_base (const jerry_char_t *path_p) /**< path */
-{
-  const jerry_char_t *basename_p = (jerry_char_t *) strrchr ((char *) path_p, '/') + 1;
-
-  return (jerry_size_t) (basename_p - path_p);
-} /* jerry_port_get_directory_end */
 
 #endif /* defined(__unix__) || defined(__APPLE__) */

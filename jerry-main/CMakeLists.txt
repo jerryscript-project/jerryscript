@@ -59,7 +59,7 @@ endmacro()
 # Jerry with libfuzzer support
 if(JERRY_LIBFUZZER)
   jerry_create_executable("jerry-libfuzzer" "main-libfuzzer.c")
-  target_link_libraries("jerry-libfuzzer" jerry-port-fsanitize=fuzzer)
+  target_link_libraries("jerry-libfuzzer" jerry-port -fsanitize=fuzzer)
 endif()
 
 # Jerry standalones

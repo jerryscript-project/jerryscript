@@ -500,6 +500,8 @@ if(ENABLE_AMALGAM)
     lit/lit-unicode-folding.inc.h
     lit/lit-unicode-ranges-sup.inc.h
     lit/lit-unicode-ranges.inc.h
+    lit/lit-hashmap-impl.h
+    lit/lit-hashmap.h
     vm/opcodes.h
     vm/vm-defines.h
     vm/vm-stack.h

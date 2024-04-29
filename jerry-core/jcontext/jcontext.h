@@ -140,7 +140,7 @@ struct jerry_context_t
   jmem_cpointer_t global_symbols_cp[ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT]; /**< global symbols */
 
 #if JERRY_LIT_HASHMAP
-  struct hashmap_s string_hashmap;
+  hashmap_t string_hashmap;
 #endif /* JERRY_LIT_HASHMAP */
 
 #if JERRY_MODULE_SYSTEM

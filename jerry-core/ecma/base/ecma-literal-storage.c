@@ -273,7 +273,7 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
   }
 
 #if JERRY_LIT_HASHMAP
-  const ecma_string_t *hashmap_entry = hashmap_get (&JERRY_CONTEXT (string_hashmap), string_p);
+  const ecma_string_t *hashmap_entry = hashmap_get (JERRY_CONTEXT (string_hashmap), string_p);
   if (hashmap_entry != NULL)
   {
     ecma_deref_ecma_string (string_p);
@@ -299,7 +299,7 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
   *slot = result;
 
 #if JERRY_LIT_HASHMAP
-  hashmap_put (&JERRY_CONTEXT (string_hashmap), string_p);
+  hashmap_put (JERRY_CONTEXT (string_hashmap), string_p);
 #endif /* JERRY_LIT_HASHMAP */
 
   return ecma_make_string_value (string_p);

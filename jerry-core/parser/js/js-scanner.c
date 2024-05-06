@@ -1534,6 +1534,11 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
     }
     case LEXER_KEYW_FUNCTION:
     {
+      if (context_p->status_flags & PARSER_INSIDE_CLASS_FIELD)
+      {
+        scanner_context_p->status_flags |= SCANNER_CONTEXT_RESTORE_INSIDE_CLASS_FIELD_FLAG;
+        context_p->status_flags &= (uint32_t) ~(PARSER_INSIDE_CLASS_FIELD);
+      }
       uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION | SCANNER_LITERAL_POOL_FUNCTION_STATEMENT;
 
       if (scanner_context_p->async_source_p != NULL)
@@ -2014,6 +2019,12 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
         if (type != LEXER_RIGHT_BRACE)
         {
           break;
+        }
+
+        if (scanner_context_p->status_flags & SCANNER_CONTEXT_RESTORE_INSIDE_CLASS_FIELD_FLAG)
+        {
+          context_p->status_flags |= PARSER_INSIDE_CLASS_FIELD;
+          scanner_context_p->status_flags &= (uint16_t) ~(SCANNER_CONTEXT_RESTORE_INSIDE_CLASS_FIELD_FLAG);
         }
 
         if (context_p->stack_top_uint8 != SCAN_STACK_CLASS_STATEMENT)

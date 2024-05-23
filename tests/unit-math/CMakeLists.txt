@@ -30,6 +30,9 @@ foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
   add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
   set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
   set_property(TARGET ${TARGET_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+  if("${PLATFORM}" STREQUAL "DARWIN")
+    set_property(TARGET ${TARGET_NAME} PROPERTY COMPILE_OPTIONS "-Wno-literal-range")
+  endif()
 
   target_link_libraries(${TARGET_NAME} jerry-math)
 

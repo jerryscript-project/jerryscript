@@ -57,7 +57,7 @@ jobs:
       - run: $RUNNER -q --jerry-tests --buildoptions=--compile-flag=-m32,--cpointer-32bit=on --build-debug
 
   OSX_x86-64_Build_Correctness_Unit_Tests:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
@@ -67,7 +67,7 @@ jobs:
       - run: $RUNNER -q --unittests
 
   OSX_x86-64_Build_Correctness_Unit_Tests_Debug:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4

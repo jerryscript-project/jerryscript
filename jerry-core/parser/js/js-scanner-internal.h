@@ -125,6 +125,8 @@ typedef enum
 #if JERRY_DEBUGGER
   SCANNER_CONTEXT_DEBUGGER_ENABLED = (1 << 1), /**< debugger is enabled */
 #endif /* JERRY_DEBUGGER */
+  SCANNER_CONTEXT_RESTORE_INSIDE_CLASS_FIELD_FLAG =
+    (1 << 2), /**< restore the PARSER_INSIDE_CLASS_FIELD flag of the main context */
 } scanner_context_flags_t;
 
 /**

@@ -405,7 +405,10 @@ static void
 parser_check_duplicated_private_field (parser_context_t *context_p, /**< context */
                                        uint8_t opts) /**< options */
 {
-  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL);
+  if (context_p->token.type != LEXER_LITERAL)
+  {
+    parser_raise_error (context_p, PARSER_ERR_EXPRESSION_EXPECTED);
+  }
   JERRY_ASSERT (context_p->private_context_p);
   scanner_class_private_member_t *iter = context_p->private_context_p->members_p;
 

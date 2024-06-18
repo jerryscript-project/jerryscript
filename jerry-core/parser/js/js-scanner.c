@@ -2700,6 +2700,12 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
             identifier_found = true;
           }
 
+          if (context_p->token.type == LEXER_SEMICOLON)
+          {
+            scanner_context.mode = SCAN_MODE_CLASS_BODY;
+            continue;
+          }
+
           if (!identifier_found)
           {
             scanner_raise_error (context_p);
@@ -2726,12 +2732,6 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
           {
             scanner_push_class_field_initializer (context_p, &scanner_context);
             break;
-          }
-
-          if (context_p->token.type == LEXER_SEMICOLON)
-          {
-            scanner_context.mode = SCAN_MODE_CLASS_BODY;
-            continue;
           }
 
           if (context_p->token.type != LEXER_RIGHT_BRACE && !(context_p->token.flags & LEXER_WAS_NEWLINE))

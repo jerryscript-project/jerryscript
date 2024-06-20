@@ -327,3 +327,26 @@ class O {
 var var16 = new O();
 var16.b();
 assert(var16.c() == 12);
+
+// Private fields are accessible in Array object
+class P extends Array {
+  #a = 1;
+  b() {
+    return this.#a;
+  }
+}
+
+var var17 = new P();
+assert(var17.b() == 1);
+
+class Q extends Array {
+  #a() {
+    return 1;
+  } 
+  b() {
+    return this.#a();
+  }
+}
+
+var var18 = new Q();
+assert(var18.b() == 1);

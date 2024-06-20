@@ -212,7 +212,7 @@ jerry_main (int argc, char *argv[])
   {
     for (i = 0; i < files_counter; i++)
     {
-      ret_value = jerryx_source_exec_script (file_names[i]);
+      ret_value = jerryx_source_exec_script (file_names[i], strlen (file_names[i]));
       if (jerry_value_is_exception (ret_value))
       {
         ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;

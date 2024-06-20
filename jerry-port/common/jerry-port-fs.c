@@ -46,22 +46,22 @@ jerry_port_get_file_size (FILE *file_p) /**< opened file */
  * @return the source of the file
  */
 jerry_char_t *JERRY_ATTR_WEAK
-jerry_port_source_read (const char *file_name_p, /**< file name */
-                        jerry_size_t *out_size_p) /**< [out] read bytes */
+jerry_port_source_read (const jerry_char_t *file_name_p, jerry_size_t file_name_size, jerry_size_t *out_size_p)
 {
+  (void) file_name_size;
   /* TODO(dbatyai): Temporary workaround for nuttx target
    * The nuttx target builds and copies the jerryscript libraries as a separate build step, which causes linking issues
    * later due to different libc libraries. It should incorporate the amalgam sources into the main nuttx build so that
    * the correct libraries are used, then this guard should be removed from here and also from the includes. */
 #if defined(__GLIBC__) || defined(_WIN32)
   struct stat stat_buffer;
-  if (stat (file_name_p, &stat_buffer) == -1 || S_ISDIR (stat_buffer.st_mode))
+  if (stat ((const char *) file_name_p, &stat_buffer) == -1 || S_ISDIR (stat_buffer.st_mode))
   {
     return NULL;
   }
 #endif /* __GLIBC__ */
 
-  FILE *file_p = fopen (file_name_p, "rb");
+  FILE *file_p = fopen ((const char *) file_name_p, "rb");
 
   if (file_p == NULL)
   {
@@ -102,6 +102,41 @@ jerry_port_source_free (uint8_t *buffer_p) /**< buffer to free */
 } /* jerry_port_source_free */
 
 /**
+ * Evaluate path root or check if char is path separator is only different on win32
+ */
+#if !defined(_WIN32)
+
+bool JERRY_ATTR_WEAK
+jerry_port_path_is_separator (jerry_char_t path_c)
+{
+  if (path_c == '/')
+  {
+    return true;
+  }
+  return false;
+} /* jerry_port_path_is_separator */
+
+jerry_size_t JERRY_ATTR_WEAK
+jerry_port_path_root (const jerry_char_t *path_p, jerry_size_t path_size)
+{
+  if (path_p == NULL)
+  {
+    return 0;
+  }
+  if (path_size == 0)
+  {
+    return 0;
+  }
+  if (jerry_port_path_is_separator (path_p[0]))
+  {
+    return 1;
+  }
+  return 0;
+} /* jerry_port_path_root */
+
+#endif /* !defined(_WIN32) */
+
+/**
  * These functions provide generic implementation for paths and are only enabled when the compiler support weak symbols,
  * and we are not building for a platform that has platform specific versions.
  */
@@ -114,8 +149,7 @@ jerry_port_source_free (uint8_t *buffer_p) /**< buffer to free */
  *         NULL otherwise
  */
 jerry_char_t *JERRY_ATTR_WEAK
-jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
-                           jerry_size_t path_size) /**< size of the path */
+jerry_port_path_normalize (const jerry_char_t *path_p, jerry_size_t path_size, jerry_size_t *out_size_p)
 {
   jerry_char_t *buffer_p = (jerry_char_t *) malloc (path_size + 1);
 
@@ -126,7 +160,7 @@ jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
 
   /* Also copy terminating zero byte. */
   memcpy (buffer_p, path_p, path_size + 1);
-
+  *out_size_p = path_size;
   return buffer_p;
 } /* jerry_port_normalize_path */
 
@@ -140,23 +174,5 @@ jerry_port_path_free (jerry_char_t *path_p)
 {
   free (path_p);
 } /* jerry_port_normalize_path */
-
-/**
- * Computes the end of the directory part of a path.
- *
- * @return end of the directory part of a path.
- */
-jerry_size_t JERRY_ATTR_WEAK
-jerry_port_path_base (const jerry_char_t *path_p) /**< path */
-{
-  const jerry_char_t *basename_p = (jerry_char_t *) strrchr ((char *) path_p, '/') + 1;
-
-  if (basename_p == NULL)
-  {
-    return 0;
-  }
-
-  return (jerry_size_t) (basename_p - path_p);
-} /* jerry_port_get_directory_end */
 
 #endif /* defined(JERRY_WEAK_SYMBOL_SUPPORT) && !(defined(__unix__) || defined(__APPLE__) || defined(_WIN32)) */

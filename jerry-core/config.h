@@ -467,6 +467,13 @@
  */
 
 /**
+ * The JERRY_LIT_HASHMAP uses an hashmap for faster literal storage.
+ */
+#ifndef JERRY_LIT_HASHMAP
+#define JERRY_LIT_HASHMAP 0
+#endif /* !defined (JERRY_LIT_HASHMAP) */
+
+/**
  * Allow configuring attributes on a few constant data inside the engine.
  *
  * One of the main usages:

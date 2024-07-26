@@ -67,6 +67,10 @@ set(ENABLE_LTO                ON  CACHE BOOL "Enable LTO build?")
 set(ENABLE_STRIP              ON  CACHE BOOL "Enable stripping all symbols from release binary?")
 set(ENABLE_COMPILE_COMMANDS   ON  CACHE BOOL "Enable generating compile_commands.json?")
 
+if(USING_MSVC)
+set(ENABLE_STATIC_CRT         OFF CACHE BOOL "Enable MSVC static CRT?")
+endif()
+
 # Option overrides
 if(NOT USING_CLANG)
   set(JERRY_LIBFUZZER OFF)
@@ -132,6 +136,7 @@ message(STATUS "BUILD_SHARED_LIBS              " ${BUILD_SHARED_LIBS})
 message(STATUS "ENABLE_AMALGAM                 " ${ENABLE_AMALGAM} ${ENABLE_AMALGAM_MESSAGE})
 message(STATUS "ENABLE_LTO                     " ${ENABLE_LTO} ${ENABLE_LTO_MESSAGE})
 message(STATUS "ENABLE_STRIP                   " ${ENABLE_STRIP} ${ENABLE_STRIP_MESSAGE})
+message(STATUS "ENABLE_STATIC_CRT              " ${ENABLE_STATIC_CRT})
 message(STATUS "ENABLE_COMPILE_COMMANDS        " ${ENABLE_COMPILE_COMMANDS})
 message(STATUS "JERRY_VERSION                  " ${JERRY_VERSION})
 message(STATUS "JERRY_CMDLINE                  " ${JERRY_CMDLINE} ${JERRY_CMDLINE_MESSAGE})
@@ -241,6 +246,22 @@ if(USING_MSVC)
   jerry_add_link_flags(/OPT:NOREF)
   # Disable MSVC warning 4996 globally because it stops us from using standard C functions.
   jerry_add_compile_flags(/wd4996)
+
+  if(ENABLE_STATIC_CRT)
+    # Replace the existing /MD and /MDd values with /MT and /MTd.
+    set(COMPILER_FLAGS
+      CMAKE_CXX_FLAGS
+      CMAKE_CXX_FLAGS_DEBUG
+      CMAKE_CXX_FLAGS_RELEASE
+      CMAKE_C_FLAGS
+      CMAKE_C_FLAGS_DEBUG
+      CMAKE_C_FLAGS_RELEASE
+    )
+
+    foreach(_flag ${COMPILER_FLAGS})
+      string(REPLACE "/MD" "/MT" ${_flag} "${${_flag}}")
+    endforeach()
+  endif()
 endif()
 
 if(JERRY_LIBFUZZER)

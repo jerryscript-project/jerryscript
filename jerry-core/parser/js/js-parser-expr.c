@@ -689,7 +689,7 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
         is_private = true;
       }
 
-      if (!lexer_consume_generator (context_p))
+      if (is_private || !lexer_consume_generator (context_p))
       {
         lexer_expect_object_literal_id (context_p, ident_opts);
       }

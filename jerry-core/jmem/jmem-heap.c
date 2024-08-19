@@ -23,6 +23,7 @@
 #include "jmem.h"
 #include "jrt-bit-fields.h"
 #include "jrt-libc-includes.h"
+#include "lit-hashmap.h"
 
 #define JMEM_ALLOCATOR_INTERNAL
 #include "jmem-allocator-internal.h"
@@ -103,6 +104,11 @@ jmem_heap_init (void)
   JMEM_VALGRIND_NOACCESS_SPACE (JERRY_HEAP_CONTEXT (area), JMEM_HEAP_AREA_SIZE);
 
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
+
+#if JERRY_LIT_HASHMAP
+  hashmap_init (&JERRY_CONTEXT (string_hashmap));
+#endif /* JERRY_LIT_HASHMAP */
+
   JMEM_HEAP_STAT_INIT ();
 } /* jmem_heap_init */
 
@@ -112,6 +118,10 @@ jmem_heap_init (void)
 void
 jmem_heap_finalize (void)
 {
+#if JERRY_LIT_HASHMAP
+  hashmap_destroy (&JERRY_CONTEXT (string_hashmap));
+#endif /* JERRY_LIT_HASHMAP */
+
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_allocated_size) == 0);
 #if !JERRY_SYSTEM_ALLOCATOR
   JMEM_VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), JMEM_HEAP_SIZE);

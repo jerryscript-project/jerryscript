@@ -916,6 +916,11 @@ opfunc_private_method_or_accessor_add (ecma_object_t *class_object_p, /**< the f
 
     JERRY_ASSERT (prop_name_p->u.hash & ECMA_SYMBOL_FLAG_PRIVATE_INSTANCE_METHOD);
 
+    if (ecma_op_object_is_fast_array (this_obj_p))
+    {
+      ecma_fast_array_convert_to_normal (this_obj_p);
+    }
+
     prop_p = ecma_find_named_property (this_obj_p, prop_name_p);
     ecma_object_t *method_p = ecma_get_object_from_value (method);
 
@@ -1365,6 +1370,11 @@ opfunc_private_field_add (ecma_value_t base, /**< base object */
   ecma_object_t *obj_p = ecma_get_object_from_value (base);
   ecma_string_t *prop_name_p = ecma_get_string_from_value (property);
   ecma_string_t *private_key_p = NULL;
+
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+      ecma_fast_array_convert_to_normal (obj_p);
+  }
 
   ecma_property_t *prop_p = opfunc_find_private_element (obj_p, prop_name_p, &private_key_p, false);
 

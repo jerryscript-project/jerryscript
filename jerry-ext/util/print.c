@@ -153,9 +153,6 @@ jerryx_print_string (const char *str_p)
   jerry_size_t buffer_size = (jerry_size_t) (strlen (str_p));
 
   jerry_port_print_buffer (buffer_p, buffer_size);
-#if JERRY_DEBUGGER
-  jerry_debugger_send_output (buffer_p, buffer_size);
-#endif /* JERRY_DEBUGGER */
 } /* jerryx_print_string */
 
 /**

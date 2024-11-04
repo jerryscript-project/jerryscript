@@ -78,6 +78,8 @@ def get_arguments():
                           help='enable amalgamated build (%(choices)s)')
     buildgrp.add_argument('--lto', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                           help='enable link-time optimizations (%(choices)s)')
+    buildgrp.add_argument('--static-crt', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                          help='enable msvc static CRT (%(choices)s)')
     buildgrp.add_argument('--shared-libs', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                           help='enable building of shared libraries (%(choices)s)')
     buildgrp.add_argument('--strip', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -187,6 +189,7 @@ def generate_build_options(arguments):
     build_options_append('ENABLE_AMALGAM', arguments.amalgam)
     build_options_append('ENABLE_LTO', arguments.lto)
     build_options_append('BUILD_SHARED_LIBS', arguments.shared_libs)
+    build_options_append('ENABLE_STATIC_CRT', arguments.static_crt)
     build_options_append('ENABLE_STRIP', arguments.strip)
     build_options_append('CMAKE_TOOLCHAIN_FILE', arguments.toolchain)
     build_options_append('CMAKE_VERBOSE_MAKEFILE', arguments.verbose)

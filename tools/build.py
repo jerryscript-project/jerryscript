@@ -53,6 +53,8 @@ def get_arguments():
         """)
 
     buildgrp = parser.add_argument_group('general build options')
+    buildgrp.add_argument('--arch', metavar='OPT', default='',
+                          help='Specify architecture if supported by cmake generator. (default: %(default)s)')
     buildgrp.add_argument('--builddir', metavar='DIR', default=os.path.join(settings.PROJECT_DIR, 'build'),
                           help='specify build directory (default: %(default)s)')
     buildgrp.add_argument('--clean', action='store_true', default=False,
@@ -260,6 +262,9 @@ def configure_jerry(arguments):
     build_options = generate_build_options(arguments)
 
     cmake_cmd = ['cmake', '-B' + arguments.builddir, '-H' + settings.PROJECT_DIR]
+
+    if arguments.arch:
+        cmake_cmd.append('-A' + arguments.arch)
 
     if arguments.install:
         cmake_cmd.append(f'-DCMAKE_INSTALL_PREFIX={arguments.install}')

@@ -153,23 +153,68 @@ ecma_finalize_lit_storage (void)
 } /* ecma_finalize_lit_storage */
 
 /**
- * Find or create a literal string.
+ * Create a new literal string slot "pool".
  *
- * @return ecma_string_t compressed pointer
+ * @return jmem_cpointer_t slot pointer
  */
-ecma_value_t
-ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string to be searched */
-                                    lit_utf8_size_t size, /**< size of the string */
-                                    bool is_ascii) /**< encode of the string */
-{
-  ecma_string_t *string_p =
-    (is_ascii ? ecma_new_ecma_string_from_ascii (chars_p, size) : ecma_new_ecma_string_from_utf8 (chars_p, size));
 
-  if (ECMA_IS_DIRECT_STRING (string_p))
+static jmem_cpointer_t *
+ecma_allocate_new_string_slot (void)
+{
+  ecma_lit_storage_item_t *new_item_p;
+  new_item_p = (ecma_lit_storage_item_t *) jmem_pools_alloc (sizeof (ecma_lit_storage_item_t));
+
+  for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
   {
-    return ecma_make_string_value (string_p);
+    new_item_p->values[i] = JMEM_CP_NULL;
   }
 
+  new_item_p->next_cp = JERRY_CONTEXT (string_list_first_cp);
+  JMEM_CP_SET_NON_NULL_POINTER (JERRY_CONTEXT (string_list_first_cp), new_item_p);
+
+  return new_item_p->values + 0;
+} /* ecma_allocate_new_string_slot */
+
+#if JERRY_LIT_HASHMAP
+/**
+ * Find an empty a literal string slot.
+ *
+ * @return jmem_cpointer_t slot pointer
+ */
+
+static jmem_cpointer_t *
+ecma_find_empty_literal_string_slot (void)
+{
+  jmem_cpointer_t string_list_cp = JERRY_CONTEXT (string_list_first_cp);
+
+  while (string_list_cp != JMEM_CP_NULL)
+  {
+    ecma_lit_storage_item_t *string_list_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_lit_storage_item_t, string_list_cp);
+
+    for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
+    {
+      if (string_list_p->values[i] == JMEM_CP_NULL)
+      {
+        return string_list_p->values + i;
+      }
+    }
+    string_list_cp = string_list_p->next_cp;
+  }
+
+  return ecma_allocate_new_string_slot ();
+} /* ecma_find_empty_literal_string_slot */
+#endif /* JERRY_LIT_HASHMAP */
+
+/**
+ * Find an empty or similar a literal string slot.
+ *
+ * @return jmem_cpointer_t slot pointer
+ */
+
+#if !JERRY_LIT_HASHMAP
+static jmem_cpointer_t *
+ecma_find_empty_or_same_literal_string_slot (ecma_string_t *string_p /**< string to be searched */)
+{
   jmem_cpointer_t string_list_cp = JERRY_CONTEXT (string_list_first_cp);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
@@ -189,12 +234,9 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
       else
       {
         ecma_string_t *value_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, string_list_p->values[i]);
-
         if (ecma_compare_ecma_strings (string_p, value_p))
         {
-          /* Return with string if found in the list. */
-          ecma_deref_ecma_string (string_p);
-          return ecma_make_string_value (value_p);
+          return string_list_p->values + i;
         }
       }
     }
@@ -202,29 +244,66 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
     string_list_cp = string_list_p->next_cp;
   }
 
-  ECMA_SET_STRING_AS_STATIC (string_p);
-  jmem_cpointer_t result;
-  JMEM_CP_SET_NON_NULL_POINTER (result, string_p);
-
   if (empty_cpointer_p != NULL)
   {
-    *empty_cpointer_p = result;
+    return empty_cpointer_p;
+  }
+
+  return ecma_allocate_new_string_slot ();
+} /* ecma_find_empty_or_same_literal_string_slot */
+#endif /* !JERRY_LIT_HASHMAP */
+
+/**
+ * Find or create a literal string.
+ *
+ * @return ecma_string_t compressed pointer
+ */
+
+ecma_value_t
+ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string to be searched */
+                                    lit_utf8_size_t size, /**< size of the string */
+                                    bool is_ascii) /**< encode of the string */
+{
+  ecma_string_t *string_p =
+    (is_ascii ? ecma_new_ecma_string_from_ascii (chars_p, size) : ecma_new_ecma_string_from_utf8 (chars_p, size));
+
+  if (ECMA_IS_DIRECT_STRING (string_p))
+  {
     return ecma_make_string_value (string_p);
   }
 
-  ecma_lit_storage_item_t *new_item_p;
-  new_item_p = (ecma_lit_storage_item_t *) jmem_pools_alloc (sizeof (ecma_lit_storage_item_t));
-
-  new_item_p->values[0] = result;
-  for (int i = 1; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
+#if JERRY_LIT_HASHMAP
+  const ecma_string_t *hashmap_entry = hashmap_get (JERRY_CONTEXT (string_hashmap), string_p);
+  if (hashmap_entry != NULL)
   {
-    new_item_p->values[i] = JMEM_CP_NULL;
+    ecma_deref_ecma_string (string_p);
+    return ecma_make_string_value (hashmap_entry);
   }
+  // Since the string is not found, just find an empty slot
+  jmem_cpointer_t *slot = ecma_find_empty_literal_string_slot ();
+#else /* JERRY_LIT_HASHMAP */
+  jmem_cpointer_t *slot = ecma_find_empty_or_same_literal_string_slot (string_p);
+  if (*slot != JMEM_CP_NULL)
+  {
+    // The string has been found
+    ecma_string_t *value_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, *slot);
+    ecma_deref_ecma_string (string_p);
+    return ecma_make_string_value (value_p);
+  }
+#endif /* JERRY_LIT_HASHMAP */
 
-  new_item_p->next_cp = JERRY_CONTEXT (string_list_first_cp);
-  JMEM_CP_SET_NON_NULL_POINTER (JERRY_CONTEXT (string_list_first_cp), new_item_p);
+  // String has not been found...
+  ECMA_SET_STRING_AS_STATIC (string_p);
+  jmem_cpointer_t result;
+  JMEM_CP_SET_NON_NULL_POINTER (result, string_p);
+  *slot = result;
+
+#if JERRY_LIT_HASHMAP
+  hashmap_put (JERRY_CONTEXT (string_hashmap), string_p);
+#endif /* JERRY_LIT_HASHMAP */
 
   return ecma_make_string_value (string_p);
+
 } /* ecma_find_or_create_literal_string */
 
 /**

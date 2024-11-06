@@ -157,6 +157,8 @@ bool ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p);
 
 #define ECMA_DATE_DAYS_IN_LEAP_YEAR (366)
 
+#define ECMA_DATE_YEAR_LIMIT (275800)
+
 /**
  * This gives a range of 8,640,000,000,000,000 milliseconds
  * to either side of 01 January, 1970 UTC.

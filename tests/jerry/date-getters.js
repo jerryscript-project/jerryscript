@@ -104,3 +104,17 @@ assert (new Date(-1, -1, -1, -1, -1).getHours() === 22);
 assert (new Date(-1, -1, -1, -1, -1, -1).getMinutes() === 58);
 assert (new Date(-1, -1, -1, -1, -1, -1, -1).getSeconds() === 58);
 assert (new Date(-1, -1, -1, -1, -1, -1, -1, -1).getMilliseconds() === 999);
+
+/* 6. test case */
+assert (isNaN(new Date(20000000, 0).getFullYear()));
+assert (new Date(0, 0).getFullYear() === 1900);
+assert (new Date(1.2, 0).getFullYear() === 1901);
+assert((new Date(8640000000000000).getFullYear()) == 275760);
+assert(isNaN(new Date(8640000000000001).getFullYear()));
+assert((new Date(-271821, 3, 21).getFullYear()) == -271821);
+assert(isNaN(new Date(1970, 0, -100000000).getFullYear())); 
+assert(new Date(1970, 0, -100000000 + 1).getFullYear() == -271821);
+assert(isNaN(new Date(1970, 0, 100000000 + 2).getFullYear())); 
+assert(new Date(1970, 0, 100000000).getFullYear() == 275760);
+assert(isNaN(new Date(4294967295, -51536298411).getFullYear()));
+assert((new Date(4294967295, -51536300000).getFullYear()) == 275628);

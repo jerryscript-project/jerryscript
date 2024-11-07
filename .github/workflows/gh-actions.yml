@@ -95,7 +95,7 @@ jobs:
         with:
           python-version: '>=3.6'
       - run: $RUNNER --test262 update
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
           name: Test262-ESNext-results
@@ -110,7 +110,7 @@ jobs:
         with:
           python-version: '>=3.6'
       - run: $RUNNER --test262 update --build-debug --test262-test-list=built-ins,annexB,harness,intl402
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
           name: Test262-ESNext-Debug-A-results
@@ -125,7 +125,7 @@ jobs:
         with:
           python-version: '>=3.6'
       - run: $RUNNER --test262 update --build-debug --test262-test-list=language
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
           name: Test262-ESNext-Debug-B-results

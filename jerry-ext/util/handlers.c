@@ -93,7 +93,7 @@ jerryx_handler_assert (const jerry_call_info_t *call_info_p, /**< call informati
   jerryx_print_backtrace (5);
 
   jerry_port_fatal (JERRY_FATAL_FAILED_ASSERTION);
-} /* jerryx_handler_assert_fatal */
+} /* jerryx_handler_assert */
 
 /**
  * Expose garbage collector to scripts.

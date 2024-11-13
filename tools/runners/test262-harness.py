@@ -46,6 +46,7 @@ from collections import Counter
 import signal
 import multiprocessing
 
+import util
 
 # The timeout of each test case
 TEST262_CASE_TIMEOUT = 180
@@ -130,10 +131,10 @@ class TempFile:
             text=self.text)
 
     def write(self, string):
-        os.write(self.file_desc, string.encode('utf8'))
+        os.write(self.file_desc, string.encode('utf8', 'ignore'))
 
     def read(self):
-        with open(self.name, "r", newline='', encoding='utf8') as file_desc:
+        with open(self.name, "r", newline='', encoding='utf8', errors='ignore') as file_desc:
             return file_desc.read()
 
     def close(self):
@@ -227,7 +228,7 @@ class TestCase:
         self.validate()
 
     def parse_test_record(self):
-        with open(self.full_path, "r", newline='', encoding='utf8') as file_desc:
+        with open(self.full_path, "r", newline='', encoding='utf8', errors='ignore') as file_desc:
             full_test = file_desc.read()
 
         match = TEST_RE.search(full_test)
@@ -488,7 +489,7 @@ class TestSuite:
         if not tests:
             return True
         for test in tests:
-            if test in rel_path:
+            if os.path.normpath(test) in os.path.normpath(rel_path):
                 return True
         return False
 
@@ -496,7 +497,7 @@ class TestSuite:
         if not name in self.include_cache:
             static = path.join(self.lib_root, name)
             if path.exists(static):
-                with open(static, encoding='utf8') as file_desc:
+                with open(static, encoding='utf8', errors='ignore') as file_desc:
                     contents = file_desc.read()
                     contents = re.sub(r'\r\n', '\n', contents)
                     self.include_cache[name] = contents + "\n"
@@ -585,7 +586,7 @@ class TestSuite:
             report_error("No tests to run")
         progress = ProgressIndicator(len(cases))
         if logname:
-            self.logf = open(logname, "w", encoding='utf8')  # pylint: disable=consider-using-with
+            self.logf = open(logname, "w", encoding='utf8', errors='ignore')  # pylint: disable=consider-using-with
 
         if job_count == 1:
             for case in cases:
@@ -647,6 +648,7 @@ class TestSuite:
 
 
 def main():
+    util.setup_stdio()
     code = 0
     parser = build_options()
     options = parser.parse_args()

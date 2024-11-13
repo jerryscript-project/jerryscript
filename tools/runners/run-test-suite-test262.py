@@ -22,12 +22,6 @@ import sys
 
 import util
 
-def get_platform_cmd_prefix():
-    if sys.platform == 'win32':
-        return ['cmd', '/S', '/C']
-    return ['python3']
-
-
 def get_arguments():
     execution_runtime = os.environ.get('RUNTIME', '')
     parser = argparse.ArgumentParser()
@@ -91,7 +85,7 @@ def update_exclude_list(args):
     # Tests pass in strict-mode but fail in non-strict-mode (or vice versa) should be considered as failures
     passing_tests = passing_tests - failing_tests
 
-    with open(args.excludelist_path, 'r+', encoding='utf8') as exclude_file:
+    with open(args.excludelist_path, 'r+', encoding='utf8', errors='ignore') as exclude_file:
         lines = exclude_file.readlines()
         exclude_file.seek(0)
         exclude_file.truncate()
@@ -135,6 +129,7 @@ def update_exclude_list(args):
 
 
 def main(args):
+    util.setup_stdio()
     return_code = prepare_test262_test_suite(args)
     if return_code:
         return return_code
@@ -149,12 +144,11 @@ def main(args):
         command += ' --test262-object'
 
     kwargs = {}
-    if sys.version_info.major >= 3:
-        kwargs['errors'] = 'ignore'
+    kwargs['errors'] = 'ignore'
 
     test262_harness_path = os.path.join(args.test262_harness_dir, 'test262-harness.py')
 
-    test262_command = get_platform_cmd_prefix() + \
+    test262_command = util.get_python_cmd_prefix() + \
                       [test262_harness_path,
                        '--command', command,
                        '--tests', args.test_dir,

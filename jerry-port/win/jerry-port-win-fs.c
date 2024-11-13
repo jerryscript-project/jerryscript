@@ -32,7 +32,7 @@ jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
 {
   (void) path_size;
 
-  return (jerry_char_t *) _fullpath (NULL, path_p, _MAX_PATH);
+  return (jerry_char_t *) _fullpath (NULL, (const char *) path_p, _MAX_PATH);
 } /* jerry_port_path_normalize */
 
 /**

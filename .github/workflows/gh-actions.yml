@@ -56,6 +56,54 @@ jobs:
       - run: $RUNNER -q --jerry-tests --buildoptions=--compile-flag=-m32,--cpointer-32bit=on
       - run: $RUNNER -q --jerry-tests --buildoptions=--compile-flag=-m32,--cpointer-32bit=on --build-debug
 
+  Win_x86-64_Conformance_Tests_ESNext:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: python $env:RUNNER --test262 update
+
+  Win_x86-64_Conformance_Tests_ESNext_Debug:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: python $env:RUNNER --test262 update --build-debug
+
+  Win_x86-64_Tests-MINGW:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-python
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-toolchain
+      - run: python $RUNNER -q --jerry-tests
+      - run: python $RUNNER -q --unittests --build-config=''
+      # FIXME: enable it with upgrade valgrind - run: python $RUNNER -q --buildoption-test
+
+  Win_x86-64_Tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: python $env:RUNNER -q --jerry-tests
+      - run: python $env:RUNNER -q --unittests
+      - run: python $env:RUNNER -q --buildoption-test
+
+  Win_x86-64_Tests_Debug:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: python $env:RUNNER -q --jerry-tests --build-debug
+      - run: python $env:RUNNER -q --unittests --build-debug
+      - run: python $env:RUNNER -q --buildoption-test --build-debug
+
   OSX_x86-64_Build_Correctness_Unit_Tests:
     runs-on: macos-13
     steps:

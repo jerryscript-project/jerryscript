@@ -123,6 +123,13 @@ set(INCLUDE_CORE_PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/parser/regexp"
     "${CMAKE_CURRENT_SOURCE_DIR}/vm")
 
+# Third-party
+# Valgrind
+set(INCLUDE_THIRD_PARTY_VALGRIND "${CMAKE_SOURCE_DIR}/third-party/valgrind")
+if(JERRY_VALGRIND)
+  set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} ${INCLUDE_THIRD_PARTY_VALGRIND})
+endif()
+
 set(INCLUDE_CORE_PUBLIC ${INCLUDE_CORE_PUBLIC} PARENT_SCOPE) # for jerry-port
 set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} PARENT_SCOPE) # for tests/unit-core
 
@@ -533,10 +540,6 @@ if(ENABLE_AMALGAM)
   set(INCLUDE_CORE_PRIVATE PARENT_SCOPE)
 endif()
 
-# Third-party
-# Valgrind
-set(INCLUDE_THIRD_PARTY_VALGRIND "${CMAKE_SOURCE_DIR}/third-party/valgrind")
-
 # build mode specific compile/link flags
 set(DEFINES_JERRY ${DEFINES_JERRY} $<$<NOT:$<CONFIG:Debug>>:JERRY_NDEBUG>)
 
@@ -641,9 +644,6 @@ jerry_add_define01(JERRY_SYSTEM_ALLOCATOR)
 
 # Valgrind
 jerry_add_define01(JERRY_VALGRIND)
-if(JERRY_VALGRIND)
-  set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} ${INCLUDE_THIRD_PARTY_VALGRIND})
-endif()
 
 # Enable VM execution stop callback
 jerry_add_define01(JERRY_VM_HALT)

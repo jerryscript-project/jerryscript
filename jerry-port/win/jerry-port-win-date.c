@@ -26,6 +26,18 @@
 #define UNIX_EPOCH_IN_TICKS 116444736000000000ull /* difference between 1970 and 1601 */
 #define TICKS_PER_MS        10000ull /* 1 tick is 100 nanoseconds */
 
+/*
+ * If you take the limit of SYSTEMTIME (last millisecond in 30827) then you end up with
+ * a FILETIME of 0x7fff35f4f06c58f0 by using SystemTimeToFileTime(). However, if you put
+ * 0x7fffffffffffffff into FileTimeToSystemTime() then you will end up in the year 30828,
+ * although this date is invalid for SYSTEMTIME. Any larger value (0x8000000000000000 and above)
+ * causes FileTimeToSystemTime() to fail.
+ * https://docs.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-systemtime
+ * https://docs.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime
+ */
+#define UNIX_EPOCH_DATE_1601_01_02  -11644387200000LL /* unit: ms */
+#define UNIX_EPOCH_DATE_30827_12_29 9106702560000000LL /* unit: ms */
+
 /**
  * Convert unix time to a FILETIME value.
  *
@@ -44,7 +56,7 @@ unix_time_to_filetime (double t, LPFILETIME ft_p)
 
   ft_p->dwLowDateTime = (DWORD) ll;
   ft_p->dwHighDateTime = (DWORD) (ll >> 32);
-} /* unix_time_to_file_time */
+} /* unix_time_to_filetime */
 
 /**
  * Convert a FILETIME to a unix time value.
@@ -58,7 +70,7 @@ filetime_to_unix_time (LPFILETIME ft_p)
   date.HighPart = ft_p->dwHighDateTime;
   date.LowPart = ft_p->dwLowDateTime;
   return (double) (((LONGLONG) date.QuadPart - UNIX_EPOCH_IN_TICKS) / TICKS_PER_MS);
-} /* FileTimeToUnixTimeMs */
+} /* filetime_to_unix_time */
 
 /**
  * Default implementation of jerry_port_local_tza.
@@ -74,6 +86,23 @@ jerry_port_local_tza (double unix_ms)
   SYSTEMTIME utc_sys;
   SYSTEMTIME local_sys;
 
+  /*
+   * If the time is earlier than the date 1601-01-02, then always using date 1601-01-02 to
+   * query time zone adjustment. This date (1601-01-02) will make sure both UTC and local
+   * time succeed with Win32 API. The date 1601-01-01 may lead to a win32 api failure, as
+   * after converting between local time and utc time, the time may be earlier than 1601-01-01
+   * in UTC time, that exceeds the FILETIME representation range.
+   */
+  if (unix_ms < (double) UNIX_EPOCH_DATE_1601_01_02)
+  {
+    unix_ms = (double) UNIX_EPOCH_DATE_1601_01_02;
+  }
+
+  /* Like above, do not use the last supported day */
+  if (unix_ms > (double) UNIX_EPOCH_DATE_30827_12_29)
+  {
+    unix_ms = (double) UNIX_EPOCH_DATE_30827_12_29;
+  }
   unix_time_to_filetime (unix_ms, &utc);
 
   if (FileTimeToSystemTime (&utc, &utc_sys) && SystemTimeToTzSpecificLocalTime (NULL, &utc_sys, &local_sys)

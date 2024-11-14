@@ -355,6 +355,29 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
 } /* scanner_scan_primary_expression */
 
 /**
+ * Consume the ?. token
+ *
+ * @return token type to continue the post primary expression parsing
+ */
+static lexer_token_type_t
+scanner_consume_optional_chain (parser_context_t *context_p) /**< context */
+{
+  switch (lexer_peek_next_character (context_p))
+  {
+    case LIT_CHAR_LEFT_PAREN:
+    case LIT_CHAR_LEFT_SQUARE:
+    {
+      lexer_next_token (context_p);
+      return context_p->token.type;
+    }
+    default:
+    {
+      return LEXER_DOT;
+    }
+  }
+} /* scanner_consume_optional_chain */
+
+/**
  * Scan the tokens after the primary expression.
  *
  * @return true for break, false for fall through
@@ -365,75 +388,84 @@ scanner_scan_post_primary_expression (parser_context_t *context_p, /**< context 
                                       lexer_token_type_t type, /**< current token type */
                                       scan_stack_modes_t stack_top) /**< current stack top */
 {
-  switch (type)
+  while (true)
   {
-    case LEXER_DOT:
+    switch (type)
     {
-      lexer_scan_identifier (context_p, LEXER_PARSE_NO_OPTS);
-
-      if (context_p->token.type == LEXER_HASHMARK)
+      case LEXER_QUESTION_MARK_DOT:
       {
-        context_p->token.flags |= LEXER_NO_SKIP_SPACES;
-        lexer_next_token (context_p);
+        type = scanner_consume_optional_chain (context_p);
+        continue;
       }
-
-      if (context_p->token.type != LEXER_LITERAL || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+      case LEXER_DOT:
       {
-        scanner_raise_error (context_p);
+        lexer_scan_identifier (context_p, LEXER_PARSE_NO_OPTS);
+        if (context_p->token.type == LEXER_HASHMARK)
+        {
+          context_p->token.flags |= LEXER_NO_SKIP_SPACES;
+          lexer_next_token (context_p);
+        }
+
+        if (context_p->token.type != LEXER_LITERAL || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+        {
+          scanner_raise_error (context_p);
+        }
+
+        return true;
       }
-
-      return true;
-    }
-    case LEXER_LEFT_PAREN:
-    {
-      parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
-      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return true;
-    }
-    case LEXER_TEMPLATE_LITERAL:
-    {
-      if (JERRY_UNLIKELY (context_p->source_p[-1] != LIT_CHAR_GRAVE_ACCENT))
+      case LEXER_LEFT_PAREN:
       {
+        parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
         scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-        parser_stack_push_uint8 (context_p, SCAN_STACK_TAGGED_TEMPLATE_LITERAL);
+        return true;
       }
-      return true;
-    }
-    case LEXER_LEFT_SQUARE:
-    {
-      parser_stack_push_uint8 (context_p, SCAN_STACK_PROPERTY_ACCESSOR);
-      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return true;
-    }
-    case LEXER_INCREASE:
-    case LEXER_DECREASE:
-    {
-      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
-
-      if (context_p->token.flags & LEXER_WAS_NEWLINE)
+      case LEXER_TEMPLATE_LITERAL:
       {
-        return false;
+        if (JERRY_UNLIKELY (context_p->source_p[-1] != LIT_CHAR_GRAVE_ACCENT))
+        {
+          scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+          parser_stack_push_uint8 (context_p, SCAN_STACK_TAGGED_TEMPLATE_LITERAL);
+        }
+        return true;
       }
+      case LEXER_LEFT_SQUARE:
+      {
+        parser_stack_push_uint8 (context_p, SCAN_STACK_PROPERTY_ACCESSOR);
+        scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+        return true;
+      }
+      case LEXER_INCREASE:
+      case LEXER_DECREASE:
+      {
+        scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
 
-      lexer_next_token (context_p);
-      type = (lexer_token_type_t) context_p->token.type;
+        if (context_p->token.flags & LEXER_WAS_NEWLINE)
+        {
+          return false;
+        }
 
-      if (type != LEXER_QUESTION_MARK)
+        lexer_next_token (context_p);
+        type = (lexer_token_type_t) context_p->token.type;
+
+        if (type != LEXER_QUESTION_MARK)
+        {
+          break;
+        }
+        /* FALLTHRU */
+      }
+      case LEXER_QUESTION_MARK:
+      {
+        parser_stack_push_uint8 (context_p, SCAN_STACK_COLON_EXPRESSION);
+        scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+        return true;
+      }
+      default:
       {
         break;
       }
-      /* FALLTHRU */
     }
-    case LEXER_QUESTION_MARK:
-    {
-      parser_stack_push_uint8 (context_p, SCAN_STACK_COLON_EXPRESSION);
-      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return true;
-    }
-    default:
-    {
-      break;
-    }
+
+    break;
   }
 
   if (LEXER_IS_BINARY_OP_TOKEN (type) && (type != LEXER_KEYW_IN || !SCANNER_IS_FOR_START (stack_top)))

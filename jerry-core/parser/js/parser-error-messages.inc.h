@@ -169,6 +169,7 @@ PARSER_ERROR_DEF (PARSER_ERR_IMPORT_META_REQUIRE_MODULE, "Cannot use 'import.met
 #if JERRY_PARSER
 PARSER_ERROR_DEF (PARSER_ERR_INVALID_IDENTIFIER_PART, "Character cannot be part of an identifier")
 PARSER_ERROR_DEF (PARSER_ERR_EVAL_CANNOT_ASSIGNED, "Eval cannot be assigned to in strict mode")
+PARSER_ERROR_DEF (PARSER_ERR_INVALID_TAGGED_TEMPLATE_OPTIONAL_CHAIN, "Invalid tagged template on optional chain")
 PARSER_ERROR_DEF (PARSER_ERR_WITH_NOT_ALLOWED, "With statement not allowed in strict mode")
 PARSER_ERROR_DEF (PARSER_ERR_NEW_TARGET_NOT_ALLOWED, "new.target expression is not allowed here")
 PARSER_ERROR_DEF (PARSER_ERR_INVALID_IDENTIFIER_START, "Character cannot be start of an identifier")

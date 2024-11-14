@@ -165,6 +165,7 @@ typedef enum
 
   VM_OC_JUMP, /**< jump */
   VM_OC_BRANCH_IF_NULLISH, /** branch if undefined or null */
+  VM_OC_BRANCH_OPTIONAL_CHAIN, /** branch if undefined or null and adjust stack */
   VM_OC_POP_REFERENCE, /** prop identifier or property reference from the stack */
   VM_OC_BRANCH_IF_STRICT_EQUAL, /**< branch if strict equal */
 

@@ -90,7 +90,7 @@ class WebSocket:
         """ Send message. """
         message = struct.pack(byte_order + "BBI",
                               WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + struct.unpack(byte_order + "B", packed_data[0].to_bytes())[0],
+                              WEBSOCKET_FIN_BIT + struct.unpack(byte_order + "B", packed_data[0:1])[0],
                               0) + packed_data[1:]
 
         self.__send_data(message)

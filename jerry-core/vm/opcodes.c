@@ -1430,17 +1430,7 @@ opfunc_private_set (ecma_value_t base, /**< this object */
   else
   {
     ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (prop_p));
-
-    if (get_set_pair_p->setter_cp == JMEM_CP_NULL)
-    {
-      result = ecma_raise_type_error (ECMA_ERR_PRIVATE_FIELD_WAS_DEFINED_WITHOUT_A_SETTER);
-    }
-    else
-    {
-      ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp);
-
-      result = ecma_op_function_call (setter_p, base, &value, 1);
-    }
+    result = ecma_op_invoke_setter (get_set_pair_p, base, value);
   }
 
   ecma_deref_object (obj_p);
@@ -1493,8 +1483,7 @@ opfunc_private_get (ecma_value_t base, /**< this object */
     }
     else
     {
-      ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
-      result = ecma_op_function_call (getter_p, base, NULL, 0);
+      result = ecma_op_invoke_getter (get_set_pair_p, base);
     }
   }
 

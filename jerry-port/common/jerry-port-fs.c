@@ -128,7 +128,7 @@ jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
   memcpy (buffer_p, path_p, path_size + 1);
 
   return buffer_p;
-} /* jerry_port_normalize_path */
+} /* jerry_port_path_normalize */
 
 /**
  * Free a path buffer returned by jerry_port_path_normalize.
@@ -139,7 +139,7 @@ void JERRY_ATTR_WEAK
 jerry_port_path_free (jerry_char_t *path_p)
 {
   free (path_p);
-} /* jerry_port_normalize_path */
+} /* jerry_port_path_free */
 
 /**
  * Computes the end of the directory part of a path.

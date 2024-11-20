@@ -190,7 +190,7 @@ jerryx_print_backtrace (unsigned depth)
   }
 
   jerry_value_free (backtrace_array);
-} /* jerryx_handler_assert_fatal */
+} /* jerryx_print_backtrace */
 
 /**
  * Print an unhandled exception value

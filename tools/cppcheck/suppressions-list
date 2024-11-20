@@ -31,7 +31,6 @@ shiftNegativeLHS:jerry-math/*.c
 shiftTooManyBits:jerry-core/*.c
 shiftTooManyBitsSigned:jerry-math/*.c
 signConversionCond:jerry-core/*.c
-uninitvar:jerry-core/parser/js/js-parser-expr.c:3423
 uninitvar:tests/unit-core/test-api-objecttype.c:119
 unmatchedSuppression:jerry-core/*.inc.h
 unreadVariable:jerry-core/*.c

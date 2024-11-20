@@ -382,6 +382,29 @@ lexer_skip_spaces (parser_context_t *context_p) /**< context */
 } /* lexer_skip_spaces */
 
 /**
+ * Checks the next token start character.
+ *
+ * @return LIT_INVALID_CP - if there is no more characters to read
+ *         next byte - otherwise
+ */
+lit_code_point_t
+lexer_peek_next_character (parser_context_t *context_p) /**< context */
+{
+  if (!(context_p->token.flags & LEXER_NO_SKIP_SPACES))
+  {
+    lexer_skip_spaces (context_p);
+    context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
+  }
+
+  if (context_p->source_p < context_p->source_end_p)
+  {
+    return context_p->source_p[0];
+  }
+
+  return LIT_INVALID_CP;
+} /* lexer_check_next_character */
+
+/**
  * Skip all the continuous empty statements.
  */
 void
@@ -1735,6 +1758,13 @@ lexer_next_token (parser_context_t *context_p) /**< context */
             break;
           }
           context_p->token.type = LEXER_NULLISH_COALESCING;
+          length = 2;
+          break;
+        }
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_DOT
+            && (length < 3 || !lit_char_is_decimal_digit (context_p->source_p[2])))
+        {
+          context_p->token.type = LEXER_QUESTION_MARK_DOT;
           length = 2;
           break;
         }

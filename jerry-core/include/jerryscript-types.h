@@ -41,8 +41,8 @@ typedef enum
 } jerry_init_flag_t;
 
 /**
- * Jerry log levels. The levels are in severity order
- * where the most serious levels come first.
+ * Jerry log levels. The levels are ordered by severity,
+ * with the most serious levels listed first.
  */
 typedef enum
 {
@@ -86,7 +86,6 @@ typedef enum
   JERRY_FEATURE_VM_EXEC_STOP, /**< stopping ECMAScript execution */
   JERRY_FEATURE_VM_THROW, /**< capturing ECMAScript throws */
   JERRY_FEATURE_JSON, /**< JSON support */
-  JERRY_FEATURE_PROMISE, /**< promise support */
   JERRY_FEATURE_TYPEDARRAY, /**< Typedarray support */
   JERRY_FEATURE_DATE, /**< Date support */
   JERRY_FEATURE_REGEXP, /**< Regexp support */
@@ -315,8 +314,10 @@ typedef void (*jerry_error_object_created_cb_t) (const jerry_value_t error_objec
  *
  * Note: if the function returns with a non-undefined value it
  *       must return with the same value for future calls.
+ *
+ * @param user_data_p: optional user data pointer
  */
-typedef jerry_value_t (*jerry_halt_cb_t) (void *user_p);
+typedef jerry_value_t (*jerry_halt_cb_t) (void *user_data_p);
 
 /**
  * Callback function which is called when an exception is thrown in an ECMAScript code.
@@ -324,13 +325,19 @@ typedef jerry_value_t (*jerry_halt_cb_t) (void *user_p);
  * until the value is caught.
  *
  * Note: the engine considers exceptions thrown by external functions as never caught.
+ *
+ * @param exception_value: the thrown exception
+ * @param user_data_p: optional user data pointer
  */
-typedef void (*jerry_throw_cb_t) (const jerry_value_t exception_value, void *user_p);
+typedef void (*jerry_throw_cb_t) (const jerry_value_t exception_value, void *user_data_p);
 
 /**
  * Function type applied to each unit of encoding when iterating over a string.
+ *
+ * @param value:  encoded byte value
+ * @param user_data_p: optional user data pointer
  */
-typedef void (*jerry_string_iterate_cb_t) (uint32_t value, void *user_p);
+typedef void (*jerry_string_iterate_cb_t) (uint32_t value, void *user_data_p);
 
 /**
  * Function type applied for each data property of an object.

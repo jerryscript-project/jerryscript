@@ -3368,7 +3368,7 @@ jerry_object_get_sz (const jerry_value_t object, /**< object value */
 
   return result;
 } /* jerry_object_get */
-
+jerryx_arg_object_properties (const jerryx_arg_obj_props_t *object_props_p, /**< pointer to object property mapping */
 /**
  * Get value by an index from the specified object.
  *
@@ -4294,7 +4294,7 @@ jerry_object_set_native_ptr (jerry_value_t object, /**< object to set native poi
 } /* jerry_object_set_native_ptr */
 
 /**
- * Checks wether the argument object has a native poitner set for the specified native type info.
+ * Checks whether the argument object has a native pointer set for the specified native type info.
  *
  * @return true if the native pointer has been set,
  *         false otherwise

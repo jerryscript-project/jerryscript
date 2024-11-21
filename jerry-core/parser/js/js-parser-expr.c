@@ -3486,16 +3486,16 @@ parser_process_binary_assignment_token (parser_context_t *context_p, /**< contex
 
   bool group_expr_assingment = false;
 
-  if (JERRY_UNLIKELY (context_p->stack_top_uint8 == LEXER_ASSIGN_GROUP_EXPR))
-  {
-    group_expr_assingment = true;
-    parser_stack_pop_uint8 (context_p);
-  }
-
   if (JERRY_UNLIKELY (context_p->stack_top_uint8 == LEXER_ASSIGN_CONST))
   {
     parser_stack_pop_uint8 (context_p);
     parser_emit_cbc_ext (context_p, CBC_EXT_THROW_ASSIGN_CONST_ERROR);
+  }
+
+  if (JERRY_UNLIKELY (context_p->stack_top_uint8 == LEXER_ASSIGN_GROUP_EXPR))
+  {
+    group_expr_assingment = true;
+    parser_stack_pop_uint8 (context_p);
   }
 
   if (index == PARSER_INVALID_LITERAL_INDEX)

@@ -4294,7 +4294,7 @@ jerry_object_set_native_ptr (jerry_value_t object, /**< object to set native poi
 } /* jerry_object_set_native_ptr */
 
 /**
- * Checks wether the argument object has a native poitner set for the specified native type info.
+ * Checks whether the argument object has a native pointer set for the specified native type info.
  *
  * @return true if the native pointer has been set,
  *         false otherwise

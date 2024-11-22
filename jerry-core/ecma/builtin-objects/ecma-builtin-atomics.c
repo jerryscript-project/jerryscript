@@ -13,10 +13,17 @@
  * limitations under the License.
  */
 
+#include "ecma-arraybuffer-object.h"
 #include "ecma-atomics-object.h"
+#include "ecma-bigint.h"
 #include "ecma-builtins.h"
+#include "ecma-errors.h"
+#include "ecma-exceptions.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-shared-arraybuffer-object.h"
+#include "ecma-typedarray-object.h"
 
 #include "jrt.h"
 
@@ -67,9 +74,49 @@ enum
  */
 
 /**
+ * Convert ecma_number to the appropriate type according to the element type of typedarray.
+ */
+static ecma_value_t
+ecma_convert_number_to_typed_array_type (ecma_number_t num, /**< ecma_number argument */
+                                         ecma_typedarray_type_t element_type) /**< element type of typedarray */
+{
+  uint32_t value = ecma_typedarray_setter_number_to_uint32 (num);
+
+  switch (element_type)
+  {
+    case ECMA_INT8_ARRAY:
+    {
+      return ecma_make_number_value ((int8_t) value);
+    }
+    case ECMA_UINT8_ARRAY:
+    {
+      return ecma_make_number_value ((uint8_t) value);
+    }
+    case ECMA_INT16_ARRAY:
+    {
+      return ecma_make_number_value ((int16_t) value);
+    }
+    case ECMA_UINT16_ARRAY:
+    {
+      return ecma_make_number_value ((uint16_t) value);
+    }
+    case ECMA_INT32_ARRAY:
+    {
+      return ecma_make_number_value ((int32_t) value);
+    }
+    default:
+    {
+      JERRY_ASSERT (element_type == ECMA_UINT32_ARRAY);
+
+      return ecma_make_number_value (value);
+    }
+  }
+} /* ecma_convert_number_to_typed_array_type */
+
+/**
  * The Atomics object's 'compareExchange' routine
  *
- * See also: ES11 24.4.4
+ * See also: ES12 25.4.4
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
@@ -80,12 +127,124 @@ ecma_builtin_atomics_compare_exchange (ecma_value_t typedarray, /**< typedArray 
                                        ecma_value_t expected_value, /**< expectedValue argument */
                                        ecma_value_t replacement_value) /**< replacementValue argument*/
 {
-  JERRY_UNUSED (typedarray);
-  JERRY_UNUSED (index);
-  JERRY_UNUSED (expected_value);
-  JERRY_UNUSED (replacement_value);
+  ecma_value_t buffer = ecma_validate_integer_typedarray (typedarray, false);
 
-  return ecma_make_uint32_value (0);
+  if (ECMA_IS_VALUE_ERROR (buffer))
+  {
+    return buffer;
+  }
+
+  uint32_t idx = ecma_validate_atomic_access (typedarray, index);
+
+  if (idx == ECMA_STRING_NOT_ARRAY_INDEX)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (typedarray);
+  ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
+
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (target_info.array_buffer_p))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_typedarray_type_t element_type = target_info.id;
+  ecma_value_t expected;
+  ecma_value_t replacement;
+
+#if JERRY_BUILTIN_BIGINT
+  if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (element_type))
+  {
+    expected = ecma_bigint_to_bigint (expected_value, false);
+
+    if (ECMA_IS_VALUE_ERROR (expected))
+    {
+      return expected;
+    }
+
+    if (element_type == ECMA_BIGUINT64_ARRAY)
+    {
+      uint64_t num;
+      bool sign;
+
+      ecma_bigint_get_digits_and_sign (expected, &num, 1, &sign);
+
+      if (sign)
+      {
+        num = (uint64_t) (-(int64_t) num);
+      }
+
+      if (expected != ECMA_BIGINT_ZERO)
+      {
+        ecma_deref_bigint (ecma_get_extended_primitive_from_value (expected));
+      }
+
+      expected = ecma_bigint_create_from_digits (&num, 1, false);
+    }
+
+    replacement = ecma_bigint_to_bigint (replacement_value, false);
+
+    if (ECMA_IS_VALUE_ERROR (replacement))
+    {
+      ecma_free_value (expected);
+      return replacement;
+    }
+  }
+  else
+#endif /* JERRY_BUILTIN_BIGINT */
+  {
+    ecma_number_t tmp_exp;
+    ecma_number_t tmp_rep;
+
+    expected = ecma_op_to_integer (expected_value, &tmp_exp);
+
+    if (ECMA_IS_VALUE_ERROR (expected))
+    {
+      return expected;
+    }
+
+    expected = ecma_convert_number_to_typed_array_type (tmp_exp, element_type);
+
+    replacement = ecma_op_to_integer (replacement_value, &tmp_rep);
+
+    if (ECMA_IS_VALUE_ERROR (replacement))
+    {
+      ecma_free_value (expected);
+      return replacement;
+    }
+
+    replacement = ecma_make_number_value (tmp_rep);
+  }
+
+  uint8_t element_size = target_info.element_size;
+  uint32_t offset = target_info.offset;
+  uint32_t indexed_position = idx * element_size + offset;
+
+  if (ecma_arraybuffer_is_detached (ecma_get_object_from_value (buffer)))
+  {
+    ecma_free_value (expected);
+    ecma_free_value (replacement);
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
+  ecma_typedarray_getter_fn_t typedarray_getter_cb = ecma_get_typedarray_getter_fn (element_type);
+
+  ecma_object_t *buffer_obj_p = ecma_get_object_from_value (buffer);
+  lit_utf8_byte_t *pos = ecma_arraybuffer_get_buffer (buffer_obj_p) + indexed_position;
+  ecma_value_t stored_value = typedarray_getter_cb (pos);
+
+  // TODO: Handle shared array buffers differently.
+  if (ecma_op_same_value (stored_value, expected))
+  {
+    ecma_typedarray_setter_fn_t typedarray_setter_cb = ecma_get_typedarray_setter_fn (element_type);
+    typedarray_setter_cb (ecma_arraybuffer_get_buffer (buffer_obj_p) + indexed_position, replacement);
+  }
+
+  ecma_free_value (expected);
+  ecma_free_value (replacement);
+
+  return stored_value;
 } /* ecma_builtin_atomics_compare_exchange */
 
 /**
@@ -117,11 +276,83 @@ ecma_builtin_atomics_store (ecma_value_t typedarray, /**< typedArray argument */
                             ecma_value_t index, /**< index argument */
                             ecma_value_t value) /**< value argument */
 {
-  JERRY_UNUSED (typedarray);
-  JERRY_UNUSED (index);
-  JERRY_UNUSED (value);
+  /* 1. */
+  ecma_value_t buffer = ecma_validate_integer_typedarray (typedarray, false);
 
-  return ecma_make_uint32_value (0);
+  if (ECMA_IS_VALUE_ERROR (buffer))
+  {
+    return buffer;
+  }
+
+  /* 2. */
+  uint32_t idx = ecma_validate_atomic_access (typedarray, index);
+
+  if (idx == ECMA_STRING_NOT_ARRAY_INDEX)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (typedarray);
+  ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
+
+  if (ECMA_ARRAYBUFFER_LAZY_ALLOC (target_info.array_buffer_p))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_typedarray_type_t element_type = target_info.id;
+
+  ecma_typedarray_setter_fn_t typedarray_setter_cb = ecma_get_typedarray_setter_fn (element_type);
+
+  ecma_value_t value_to_store;
+#if JERRY_BUILTIN_BIGINT
+  if (element_type == ECMA_BIGINT64_ARRAY || element_type == ECMA_BIGUINT64_ARRAY)
+  {
+    value_to_store = ecma_bigint_to_bigint (value, false);
+
+    if (ECMA_IS_VALUE_ERROR (value_to_store))
+    {
+      return value_to_store;
+    }
+  }
+  else
+#endif /* JERRY_BUILTIN_BIGINT */
+  {
+    ecma_number_t num_int;
+
+    value_to_store = ecma_op_to_integer (value, &num_int);
+
+    if (ECMA_IS_VALUE_ERROR (value_to_store))
+    {
+      return value_to_store;
+    }
+
+    if (ecma_number_is_zero (num_int) && ecma_number_is_negative (num_int))
+    {
+      num_int = (ecma_number_t) 0;
+    }
+
+    value_to_store = ecma_make_number_value (num_int);
+  }
+
+  ecma_object_t *buffer_obj_p = ecma_get_object_from_value (buffer);
+
+  if (ecma_arraybuffer_is_detached (buffer_obj_p))
+  {
+    ecma_free_value (value_to_store);
+    return ecma_raise_type_error (ECMA_ERR_ARRAYBUFFER_IS_DETACHED);
+  }
+
+  uint8_t element_size = target_info.element_size;
+
+  uint32_t offset = target_info.offset;
+
+  uint32_t indexed_position = idx * element_size + offset;
+
+  // TODO: Handle shared array buffers differently.
+  typedarray_setter_cb (ecma_arraybuffer_get_buffer (buffer_obj_p) + indexed_position, value_to_store);
+
+  return value_to_store;
 } /* ecma_builtin_atomics_store */
 
 /**

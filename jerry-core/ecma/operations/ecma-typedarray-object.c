@@ -197,7 +197,7 @@ ecma_typedarray_get_biguint64_element (lit_utf8_byte_t *src) /**< the location i
 /**
  * Normalize the given ecma_number_t to an uint32_t value
  */
-static uint32_t
+uint32_t
 ecma_typedarray_setter_number_to_uint32 (ecma_number_t value) /**< the number value to normalize */
 {
   uint32_t uint32_value = 0;

@@ -24,13 +24,13 @@
 #include "jerryscript-ext/print.h"
 
 void
-jerryx_repl (const char *prompt_p)
+jerryx_repl (const jerry_char_t *prompt_p, jerry_size_t prompt_size)
 {
   jerry_value_t result;
 
   while (true)
   {
-    jerryx_print_string (prompt_p);
+    jerryx_print_buffer (prompt_p, prompt_size);
     fflush (stdout);
 
     jerry_size_t length;
@@ -38,7 +38,7 @@ jerryx_repl (const char *prompt_p)
 
     if (line_p == NULL)
     {
-      jerryx_print_byte ('\n');
+      jerryx_print_buffer (JERRY_ZSTR_ARG ("\n"));
       return;
     }
 
@@ -80,7 +80,7 @@ jerryx_repl (const char *prompt_p)
       goto exception;
     }
 
-    jerryx_print_byte ('\n');
+    jerryx_print_buffer (JERRY_ZSTR_ARG ("\n"));
 
     jerry_value_free (result);
     result = jerry_run_jobs ();

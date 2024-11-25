@@ -143,16 +143,6 @@ void jerry_port_context_free (void);
 void jerry_port_log (const char *message_p);
 
 /**
- * Print a single character to standard output.
- *
- * This port function is never called from jerry-core directly, it is only used by jerry-ext components to print
- * information.
- *
- * @param byte: the byte to print.
- */
-void jerry_port_print_byte (jerry_char_t byte);
-
-/**
  * Print a buffer to standard output
  *
  * This port function is never called from jerry-core directly, it is only used by jerry-ext components to print

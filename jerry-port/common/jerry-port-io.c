@@ -28,29 +28,11 @@ jerry_port_log (const char *message_p) /**< message */
   fputs (message_p, stderr);
 } /* jerry_port_log */
 
-/**
- * Default implementation of jerry_port_print_byte. Uses 'putchar' to
- * print a single character to standard output.
- */
 void JERRY_ATTR_WEAK
-jerry_port_print_byte (jerry_char_t byte) /**< the character to print */
+jerry_port_print_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  putchar (byte);
-} /* jerry_port_print_byte */
-
-/**
- * Default implementation of jerry_port_print_buffer. Uses 'jerry_port_print_byte' to
- * print characters of the input buffer.
- */
-void JERRY_ATTR_WEAK
-jerry_port_print_buffer (const jerry_char_t *buffer_p, /**< string buffer */
-                         jerry_size_t buffer_size) /**< string size*/
-{
-  for (jerry_size_t i = 0; i < buffer_size; i++)
-  {
-    jerry_port_print_byte (buffer_p[i]);
-  }
-} /* jerry_port_print_byte */
+  fwrite (buffer_p, 1, buffer_size, stdout);
+} /* jerry_port_print_buffer */
 
 /**
  * Read a line from standard input as a zero-terminated string.

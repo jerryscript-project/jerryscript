@@ -49,7 +49,7 @@ main (void)
   jerry_init (JERRY_INIT_EMPTY);
   jerryx_register_global ("print", jerryx_handler_print);
 
-  jerryx_repl ("js> ");
+  jerryx_repl (JERRY_ZSTR_ARG ("js> "));
 
   jerry_cleanup ();
 } /* main */

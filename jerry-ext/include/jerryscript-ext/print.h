@@ -22,9 +22,7 @@
 JERRY_C_API_BEGIN
 
 jerry_value_t jerryx_print_value (const jerry_value_t value);
-void jerryx_print_byte (jerry_char_t ch);
 void jerryx_print_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size);
-void jerryx_print_string (const char *str_p);
 void jerryx_print_backtrace (unsigned depth);
 void jerryx_print_unhandled_exception (jerry_value_t exception);
 void jerryx_print_unhandled_rejection (jerry_value_t exception);

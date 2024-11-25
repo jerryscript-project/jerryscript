@@ -25,9 +25,9 @@
  * Provide a 'print' implementation for scripts.
  *
  * The routine converts all of its arguments to strings and outputs them
- * char-by-char using jerry_port_print_byte.
+ * by using jerry_port_print_buffer.
  *
- * The NUL character is output as "\u0000", other characters are output
+ * The NULL character is output as "\u0000", other characters are output
  * bytewise.
  *
  * Note:
@@ -35,7 +35,7 @@
  *      output. This allows more flexibility but also extends the core
  *      JerryScript engine port API. Applications that want to use
  *      `jerryx_handler_print` must ensure that their port implementation also
- *      provides `jerry_port_print_byte`.
+ *      provides `jerry_port_print_buffer`.
  *
  * @return undefined - if all arguments could be converted to strings,
  *         error - otherwise.
@@ -51,7 +51,7 @@ jerryx_handler_print (const jerry_call_info_t *call_info_p, /**< call informatio
   {
     if (index > 0)
     {
-      jerryx_print_byte (' ');
+      jerryx_print_buffer (JERRY_ZSTR_ARG (" "));
     }
 
     jerry_value_t result = jerryx_print_value (args_p[index]);
@@ -62,7 +62,7 @@ jerryx_handler_print (const jerry_call_info_t *call_info_p, /**< call informatio
     }
   }
 
-  jerryx_print_byte ('\n');
+  jerryx_print_buffer (JERRY_ZSTR_ARG ("\n"));
   return jerry_undefined ();
 } /* jerryx_handler_print */
 

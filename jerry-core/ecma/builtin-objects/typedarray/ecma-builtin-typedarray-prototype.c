@@ -1711,14 +1711,35 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
 
   uint8_t *dst_buffer_p = ecma_typedarray_get_buffer (&new_typedarray_info);
 
-  JERRY_ASSERT (new_typedarray_info.offset == 0);
-
   src_buffer_p += relative_start << info_p->shift;
 
   if (info_p->id == new_typedarray_info.id)
   {
     // 22.2.3.23. Step 22. h-i.
-    memcpy (dst_buffer_p, src_buffer_p, count << info_p->shift);
+
+    if (JERRY_LIKELY (new_typedarray_info.offset == 0))
+    {
+      if (info_p->array_buffer_p == new_typedarray_info.array_buffer_p)
+      {
+        return new_typedarray;
+      }
+
+      memcpy (dst_buffer_p, src_buffer_p, count << info_p->shift);
+    }
+    else
+    {
+      uint32_t byte_shift = (uint32_t) (1 << info_p->shift);
+
+      while (count)
+      {
+        memmove (dst_buffer_p, src_buffer_p, byte_shift);
+
+        dst_buffer_p += byte_shift;
+        src_buffer_p += byte_shift;
+
+        count--;
+      }
+    }
   }
   else
   {

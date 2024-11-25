@@ -80,7 +80,7 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
     return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_ITERATOR);
   }
 
-  ecma_value_t iterated_value = ext_obj_p->u.cls.u3.iterated_value;
+  ecma_value_t iterated_value = ext_obj_p->u.cls.iterator.value;
 
   /* 4 - 5 */
   if (ecma_is_value_empty (iterated_value))
@@ -114,7 +114,7 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
     }
   }
 
-  ecma_length_t index = ext_obj_p->u.cls.u2.iterator_index;
+  ecma_length_t index = ext_obj_p->u.cls.iterator.index;
 
   if (JERRY_UNLIKELY (index == ECMA_ITERATOR_INDEX_LIMIT))
   {
@@ -137,17 +137,17 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
   else
   {
     /* 11. */
-    ext_obj_p->u.cls.u2.iterator_index++;
+    ext_obj_p->u.cls.iterator.index++;
   }
 
   if (index >= length)
   {
-    ext_obj_p->u.cls.u3.iterated_value = ECMA_VALUE_EMPTY;
+    ext_obj_p->u.cls.iterator.value = ECMA_VALUE_EMPTY;
     return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
   }
 
   /* 7. */
-  uint8_t iterator_kind = ext_obj_p->u.cls.u1.iterator_kind;
+  uint8_t iterator_kind = ext_obj_p->u.cls.iterator.kind;
 
   if (iterator_kind == ECMA_ITERATOR_KEYS)
   {

@@ -32,7 +32,7 @@
  * Get array buffer flags.
  */
 #define ECMA_ARRAYBUFFER_GET_FLAGS(arraybuffer_p) \
-  (((ecma_extended_object_t *) (arraybuffer_p))->u.cls.u1.array_buffer_flags)
+  (((ecma_extended_object_t *) (arraybuffer_p))->u.cls.arraybuffer.flags)
 
 /**
  * Check whether the backing store is allocated for an array buffer.

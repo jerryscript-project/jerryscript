@@ -117,7 +117,7 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
     if (ecma_is_value_false (next))
     {
       /* ii. */
-      ret_value = ecma_copy_value (capability_p->header.u.cls.u3.promise);
+      ret_value = ecma_copy_value (capability_p->header.u.cls.promise_capabality.promise);
       goto done;
     }
 
@@ -247,7 +247,7 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
       }
 
       /* iv. */
-      ret_value = ecma_copy_value (capability_p->header.u.cls.u3.promise);
+      ret_value = ecma_copy_value (capability_p->header.u.cls.promise_capabality.promise);
       goto done;
     }
 

@@ -1311,7 +1311,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
 
     if (ecma_get_object_base_type (obj_p) == ECMA_OBJECT_BASE_TYPE_CLASS)
     {
-      switch (((ecma_extended_object_t *) obj_p)->u.cls.type)
+      switch (((ecma_extended_object_t *) obj_p)->u.cls.head.type)
       {
         /* 5.a */
         case ECMA_OBJECT_CLASS_NUMBER:
@@ -1346,7 +1346,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
         case ECMA_OBJECT_CLASS_BOOLEAN:
         {
           ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-          value = ext_object_p->u.cls.u3.value;
+          value = ecma_object_cls_general (ext_object_p)->value;
           ecma_deref_object (obj_p);
           break;
         }
@@ -1355,7 +1355,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
         case ECMA_OBJECT_CLASS_BIGINT:
         {
           ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-          value = ecma_copy_value (ext_object_p->u.cls.u3.value);
+          value = ecma_copy_value (ecma_object_cls_general (ext_object_p)->value);
           ecma_deref_object (obj_p);
           break;
         }
@@ -1616,7 +1616,7 @@ ecma_builtin_json_stringify (ecma_value_t arg1, /**< value */
 
             if (ecma_get_object_base_type (value_obj_p) == ECMA_OBJECT_BASE_TYPE_CLASS)
             {
-              uint8_t class_type = ((ecma_extended_object_t *) value_obj_p)->u.cls.type;
+              uint8_t class_type = ((ecma_extended_object_t *) value_obj_p)->u.cls.head.type;
 
               if (class_type == ECMA_OBJECT_CLASS_NUMBER || class_type == ECMA_OBJECT_CLASS_STRING)
               {
@@ -1667,7 +1667,7 @@ ecma_builtin_json_stringify (ecma_value_t arg1, /**< value */
 
     if (ecma_get_object_base_type (obj_p) == ECMA_OBJECT_BASE_TYPE_CLASS)
     {
-      uint8_t class_type = ((ecma_extended_object_t *) obj_p)->u.cls.type;
+      uint8_t class_type = ((ecma_extended_object_t *) obj_p)->u.cls.head.type;
 
       /* 5.a */
       if (class_type == ECMA_OBJECT_CLASS_NUMBER)

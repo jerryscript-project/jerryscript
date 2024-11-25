@@ -102,7 +102,7 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
   if (ecma_object_is_regexp_object (pattern_value))
   {
     ecma_extended_object_t *pattern_obj_p = (ecma_extended_object_t *) ecma_get_object_from_value (pattern_value);
-    bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, pattern_obj_p->u.cls.u3.value);
+    bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, ecma_object_cls_general (pattern_obj_p)->value);
 
     create_regexp_from_bc = ecma_is_value_undefined (flags_value);
 

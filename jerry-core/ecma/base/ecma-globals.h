@@ -996,6 +996,231 @@ typedef enum
 #define ECMA_BUILT_IN_BITSET_SHIFT 5
 
 /**
+ * Description of the following general class object:
+ * ECMA_OBJECT_CLASS_BOOLEAN(boolean)
+ * ECMA_OBJECT_CLASS_NUMBER(number)
+ * ECMA_OBJECT_CLASS_STRING(string)
+ * ECMA_OBJECT_CLASS_BIGINT(bigint)
+ * ECMA_OBJECT_CLASS_SYMBOL(symbol)
+ * ECMA_OBJECT_CLASS_SCRIPT(Compiled ECMAScript byte code)
+ * ECMA_OBJECT_CLASS_REGEXP(RegExp Object)
+ * ECMA_OBJECT_CLASS_MODULE_NAMESPACE(Module Namespace)
+ * Can only be accessed with ecma_object_cls_general
+ */
+typedef struct
+{
+  uint8_t cls_type; /**< class type of the object */
+  uint8_t padding0;
+  uint16_t padding1;
+  ecma_value_t value; /**< value of the general object */
+} ecma_object_cls_general_t;
+
+/**
+ * Description of objects with class.
+ *
+ * Note:
+ *     class is a reserved word in c++, so cls is used instead
+ *     all struct for object should begin with `uint8_t cls_type;`
+ */
+typedef union
+{
+  /**
+   * Description of the class type in head struct for shared access
+   */
+  struct
+  {
+    uint8_t type; /**< class type of the object */
+    uint8_t padding0;
+    uint16_t padding1;
+    uint32_t padding2;
+  } head;
+  /**
+   * Fields for general class type, do not access directly,
+   * use ecma_object_cls_general to access to ensure the cls_type is valid
+   */
+  ecma_object_cls_general_t __general;
+  /**
+   * Fields can only used by ecma_extended_object_t
+   * That is ECMA_OBJECT_CLASS_WEAKREF(WeakRef)
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t padding0;
+    uint16_t padding1;
+    ecma_value_t target; /**< [[WeakRefTarget]] internal property */
+  } weakref;
+  /**
+   * Fields can only used by ecma_promise_t.
+   * That is ECMA_OBJECT_CLASS_PROMISE(Promise)
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t flags; /**< Promise object flags */
+    uint16_t padding1;
+    ecma_value_t value; /**< value of the Promise object */
+  } promise;
+  /**
+   * Fields can only used by ecma_promise_capabality_t.
+   * That is ECMA_OBJECT_CLASS_PROMISE_CAPABILITY(Promise capability)
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t padding0; /**< Promise object flags */
+    uint16_t padding1;
+    ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
+  } promise_capabality;
+  /**
+   * Fields can only used by ecma_regexp_string_iterator_t.
+   * That is ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR(RegExp string iterator object)
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t flags; /**< flags for RegExp string iterator */
+    uint16_t padding0;
+    uint32_t padding1;
+  } regexp_string_iterator;
+  /**
+   * Fields can only used by vm_executable_object_t.
+   * That is ECMA_OBJECT_CLASS_GENERATOR(Generator object) or
+   * ECMA_OBJECT_CLASS_GENERATOR(Async generator object)
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t padding0;
+    uint16_t obj_flags; /**< executable object flags */
+    ecma_value_t head; /**< points to the async generator task queue head item */
+  } generator;
+  /**
+   * Fields can only used by ecma_async_from_sync_iterator_object_t.
+   * That is ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR(AsyncFromSyncIterator)
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t padding0;
+    uint16_t padding1;
+    ecma_value_t value; /**< IteratorRecord [[Iterator]] internal slot for AsyncFromSyncIterator */
+  } sync_iterator;
+  /**
+   * Fields can only used by %Iterator% object, those objects class type is:
+   * ECMA_OBJECT_CLASS_ARRAY_ITERATOR
+   * ECMA_OBJECT_CLASS_SET_ITERATOR
+   * ECMA_OBJECT_CLASS_MAP_ITERATOR
+   * ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR
+   * ECMA_OBJECT_CLASS_STRING_ITERATOR
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t kind; /**< type of iterator */
+    uint16_t index; /**< for %Iterator%: [[%Iterator%NextIndex]] property */
+    ecma_value_t value; /**< for %Iterator%: [[IteratedObject]] property */
+  } iterator;
+#if JERRY_BUILTIN_CONTAINER
+  /**
+   * Fields can only used by container(Map/Set) object
+   * That is ECMA_OBJECT_CLASS_CONTAINER(Container (Map, WeakMap, Set, WeakSet))
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t flags; /**< container object flags */
+    uint16_t id; /**< magic string id of a container */
+    ecma_value_t value; /**< internal value pointer */
+  } container;
+#endif /* JERRY_BUILTIN_CONTAINER */
+  /**
+   * Fields can only used by Error object
+   * That is ECMA_OBJECT_CLASS_ERROR
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t type; /**< jerry_error_t type of native error objects */
+    uint16_t padding0;
+    uint32_t padding1;
+  } error;
+#if JERRY_BUILTIN_DATE
+  /**
+   * Fields can only used by Date object
+   * That is ECMA_OBJECT_CLASS_DATE
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t flags; /**< flags for date objects */
+    uint16_t padding0;
+    int32_t tza; /**< TimeZone adjustment for date objects */
+  } date;
+#endif /* JERRY_BUILTIN_DATE */
+#if JERRY_MODULE_SYSTEM
+  /**
+   * Fields can only used by ES2020 module
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t state; /**< Module state */
+    uint16_t flags; /**< Module flags */
+    uint32_t dfs_ancestor_index; /**< module dfs ancestor index (ES2020 15.2.1.16) */
+  } module;
+#endif /* JERRY_MODULE_SYSTEM */
+  /**
+   * Fields can only used by Arguments Exotic Object
+   * That is ECMA_OBJECT_CLASS_ARGUMENTS
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t flags; /**< arguments object flags */
+    uint16_t formal_params_number; /**< for arguments: formal parameters number */
+    uint32_t number; /**< for arguments: arguments number */
+  } arguments;
+#if JERRY_BUILTIN_DATAVIEW
+  /**
+   * Fields can only used by DataView Object
+   * That is ECMA_OBJECT_CLASS_DATAVIEW
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t padding0;
+    uint16_t padding1;
+    uint32_t length; /**< length of DataView */
+  } dataview;
+#endif /* JERRY_BUILTIN_DATAVIEW */
+#if JERRY_BUILTIN_TYPEDARRAY
+  /**
+   * Fields can only used by ArrayBuffer Object
+   * That is ECMA_OBJECT_CLASS_ARRAY_BUFFER or ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t flags; /**< ArrayBuffer flags */
+    uint16_t padding0;
+    uint32_t length; /**< length of ArrayBuffer */
+  } arraybuffer;
+  /**
+   * Fields can only used by TypedArray Object
+   * That is ECMA_OBJECT_CLASS_TYPEDARRAY
+   */
+  struct
+  {
+    uint8_t cls_type; /**< class type of the object */
+    uint8_t type; /**< type of typed array */
+    uint16_t flags; /**< typed array object flags */
+    ecma_value_t arraybuffer; /**< for typedarray: ArrayBuffer reference */
+  } typedarray;
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+} ecma_object_cls_t;
+
+/**
  * Description of extended ECMA-object.
  *
  * The extended object is an object with extra fields.
@@ -1011,80 +1236,7 @@ typedef struct
   {
     ecma_built_in_props_t built_in; /**< built-in object part */
 
-    /**
-     * Description of objects with class.
-     *
-     * Note:
-     *     class is a reserved word in c++, so cls is used instead
-     */
-    struct
-    {
-      uint8_t type; /**< class type of the object */
-      /**
-       * Description of 8 bit extra fields. These extra fields depend on the type.
-       */
-      union
-      {
-        uint8_t arguments_flags; /**< arguments object flags */
-        uint8_t error_type; /**< jerry_error_t type of native error objects */
-#if JERRY_BUILTIN_DATE
-        uint8_t date_flags; /**< flags for date objects */
-#endif /* JERRY_BUILTIN_DATE */
-#if JERRY_MODULE_SYSTEM
-        uint8_t module_state; /**< Module state */
-#endif /* JERRY_MODULE_SYSTEM */
-        uint8_t iterator_kind; /**< type of iterator */
-        uint8_t regexp_string_iterator_flags; /**< flags for RegExp string iterator */
-        uint8_t promise_flags; /**< Promise object flags */
-#if JERRY_BUILTIN_CONTAINER
-        uint8_t container_flags; /**< container object flags */
-#endif /* JERRY_BUILTIN_CONTAINER */
-#if JERRY_BUILTIN_TYPEDARRAY
-        uint8_t array_buffer_flags; /**< ArrayBuffer flags */
-        uint8_t typedarray_type; /**< type of typed array */
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
-      } u1;
-      /**
-       * Description of 16 bit extra fields. These extra fields depend on the type.
-       */
-      union
-      {
-        uint16_t formal_params_number; /**< for arguments: formal parameters number */
-#if JERRY_MODULE_SYSTEM
-        uint16_t module_flags; /**< Module flags */
-#endif /* JERRY_MODULE_SYSTEM */
-        uint16_t iterator_index; /**< for %Iterator%: [[%Iterator%NextIndex]] property */
-        uint16_t executable_obj_flags; /**< executable object flags */
-#if JERRY_BUILTIN_CONTAINER
-        uint16_t container_id; /**< magic string id of a container */
-#endif /* JERRY_BUILTIN_CONTAINER */
-#if JERRY_BUILTIN_TYPEDARRAY
-        uint16_t typedarray_flags; /**< typed array object flags */
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
-      } u2;
-      /**
-       * Description of 32 bit / value. These extra fields depend on the type.
-       */
-      union
-      {
-        ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
-        ecma_value_t target; /**< [[ProxyTarget]] or [[WeakRefTarget]] internal property */
-#if JERRY_BUILTIN_TYPEDARRAY
-        ecma_value_t arraybuffer; /**< for typedarray: ArrayBuffer reference */
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
-        ecma_value_t head; /**< points to the async generator task queue head item */
-        ecma_value_t iterated_value; /**< for %Iterator%: [[IteratedObject]] property */
-        ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
-        ecma_value_t sync_iterator; /**< IteratorRecord [[Iterator]] internal slot for AsyncFromSyncIterator */
-        ecma_value_t spread_value; /**< for spread object: spreaded element */
-        int32_t tza; /**< TimeZone adjustment for date objects */
-        uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
-        uint32_t arguments_number; /**< for arguments: arguments number */
-#if JERRY_MODULE_SYSTEM
-        uint32_t dfs_ancestor_index; /**< module dfs ancestor index (ES2020 15.2.1.16) */
-#endif /* JERRY_MODULE_SYSTEM */
-      } u3;
-    } cls;
+    ecma_object_cls_t cls; /**< objects with class. */
 
     /**
      * Description of function objects.
@@ -1928,8 +2080,8 @@ typedef enum
 /**
  * Checks whether the executable object is waiting for resuming.
  */
-#define ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED(executable_object_p)          \
-  (!((executable_object_p)->extended_object.u.cls.u2.executable_obj_flags \
+#define ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED(executable_object_p)      \
+  (!((executable_object_p)->extended_object.u.cls.generator.obj_flags \
      & (ECMA_EXECUTABLE_OBJECT_COMPLETED | ECMA_EXECUTABLE_OBJECT_RUNNING)))
 
 /**
@@ -1946,7 +2098,7 @@ typedef enum
  * Resume execution of the byte code.
  */
 #define ECMA_EXECUTABLE_OBJECT_RESUME_EXEC(executable_object_p) \
-  ((executable_object_p)->extended_object.u.cls.u2.executable_obj_flags &= ECMA_EXECUTABLE_OBJECT_RESUME_EXEC_MASK)
+  ((executable_object_p)->extended_object.u.cls.generator.obj_flags &= ECMA_EXECUTABLE_OBJECT_RESUME_EXEC_MASK)
 
 /**
  * Enqueued task of an AsyncGenerator.

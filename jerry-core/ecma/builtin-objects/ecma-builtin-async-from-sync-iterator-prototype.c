@@ -147,7 +147,7 @@ ecma_builtin_async_from_sync_iterator_prototype_next (ecma_async_from_sync_itera
 {
   /* 5. */
   ecma_value_t next_result =
-    ecma_op_iterator_next (iter_p->header.u.cls.u3.sync_iterator, iter_p->sync_next_method, value);
+    ecma_op_iterator_next (iter_p->header.u.cls.sync_iterator.value, iter_p->sync_next_method, value);
 
   /* 6. */
   if (ECMA_IS_VALUE_ERROR (ecma_op_if_abrupt_reject_promise (&next_result, capability_p)))
@@ -180,7 +180,7 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
                                                     lit_magic_string_id_t method_id) /**< method id */
 {
   /* 5. */
-  ecma_value_t sync_iterator = iter_p->header.u.cls.u3.sync_iterator;
+  ecma_value_t sync_iterator = iter_p->header.u.cls.sync_iterator.value;
   ecma_value_t method = ecma_op_get_method_by_magic_id (sync_iterator, method_id);
 
   /* 6. */
@@ -234,7 +234,7 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
     }
 
     /* 7.c. */
-    return ecma_copy_value (capability_p->header.u.cls.u3.promise);
+    return ecma_copy_value (capability_p->header.u.cls.promise_capabality.promise);
   }
 
   /* 8. */
@@ -276,7 +276,7 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
     ecma_free_value (reject);
 
     /* 10.b. */
-    return ecma_copy_value (capability_p->header.u.cls.u3.promise);
+    return ecma_copy_value (capability_p->header.u.cls.promise_capabality.promise);
   }
 
   ecma_value_t result = ecma_op_async_from_sync_iterator_prototype_continuation (call_result, capability_obj_p);

@@ -16,8 +16,7 @@
 
 
 # This file is based on work under the following copyright and permission notice:
-# https://github.com/test262-utils/test262-harness-py
-# test262.py, _monkeyYaml.py, parseTestRecord.py
+# https://github.com/test262-utils/test262-harness-py/blob/master/src/test262.py
 
 # license of test262.py:
 # Copyright 2009 the Sputnik authors.  All rights reserved.
@@ -29,14 +28,6 @@
 
 # license of _packager.py:
 # Copyright (c) 2012 Ecma International.  All rights reserved.
-# This code is governed by the BSD license found in the LICENSE file.
-
-# license of _monkeyYaml.py:
-# Copyright 2014 by Sam Mikes.  All rights reserved.
-# This code is governed by the BSD license found in the LICENSE file.
-
-# license of parseTestRecord.py:
-# Copyright 2011 by Google, Inc.  All rights reserved.
 # This code is governed by the BSD license found in the LICENSE file.
 
 
@@ -55,275 +46,14 @@ from collections import Counter
 import signal
 import multiprocessing
 
-#######################################################################
-# based on _monkeyYaml.py
-#######################################################################
-
-M_YAML_LIST_PATTERN = re.compile(r"^\[(.*)\]$")
-M_YAML_MULTILINE_LIST = re.compile(r"^ *- (.*)$")
-
 
 # The timeout of each test case
 TEST262_CASE_TIMEOUT = 180
 
-
-def yaml_load(string):
-    return my_read_dict(string.splitlines())[1]
-
-
-def my_read_dict(lines, indent=""):
-    dictionary = {}
-    key = None
-    empty_lines = 0
-
-    while lines:
-        if not lines[0].startswith(indent):
-            break
-
-        line = lines.pop(0)
-        if my_is_all_spaces(line):
-            empty_lines += 1
-            continue
-
-        result = re.match(r"(.*?):(.*)", line)
-
-        if result:
-            if not dictionary:
-                dictionary = {}
-            key = result.group(1).strip()
-            value = result.group(2).strip()
-            (lines, value) = my_read_value(lines, value, indent)
-            dictionary[key] = value
-        else:
-            if dictionary and key and key in dictionary:
-                char = " " if empty_lines == 0 else "\n" * empty_lines
-                dictionary[key] += char + line.strip()
-            else:
-                raise Exception("monkeyYaml is confused at " + line)
-        empty_lines = 0
-
-    if not dictionary:
-        dictionary = None
-
-    return lines, dictionary
-
-
-def my_read_value(lines, value, indent):
-    if value in (">", "|"):
-        (lines, value) = my_multiline(lines, value == "|")
-        value = value + "\n"
-        return (lines, value)
-    if lines and not value:
-        if my_maybe_list(lines[0]):
-            return my_multiline_list(lines, value)
-        indent_match = re.match("(" + indent + r"\s+)", lines[0])
-        if indent_match:
-            if ":" in lines[0]:
-                return my_read_dict(lines, indent_match.group(1))
-            return my_multiline(lines, False)
-    return lines, my_read_one_line(value)
-
-
-def my_maybe_list(value):
-    return M_YAML_MULTILINE_LIST.match(value)
-
-
-def my_multiline_list(lines, value):
-    # assume no explcit indentor (otherwise have to parse value)
-    value = []
-    indent = 0
-    while lines:
-        line = lines.pop(0)
-        leading = my_leading_spaces(line)
-        if my_is_all_spaces(line):
-            pass
-        elif leading < indent:
-            lines.insert(0, line)
-            break
-        else:
-            indent = indent or leading
-            value += [my_read_one_line(my_remove_list_header(indent, line))]
-    return (lines, value)
-
-
-def my_remove_list_header(indent, line):
-    line = line[indent:]
-    return M_YAML_MULTILINE_LIST.match(line).group(1)
-
-
-def my_read_one_line(value):
-    if M_YAML_LIST_PATTERN.match(value):
-        return my_flow_list(value)
-    if re.match(r"^[-0-9]*$", value):
-        try:
-            value = int(value)
-        except ValueError:
-            pass
-    elif re.match(r"^[-.0-9eE]*$", value):
-        try:
-            value = float(value)
-        except ValueError:
-            pass
-    elif re.match(r"^('|\").*\1$", value):
-        value = value[1:-1]
-    return value
-
-
-def my_flow_list(value):
-    result = M_YAML_LIST_PATTERN.match(value)
-    values = result.group(1).split(",")
-    return [my_read_one_line(v.strip()) for v in values]
-
-
-def my_multiline(lines, preserve_newlines=False):
-    # assume no explcit indentor (otherwise have to parse value)
-    value = ""
-    indent = my_leading_spaces(lines[0])
-    was_empty = None
-
-    while lines:
-        line = lines.pop(0)
-        is_empty = my_is_all_spaces(line)
-
-        if is_empty:
-            if preserve_newlines:
-                value += "\n"
-        elif my_leading_spaces(line) < indent:
-            lines.insert(0, line)
-            break
-        else:
-            if preserve_newlines:
-                if was_empty is not None:
-                    value += "\n"
-            else:
-                if was_empty:
-                    value += "\n"
-                elif was_empty is False:
-                    value += " "
-            value += line[(indent):]
-
-        was_empty = is_empty
-
-    return (lines, value)
-
-
-def my_is_all_spaces(line):
-    return len(line.strip()) == 0
-
-
-def my_leading_spaces(line):
-    return len(line) - len(line.lstrip(' '))
-
-
-#######################################################################
-# based on parseTestRecord.py
-#######################################################################
-
-# Matches trailing whitespace and any following blank lines.
-_BLANK_LINES = r"([ \t]*[\r\n]{1,2})*"
-
-# Matches the YAML frontmatter block.
-# It must be non-greedy because test262-es2015/built-ins/Object/assign/Override.js contains a comment like yaml pattern
-_YAML_PATTERN = re.compile(r"/\*---(.*?)---\*/" + _BLANK_LINES, re.DOTALL)
-
-# Matches all known variants for the license block.
-# https://github.com/tc39/test262/blob/705d78299cf786c84fa4df473eff98374de7135a/tools/lint/lib/checks/license.py
-_LICENSE_PATTERN = re.compile(
-    r'// Copyright( \([C]\))? (\w+) .+\. {1,2}All rights reserved\.[\r\n]{1,2}' +
-    r'(' +
-    r'// This code is governed by the( BSD)? license found in the LICENSE file\.' +
-    r'|' +
-    r'// See LICENSE for details.' +
-    r'|' +
-    r'// Use of this source code is governed by a BSD-style license that can be[\r\n]{1,2}' +
-    r'// found in the LICENSE file\.' +
-    r'|' +
-    r'// See LICENSE or https://github\.com/tc39/test262/blob/master/LICENSE' +
-    r')' + _BLANK_LINES, re.IGNORECASE)
-
-
-def yaml_attr_parser(test_record, attrs, name, onerror=print):
-    parsed = yaml_load(attrs)
-    if parsed is None:
-        onerror(f"Failed to parse yaml in name {name}")
-        return
-
-    for key in parsed:
-        value = parsed[key]
-        if key == "info":
-            key = "commentary"
-        test_record[key] = value
-
-    if 'flags' in test_record:
-        for flag in test_record['flags']:
-            test_record[flag] = ""
-
-
-def find_license(src):
-    match = _LICENSE_PATTERN.search(src)
-    if not match:
-        return None
-
-    return match.group(0)
-
-
-def find_attrs(src):
-    match = _YAML_PATTERN.search(src)
-    if not match:
-        return (None, None)
-
-    return (match.group(0), match.group(1).strip())
-
-
-def parse_test_record(src, name, onerror=print):
-    # Find the license block.
-    header = find_license(src)
-
-    # Find the YAML frontmatter.
-    (frontmatter, attrs) = find_attrs(src)
-
-    # YAML frontmatter is required for all tests.
-    if frontmatter is None:
-        onerror(f"Missing frontmatter: {name}")
-
-    # The license shuold be placed before the frontmatter and there shouldn't be
-    # any extra content between the license and the frontmatter.
-    if header is not None and frontmatter is not None:
-        header_idx = src.index(header)
-        frontmatter_idx = src.index(frontmatter)
-        if header_idx > frontmatter_idx:
-            onerror(f"Unexpected license after frontmatter: {name}")
-
-        # Search for any extra test content, but ignore whitespace only or comment lines.
-        extra = src[header_idx + len(header): frontmatter_idx]
-        if extra and any(line.strip() and not line.lstrip().startswith("//") for line in extra.split("\n")):
-            onerror(
-                f"Unexpected test content between license and frontmatter: {name}")
-
-    # Remove the license and YAML parts from the actual test content.
-    test = src
-    if frontmatter is not None:
-        test = test.replace(frontmatter, '')
-    if header is not None:
-        test = test.replace(header, '')
-
-    test_record = {}
-    test_record['header'] = header.strip() if header else ''
-    test_record['test'] = test
-
-    if attrs:
-        yaml_attr_parser(test_record, attrs, name, onerror)
-
-    # Report if the license block is missing in non-generated tests.
-    if header is None and "generated" not in test_record and "hashbang" not in name:
-        onerror(f"No license found in: {name}")
-
-    return test_record
-
-
-#######################################################################
-# based on test262.py
-#######################################################################
+TEST_RE = re.compile(r"(?P<test1>.*)\/\*---(?P<header>.+)---\*\/(?P<test2>.*)", re.DOTALL)
+YAML_INCLUDES_RE = re.compile(r"includes:\s+\[(?P<includes>.+)\]")
+YAML_FLAGS_RE = re.compile(r"flags:\s+\[(?P<flags>.+)\]")
+YAML_NEGATIVE_RE = re.compile(r"negative:.*phase:\s+(?P<phase>\w+).*type:\s+(?P<type>\w+)", re.DOTALL)
 
 class Test262Error(Exception):
     def __init__(self, message):
@@ -490,18 +220,34 @@ class TestCase:
         self.name = name
         self.full_path = full_path
         self.strict_mode = strict_mode
-        with open(self.full_path, "r", newline='', encoding='utf8') as file_desc:
-            self.contents = file_desc.read()
-        test_record = parse_test_record(self.contents, name)
-        self.test = test_record["test"]
-        del test_record["test"]
-        del test_record["header"]
-        test_record.pop("commentary", None)    # do not throw if missing
-        self.test_record = test_record
         self.command_template = command_template
         self.module_flag = module_flag
-
+        self.test_record = {}
+        self.parse_test_record()
         self.validate()
+
+    def parse_test_record(self):
+        with open(self.full_path, "r", newline='', encoding='utf8') as file_desc:
+            full_test = file_desc.read()
+
+        match = TEST_RE.search(full_test)
+        header = match.group("header")
+        self.test = match.group("test1") + match.group("test2")
+
+        match = YAML_INCLUDES_RE.search(header)
+
+        if match:
+            self.test_record["includes"] = [inc.strip() for inc in match.group("includes").split(",") if inc]
+
+        match = YAML_FLAGS_RE.search(header)
+        self.test_record["flags"] = [flag.strip() for flag in match.group("flags").split(",") if flag] if match else []
+
+        match = YAML_NEGATIVE_RE.search(header)
+        if match:
+            self.test_record["negative"] = {
+                "phase" : match.group("phase"),
+                "type" : match.group("type")
+            }
 
     def negative_match(self, stderr):
         neg = re.compile(self.get_negative_type())
@@ -537,19 +283,19 @@ class TestCase:
         return 'negative' in self.test_record
 
     def is_only_strict(self):
-        return 'onlyStrict' in self.test_record
+        return 'onlyStrict' in self.test_record["flags"]
 
     def is_no_strict(self):
-        return 'noStrict' in self.test_record or self.is_raw()
+        return 'noStrict' in self.test_record["flags"] or self.is_raw()
 
     def is_raw(self):
-        return 'raw' in self.test_record
+        return 'raw' in self.test_record["flags"]
 
     def is_async_test(self):
-        return 'async' in self.test_record or '$DONE' in self.test
+        return 'async' in self.test_record["flags"] or '$DONE' in self.test
 
     def is_module(self):
-        return 'module' in self.test_record
+        return 'module' in self.test_record["flags"]
 
     def get_include_list(self):
         if self.test_record.get('includes'):

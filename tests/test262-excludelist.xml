@@ -2486,39 +2486,7 @@
        features: [Atomics]
        https://github.com/tc39/ecmascript_sharedmem
   -->
-  <test id="built-ins/Atomics/add/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/add/bigint/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/add/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/add/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/add/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/bigint/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/bad-range.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/bigint/bad-range.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/bigint/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/non-shared-int-views-throws.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/non-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/validate-arraytype-before-expectedValue-coercion.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/validate-arraytype-before-index-coercion.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/validate-arraytype-before-replacementValue-coercion.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/bigint/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/non-shared-bufferdata.js"><reason></reason></test>
   <test id="built-ins/Atomics/isLockFree/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/bigint/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/non-shared-bufferdata.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bigint/non-bigint64-typedarray-throws.js"><reason></reason></test>
@@ -2558,27 +2526,6 @@
   <test id="built-ins/Atomics/notify/undefined-index-defaults-to-zero.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/validate-arraytype-before-count-coercion.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/validate-arraytype-before-index-coercion.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/bigint/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/bad-range.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/bigint/bad-range.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/bigint/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/non-shared-int-views-throws.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/non-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/validate-arraytype-before-index-coercion.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/validate-arraytype-before-value-coercion.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/bigint/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/non-shared-bufferdata.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bigint/cannot-suspend-throws.js"><reason></reason></test>
@@ -2652,34 +2599,11 @@
   <test id="built-ins/Atomics/wait/waiterlist-block-indexedposition-wake.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/waiterlist-order-of-operations-is-fifo.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/was-woken-before-timeout.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/bigint/non-shared-bufferdata.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/non-shared-bufferdata.js"><reason></reason></test>
 
   <!-- ES2017: Shared Memory and Atomics
        features: [SharedArrayBuffer]
        https://github.com/tc39/ecmascript_sharedmem
   -->
-  <test id="built-ins/Atomics/add/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/add/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/add/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/and/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/bad-range.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/bigint/bad-range.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/compareExchange/non-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/exchange/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/load/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bigint/notify-all-on-loc.js"><reason></reason></test>
@@ -2705,18 +2629,6 @@
   <test id="built-ins/Atomics/notify/out-of-range-index-throws.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/symbol-for-index-throws.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/undefined-index-defaults-to-zero.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/or/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/bad-range.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/bigint/bad-range.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/store/non-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/sub/good-views.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bigint/bad-range.js"><reason></reason></test>
   <test id="built-ins/Atomics/wait/bigint/cannot-suspend-throws.js"><reason></reason></test>
@@ -2865,9 +2777,6 @@
   <test id="built-ins/Atomics/waitAsync/value-not-equal.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/waiterlist-block-indexedposition-wake.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/was-woken-before-timeout.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/bigint/good-views.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/expected-return-value.js"><reason></reason></test>
-  <test id="built-ins/Atomics/xor/good-views.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/typedarray-backed-by-sharedarraybuffer.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/buffer-arg/typedarray-backed-by-sharedarraybuffer.js"><reason></reason></test>
   <!-- END - ES2017: Shared Memory and Atomics -->

@@ -16,6 +16,7 @@
 #ifndef ECMA_ARRAYBUFFER_OBJECT_H
 #define ECMA_ARRAYBUFFER_OBJECT_H
 
+#include "ecma-atomics-object.h"
 #include "ecma-globals.h"
 
 #if JERRY_BUILTIN_TYPEDARRAY
@@ -58,6 +59,13 @@ bool ecma_arraybuffer_detach (ecma_object_t *obj_p);
 bool ecma_is_arraybuffer (ecma_value_t val);
 ecma_value_t
 ecma_builtin_arraybuffer_slice (ecma_value_t this_arg, const ecma_value_t *argument_list_p, uint32_t arguments_number);
+ecma_value_t ecma_arraybuffer_get_modify_set_value_in_buffer (ecma_value_t buffer,
+                                                              uint32_t indexed_position,
+                                                              ecma_value_t val,
+                                                              ecma_atomics_op_t op,
+                                                              ecma_typedarray_type_t element_type,
+                                                              ecma_typedarray_getter_fn_t typedarray_getter_cb,
+                                                              ecma_typedarray_setter_fn_t typedarray_setter_cb);
 
 /**
  * @}

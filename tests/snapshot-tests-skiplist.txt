@@ -1,3 +1,4 @@
+tests/jerry/atomics.js
 tests/jerry/bigint-typedarray-prototype-filter.js
 tests/jerry/bigint5.js
 tests/jerry/bigint6.js

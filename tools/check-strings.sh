@@ -16,21 +16,44 @@
 
 MAGIC_STRINGS_GEN="tools/gen-strings.py"
 MAGIC_STRINGS_INC_H="jerry-core/lit/lit-magic-strings.inc.h"
-MAGIC_STRINGS_TEMP=`mktemp lit-magic-strings.inc.h.XXXXXXXXXX`
+ECMA_ERROR_MESSAGES_INC_H="jerry-core/ecma/base/ecma-error-messages.inc.h"
+PARSER_ERROR_MESSAGES_INC_H="jerry-core/parser/js/parser-error-messages.inc.h"
+MAGIC_STRINGS_TEMP=$(mktemp lit-magic-strings.inc.h.XXXXXXXXXX)
+ECMA_ERROR_MESSAGES_TEMP=$(mktemp ecma-error-messages.inc.h.XXXXXXXXXX)
+PARSER_ERROR_MESSAGES_TEMP=$(mktemp parser-error-messages.inc.h.XXXXXXXXXX)
 
-cp $MAGIC_STRINGS_INC_H $MAGIC_STRINGS_TEMP
+cp $MAGIC_STRINGS_INC_H "$MAGIC_STRINGS_TEMP"
+cp $ECMA_ERROR_MESSAGES_INC_H "$ECMA_ERROR_MESSAGES_TEMP"
+cp $PARSER_ERROR_MESSAGES_INC_H "$PARSER_ERROR_MESSAGES_TEMP"
 $MAGIC_STRINGS_GEN
 DIFF_RESULT=$?
 
 if [ $DIFF_RESULT -eq 0 ]
 then
-  diff -q $MAGIC_STRINGS_INC_H $MAGIC_STRINGS_TEMP
+  diff -q $MAGIC_STRINGS_INC_H "$MAGIC_STRINGS_TEMP"
   DIFF_RESULT=$?
   if [ $DIFF_RESULT -ne 0 ]
   then
     echo -e "\e[1;33m$MAGIC_STRINGS_INC_H must be re-generated. Run $MAGIC_STRINGS_GEN\e[0m"
+    exit $DIFF_RESULT
+  fi
+  diff -q $ECMA_ERROR_MESSAGES_INC_H "$ECMA_ERROR_MESSAGES_TEMP"
+  DIFF_RESULT=$?
+  if [ $DIFF_RESULT -ne 0 ]
+  then
+    echo -e "\e[1;33m$ECMA_ERROR_MESSAGES_INC_H must be re-generated. Run $MAGIC_STRINGS_GEN\e[0m"
+    exit $DIFF_RESULT
+  fi
+  diff -q $PARSER_ERROR_MESSAGES_INC_H "$PARSER_ERROR_MESSAGES_TEMP"
+  DIFF_RESULT=$?
+  if [ $DIFF_RESULT -ne 0 ]
+  then
+    echo -e "\e[1;33m$PARSER_ERROR_MESSAGES_INC_H must be re-generated. Run $MAGIC_STRINGS_GEN\e[0m"
+    exit $DIFF_RESULT
   fi
 fi
-mv $MAGIC_STRINGS_TEMP $MAGIC_STRINGS_INC_H
+mv "$MAGIC_STRINGS_TEMP" $MAGIC_STRINGS_INC_H
+mv "$ECMA_ERROR_MESSAGES_TEMP" $ECMA_ERROR_MESSAGES_INC_H
+mv "$PARSER_ERROR_MESSAGES_TEMP" $PARSER_ERROR_MESSAGES_INC_H
 
 exit $DIFF_RESULT

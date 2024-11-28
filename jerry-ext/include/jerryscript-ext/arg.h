@@ -167,7 +167,7 @@ static inline jerryx_arg_t
 jerryx_arg_native_pointer (void **dest, const jerry_object_native_info_t *info_p, jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t jerryx_arg_ignore (void);
 static inline jerryx_arg_t jerryx_arg_custom (void *dest, uintptr_t extra_info, jerryx_arg_transform_func_t func);
-static inline jerryx_arg_t jerryx_arg_object_properties (const jerryx_arg_object_props_t *object_props_p,
+static inline jerryx_arg_t jerryx_arg_object_properties (const jerryx_arg_object_props_t *obj_prop_p,
                                                          jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t jerryx_arg_array (const jerryx_arg_array_items_t *array_items_p,
                                              jerryx_arg_optional_t opt_flag);

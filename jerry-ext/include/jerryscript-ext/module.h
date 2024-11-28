@@ -161,12 +161,12 @@ extern jerryx_module_resolver_t jerryx_module_native_resolver;
  * loaded if it is found.
  */
 jerry_value_t
-jerryx_module_resolve (const jerry_value_t name, const jerryx_module_resolver_t **resolvers, size_t count);
+jerryx_module_resolve (const jerry_value_t name, const jerryx_module_resolver_t **resolvers_p, size_t count);
 
 /**
  * Delete a module from the cache or, if name has the JavaScript value of undefined, clear the entire cache.
  */
-void jerryx_module_clear_cache (const jerry_value_t name, const jerryx_module_resolver_t **resolvers, size_t count);
+void jerryx_module_clear_cache (const jerry_value_t name, const jerryx_module_resolver_t **resolvers_p, size_t count);
 
 JERRY_C_API_END
 

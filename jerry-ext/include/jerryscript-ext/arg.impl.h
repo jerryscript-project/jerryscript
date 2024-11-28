@@ -347,7 +347,7 @@ jerryx_arg_custom (void *dest, /**< pointer to the native argument where the res
  * @return a jerryx_arg_t instance.
  */
 static inline jerryx_arg_t
-jerryx_arg_object_properties (const jerryx_arg_object_props_t *object_props, /**< pointer to object property mapping */
+jerryx_arg_object_properties (const jerryx_arg_object_props_t *obj_prop_p, /**< pointer to object property mapping */
                               jerryx_arg_optional_t opt_flag) /**< whether the argument is optional */
 {
   jerryx_arg_transform_func_t func;
@@ -361,7 +361,7 @@ jerryx_arg_object_properties (const jerryx_arg_object_props_t *object_props, /**
     func = jerryx_arg_transform_object_props;
   }
 
-  return (jerryx_arg_t){ .func = func, .dest = NULL, .extra_info = (uintptr_t) object_props };
+  return (jerryx_arg_t){ .func = func, .dest = NULL, .extra_info = (uintptr_t) obj_prop_p };
 } /* jerryx_arg_object_properties */
 
 /**

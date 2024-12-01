@@ -52,7 +52,7 @@ typedef struct
  * @return rounded high to uint64_t
  */
 static uint64_t
-ecma_round_high_to_uint64 (ecma_uint128_t *num_p)
+ecma_round_high_to_uint64 (ecma_uint128_t *num_p) /**< 128-bit unsigned integer */
 {
   uint64_t masked_lo = num_p->lo & ~(1ULL << 63u);
   uint64_t masked_hi = num_p->hi & 0x1;
@@ -69,7 +69,8 @@ ecma_round_high_to_uint64 (ecma_uint128_t *num_p)
  * Left shift 128-bit integer by max 63 bits.
  */
 static void JERRY_ATTR_ALWAYS_INLINE
-ecma_uint128_shift_left (ecma_uint128_t *num_p, int32_t shift)
+ecma_uint128_shift_left (ecma_uint128_t *num_p, /**< 128-bit unsigned integer */
+                         int32_t shift) /**< left shift count */
 {
   num_p->hi = (num_p->hi << shift) | (num_p->lo >> (64 - shift));
   num_p->lo <<= shift;
@@ -79,7 +80,8 @@ ecma_uint128_shift_left (ecma_uint128_t *num_p, int32_t shift)
  * Right shift 128-bit integer by max 63 bits.
  */
 static void JERRY_ATTR_ALWAYS_INLINE
-ecma_uint128_shift_right (ecma_uint128_t *num_p, int32_t shift)
+ecma_uint128_shift_right (ecma_uint128_t *num_p, /**< 128-bit unsigned integer */
+                          int32_t shift) /**< right shift count */
 {
   num_p->lo = (num_p->lo >> shift) | (num_p->hi << (64 - shift));
   num_p->hi >>= shift;
@@ -89,7 +91,8 @@ ecma_uint128_shift_right (ecma_uint128_t *num_p, int32_t shift)
  * Add two 128-bit integer values and assign the result to the left one.
  */
 static void
-ecma_uint128_add (ecma_uint128_t *left_p, ecma_uint128_t *right_p)
+ecma_uint128_add (ecma_uint128_t *left_p, /**< left 128-bit unsigned integer */
+                  ecma_uint128_t *right_p) /**< right 128-bit unsigned integer */
 {
   left_p->hi += right_p->hi;
   left_p->lo += right_p->lo;
@@ -104,7 +107,7 @@ ecma_uint128_add (ecma_uint128_t *left_p, ecma_uint128_t *right_p)
  * Multiply 128-bit integer by 10
  */
 static void
-ecma_uint128_mul10 (ecma_uint128_t *num_p)
+ecma_uint128_mul10 (ecma_uint128_t *num_p) /**< 128-bit unsigned integer */
 {
   ecma_uint128_shift_left (num_p, 1u);
 
@@ -130,7 +133,7 @@ ecma_uint128_mul10 (ecma_uint128_t *num_p)
  * Q = Q3 *2^96  + Q2 *2^64  + Q1 *2^32  + Q0 *2^0     // 128-bit quotient
  */
 static void
-ecma_uint128_div10 (ecma_uint128_t *num_p)
+ecma_uint128_div10 (ecma_uint128_t *num_p) /**< 128-bit unsigned integer */
 {
   /* estimation of reciprocal of 10, 128 bits right of the binary point (T1 == T2) */
   const uint64_t tenth_l = 0x9999999aul;

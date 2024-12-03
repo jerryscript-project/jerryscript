@@ -23,8 +23,8 @@
 #include <winbase.h>
 #include <winnt.h>
 
-#define UNIX_EPOCH_IN_TICKS 116444736000000000ull /* difference between 1970 and 1601 */
-#define TICKS_PER_MS        10000ull /* 1 tick is 100 nanoseconds */
+#define UNIX_EPOCH_IN_TICKS 116444736000000000LL /* difference between 1970 and 1601 */
+#define TICKS_PER_MS        10000LL /* 1 tick is 100 nanoseconds */
 
 /*
  * If you take the limit of SYSTEMTIME (last millisecond in 30827) then you end up with
@@ -44,15 +44,9 @@
  * https://support.microsoft.com/en-us/help/167296/how-to-convert-a-unix-time-t-to-a-win32-filetime-or-systemtime
  */
 static void
-unix_time_to_filetime (double t, LPFILETIME ft_p)
+unix_time_to_filetime (LONGLONG t, LPFILETIME ft_p)
 {
-  LONGLONG ll = (LONGLONG) t * TICKS_PER_MS + UNIX_EPOCH_IN_TICKS;
-
-  /* FILETIME values before the epoch are invalid. */
-  if (ll < 0)
-  {
-    ll = 0;
-  }
+  LONGLONG ll = t * TICKS_PER_MS + UNIX_EPOCH_IN_TICKS;
 
   ft_p->dwLowDateTime = (DWORD) ll;
   ft_p->dwHighDateTime = (DWORD) (ll >> 32);
@@ -63,13 +57,15 @@ unix_time_to_filetime (double t, LPFILETIME ft_p)
  *
  * @return unix time
  */
-static double
+static LONGLONG
 filetime_to_unix_time (LPFILETIME ft_p)
 {
   ULARGE_INTEGER date;
+  LONGLONG ll;
   date.HighPart = ft_p->dwHighDateTime;
   date.LowPart = ft_p->dwLowDateTime;
-  return (double) (((LONGLONG) date.QuadPart - UNIX_EPOCH_IN_TICKS) / TICKS_PER_MS);
+  ll = date.QuadPart - UNIX_EPOCH_IN_TICKS;
+  return ll / TICKS_PER_MS;
 } /* filetime_to_unix_time */
 
 /**
@@ -85,6 +81,7 @@ jerry_port_local_tza (double unix_ms)
   FILETIME local;
   SYSTEMTIME utc_sys;
   SYSTEMTIME local_sys;
+  LONGLONG t = (LONGLONG) (unix_ms);
 
   /*
    * If the time is earlier than the date 1601-01-02, then always using date 1601-01-02 to
@@ -93,23 +90,23 @@ jerry_port_local_tza (double unix_ms)
    * after converting between local time and utc time, the time may be earlier than 1601-01-01
    * in UTC time, that exceeds the FILETIME representation range.
    */
-  if (unix_ms < (double) UNIX_EPOCH_DATE_1601_01_02)
+  if (t < UNIX_EPOCH_DATE_1601_01_02)
   {
-    unix_ms = (double) UNIX_EPOCH_DATE_1601_01_02;
+    t = UNIX_EPOCH_DATE_1601_01_02;
   }
 
   /* Like above, do not use the last supported day */
-  if (unix_ms > (double) UNIX_EPOCH_DATE_30827_12_29)
+  if (t > UNIX_EPOCH_DATE_30827_12_29)
   {
-    unix_ms = (double) UNIX_EPOCH_DATE_30827_12_29;
+    t = UNIX_EPOCH_DATE_30827_12_29;
   }
-  unix_time_to_filetime (unix_ms, &utc);
+  unix_time_to_filetime (t, &utc);
 
   if (FileTimeToSystemTime (&utc, &utc_sys) && SystemTimeToTzSpecificLocalTime (NULL, &utc_sys, &local_sys)
       && SystemTimeToFileTime (&local_sys, &local))
   {
-    double unix_local = filetime_to_unix_time (&local);
-    return (int32_t) (unix_local - unix_ms);
+    LONGLONG unix_local = filetime_to_unix_time (&local);
+    return (int32_t) (unix_local - t);
   }
 
   return 0;
@@ -125,7 +122,7 @@ jerry_port_current_time (void)
 {
   FILETIME ft;
   GetSystemTimeAsFileTime (&ft);
-  return filetime_to_unix_time (&ft);
+  return (double) filetime_to_unix_time (&ft);
 } /* jerry_port_current_time */
 
 #endif /* defined(_WIN32) */

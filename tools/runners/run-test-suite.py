@@ -61,13 +61,13 @@ def get_tests(test_dir, test_list, skip_list):
         dirname = os.path.dirname(test_list)
         with open(test_list, "r", encoding='utf8') as test_list_fd:
             for test in test_list_fd:
-                tests.append(os.path.normpath(os.path.join(dirname, test.rstrip())))
+                tests.append(os.path.join(dirname, test.rstrip()))
 
     tests.sort()
 
     def filter_tests(test):
         for skipped in skip_list:
-            if skipped in test:
+            if os.path.normpath(skipped) in os.path.normpath(test):
                 return False
         return True
 
@@ -76,8 +76,8 @@ def get_tests(test_dir, test_list, skip_list):
 
 def execute_test_command(test_cmd):
     kwargs = {}
-    if sys.version_info.major >= 3:
-        kwargs['encoding'] = 'unicode_escape'
+    kwargs['encoding'] = 'unicode_escape'
+    kwargs['errors'] = 'ignore'
     with subprocess.Popen(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           universal_newlines=True, **kwargs) as process:
         stdout, _ = process.communicate()
@@ -85,6 +85,7 @@ def execute_test_command(test_cmd):
 
 
 def main(args):
+    util.setup_stdio()
     tests = get_tests(args.test_dir, args.test_list, args.skip_list)
     total = len(tests)
     if total == 0:

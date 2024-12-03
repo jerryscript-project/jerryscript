@@ -20,12 +20,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-/**
- * Default implementation of jerry_port_local_tza.
- *
- * @return offset between UTC and local time at the given unix timestamp, if
- *         available. Otherwise, returns 0, assuming UTC time.
- */
 int32_t
 jerry_port_local_tza (double unix_ms)
 {
@@ -53,11 +47,6 @@ jerry_port_local_tza (double unix_ms)
 #endif /* HAVE_TM_GMTOFF */
 } /* jerry_port_local_tza */
 
-/**
- * Default implementation of jerry_port_current_time.
- *
- * @return milliseconds since Unix epoch
- */
 double
 jerry_port_current_time (void)
 {

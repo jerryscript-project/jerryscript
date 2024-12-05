@@ -147,7 +147,7 @@ lexer_hex_in_braces_to_code_point (const uint8_t *source_p, /**< current source 
 /**
  * Parse hexadecimal character sequence
  *
- * @return character value
+ * @return character value (-1 if the escape sequence is invalid)
  */
 static lit_code_point_t
 lexer_unchecked_hex_to_character (const uint8_t **source_p) /**< [in, out] current source position */
@@ -174,13 +174,19 @@ lexer_unchecked_hex_to_character (const uint8_t **source_p) /**< [in, out] curre
     }
     else
     {
-      JERRY_ASSERT ((byte >= LIT_CHAR_LOWERCASE_A && byte <= LIT_CHAR_LOWERCASE_F)
-                    || (byte >= LIT_CHAR_UPPERCASE_A && byte <= LIT_CHAR_UPPERCASE_F));
+      if (!((byte >= LIT_CHAR_LOWERCASE_A && byte <= LIT_CHAR_LOWERCASE_F)
+            || (byte >= LIT_CHAR_UPPERCASE_A && byte <= LIT_CHAR_UPPERCASE_F)))
+      {
+        return (lit_code_point_t) -1;
+      }
 
       result += LEXER_TO_ASCII_LOWERCASE (byte) - (LIT_CHAR_LOWERCASE_A - 10);
     }
 
-    JERRY_ASSERT (result <= LIT_UNICODE_CODE_POINT_MAX);
+    if (result > LIT_UNICODE_CODE_POINT_MAX)
+    {
+      return (lit_code_point_t) -1;
+    }
 
     if (length == 0)
     {
@@ -2098,8 +2104,10 @@ lexer_scan_private_identifier (parser_context_t *context_p) /**< context */
 
 /**
  * Convert an ident with escapes to a utf8 string.
+ *
+ * @return false if source contains invalid unicode escape sequence, true otherwise
  */
-void
+bool
 lexer_convert_ident_to_cesu8 (uint8_t *destination_p, /**< destination string */
                               const uint8_t *source_p, /**< source string */
                               prop_length_t length) /**< length of destination string */
@@ -2113,7 +2121,12 @@ lexer_convert_ident_to_cesu8 (uint8_t *destination_p, /**< destination string */
     if (*source_p == LIT_CHAR_BACKSLASH)
     {
       source_p += 2;
-      destination_p += lit_code_point_to_cesu8_bytes (destination_p, lexer_unchecked_hex_to_character (&source_p));
+      lit_code_point_t code_point = lexer_unchecked_hex_to_character (&source_p);
+      if (code_point == (lit_code_point_t) -1)
+      {
+        return false;
+      }
+      destination_p += lit_code_point_to_cesu8_bytes (destination_p, code_point);
       continue;
     }
 
@@ -2128,6 +2141,7 @@ lexer_convert_ident_to_cesu8 (uint8_t *destination_p, /**< destination string */
 
     *destination_p++ = *source_p++;
   } while (destination_p < destination_end_p);
+  return true;
 } /* lexer_convert_ident_to_cesu8 */
 
 /**
@@ -2160,7 +2174,10 @@ lexer_convert_literal_to_chars (parser_context_t *context_p, /**< context */
 
   if (literal_p->type == LEXER_IDENT_LITERAL)
   {
-    lexer_convert_ident_to_cesu8 (destination_start_p, literal_p->char_p, literal_p->length);
+    if (!lexer_convert_ident_to_cesu8 (destination_start_p, literal_p->char_p, literal_p->length))
+    {
+      parser_raise_error (context_p, PARSER_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE);
+    }
     return destination_start_p;
   }
 
@@ -2259,7 +2276,12 @@ lexer_convert_literal_to_chars (parser_context_t *context_p, /**< context */
       if (*source_p == LIT_CHAR_LOWERCASE_X || *source_p == LIT_CHAR_LOWERCASE_U)
       {
         source_p++;
-        destination_p += lit_code_point_to_cesu8_bytes (destination_p, lexer_unchecked_hex_to_character (&source_p));
+        lit_code_point_t code_point = lexer_unchecked_hex_to_character (&source_p);
+        if (code_point == (lit_code_point_t) -1)
+        {
+          parser_raise_error (context_p, PARSER_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE);
+        }
+        destination_p += lit_code_point_to_cesu8_bytes (destination_p, code_point);
         continue;
       }
 
@@ -3338,6 +3360,10 @@ lexer_compare_identifier_to_chars (const uint8_t *left_p, /**< left identifier *
     {
       left_p += 2;
       lit_code_point_t code_point = lexer_unchecked_hex_to_character (&left_p);
+      if (code_point == (lit_code_point_t) -1)
+      {
+        return false;
+      }
 
       escape_size = lit_code_point_to_cesu8_bytes (utf8_buf, code_point);
     }

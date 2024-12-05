@@ -749,7 +749,7 @@ void lexer_parse_string (parser_context_t *context_p, lexer_string_options_t opt
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
 bool lexer_scan_identifier (parser_context_t *context_p, lexer_parse_options_t opts);
 void lexer_check_property_modifier (parser_context_t *context_p);
-void lexer_convert_ident_to_cesu8 (uint8_t *destination_p, const uint8_t *source_p, prop_length_t length);
+bool lexer_convert_ident_to_cesu8 (uint8_t *destination_p, const uint8_t *source_p, prop_length_t length);
 
 const uint8_t *lexer_convert_literal_to_chars (parser_context_t *context_p,
                                                const lexer_lit_location_t *literal_p,

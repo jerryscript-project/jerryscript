@@ -237,7 +237,7 @@ jerry_module_resolve (const jerry_value_t specifier, /**< module specifier strin
  */
 void
 jerry_module_cleanup (const jerry_value_t realm) /**< if this argument is object, release only those modules,
-                                                  *   which realm value is equal to this argument. */
+                                                  *   whose realm value is equal to this argument. */
 {
 #if JERRY_MODULE_SYSTEM
   jerry_module_free ((jerry_module_manager_t *) jerry_context_data (&jerry_module_manager), realm);

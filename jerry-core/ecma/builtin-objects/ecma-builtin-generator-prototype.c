@@ -89,9 +89,9 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *generator_ob
 
   while (true)
   {
-    if (generator_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
+    if (generator_object_p->extended_object.u.cls.generator.obj_flags & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
     {
-      if (generator_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_RUNNING)
+      if (generator_object_p->extended_object.u.cls.generator.obj_flags & ECMA_EXECUTABLE_OBJECT_RUNNING)
       {
         return ecma_raise_type_error (ECMA_ERR_GENERATOR_IS_CURRENTLY_UNDER_EXECUTION);
       }
@@ -101,10 +101,10 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *generator_ob
 
       bool done = false;
 
-      generator_object_p->extended_object.u.cls.u2.executable_obj_flags |= ECMA_EXECUTABLE_OBJECT_RUNNING;
+      generator_object_p->extended_object.u.cls.generator.obj_flags |= ECMA_EXECUTABLE_OBJECT_RUNNING;
       ecma_value_t result = ecma_op_iterator_do (resume_mode, iterator, next_method, arg, &done);
       ecma_free_value (arg);
-      generator_object_p->extended_object.u.cls.u2.executable_obj_flags &= (uint8_t) ~ECMA_EXECUTABLE_OBJECT_RUNNING;
+      generator_object_p->extended_object.u.cls.generator.obj_flags &= (uint8_t) ~ECMA_EXECUTABLE_OBJECT_RUNNING;
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
@@ -156,7 +156,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *generator_ob
     }
 
     bool done;
-    done = (generator_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED);
+    done = (generator_object_p->extended_object.u.cls.generator.obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED);
 
     if (!done)
     {
@@ -179,7 +179,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *generator_ob
         }
 
         ecma_deref_object (ecma_get_object_from_value (iterator));
-        generator_object_p->extended_object.u.cls.u2.executable_obj_flags |= ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD;
+        generator_object_p->extended_object.u.cls.generator.obj_flags |= ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD;
         generator_object_p->iterator = iterator;
 
         if (generator_object_p->frame_ctx.stack_top_p[0] != ECMA_VALUE_UNDEFINED)
@@ -232,12 +232,12 @@ ecma_builtin_generator_prototype_dispatch_routine (uint8_t builtin_routine_id, /
     return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_GENERATOR_OBJECT);
   }
 
-  if (executable_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_RUNNING)
+  if (executable_object_p->extended_object.u.cls.generator.obj_flags & ECMA_EXECUTABLE_OBJECT_RUNNING)
   {
     return ecma_raise_type_error (ECMA_ERR_GENERATOR_IS_CURRENTLY_UNDER_EXECUTION);
   }
 
-  if (executable_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED)
+  if (executable_object_p->extended_object.u.cls.generator.obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED)
   {
     if (builtin_routine_id != ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW)
     {

@@ -459,8 +459,8 @@ jerry_parse_common (void *source_p, /**< script source */
   ecma_object_t *object_p = ecma_create_object (NULL, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_SCRIPT;
-  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.value, bytecode_data_p);
+  ext_object_p->u.cls.head.type = ECMA_OBJECT_CLASS_SCRIPT;
+  ECMA_SET_INTERNAL_VALUE_POINTER (ecma_object_cls_general (ext_object_p)->value, bytecode_data_p);
 
   return ecma_make_object_value (object_p);
 } /* jerry_parse_common */
@@ -547,7 +547,8 @@ jerry_run (const jerry_value_t script) /**< script or module to run */
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
   const ecma_compiled_code_t *bytecode_data_p;
-  bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ext_object_p->u.cls.u3.value);
+  bytecode_data_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ecma_object_cls_general (ext_object_p)->value);
 
   JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_SCRIPT);
 
@@ -644,7 +645,7 @@ jerry_module_evaluate (const jerry_value_t module) /**< root module */
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_NOT_MODULE));
   }
 
-  if (module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_LINKED)
+  if (module_p->header.u.cls.module.state != JERRY_MODULE_STATE_LINKED)
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_MODULE_MUST_BE_IN_LINKED_STATE));
   }
@@ -676,7 +677,7 @@ jerry_module_state (const jerry_value_t module) /**< module object */
     return JERRY_MODULE_STATE_INVALID;
   }
 
-  return (jerry_module_state_t) module_p->header.u.cls.u1.module_state;
+  return (jerry_module_state_t) module_p->header.u.cls.module.state;
 #else /* !JERRY_MODULE_SYSTEM */
   JERRY_UNUSED (module);
 
@@ -824,8 +825,8 @@ jerry_module_namespace (const jerry_value_t module) /**< module */
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_NOT_MODULE));
   }
 
-  if (module_p->header.u.cls.u1.module_state < JERRY_MODULE_STATE_LINKED
-      || module_p->header.u.cls.u1.module_state > JERRY_MODULE_STATE_EVALUATED)
+  if (module_p->header.u.cls.module.state < JERRY_MODULE_STATE_LINKED
+      || module_p->header.u.cls.module.state > JERRY_MODULE_STATE_EVALUATED)
   {
     return jerry_throw_sz (JERRY_ERROR_RANGE, ecma_get_error_msg (ECMA_ERR_NAMESPACE_OBJECT_IS_NOT_AVAILABLE));
   }
@@ -958,7 +959,7 @@ jerry_native_module (jerry_native_module_evaluate_cb_t callback, /**< evaluation
 
   ecma_module_t *module_p = ecma_module_create ();
 
-  module_p->header.u.cls.u2.module_flags |= ECMA_MODULE_IS_NATIVE;
+  module_p->header.u.cls.module.flags |= ECMA_MODULE_IS_NATIVE;
   module_p->scope_p = scope_p;
   module_p->local_exports_p = local_exports_p;
   module_p->u.callback = callback;
@@ -999,7 +1000,7 @@ jerry_native_module_get (const jerry_value_t native_module, /**< a native module
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_NOT_MODULE));
   }
 
-  if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE) || !ecma_is_value_string (export_name))
+  if (!(module_p->header.u.cls.module.flags & ECMA_MODULE_IS_NATIVE) || !ecma_is_value_string (export_name))
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
   }
@@ -1044,7 +1045,7 @@ jerry_native_module_set (jerry_value_t native_module, /**< a native module objec
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_NOT_MODULE));
   }
 
-  if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE) || !ecma_is_value_string (export_name)
+  if (!(module_p->header.u.cls.module.flags & ECMA_MODULE_IS_NATIVE) || !ecma_is_value_string (export_name)
       || ecma_is_value_exception (value))
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_WRONG_ARGS_MSG));
@@ -1540,8 +1541,8 @@ jerry_object_type (const jerry_value_t value) /**< input value to check */
     case ECMA_OBJECT_TYPE_CLASS:
     case ECMA_OBJECT_TYPE_BUILT_IN_CLASS:
     {
-      JERRY_ASSERT (ext_obj_p->u.cls.type < ECMA_OBJECT_CLASS__MAX);
-      return jerry_class_object_type[ext_obj_p->u.cls.type];
+      JERRY_ASSERT (ext_obj_p->u.cls.head.type < ECMA_OBJECT_CLASS__MAX);
+      return jerry_class_object_type[ext_obj_p->u.cls.head.type];
     }
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_BUILT_IN_ARRAY:
@@ -1650,7 +1651,7 @@ jerry_iterator_type (const jerry_value_t value) /**< input value to check */
 
     if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS)
     {
-      switch (ext_obj_p->u.cls.type)
+      switch (ext_obj_p->u.cls.head.type)
       {
         case ECMA_OBJECT_CLASS_ARRAY_ITERATOR:
         {
@@ -3616,7 +3617,7 @@ jerry_object_set_internal (jerry_value_t object, /**< object value */
     internal_object_p = ecma_create_object (NULL, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
     {
       ecma_extended_object_t *container_p = (ecma_extended_object_t *) internal_object_p;
-      container_p->u.cls.type = ECMA_OBJECT_CLASS_INTERNAL_OBJECT;
+      container_p->u.cls.head.type = ECMA_OBJECT_CLASS_INTERNAL_OBJECT;
     }
 
     value_p->value = ecma_make_object_value (internal_object_p);
@@ -4147,7 +4148,7 @@ jerry_object_is_valid_foreach (ecma_object_t *object_p) /**< object to test */
   if (object_type == ECMA_OBJECT_TYPE_CLASS)
   {
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-    switch (ext_object_p->u.cls.type)
+    switch (ext_object_p->u.cls.head.type)
     {
       /* An object's internal property object should not be iterable by foreach. */
       case ECMA_OBJECT_CLASS_INTERNAL_OBJECT:
@@ -5653,16 +5654,17 @@ jerry_source_info (const jerry_value_t value) /**< jerry api value */
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
         const ecma_compiled_code_t *bytecode_p = NULL;
 
-        if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_SCRIPT)
+        if (ext_object_p->u.cls.head.type == ECMA_OBJECT_CLASS_SCRIPT)
         {
-          bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ext_object_p->u.cls.u3.value);
+          bytecode_p =
+            ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ecma_object_cls_general (ext_object_p)->value);
         }
 #if JERRY_MODULE_SYSTEM
-        else if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_MODULE)
+        else if (ext_object_p->u.cls.head.type == ECMA_OBJECT_CLASS_MODULE)
         {
           ecma_module_t *module_p = (ecma_module_t *) object_p;
 
-          if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE))
+          if (!(module_p->header.u.cls.module.flags & ECMA_MODULE_IS_NATIVE))
           {
             bytecode_p = module_p->u.compiled_code_p;
           }
@@ -5993,7 +5995,7 @@ jerry_arraybuffer_external (uint8_t *buffer_p, /**< the backing store used by th
 
     if (buffer_p != NULL)
     {
-      arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+      arraybuffer_pointer_p->extended_object.u.cls.arraybuffer.flags |= ECMA_ARRAYBUFFER_ALLOCATED;
       arraybuffer_pointer_p->buffer_p = buffer_p;
     }
   }
@@ -6081,7 +6083,7 @@ jerry_shared_arraybuffer_external (uint8_t *buffer_p, /**< the backing store use
 
     if (buffer_p != NULL)
     {
-      shared_arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+      shared_arraybuffer_pointer_p->extended_object.u.cls.arraybuffer.flags |= ECMA_ARRAYBUFFER_ALLOCATED;
       shared_arraybuffer_pointer_p->buffer_p = buffer_p;
     }
   }
@@ -6529,7 +6531,7 @@ jerry_dataview_buffer (const jerry_value_t value, /**< DataView to get the array
 
   if (byte_length != NULL)
   {
-    *byte_length = dataview_p->header.u.cls.u3.length;
+    *byte_length = dataview_p->header.u.cls.dataview.length;
   }
 
   ecma_object_t *arraybuffer_p = dataview_p->buffer_p;
@@ -7032,7 +7034,7 @@ jerry_container_type (const jerry_value_t value) /**< the container object */
 
     if (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_CONTAINER))
     {
-      switch (((ecma_extended_object_t *) obj_p)->u.cls.u2.container_id)
+      switch (((ecma_extended_object_t *) obj_p)->u.cls.container.id)
       {
         case LIT_MAGIC_STRING_MAP_UL:
         {
@@ -7103,10 +7105,10 @@ jerry_container_to_array (const jerry_value_t value, /**< the container or itera
 
   *is_key_value_p = false;
 
-  if (ext_obj_p->u.cls.type == ECMA_OBJECT_CLASS_MAP_ITERATOR
-      || ext_obj_p->u.cls.type == ECMA_OBJECT_CLASS_SET_ITERATOR)
+  if (ext_obj_p->u.cls.head.type == ECMA_OBJECT_CLASS_MAP_ITERATOR
+      || ext_obj_p->u.cls.head.type == ECMA_OBJECT_CLASS_SET_ITERATOR)
   {
-    ecma_value_t iterated_value = ext_obj_p->u.cls.u3.iterated_value;
+    ecma_value_t iterated_value = ext_obj_p->u.cls.iterator.value;
 
     if (ecma_is_value_empty (iterated_value))
     {
@@ -7115,27 +7117,29 @@ jerry_container_to_array (const jerry_value_t value, /**< the container or itera
 
     ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) (ecma_get_object_from_value (iterated_value));
 
-    ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+    ecma_collection_t *container_p =
+      ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
     entry_count = ECMA_CONTAINER_ENTRY_COUNT (container_p);
-    index = ext_obj_p->u.cls.u2.iterator_index;
+    index = ext_obj_p->u.cls.iterator.index;
 
-    entry_size = ecma_op_container_entry_size (map_object_p->u.cls.u2.container_id);
+    entry_size = ecma_op_container_entry_size (map_object_p->u.cls.container.id);
     start_p = ECMA_CONTAINER_START (container_p);
 
-    iterator_kind = ext_obj_p->u.cls.u1.iterator_kind;
+    iterator_kind = ext_obj_p->u.cls.iterator.kind;
   }
   else if (jerry_container_type (value) != JERRY_CONTAINER_TYPE_INVALID)
   {
-    ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, ext_obj_p->u.cls.u3.value);
+    ecma_collection_t *container_p =
+      ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, ext_obj_p->u.cls.container.value);
     entry_count = ECMA_CONTAINER_ENTRY_COUNT (container_p);
-    entry_size = ecma_op_container_entry_size (ext_obj_p->u.cls.u2.container_id);
+    entry_size = ecma_op_container_entry_size (ext_obj_p->u.cls.container.id);
 
     index = 0;
     iterator_kind = ECMA_ITERATOR_KEYS;
     start_p = ECMA_CONTAINER_START (container_p);
 
-    if (ext_obj_p->u.cls.u2.container_id == LIT_MAGIC_STRING_MAP_UL
-        || ext_obj_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKMAP_UL)
+    if (ext_obj_p->u.cls.container.id == LIT_MAGIC_STRING_MAP_UL
+        || ext_obj_p->u.cls.container.id == LIT_MAGIC_STRING_WEAKMAP_UL)
     {
       iterator_kind = ECMA_ITERATOR_ENTRIES;
     }
@@ -7200,7 +7204,7 @@ jerry_container_op (jerry_container_op_t operation, /**< container operation */
   {
     return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_CONTAINER_IS_NOT_A_CONTAINER_OBJECT));
   }
-  uint16_t type = ((ecma_extended_object_t *) obj_p)->u.cls.u2.container_id;
+  uint16_t type = ((ecma_extended_object_t *) obj_p)->u.cls.container.id;
   ecma_extended_object_t *container_object_p = ecma_op_container_get_object (container, type);
 
   if (container_object_p == NULL)

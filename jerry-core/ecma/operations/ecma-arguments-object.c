@@ -75,10 +75,10 @@ ecma_op_create_arguments_object (vm_frame_ctx_shared_args_t *shared_p, /**< shar
 
   ecma_unmapped_arguments_t *arguments_p = (ecma_unmapped_arguments_t *) obj_p;
 
-  arguments_p->header.u.cls.type = ECMA_OBJECT_CLASS_ARGUMENTS;
-  arguments_p->header.u.cls.u1.arguments_flags = ECMA_ARGUMENTS_OBJECT_NO_FLAGS;
-  arguments_p->header.u.cls.u2.formal_params_number = formal_params_number;
-  arguments_p->header.u.cls.u3.arguments_number = 0;
+  arguments_p->header.u.cls.head.type = ECMA_OBJECT_CLASS_ARGUMENTS;
+  arguments_p->header.u.cls.arguments.flags = ECMA_ARGUMENTS_OBJECT_NO_FLAGS;
+  arguments_p->header.u.cls.arguments.formal_params_number = formal_params_number;
+  arguments_p->header.u.cls.arguments.number = 0;
   arguments_p->callee = ecma_make_object_value (func_obj_p);
 
   ecma_value_t *argv_p = (ecma_value_t *) (((uint8_t *) obj_p) + object_size);
@@ -93,19 +93,19 @@ ecma_op_create_arguments_object (vm_frame_ctx_shared_args_t *shared_p, /**< shar
     argv_p[i] = ECMA_VALUE_UNDEFINED;
   }
 
-  arguments_p->header.u.cls.u3.arguments_number = shared_p->arg_list_len;
+  arguments_p->header.u.cls.arguments.number = shared_p->arg_list_len;
 
   if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED)
   {
     ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) obj_p;
 
     ECMA_SET_INTERNAL_VALUE_POINTER (mapped_arguments_p->lex_env, lex_env_p);
-    arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_MAPPED;
+    arguments_p->header.u.cls.arguments.flags |= ECMA_ARGUMENTS_OBJECT_MAPPED;
 
 #if JERRY_SNAPSHOT_EXEC
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
     {
-      arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE;
+      arguments_p->header.u.cls.arguments.flags |= ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE;
       mapped_arguments_p->u.byte_code_p = (ecma_compiled_code_t *) bytecode_data_p;
     }
     else
@@ -166,7 +166,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
   ecma_value_t ret_value = ecma_op_general_object_define_own_property (object_p, property_name_p, property_desc_p);
 
   if (ECMA_IS_VALUE_ERROR (ret_value)
-      || !(((ecma_extended_object_t *) object_p)->u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
+      || !(((ecma_extended_object_t *) object_p)->u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
   {
     return ret_value;
   }
@@ -174,7 +174,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
   ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) object_p;
   uint32_t index = ecma_string_get_array_index (property_name_p);
 
-  if (index >= mapped_arguments_p->unmapped.header.u.cls.u2.formal_params_number)
+  if (index >= mapped_arguments_p->unmapped.header.u.cls.arguments.formal_params_number)
   {
     return ret_value;
   }
@@ -228,8 +228,8 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
   ecma_value_t *argv_p = (ecma_value_t *) (arguments_p + 1);
   ecma_property_value_t *prop_value_p;
   ecma_property_t *prop_p;
-  uint32_t arguments_number = arguments_p->header.u.cls.u3.arguments_number;
-  uint8_t flags = arguments_p->header.u.cls.u1.arguments_flags;
+  uint32_t arguments_number = arguments_p->header.u.cls.arguments.number;
+  uint8_t flags = arguments_p->header.u.cls.arguments.flags;
 
   if (flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
   {
@@ -327,27 +327,27 @@ ecma_op_arguments_delete_built_in_property (ecma_object_t *object_p, /**< the ob
 
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_LENGTH))
   {
-    JERRY_ASSERT (!(arguments_p->header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED));
+    JERRY_ASSERT (!(arguments_p->header.u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED));
 
-    arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED;
+    arguments_p->header.u.cls.arguments.flags |= ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED;
     return;
   }
 
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLEE))
   {
-    JERRY_ASSERT (!(arguments_p->header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED));
-    JERRY_ASSERT (arguments_p->header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED);
+    JERRY_ASSERT (!(arguments_p->header.u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED));
+    JERRY_ASSERT (arguments_p->header.u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_MAPPED);
 
-    arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED;
+    arguments_p->header.u.cls.arguments.flags |= ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED;
     return;
   }
 
   if (ecma_prop_name_is_symbol (property_name_p))
   {
-    JERRY_ASSERT (!(arguments_p->header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED));
+    JERRY_ASSERT (!(arguments_p->header.u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED));
     JERRY_ASSERT (ecma_op_compare_string_to_global_symbol (property_name_p, LIT_GLOBAL_SYMBOL_ITERATOR));
 
-    arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED;
+    arguments_p->header.u.cls.arguments.flags |= ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED;
     return;
   }
 
@@ -355,7 +355,7 @@ ecma_op_arguments_delete_built_in_property (ecma_object_t *object_p, /**< the ob
 
   ecma_value_t *argv_p = (ecma_value_t *) (arguments_p + 1);
 
-  if (arguments_p->header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
+  if (arguments_p->header.u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
   {
     argv_p = (ecma_value_t *) (((ecma_mapped_arguments_t *) object_p) + 1);
   }
@@ -378,8 +378,8 @@ ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< ar
 
   ecma_unmapped_arguments_t *arguments_p = (ecma_unmapped_arguments_t *) obj_p;
 
-  uint32_t arguments_number = arguments_p->header.u.cls.u3.arguments_number;
-  uint8_t flags = arguments_p->header.u.cls.u1.arguments_flags;
+  uint32_t arguments_number = arguments_p->header.u.cls.arguments.number;
+  uint8_t flags = arguments_p->header.u.cls.arguments.flags;
 
   if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES))
   {
@@ -434,13 +434,13 @@ ecma_op_arguments_object_get_formal_parameter (ecma_mapped_arguments_t *mapped_a
                                                                                              *   object */
                                                uint32_t index) /**< formal parameter index */
 {
-  JERRY_ASSERT (mapped_arguments_p->unmapped.header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED);
-  JERRY_ASSERT (index < mapped_arguments_p->unmapped.header.u.cls.u2.formal_params_number);
+  JERRY_ASSERT (mapped_arguments_p->unmapped.header.u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_MAPPED);
+  JERRY_ASSERT (index < mapped_arguments_p->unmapped.header.u.cls.arguments.formal_params_number);
 
   ecma_compiled_code_t *byte_code_p;
 
 #if JERRY_SNAPSHOT_EXEC
-  if (mapped_arguments_p->unmapped.header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE)
+  if (mapped_arguments_p->unmapped.header.u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE)
   {
     byte_code_p = mapped_arguments_p->u.byte_code_p;
   }

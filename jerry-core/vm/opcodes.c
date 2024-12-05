@@ -613,9 +613,9 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
     ecma_deref_object (proto_p);
   }
 
-  executable_object_p->extended_object.u.cls.type = class_type;
-  executable_object_p->extended_object.u.cls.u2.executable_obj_flags = 0;
-  ECMA_SET_INTERNAL_VALUE_ANY_POINTER (executable_object_p->extended_object.u.cls.u3.head, NULL);
+  executable_object_p->extended_object.u.cls.head.type = class_type;
+  executable_object_p->extended_object.u.cls.generator.obj_flags = 0;
+  ECMA_SET_INTERNAL_VALUE_ANY_POINTER (executable_object_p->extended_object.u.cls.generator.head, NULL);
   executable_object_p->iterator = ECMA_VALUE_UNDEFINED;
 
   JERRY_ASSERT (!(frame_ctx_p->status_flags & VM_FRAME_CTX_DIRECT_EVAL));
@@ -742,7 +742,7 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
 
   JERRY_ASSERT (ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED (executable_object_p));
 
-  executable_object_p->extended_object.u.cls.u2.executable_obj_flags |= ECMA_EXECUTABLE_OBJECT_RUNNING;
+  executable_object_p->extended_object.u.cls.generator.obj_flags |= ECMA_EXECUTABLE_OBJECT_RUNNING;
 
   executable_object_p->frame_ctx.prev_context_p = JERRY_CONTEXT (vm_top_context_p);
   JERRY_CONTEXT (vm_top_context_p) = &executable_object_p->frame_ctx;
@@ -763,14 +763,14 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
 #endif /* JERRY_BUILTIN_REALMS */
 
   JERRY_CONTEXT (current_new_target_p) = old_new_target;
-  executable_object_p->extended_object.u.cls.u2.executable_obj_flags &= (uint8_t) ~ECMA_EXECUTABLE_OBJECT_RUNNING;
+  executable_object_p->extended_object.u.cls.generator.obj_flags &= (uint8_t) ~ECMA_EXECUTABLE_OBJECT_RUNNING;
 
   if (executable_object_p->frame_ctx.call_operation != VM_EXEC_RETURN)
   {
     JERRY_ASSERT (executable_object_p->frame_ctx.call_operation == VM_NO_EXEC_OP);
 
     /* All resources are released. */
-    executable_object_p->extended_object.u.cls.u2.executable_obj_flags |= ECMA_EXECUTABLE_OBJECT_COMPLETED;
+    executable_object_p->extended_object.u.cls.generator.obj_flags |= ECMA_EXECUTABLE_OBJECT_COMPLETED;
     ecma_deref_if_object (executable_object_p->frame_ctx.this_binding);
     return result;
   }
@@ -814,7 +814,8 @@ opfunc_async_generator_yield (ecma_extended_object_t *async_generator_object_p, 
                               ecma_value_t value) /**< value (takes the reference) */
 {
   ecma_async_generator_task_t *task_p;
-  task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t, async_generator_object_p->u.cls.u3.head);
+  task_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t, async_generator_object_p->u.cls.generator.head);
 
   ecma_value_t iter_result = ecma_create_iter_result_object (value, ECMA_VALUE_FALSE);
   ecma_fulfill_promise (task_p->promise, iter_result);
@@ -823,7 +824,7 @@ opfunc_async_generator_yield (ecma_extended_object_t *async_generator_object_p, 
   ecma_free_value (value);
 
   ecma_value_t next = task_p->next;
-  async_generator_object_p->u.cls.u3.head = next;
+  async_generator_object_p->u.cls.generator.head = next;
 
   JERRY_ASSERT (task_p->operation_value == ECMA_VALUE_UNDEFINED);
   jmem_heap_free_block (task_p, sizeof (ecma_async_generator_task_t));
@@ -864,7 +865,7 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
   vm_executable_object_t *executable_object_p;
   executable_object_p = opfunc_create_executable_object (frame_ctx_p, VM_CREATE_EXECUTABLE_OBJECT_ASYNC);
 
-  executable_object_p->extended_object.u.cls.u2.executable_obj_flags |= extra_flags;
+  executable_object_p->extended_object.u.cls.generator.obj_flags |= extra_flags;
 
   ecma_promise_async_then (result, ecma_make_object_value ((ecma_object_t *) executable_object_p));
   ecma_deref_object ((ecma_object_t *) executable_object_p);

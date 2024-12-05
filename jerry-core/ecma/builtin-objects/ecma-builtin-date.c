@@ -720,9 +720,9 @@ ecma_builtin_date_create (ecma_number_t tv)
   ecma_deref_object (prototype_obj_p);
 
   ecma_date_object_t *date_object_p = (ecma_date_object_t *) obj_p;
-  date_object_p->header.u.cls.type = ECMA_OBJECT_CLASS_DATE;
-  date_object_p->header.u.cls.u1.date_flags = ECMA_DATE_TZA_NONE;
-  date_object_p->header.u.cls.u3.tza = 0;
+  date_object_p->header.u.cls.head.type = ECMA_OBJECT_CLASS_DATE;
+  date_object_p->header.u.cls.date.flags = ECMA_DATE_TZA_NONE;
+  date_object_p->header.u.cls.date.tza = 0;
   date_object_p->date_value = tv;
 
   return ecma_make_object_value (obj_p);

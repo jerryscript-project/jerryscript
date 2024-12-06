@@ -1693,9 +1693,6 @@ jerry_feature_enabled (const jerry_feature_t feature) /**< feature to check */
   JERRY_ASSERT (feature < JERRY_FEATURE__COUNT);
 
   return (false
-#if JERRY_CPOINTER_32_BIT
-          || feature == JERRY_FEATURE_CPOINTER_32_BIT
-#endif /* JERRY_CPOINTER_32_BIT */
 #if JERRY_ERROR_MESSAGES
           || feature == JERRY_FEATURE_ERROR_MESSAGES
 #endif /* JERRY_ERROR_MESSAGES */

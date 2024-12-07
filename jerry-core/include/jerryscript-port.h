@@ -56,7 +56,6 @@ typedef enum
  * A libc-based port may implement this with exit() or abort(), or both.
  *
  * @param code: the cause of the error.
- * @return This function is expected to not return.
  */
 void JERRY_ATTR_NORETURN jerry_port_fatal (jerry_fatal_code_t code);
 

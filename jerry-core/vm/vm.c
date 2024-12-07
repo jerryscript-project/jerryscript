@@ -5137,9 +5137,6 @@ JERRY_STATIC_ASSERT ((int) CBC_CODE_FLAGS_STRICT_MODE == (int) VM_FRAME_CTX_IS_S
 
 /**
  * Initialize code block execution
- *
- * @return ECMA_VALUE_ERROR - if the initialization fails
- *         ECMA_VALUE_EMPTY - otherwise
  */
 static void JERRY_ATTR_NOINLINE
 vm_init_exec (vm_frame_ctx_t *frame_ctx_p) /**< frame context */

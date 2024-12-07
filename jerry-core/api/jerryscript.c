@@ -115,8 +115,6 @@ JERRY_STATIC_ASSERT (((NUMBER_ARITHMETIC_SUBTRACTION + ECMA_NUMBER_ARITHMETIC_OP
  *         The API could not be invoked in the following cases:
  *           - before jerry_init and after jerry_cleanup
  *           - between enter to and return from a native free callback
- *
- * @return void
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_assert_api_enabled (void)
@@ -126,8 +124,6 @@ jerry_assert_api_enabled (void)
 
 /**
  * Turn on API availability
- *
- * @return void
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_api_enable (void)
@@ -139,8 +135,6 @@ jerry_api_enable (void)
 
 /**
  * Turn off API availability
- *
- * @return void
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_api_disable (void)

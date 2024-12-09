@@ -591,6 +591,7 @@ typedef struct
   ecma_value_t tagged_template_literal_cp; /**< compessed pointer to the tagged template literal collection */
   parser_private_context_t *private_context_p; /**< private context */
   uint8_t stack_top_uint8; /**< top byte stored on the stack */
+  parser_list_t branch_list; /**< list of branches */
 
 #ifndef JERRY_NDEBUG
   /* Variables for debugging / logging. */

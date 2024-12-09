@@ -100,11 +100,11 @@ main_init_engine (main_args_t *arguments_p) /**< main arguments */
     jerryx_test262_register ();
   }
 
-  jerryx_register_global ("assert", jerryx_handler_assert);
-  jerryx_register_global ("gc", jerryx_handler_gc);
-  jerryx_register_global ("print", jerryx_handler_print);
-  jerryx_register_global ("sourceName", jerryx_handler_source_name);
-  jerryx_register_global ("createRealm", jerryx_handler_create_realm);
+  jerryx_register_global (jerry_string_sz ("assert"), jerryx_handler_assert);
+  jerryx_register_global (jerry_string_sz ("gc"), jerryx_handler_gc);
+  jerryx_register_global (jerry_string_sz ("print"), jerryx_handler_print);
+  jerryx_register_global (jerry_string_sz ("sourceName"), jerryx_handler_source_name);
+  jerryx_register_global (jerry_string_sz ("createRealm"), jerryx_handler_create_realm);
 } /* main_init_engine */
 
 int
@@ -245,7 +245,10 @@ restart:
   if (arguments.exit_cb_name_p != NULL)
   {
     jerry_value_t global = jerry_current_realm ();
-    jerry_value_t callback_fn = jerry_object_get_sz (global, arguments.exit_cb_name_p);
+    jerry_value_t callback_fn =
+      jerry_object_get_sz (global,
+                           jerry_string_utf8 ((const jerry_char_t *) arguments.exit_cb_name_p,
+                                              (jerry_size_t) strlen (arguments.exit_cb_name_p)));
     jerry_value_free (global);
 
     if (jerry_value_is_function (callback_fn))

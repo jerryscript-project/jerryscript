@@ -174,6 +174,7 @@ bool jerry_frame_is_strict (jerry_frame_t *frame_p);
 /* Reference management */
 jerry_value_t JERRY_ATTR_WARN_UNUSED_RESULT jerry_value_copy (const jerry_value_t value);
 void jerry_value_free (jerry_value_t value);
+void jerry_value_list_free (const jerry_value_t *value_list, jerry_size_t value_list_count);
 
 /**
  * @defgroup jerry-api-value-checks Type inspection
@@ -255,8 +256,8 @@ jerry_value_t jerry_binary_op (jerry_binary_op_t operation, const jerry_value_t 
  * @defgroup jerry-api-exception-ctor Constructors
  * @{
  */
-jerry_value_t jerry_throw (jerry_error_t type, const jerry_value_t message);
-jerry_value_t jerry_throw_sz (jerry_error_t type, const char *message_p);
+jerry_value_t jerry_throw (jerry_error_t error_type, const jerry_value_t message);
+jerry_value_t jerry_throw_sz (jerry_error_t error_type, const jerry_value_t message_sz);
 jerry_value_t jerry_throw_value (jerry_value_t value, bool take_ownership);
 jerry_value_t jerry_throw_abort (jerry_value_t value, bool take_ownership);
 /**
@@ -428,11 +429,44 @@ void jerry_bigint_to_digits (const jerry_value_t value, uint64_t *digits_p, uint
  * @{
  */
 jerry_value_t jerry_string (const jerry_char_t *buffer_p, jerry_size_t buffer_size, jerry_encoding_t encoding);
-jerry_value_t jerry_string_sz (const char *str_p);
-jerry_value_t jerry_string_external (const jerry_char_t *buffer_p, jerry_size_t buffer_size, void *user_p);
-jerry_value_t jerry_string_external_sz (const char *str_p, void *user_p);
+jerry_value_t jerry_string_cesu8 (const jerry_char_t *buffer_p, jerry_size_t buffer_size);
+jerry_value_t jerry_string_utf8 (const jerry_char_t *buffer_p, jerry_size_t buffer_size);
+
 /**
- * jerry-api-string-cotr @}
+ * Create string value from the zero-terminated UTF-8 encoded literal string.
+ * The content of the buffer is assumed be encoded correctly, it's the callers
+ * responsibility to validate the input.
+ *
+ * @note
+ * - This is a macro that only accept literal string
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
+ *
+ * @return created string
+ */
+#define jerry_string_sz(str) jerry_string_utf8 (JERRY_ZSTR_ARG (str))
+
+jerry_value_t jerry_string_external (const jerry_char_t *buffer_p, jerry_size_t buffer_size, void *user_p);
+
+/**
+ * Create external string from the zero-terminated CESU-8 encoded literal string.
+ * The content of the buffer is assumed be encoded correctly, it's the callers
+ * responsibility to validate the input.
+ *
+ * @note
+ * - This is a macro that only accept literal string
+ * - The free callback can be set by [jerry_string_external_on_free](#jerry_string_external_on_free)
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free)
+ *   when it is no longer needed.
+ *
+ * @param str zero-terminated CESU-8 encoded literal string
+ * @param user_p user pointer passed to the callback when the string is freed
+ *
+ * @return created external string
+ */
+#define jerry_string_external_sz(str, user_p) jerry_string_external (JERRY_ZSTR_ARG (str), user_p)
+
+/**
+ * jerry-api-string-ctor @}
  */
 
 /**
@@ -550,7 +584,7 @@ bool jerry_object_foreach (const jerry_value_t object, jerry_object_property_for
  * @{
  */
 jerry_value_t jerry_object_set (jerry_value_t object, const jerry_value_t key, const jerry_value_t value);
-jerry_value_t jerry_object_set_sz (jerry_value_t object, const char *key_p, const jerry_value_t value);
+jerry_value_t jerry_object_set_sz (jerry_value_t object, const jerry_value_t key_sz, const jerry_value_t value);
 jerry_value_t jerry_object_set_index (jerry_value_t object, uint32_t index, const jerry_value_t value);
 jerry_value_t jerry_object_define_own_prop (jerry_value_t object,
                                             const jerry_value_t key,
@@ -568,7 +602,7 @@ void jerry_object_set_native_ptr (jerry_value_t object,
  * @{
  */
 jerry_value_t jerry_object_has (const jerry_value_t object, const jerry_value_t key);
-jerry_value_t jerry_object_has_sz (const jerry_value_t object, const char *key_p);
+jerry_value_t jerry_object_has_sz (const jerry_value_t object, const jerry_value_t key_sz);
 jerry_value_t jerry_object_has_own (const jerry_value_t object, const jerry_value_t key);
 bool jerry_object_has_internal (const jerry_value_t object, const jerry_value_t key);
 bool jerry_object_has_native_ptr (const jerry_value_t object, const jerry_object_native_info_t *native_info_p);
@@ -581,7 +615,7 @@ bool jerry_object_has_native_ptr (const jerry_value_t object, const jerry_object
  * @{
  */
 jerry_value_t jerry_object_get (const jerry_value_t object, const jerry_value_t key);
-jerry_value_t jerry_object_get_sz (const jerry_value_t object, const char *key_p);
+jerry_value_t jerry_object_get_sz (const jerry_value_t object, const jerry_value_t key_sz);
 jerry_value_t jerry_object_get_index (const jerry_value_t object, uint32_t index);
 jerry_value_t jerry_object_get_own_prop (const jerry_value_t object,
                                          const jerry_value_t key,
@@ -602,7 +636,7 @@ jerry_value_t jerry_object_find_own (const jerry_value_t object,
  * @{
  */
 jerry_value_t jerry_object_delete (jerry_value_t object, const jerry_value_t key);
-jerry_value_t jerry_object_delete_sz (const jerry_value_t object, const char *key_p);
+jerry_value_t jerry_object_delete_sz (const jerry_value_t object, const jerry_value_t key_sz);
 jerry_value_t jerry_object_delete_index (jerry_value_t object, uint32_t index);
 bool jerry_object_delete_internal (jerry_value_t object, const jerry_value_t key);
 bool jerry_object_delete_native_ptr (jerry_value_t object, const jerry_object_native_info_t *native_info_p);
@@ -1015,7 +1049,7 @@ jerry_value_t jerry_container_op (jerry_container_op_t operation,
  * @{
  */
 jerry_value_t jerry_regexp (const jerry_value_t pattern, uint16_t flags);
-jerry_value_t jerry_regexp_sz (const char *pattern_p, uint16_t flags);
+jerry_value_t jerry_regexp_sz (const jerry_value_t pattern_sz, uint16_t flags);
 /**
  * jerry-api-regexp-ctor @}
  */
@@ -1033,8 +1067,8 @@ jerry_value_t jerry_regexp_sz (const char *pattern_p, uint16_t flags);
  * @defgroup jerry-api-error-ctor Constructors
  * @{
  */
-jerry_value_t jerry_error (jerry_error_t type, const jerry_value_t message);
-jerry_value_t jerry_error_sz (jerry_error_t type, const char *message_p);
+jerry_value_t jerry_error (jerry_error_t error_type, const jerry_value_t message);
+jerry_value_t jerry_error_sz (jerry_error_t error_type, const jerry_value_t message_sz);
 /**
  * jerry-api-error-ctor @}
  */

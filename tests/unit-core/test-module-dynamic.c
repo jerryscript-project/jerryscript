@@ -90,7 +90,7 @@ module_import_callback (const jerry_value_t specifier, /* string value */
     case 0:
     {
       compare_specifier (specifier, 1);
-      return jerry_throw_sz (JERRY_ERROR_RANGE, "Err01");
+      return jerry_throw_sz (JERRY_ERROR_RANGE, jerry_string_sz ("Err01"));
     }
     case 1:
     {

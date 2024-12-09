@@ -28,20 +28,21 @@ set(PLATFORM "${CMAKE_SYSTEM_NAME}")
 string(TOUPPER "${PLATFORM}" PLATFORM)
 
 # Determining compiler
+if(MSVC)
+  set(USING_MSVC 1)
+endif()
+
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
   set(USING_GCC 1)
 endif()
 
-if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+# Clang may support for MSVC
+if(NOT USING_MSVC AND CMAKE_C_COMPILER_ID MATCHES "Clang")
   set(USING_CLANG 1)
 endif()
 
 if(CMAKE_C_COMPILER_ID MATCHES "TI")
   set(USING_TI 1)
-endif()
-
-if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
-  set(USING_MSVC 1)
 endif()
 
 # Determining build type
@@ -68,7 +69,7 @@ set(ENABLE_STRIP              ON  CACHE BOOL "Enable stripping all symbols from 
 set(ENABLE_COMPILE_COMMANDS   ON  CACHE BOOL "Enable generating compile_commands.json?")
 
 if(USING_MSVC)
-set(ENABLE_STATIC_CRT         OFF CACHE BOOL "Enable MSVC static CRT?")
+  set(ENABLE_STATIC_CRT         OFF CACHE BOOL "Enable MSVC static CRT?")
 endif()
 
 # Option overrides

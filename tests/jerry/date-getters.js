@@ -110,8 +110,16 @@ assert (new Date(-1, -1, -1, -1, -1, -1, -1, -1).getMilliseconds() === 999);
 assert (isNaN(new Date(20000000, 0).getFullYear()));
 assert (new Date(0, 0).getFullYear() === 1900);
 assert (new Date(1.2, 0).getFullYear() === 1901);
+
+/* 7. test case */
+/* A Number can exactly represent all integers from -9,007,199,254,740,992 to 9,007,199,254,740,992 (21.1.2.8 and 21.1.2.6).
+   A time value supports a slightly smaller range of -8,640,000,000,000,000 to 8,640,000,000,000,000 milliseconds. */
 assert((new Date(8640000000000000).getFullYear()) == 275760);
 assert(isNaN(new Date(8640000000000001).getFullYear()));
+assert((new Date(-8640000000000000).getFullYear()) == -271821);
+assert(isNaN(new Date(-8640000000000001).getFullYear()));
+
+/* 8. test case */
 assert((new Date(-271821, 3, 21).getFullYear()) == -271821);
 assert(isNaN(new Date(1970, 0, -100000000).getFullYear())); 
 assert(new Date(1970, 0, -100000000 + 1).getFullYear() == -271821);

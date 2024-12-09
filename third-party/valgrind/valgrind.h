@@ -12,7 +12,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2011 Julian Seward.  All rights reserved.
+   Copyright (C) 2000-2017 Julian Seward.  All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
@@ -89,7 +89,7 @@
         || (__VALGRIND_MAJOR__ == 3 && __VALGRIND_MINOR__ >= 6))
 */
 #define __VALGRIND_MAJOR__    3
-#define __VALGRIND_MINOR__    6
+#define __VALGRIND_MINOR__    24
 
 
 #include <stdarg.h>
@@ -110,34 +110,72 @@
 */
 #undef PLAT_x86_darwin
 #undef PLAT_amd64_darwin
+#undef PLAT_x86_freebsd
+#undef PLAT_amd64_freebsd
+#undef PLAT_arm64_freebsd
 #undef PLAT_x86_win32
+#undef PLAT_amd64_win64
 #undef PLAT_x86_linux
 #undef PLAT_amd64_linux
 #undef PLAT_ppc32_linux
-#undef PLAT_ppc64_linux
+#undef PLAT_ppc64be_linux
+#undef PLAT_ppc64le_linux
 #undef PLAT_arm_linux
+#undef PLAT_arm64_linux
 #undef PLAT_s390x_linux
+#undef PLAT_mips32_linux
+#undef PLAT_mips64_linux
+#undef PLAT_nanomips_linux
+#undef PLAT_x86_solaris
+#undef PLAT_amd64_solaris
 
 
 #if defined(__APPLE__) && defined(__i386__)
 #  define PLAT_x86_darwin 1
 #elif defined(__APPLE__) && defined(__x86_64__)
 #  define PLAT_amd64_darwin 1
-#elif defined(__MINGW32__) || defined(__CYGWIN32__) \
+#elif defined(__FreeBSD__) && defined(__i386__)
+#  define PLAT_x86_freebsd 1
+#elif defined(__FreeBSD__) && defined(__amd64__)
+#  define PLAT_amd64_freebsd 1
+#elif defined(__FreeBSD__) && defined(__aarch64__) && !defined(__arm__)
+#  define PLAT_arm64_freebsd 1
+#elif (defined(__MINGW32__) && defined(__i386__)) \
+      || defined(__CYGWIN32__) \
       || (defined(_WIN32) && defined(_M_IX86))
 #  define PLAT_x86_win32 1
+#elif (defined(__MINGW32__) && defined(__x86_64__)) \
+      || (defined(_WIN32) && defined(_M_X64))
+/* __MINGW32__ and _WIN32 are defined in 64 bit mode as well. */
+#  define PLAT_amd64_win64 1
 #elif defined(__linux__) && defined(__i386__)
 #  define PLAT_x86_linux 1
-#elif defined(__linux__) && defined(__x86_64__)
+#elif defined(__linux__) && defined(__x86_64__) && !defined(__ILP32__)
 #  define PLAT_amd64_linux 1
 #elif defined(__linux__) && defined(__powerpc__) && !defined(__powerpc64__)
 #  define PLAT_ppc32_linux 1
-#elif defined(__linux__) && defined(__powerpc__) && defined(__powerpc64__)
-#  define PLAT_ppc64_linux 1
-#elif defined(__linux__) && defined(__arm__)
+#elif defined(__linux__) && defined(__powerpc__) && defined(__powerpc64__) && _CALL_ELF != 2
+/* Big Endian uses ELF version 1 */
+#  define PLAT_ppc64be_linux 1
+#elif defined(__linux__) && defined(__powerpc__) && defined(__powerpc64__) && _CALL_ELF == 2
+/* Little Endian uses ELF version 2 */
+#  define PLAT_ppc64le_linux 1
+#elif defined(__linux__) && defined(__arm__) && !defined(__aarch64__)
 #  define PLAT_arm_linux 1
+#elif defined(__linux__) && defined(__aarch64__) && !defined(__arm__)
+#  define PLAT_arm64_linux 1
 #elif defined(__linux__) && defined(__s390__) && defined(__s390x__)
 #  define PLAT_s390x_linux 1
+#elif defined(__linux__) && defined(__mips__) && (__mips==64)
+#  define PLAT_mips64_linux 1
+#elif defined(__linux__) && defined(__mips__) && (__mips==32)
+#  define PLAT_mips32_linux 1
+#elif defined(__linux__) && defined(__nanomips__)
+#  define PLAT_nanomips_linux 1
+#elif defined(__sun) && defined(__i386__)
+#  define PLAT_x86_solaris 1
+#elif defined(__sun) && defined(__x86_64__)
+#  define PLAT_amd64_solaris 1
 #else
 /* If we're not compiling for our target platform, don't generate
    any inline asms.  */
@@ -225,10 +263,11 @@
    inline asm stuff to be useful.
 */
 
-/* ------------------------- x86-{linux,darwin} ---------------- */
+/* ----------------- x86-{linux,darwin,solaris} ---------------- */
 
 #if defined(PLAT_x86_linux)  ||  defined(PLAT_x86_darwin)  \
-    ||  (defined(PLAT_x86_win32) && defined(__GNUC__))
+    ||  (defined(PLAT_x86_win32) && defined(__GNUC__)) \
+    ||  defined(PLAT_x86_solaris) || defined(PLAT_x86_freebsd)
 
 typedef
    struct { 
@@ -279,7 +318,17 @@ typedef
                      __SPECIAL_INSTRUCTION_PREAMBLE               \
                      /* call-noredir *%EAX */                     \
                      "xchgl %%edx,%%edx\n\t"
-#endif /* PLAT_x86_linux || PLAT_x86_darwin || (PLAT_x86_win32 && __GNUC__) */
+
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE              \
+                     "xchgl %%edi,%%edi\n\t"                     \
+                     : : : "cc", "memory"                        \
+                    );                                           \
+ } while (0)
+
+#endif /* PLAT_x86_linux || PLAT_x86_darwin || (PLAT_x86_win32 && __GNUC__)
+          || PLAT_x86_solaris */
 
 /* ------------------------- x86-Win32 ------------------------- */
 
@@ -341,15 +390,25 @@ valgrind_do_client_request_expr(uintptr_t _zzq_default, uintptr_t _zzq_request,
 
 #define VALGRIND_CALL_NOREDIR_EAX ERROR
 
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm { __SPECIAL_INSTRUCTION_PREAMBLE                       \
+            __asm xchg edi,edi                                   \
+    }                                                            \
+ } while (0)
+
 #else
 #error Unsupported compiler.
 #endif
 
 #endif /* PLAT_x86_win32 */
 
-/* ------------------------ amd64-{linux,darwin} --------------- */
+/* ----------------- amd64-{linux,darwin,solaris,freebsd,win64} --------------- */
 
-#if defined(PLAT_amd64_linux)  ||  defined(PLAT_amd64_darwin)
+#if defined(PLAT_amd64_linux)  ||  defined(PLAT_amd64_darwin) \
+    ||  defined(PLAT_amd64_solaris) \
+    ||  defined(PLAT_amd64_freebsd) \
+    ||  defined(PLAT_amd64_win64)
 
 typedef
    struct { 
@@ -357,6 +416,7 @@ typedef
    }
    OrigFn;
 
+#if defined(__GNUC__) || defined(__clang__)
 #define __SPECIAL_INSTRUCTION_PREAMBLE                            \
                      "rolq $3,  %%rdi ; rolq $13, %%rdi\n\t"      \
                      "rolq $61, %%rdi ; rolq $51, %%rdi\n\t"
@@ -400,7 +460,58 @@ typedef
                      __SPECIAL_INSTRUCTION_PREAMBLE               \
                      /* call-noredir *%RAX */                     \
                      "xchgq %%rdx,%%rdx\n\t"
-#endif /* PLAT_amd64_linux || PLAT_amd64_darwin */
+
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE              \
+                     "xchgq %%rdi,%%rdi\n\t"                     \
+                     : : : "cc", "memory"                        \
+                    );                                           \
+ } while (0)
+
+#elif defined(_MSC_VER)
+
+#define VALGRIND_DO_CLIENT_REQUEST_EXPR(                          \
+        _zzq_default, _zzq_request,                               \
+        _zzq_arg1, _zzq_arg2, _zzq_arg3, _zzq_arg4, _zzq_arg5)    \
+    valgrind_do_client_request_expr((uintptr_t)(_zzq_default),    \
+        (uintptr_t)(_zzq_request), (uintptr_t)(_zzq_arg1),        \
+        (uintptr_t)(_zzq_arg2), (uintptr_t)(_zzq_arg3),           \
+        (uintptr_t)(_zzq_arg4), (uintptr_t)(_zzq_arg5))
+
+static __inline uintptr_t
+valgrind_do_client_request_expr(uintptr_t _zzq_default, uintptr_t _zzq_request,
+                                uintptr_t _zzq_arg1, uintptr_t _zzq_arg2,
+                                uintptr_t _zzq_arg3, uintptr_t _zzq_arg4,
+                                uintptr_t _zzq_arg5)
+{
+    volatile uintptr_t _zzq_args[6];
+    volatile unsigned int _zzq_result = 0;
+    _zzq_args[0] = (uintptr_t)(_zzq_request);
+    _zzq_args[1] = (uintptr_t)(_zzq_arg1);
+    _zzq_args[2] = (uintptr_t)(_zzq_arg2);
+    _zzq_args[3] = (uintptr_t)(_zzq_arg3);
+    _zzq_args[4] = (uintptr_t)(_zzq_arg4);
+    _zzq_args[5] = (uintptr_t)(_zzq_arg5);
+    return _zzq_result;
+}
+
+#define VALGRIND_GET_NR_CONTEXT(_zzq_rlval)                       \
+  { volatile OrigFn* _zzq_orig = &(_zzq_rlval);                   \
+    volatile unsigned int __addr = _ReturnAddress();              \
+    _zzq_orig->nraddr = __addr;                                   \
+  }
+
+#else /* !defined(__GNUC__) && !defined(__clang__) && !defined(_MSC_VER) */
+
+#error Unsupported compiler.
+
+#endif /* defined(__GNUC__) || defined(__clang__) */
+
+#endif /* defined(PLAT_amd64_linux)  ||  defined(PLAT_amd64_darwin) \
+    ||  defined(PLAT_amd64_solaris) \
+    ||  defined(PLAT_amd64_freebsd) \
+    ||  defined(PLAT_amd64_win64) */
 
 /* ------------------------ ppc32-linux ------------------------ */
 
@@ -413,8 +524,8 @@ typedef
    OrigFn;
 
 #define __SPECIAL_INSTRUCTION_PREAMBLE                            \
-                     "rlwinm 0,0,3,0,0  ; rlwinm 0,0,13,0,0\n\t"  \
-                     "rlwinm 0,0,29,0,0 ; rlwinm 0,0,19,0,0\n\t"
+                    "rlwinm 0,0,3,0,31  ; rlwinm 0,0,13,0,31\n\t" \
+                    "rlwinm 0,0,29,0,31 ; rlwinm 0,0,19,0,31\n\t"
 
 #define VALGRIND_DO_CLIENT_REQUEST_EXPR(                          \
         _zzq_default, _zzq_request,                               \
@@ -461,16 +572,24 @@ typedef
                      __SPECIAL_INSTRUCTION_PREAMBLE               \
                      /* branch-and-link-to-noredir *%R11 */       \
                      "or 3,3,3\n\t"
+
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE              \
+                     "or 5,5,5\n\t"                              \
+                    );                                           \
+ } while (0)
+
 #endif /* PLAT_ppc32_linux */
 
 /* ------------------------ ppc64-linux ------------------------ */
 
-#if defined(PLAT_ppc64_linux)
+#if defined(PLAT_ppc64be_linux)
 
 typedef
    struct { 
-      unsigned long long int nraddr; /* where's the code? */
-      unsigned long long int r2;  /* what tocptr do we need? */
+      unsigned long int nraddr; /* where's the code? */
+      unsigned long int r2;  /* what tocptr do we need? */
    }
    OrigFn;
 
@@ -483,15 +602,15 @@ typedef
         _zzq_arg1, _zzq_arg2, _zzq_arg3, _zzq_arg4, _zzq_arg5)    \
                                                                   \
   __extension__                                                   \
-  ({         unsigned long long int  _zzq_args[6];                \
-             unsigned long long int  _zzq_result;                 \
-             unsigned long long int* _zzq_ptr;                    \
-    _zzq_args[0] = (unsigned long long int)(_zzq_request);        \
-    _zzq_args[1] = (unsigned long long int)(_zzq_arg1);           \
-    _zzq_args[2] = (unsigned long long int)(_zzq_arg2);           \
-    _zzq_args[3] = (unsigned long long int)(_zzq_arg3);           \
-    _zzq_args[4] = (unsigned long long int)(_zzq_arg4);           \
-    _zzq_args[5] = (unsigned long long int)(_zzq_arg5);           \
+  ({         unsigned long int  _zzq_args[6];                     \
+             unsigned long int  _zzq_result;                      \
+             unsigned long int* _zzq_ptr;                         \
+    _zzq_args[0] = (unsigned long int)(_zzq_request);             \
+    _zzq_args[1] = (unsigned long int)(_zzq_arg1);                \
+    _zzq_args[2] = (unsigned long int)(_zzq_arg2);                \
+    _zzq_args[3] = (unsigned long int)(_zzq_arg3);                \
+    _zzq_args[4] = (unsigned long int)(_zzq_arg4);                \
+    _zzq_args[5] = (unsigned long int)(_zzq_arg5);                \
     _zzq_ptr = _zzq_args;                                         \
     __asm__ volatile("mr 3,%1\n\t" /*default*/                    \
                      "mr 4,%2\n\t" /*ptr*/                        \
@@ -507,7 +626,7 @@ typedef
 
 #define VALGRIND_GET_NR_CONTEXT(_zzq_rlval)                       \
   { volatile OrigFn* _zzq_orig = &(_zzq_rlval);                   \
-    unsigned long long int __addr;                                \
+    unsigned long int __addr;                                     \
     __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE               \
                      /* %R3 = guest_NRADDR */                     \
                      "or 2,2,2\n\t"                               \
@@ -533,7 +652,91 @@ typedef
                      /* branch-and-link-to-noredir *%R11 */       \
                      "or 3,3,3\n\t"
 
-#endif /* PLAT_ppc64_linux */
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE              \
+                     "or 5,5,5\n\t"                              \
+                    );                                           \
+ } while (0)
+
+#endif /* PLAT_ppc64be_linux */
+
+#if defined(PLAT_ppc64le_linux)
+
+typedef
+   struct {
+      unsigned long int nraddr; /* where's the code? */
+      unsigned long int r2;     /* what tocptr do we need? */
+   }
+   OrigFn;
+
+#define __SPECIAL_INSTRUCTION_PREAMBLE                            \
+                     "rotldi 0,0,3  ; rotldi 0,0,13\n\t"          \
+                     "rotldi 0,0,61 ; rotldi 0,0,51\n\t"
+
+#define VALGRIND_DO_CLIENT_REQUEST_EXPR(                          \
+        _zzq_default, _zzq_request,                               \
+        _zzq_arg1, _zzq_arg2, _zzq_arg3, _zzq_arg4, _zzq_arg5)    \
+                                                                  \
+  __extension__                                                   \
+  ({         unsigned long int  _zzq_args[6];                     \
+             unsigned long int  _zzq_result;                      \
+             unsigned long int* _zzq_ptr;                         \
+    _zzq_args[0] = (unsigned long int)(_zzq_request);             \
+    _zzq_args[1] = (unsigned long int)(_zzq_arg1);                \
+    _zzq_args[2] = (unsigned long int)(_zzq_arg2);                \
+    _zzq_args[3] = (unsigned long int)(_zzq_arg3);                \
+    _zzq_args[4] = (unsigned long int)(_zzq_arg4);                \
+    _zzq_args[5] = (unsigned long int)(_zzq_arg5);                \
+    _zzq_ptr = _zzq_args;                                         \
+    __asm__ volatile("mr 3,%1\n\t" /*default*/                    \
+                     "mr 4,%2\n\t" /*ptr*/                        \
+                     __SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* %R3 = client_request ( %R4 ) */           \
+                     "or 1,1,1\n\t"                               \
+                     "mr %0,3"     /*result*/                     \
+                     : "=b" (_zzq_result)                         \
+                     : "b" (_zzq_default), "b" (_zzq_ptr)         \
+                     : "cc", "memory", "r3", "r4");               \
+    _zzq_result;                                                  \
+  })
+
+#define VALGRIND_GET_NR_CONTEXT(_zzq_rlval)                       \
+  { volatile OrigFn* _zzq_orig = &(_zzq_rlval);                   \
+    unsigned long int __addr;                                     \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* %R3 = guest_NRADDR */                     \
+                     "or 2,2,2\n\t"                               \
+                     "mr %0,3"                                    \
+                     : "=b" (__addr)                              \
+                     :                                            \
+                     : "cc", "memory", "r3"                       \
+                    );                                            \
+    _zzq_orig->nraddr = __addr;                                   \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* %R3 = guest_NRADDR_GPR2 */                \
+                     "or 4,4,4\n\t"                               \
+                     "mr %0,3"                                    \
+                     : "=b" (__addr)                              \
+                     :                                            \
+                     : "cc", "memory", "r3"                       \
+                    );                                            \
+    _zzq_orig->r2 = __addr;                                       \
+  }
+
+#define VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                   \
+                     __SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* branch-and-link-to-noredir *%R12 */       \
+                     "or 3,3,3\n\t"
+
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE              \
+                     "or 5,5,5\n\t"                              \
+                    );                                           \
+ } while (0)
+
+#endif /* PLAT_ppc64le_linux */
 
 /* ------------------------- arm-linux ------------------------- */
 
@@ -593,7 +796,84 @@ typedef
                      /* branch-and-link-to-noredir *%R4 */        \
                      "orr r12, r12, r12\n\t"
 
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE              \
+                     "orr r9, r9, r9\n\t"                        \
+                     : : : "cc", "memory"                        \
+                    );                                           \
+ } while (0)
+
 #endif /* PLAT_arm_linux */
+
+/* ------------------------ arm64-{linux,freebsd} ------------------------- */
+
+#if defined(PLAT_arm64_linux) || defined(PLAT_arm64_freebsd)
+
+typedef
+   struct { 
+      unsigned long int nraddr; /* where's the code? */
+   }
+   OrigFn;
+
+#define __SPECIAL_INSTRUCTION_PREAMBLE                            \
+            "ror x12, x12, #3  ;  ror x12, x12, #13 \n\t"         \
+            "ror x12, x12, #51 ;  ror x12, x12, #61 \n\t"
+
+#define VALGRIND_DO_CLIENT_REQUEST_EXPR(                          \
+        _zzq_default, _zzq_request,                               \
+        _zzq_arg1, _zzq_arg2, _zzq_arg3, _zzq_arg4, _zzq_arg5)    \
+                                                                  \
+  __extension__                                                   \
+  ({volatile unsigned long int  _zzq_args[6];                     \
+    volatile unsigned long int  _zzq_result;                      \
+    _zzq_args[0] = (unsigned long int)(_zzq_request);             \
+    _zzq_args[1] = (unsigned long int)(_zzq_arg1);                \
+    _zzq_args[2] = (unsigned long int)(_zzq_arg2);                \
+    _zzq_args[3] = (unsigned long int)(_zzq_arg3);                \
+    _zzq_args[4] = (unsigned long int)(_zzq_arg4);                \
+    _zzq_args[5] = (unsigned long int)(_zzq_arg5);                \
+    __asm__ volatile("mov x3, %1\n\t" /*default*/                 \
+                     "mov x4, %2\n\t" /*ptr*/                     \
+                     __SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* X3 = client_request ( X4 ) */             \
+                     "orr x10, x10, x10\n\t"                      \
+                     "mov %0, x3"     /*result*/                  \
+                     : "=r" (_zzq_result)                         \
+                     : "r" ((unsigned long int)(_zzq_default)),   \
+                       "r" (&_zzq_args[0])                        \
+                     : "cc","memory", "x3", "x4");                \
+    _zzq_result;                                                  \
+  })
+
+#define VALGRIND_GET_NR_CONTEXT(_zzq_rlval)                       \
+  { volatile OrigFn* _zzq_orig = &(_zzq_rlval);                   \
+    unsigned long int __addr;                                     \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* X3 = guest_NRADDR */                      \
+                     "orr x11, x11, x11\n\t"                      \
+                     "mov %0, x3"                                 \
+                     : "=r" (__addr)                              \
+                     :                                            \
+                     : "cc", "memory", "x3"                       \
+                    );                                            \
+    _zzq_orig->nraddr = __addr;                                   \
+  }
+
+#define VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                    \
+                     __SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* branch-and-link-to-noredir X8 */          \
+                     "orr x12, x12, x12\n\t"
+
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE              \
+                     "orr x9, x9, x9\n\t"                        \
+                     : : : "cc", "memory"                        \
+                    );                                           \
+ } while (0)
+
+#endif /* PLAT_arm64_linux || PLAT_arm64_freebsd */
 
 /* ------------------------ s390x-linux ------------------------ */
 
@@ -601,7 +881,7 @@ typedef
 
 typedef
   struct {
-     unsigned long long int nraddr; /* where's the code? */
+     unsigned long int nraddr; /* where's the code? */
   }
   OrigFn;
 
@@ -618,19 +898,20 @@ typedef
 #define __CLIENT_REQUEST_CODE "lr 2,2\n\t"
 #define __GET_NR_CONTEXT_CODE "lr 3,3\n\t"
 #define __CALL_NO_REDIR_CODE  "lr 4,4\n\t"
+#define __VEX_INJECT_IR_CODE  "lr 5,5\n\t"
 
 #define VALGRIND_DO_CLIENT_REQUEST_EXPR(                         \
        _zzq_default, _zzq_request,                               \
        _zzq_arg1, _zzq_arg2, _zzq_arg3, _zzq_arg4, _zzq_arg5)    \
   __extension__                                                  \
- ({volatile unsigned long long int _zzq_args[6];                 \
-   volatile unsigned long long int _zzq_result;                  \
-   _zzq_args[0] = (unsigned long long int)(_zzq_request);        \
-   _zzq_args[1] = (unsigned long long int)(_zzq_arg1);           \
-   _zzq_args[2] = (unsigned long long int)(_zzq_arg2);           \
-   _zzq_args[3] = (unsigned long long int)(_zzq_arg3);           \
-   _zzq_args[4] = (unsigned long long int)(_zzq_arg4);           \
-   _zzq_args[5] = (unsigned long long int)(_zzq_arg5);           \
+ ({volatile unsigned long int _zzq_args[6];                      \
+   volatile unsigned long int _zzq_result;                       \
+   _zzq_args[0] = (unsigned long int)(_zzq_request);             \
+   _zzq_args[1] = (unsigned long int)(_zzq_arg1);                \
+   _zzq_args[2] = (unsigned long int)(_zzq_arg2);                \
+   _zzq_args[3] = (unsigned long int)(_zzq_arg3);                \
+   _zzq_args[4] = (unsigned long int)(_zzq_arg4);                \
+   _zzq_args[5] = (unsigned long int)(_zzq_arg5);                \
    __asm__ volatile(/* r2 = args */                              \
                     "lgr 2,%1\n\t"                               \
                     /* r3 = default */                           \
@@ -640,7 +921,8 @@ typedef
                     /* results = r3 */                           \
                     "lgr %0, 3\n\t"                              \
                     : "=d" (_zzq_result)                         \
-                    : "a" (&_zzq_args[0]), "0" (_zzq_default)    \
+                    : "a" (&_zzq_args[0]),                       \
+                      "0" ((unsigned long int)_zzq_default)      \
                     : "cc", "2", "3", "memory"                   \
                    );                                            \
    _zzq_result;                                                  \
@@ -648,7 +930,7 @@ typedef
 
 #define VALGRIND_GET_NR_CONTEXT(_zzq_rlval)                      \
  { volatile OrigFn* _zzq_orig = &(_zzq_rlval);                   \
-   volatile unsigned long long int __addr;                       \
+   volatile unsigned long int __addr;                            \
    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE               \
                     __GET_NR_CONTEXT_CODE                        \
                     "lgr %0, 3\n\t"                              \
@@ -663,8 +945,225 @@ typedef
                     __SPECIAL_INSTRUCTION_PREAMBLE               \
                     __CALL_NO_REDIR_CODE
 
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE              \
+                     __VEX_INJECT_IR_CODE);                      \
+ } while (0)
+
 #endif /* PLAT_s390x_linux */
 
+/* ------------------------- mips32-linux ---------------- */
+
+#if defined(PLAT_mips32_linux)
+
+typedef
+   struct { 
+      unsigned int nraddr; /* where's the code? */
+   }
+   OrigFn;
+
+/* .word  0x342
+ * .word  0x742
+ * .word  0xC2
+ * .word  0x4C2*/
+#define __SPECIAL_INSTRUCTION_PREAMBLE          \
+                     "srl $0, $0, 13\n\t"       \
+                     "srl $0, $0, 29\n\t"       \
+                     "srl $0, $0, 3\n\t"        \
+                     "srl $0, $0, 19\n\t"
+                    
+#define VALGRIND_DO_CLIENT_REQUEST_EXPR(                          \
+       _zzq_default, _zzq_request,                                \
+       _zzq_arg1, _zzq_arg2, _zzq_arg3, _zzq_arg4, _zzq_arg5)     \
+  __extension__                                                   \
+  ({ volatile unsigned int _zzq_args[6];                          \
+    volatile unsigned int _zzq_result;                            \
+    _zzq_args[0] = (unsigned int)(_zzq_request);                  \
+    _zzq_args[1] = (unsigned int)(_zzq_arg1);                     \
+    _zzq_args[2] = (unsigned int)(_zzq_arg2);                     \
+    _zzq_args[3] = (unsigned int)(_zzq_arg3);                     \
+    _zzq_args[4] = (unsigned int)(_zzq_arg4);                     \
+    _zzq_args[5] = (unsigned int)(_zzq_arg5);                     \
+        __asm__ volatile("move $11, %1\n\t" /*default*/           \
+                     "move $12, %2\n\t" /*ptr*/                   \
+                     __SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* T3 = client_request ( T4 ) */             \
+                     "or $13, $13, $13\n\t"                       \
+                     "move %0, $11\n\t"     /*result*/            \
+                     : "=r" (_zzq_result)                         \
+                     : "r" (_zzq_default), "r" (&_zzq_args[0])    \
+                     : "$11", "$12", "memory");                   \
+    _zzq_result;                                                  \
+  })
+
+#define VALGRIND_GET_NR_CONTEXT(_zzq_rlval)                       \
+  { volatile OrigFn* _zzq_orig = &(_zzq_rlval);                   \
+    volatile unsigned int __addr;                                 \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* %t9 = guest_NRADDR */                     \
+                     "or $14, $14, $14\n\t"                       \
+                     "move %0, $11"     /*result*/                \
+                     : "=r" (__addr)                              \
+                     :                                            \
+                     : "$11"                                      \
+                    );                                            \
+    _zzq_orig->nraddr = __addr;                                   \
+  }
+
+#define VALGRIND_CALL_NOREDIR_T9                                 \
+                     __SPECIAL_INSTRUCTION_PREAMBLE              \
+                     /* call-noredir *%t9 */                     \
+                     "or $15, $15, $15\n\t"
+
+#define VALGRIND_VEX_INJECT_IR()                                 \
+ do {                                                            \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE              \
+                     "or $11, $11, $11\n\t"                      \
+                    );                                           \
+ } while (0)
+
+
+#endif /* PLAT_mips32_linux */
+
+/* ------------------------- mips64-linux ---------------- */
+
+#if defined(PLAT_mips64_linux)
+
+typedef
+   struct {
+      unsigned long nraddr; /* where's the code? */
+   }
+   OrigFn;
+
+/* dsll $0,$0, 3
+ * dsll $0,$0, 13
+ * dsll $0,$0, 29
+ * dsll $0,$0, 19*/
+#define __SPECIAL_INSTRUCTION_PREAMBLE                              \
+                     "dsll $0,$0, 3 ; dsll $0,$0,13\n\t"            \
+                     "dsll $0,$0,29 ; dsll $0,$0,19\n\t"
+
+#define VALGRIND_DO_CLIENT_REQUEST_EXPR(                            \
+       _zzq_default, _zzq_request,                                  \
+       _zzq_arg1, _zzq_arg2, _zzq_arg3, _zzq_arg4, _zzq_arg5)       \
+  __extension__                                                     \
+  ({ volatile unsigned long int _zzq_args[6];                       \
+    volatile unsigned long int _zzq_result;                         \
+    _zzq_args[0] = (unsigned long int)(_zzq_request);               \
+    _zzq_args[1] = (unsigned long int)(_zzq_arg1);                  \
+    _zzq_args[2] = (unsigned long int)(_zzq_arg2);                  \
+    _zzq_args[3] = (unsigned long int)(_zzq_arg3);                  \
+    _zzq_args[4] = (unsigned long int)(_zzq_arg4);                  \
+    _zzq_args[5] = (unsigned long int)(_zzq_arg5);                  \
+        __asm__ volatile("move $11, %1\n\t" /*default*/             \
+                         "move $12, %2\n\t" /*ptr*/                 \
+                         __SPECIAL_INSTRUCTION_PREAMBLE             \
+                         /* $11 = client_request ( $12 ) */         \
+                         "or $13, $13, $13\n\t"                     \
+                         "move %0, $11\n\t"     /*result*/          \
+                         : "=r" (_zzq_result)                       \
+                         : "r" (_zzq_default), "r" (&_zzq_args[0])  \
+                         : "$11", "$12", "memory");                 \
+    _zzq_result;                                                    \
+  })
+
+#define VALGRIND_GET_NR_CONTEXT(_zzq_rlval)                         \
+  { volatile OrigFn* _zzq_orig = &(_zzq_rlval);                     \
+    volatile unsigned long int __addr;                              \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE                 \
+                     /* $11 = guest_NRADDR */                       \
+                     "or $14, $14, $14\n\t"                         \
+                     "move %0, $11"     /*result*/                  \
+                     : "=r" (__addr)                                \
+                     :                                              \
+                     : "$11");                                      \
+    _zzq_orig->nraddr = __addr;                                     \
+  }
+
+#define VALGRIND_CALL_NOREDIR_T9                                    \
+                     __SPECIAL_INSTRUCTION_PREAMBLE                 \
+                     /* call-noredir $25 */                         \
+                     "or $15, $15, $15\n\t"
+
+#define VALGRIND_VEX_INJECT_IR()                                    \
+ do {                                                               \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE                 \
+                     "or $11, $11, $11\n\t"                         \
+                    );                                              \
+ } while (0)
+
+#endif /* PLAT_mips64_linux */
+
+#if defined(PLAT_nanomips_linux)
+
+typedef
+   struct {
+      unsigned int nraddr; /* where's the code? */
+   }
+   OrigFn;
+/*
+   8000 c04d  srl  zero, zero, 13
+   8000 c05d  srl  zero, zero, 29
+   8000 c043  srl  zero, zero,  3
+   8000 c053  srl  zero, zero, 19
+*/
+
+#define __SPECIAL_INSTRUCTION_PREAMBLE "srl[32] $zero, $zero, 13 \n\t" \
+                                       "srl[32] $zero, $zero, 29 \n\t" \
+                                       "srl[32] $zero, $zero, 3  \n\t" \
+                                       "srl[32] $zero, $zero, 19 \n\t"
+
+#define VALGRIND_DO_CLIENT_REQUEST_EXPR(                          \
+       _zzq_default, _zzq_request,                                \
+       _zzq_arg1, _zzq_arg2, _zzq_arg3, _zzq_arg4, _zzq_arg5)     \
+  __extension__                                                   \
+  ({ volatile unsigned int _zzq_args[6];                          \
+    volatile unsigned int _zzq_result;                            \
+    _zzq_args[0] = (unsigned int)(_zzq_request);                  \
+    _zzq_args[1] = (unsigned int)(_zzq_arg1);                     \
+    _zzq_args[2] = (unsigned int)(_zzq_arg2);                     \
+    _zzq_args[3] = (unsigned int)(_zzq_arg3);                     \
+    _zzq_args[4] = (unsigned int)(_zzq_arg4);                     \
+    _zzq_args[5] = (unsigned int)(_zzq_arg5);                     \
+    __asm__ volatile("move $a7, %1\n\t" /* default */             \
+                     "move $t0, %2\n\t" /* ptr */                 \
+                     __SPECIAL_INSTRUCTION_PREAMBLE               \
+                     /* $a7 = client_request( $t0 ) */            \
+                     "or[32] $t0, $t0, $t0\n\t"                   \
+                     "move %0, $a7\n\t"     /* result */          \
+                     : "=r" (_zzq_result)                         \
+                     : "r" (_zzq_default), "r" (&_zzq_args[0])    \
+                     : "$a7", "$t0", "memory");                   \
+    _zzq_result;                                                  \
+  })
+
+#define VALGRIND_GET_NR_CONTEXT(_zzq_rlval)                         \
+  { volatile OrigFn* _zzq_orig = &(_zzq_rlval);                     \
+    volatile unsigned long int __addr;                              \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE                 \
+                     /* $a7 = guest_NRADDR */                       \
+                     "or[32] $t1, $t1, $t1\n\t"                     \
+                     "move %0, $a7"     /*result*/                  \
+                     : "=r" (__addr)                                \
+                     :                                              \
+                     : "$a7");                                      \
+    _zzq_orig->nraddr = __addr;                                     \
+  }
+
+#define VALGRIND_CALL_NOREDIR_T9                                    \
+                     __SPECIAL_INSTRUCTION_PREAMBLE                 \
+                     /* call-noredir $25 */                         \
+                     "or[32] $t2, $t2, $t2\n\t"
+
+#define VALGRIND_VEX_INJECT_IR()                                    \
+ do {                                                               \
+    __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE                 \
+                     "or[32] $t3, $t3, $t3\n\t"                     \
+                    );                                              \
+ } while (0)
+
+#endif
 /* Insert assembly code for other platforms here... */
 
 #endif /* NVALGRIND */
@@ -715,6 +1214,18 @@ typedef
    macros.  The type of the argument _lval is OrigFn. */
 #define VALGRIND_GET_ORIG_FN(_lval)  VALGRIND_GET_NR_CONTEXT(_lval)
 
+/* Also provide end-user facilities for function replacement, rather
+   than wrapping.  A replacement function differs from a wrapper in
+   that it has no way to get hold of the original function being
+   called, and hence no way to call onwards to it.  In a replacement
+   function, VALGRIND_GET_ORIG_FN always returns zero. */
+
+#define I_REPLACE_SONAME_FNNAME_ZU(soname,fnname)                 \
+   VG_CONCAT4(_vgr00000ZU_,soname,_,fnname)
+
+#define I_REPLACE_SONAME_FNNAME_ZZ(soname,fnname)                 \
+   VG_CONCAT4(_vgr00000ZZ_,soname,_,fnname)
+
 /* Derivatives of the main macros below, for calling functions
    returning void. */
 
@@ -750,13 +1261,25 @@ typedef
    do { volatile unsigned long _junk;                             \
         CALL_FN_W_7W(_junk,fnptr,arg1,arg2,arg3,arg4,arg5,arg6,arg7); } while (0)
 
-/* ------------------------- x86-{linux,darwin} ---------------- */
+/* ----------------- x86-{linux,darwin,solaris} ---------------- */
 
-#if defined(PLAT_x86_linux)  ||  defined(PLAT_x86_darwin)
+#if defined(PLAT_x86_linux)  ||  defined(PLAT_x86_darwin) \
+    ||  defined(PLAT_x86_solaris)  || defined(PLAT_x86_freebsd)
 
 /* These regs are trashed by the hidden call.  No need to mention eax
    as gcc can already see that, plus causes gcc to bomb. */
 #define __CALLER_SAVED_REGS /*"eax"*/ "ecx", "edx"
+
+/* Macros to save and align the stack before making a function
+   call and restore it afterwards as gcc may not keep the stack
+   pointer aligned if it doesn't realise calls are being made
+   to other functions. */
+
+#define VALGRIND_ALIGN_STACK               \
+      "movl %%esp,%%edi\n\t"               \
+      "andl $0xfffffff0,%%esp\n\t"
+#define VALGRIND_RESTORE_STACK             \
+      "movl %%edi,%%esp\n\t"
 
 /* These CALL_FN_ macros assume that on x86-linux, sizeof(unsigned
    long) == 4. */
@@ -768,11 +1291,13 @@ typedef
       volatile unsigned long _res;                                \
       _argvec[0] = (unsigned long)_orig.nraddr;                   \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -785,14 +1310,15 @@ typedef
       _argvec[0] = (unsigned long)_orig.nraddr;                   \
       _argvec[1] = (unsigned long)(arg1);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "subl $12, %%esp\n\t"                                    \
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $16, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -806,15 +1332,16 @@ typedef
       _argvec[1] = (unsigned long)(arg1);                         \
       _argvec[2] = (unsigned long)(arg2);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "subl $8, %%esp\n\t"                                     \
          "pushl 8(%%eax)\n\t"                                     \
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $16, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -829,16 +1356,17 @@ typedef
       _argvec[2] = (unsigned long)(arg2);                         \
       _argvec[3] = (unsigned long)(arg3);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "subl $4, %%esp\n\t"                                     \
          "pushl 12(%%eax)\n\t"                                    \
          "pushl 8(%%eax)\n\t"                                     \
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $16, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -854,16 +1382,17 @@ typedef
       _argvec[3] = (unsigned long)(arg3);                         \
       _argvec[4] = (unsigned long)(arg4);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "pushl 16(%%eax)\n\t"                                    \
          "pushl 12(%%eax)\n\t"                                    \
          "pushl 8(%%eax)\n\t"                                     \
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $16, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -880,6 +1409,7 @@ typedef
       _argvec[4] = (unsigned long)(arg4);                         \
       _argvec[5] = (unsigned long)(arg5);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "subl $12, %%esp\n\t"                                    \
          "pushl 20(%%eax)\n\t"                                    \
          "pushl 16(%%eax)\n\t"                                    \
@@ -888,10 +1418,10 @@ typedef
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $32, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -909,6 +1439,7 @@ typedef
       _argvec[5] = (unsigned long)(arg5);                         \
       _argvec[6] = (unsigned long)(arg6);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "subl $8, %%esp\n\t"                                     \
          "pushl 24(%%eax)\n\t"                                    \
          "pushl 20(%%eax)\n\t"                                    \
@@ -918,10 +1449,10 @@ typedef
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $32, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -941,6 +1472,7 @@ typedef
       _argvec[6] = (unsigned long)(arg6);                         \
       _argvec[7] = (unsigned long)(arg7);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "subl $4, %%esp\n\t"                                     \
          "pushl 28(%%eax)\n\t"                                    \
          "pushl 24(%%eax)\n\t"                                    \
@@ -951,10 +1483,10 @@ typedef
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $32, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -975,6 +1507,7 @@ typedef
       _argvec[7] = (unsigned long)(arg7);                         \
       _argvec[8] = (unsigned long)(arg8);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "pushl 32(%%eax)\n\t"                                    \
          "pushl 28(%%eax)\n\t"                                    \
          "pushl 24(%%eax)\n\t"                                    \
@@ -985,10 +1518,10 @@ typedef
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $32, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1010,6 +1543,7 @@ typedef
       _argvec[8] = (unsigned long)(arg8);                         \
       _argvec[9] = (unsigned long)(arg9);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "subl $12, %%esp\n\t"                                    \
          "pushl 36(%%eax)\n\t"                                    \
          "pushl 32(%%eax)\n\t"                                    \
@@ -1022,10 +1556,10 @@ typedef
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $48, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1048,6 +1582,7 @@ typedef
       _argvec[9] = (unsigned long)(arg9);                         \
       _argvec[10] = (unsigned long)(arg10);                       \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "subl $8, %%esp\n\t"                                     \
          "pushl 40(%%eax)\n\t"                                    \
          "pushl 36(%%eax)\n\t"                                    \
@@ -1061,10 +1596,10 @@ typedef
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $48, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1089,6 +1624,7 @@ typedef
       _argvec[10] = (unsigned long)(arg10);                       \
       _argvec[11] = (unsigned long)(arg11);                       \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "subl $4, %%esp\n\t"                                     \
          "pushl 44(%%eax)\n\t"                                    \
          "pushl 40(%%eax)\n\t"                                    \
@@ -1103,10 +1639,10 @@ typedef
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $48, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1132,6 +1668,7 @@ typedef
       _argvec[11] = (unsigned long)(arg11);                       \
       _argvec[12] = (unsigned long)(arg12);                       \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "pushl 48(%%eax)\n\t"                                    \
          "pushl 44(%%eax)\n\t"                                    \
          "pushl 40(%%eax)\n\t"                                    \
@@ -1146,19 +1683,20 @@ typedef
          "pushl 4(%%eax)\n\t"                                     \
          "movl (%%eax), %%eax\n\t"  /* target->%eax */            \
          VALGRIND_CALL_NOREDIR_EAX                                \
-         "addl $48, %%esp\n"                                      \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=a" (_res)                                  \
          : /*in*/    "a" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "edi"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
 
-#endif /* PLAT_x86_linux || PLAT_x86_darwin */
+#endif /* PLAT_x86_linux || PLAT_x86_darwin || PLAT_x86_solaris */
 
-/* ------------------------ amd64-{linux,darwin} --------------- */
+/* ---------------- amd64-{linux,darwin,solaris} --------------- */
 
-#if defined(PLAT_amd64_linux)  ||  defined(PLAT_amd64_darwin)
+#if defined(PLAT_amd64_linux)  ||  defined(PLAT_amd64_darwin) \
+    ||  defined(PLAT_amd64_solaris)  ||  defined(PLAT_amd64_freebsd)
 
 /* ARGREGS: rdi rsi rdx rcx r8 r9 (the rest on stack in R-to-L order) */
 
@@ -1237,6 +1775,16 @@ typedef
 #  define VALGRIND_CFI_EPILOGUE
 #endif
 
+/* Macros to save and align the stack before making a function
+   call and restore it afterwards as gcc may not keep the stack
+   pointer aligned if it doesn't realise calls are being made
+   to other functions. */
+
+#define VALGRIND_ALIGN_STACK               \
+      "movq %%rsp,%%r14\n\t"               \
+      "andq $0xfffffffffffffff0,%%rsp\n\t"
+#define VALGRIND_RESTORE_STACK             \
+      "movq %%r14,%%rsp\n\t"
 
 /* These CALL_FN_ macros assume that on amd64-linux, sizeof(unsigned
    long) == 8. */
@@ -1262,435 +1810,442 @@ typedef
    with the stack pointer doesn't give a danger of non-unwindable
    stack. */
 
-#define CALL_FN_W_v(lval, orig)                                   \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[1];                          \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_v(lval, orig)                                        \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[1];                               \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_W(lval, orig, arg1)                             \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[2];                          \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_W(lval, orig, arg1)                                  \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[2];                               \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_WW(lval, orig, arg1,arg2)                       \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[3];                          \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_WW(lval, orig, arg1,arg2)                            \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[3];                               \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_WWW(lval, orig, arg1,arg2,arg3)                 \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[4];                          \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_WWW(lval, orig, arg1,arg2,arg3)                      \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[4];                               \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_WWWW(lval, orig, arg1,arg2,arg3,arg4)           \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[5];                          \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      _argvec[4] = (unsigned long)(arg4);                         \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "movq 32(%%rax), %%rcx\n\t"                              \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_WWWW(lval, orig, arg1,arg2,arg3,arg4)                \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[5];                               \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      _argvec[4] = (unsigned long)(arg4);                              \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "movq 32(%%rax), %%rcx\n\t"                                   \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_5W(lval, orig, arg1,arg2,arg3,arg4,arg5)        \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[6];                          \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      _argvec[4] = (unsigned long)(arg4);                         \
-      _argvec[5] = (unsigned long)(arg5);                         \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "movq 40(%%rax), %%r8\n\t"                               \
-         "movq 32(%%rax), %%rcx\n\t"                              \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_5W(lval, orig, arg1,arg2,arg3,arg4,arg5)             \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[6];                               \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      _argvec[4] = (unsigned long)(arg4);                              \
+      _argvec[5] = (unsigned long)(arg5);                              \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "movq 40(%%rax), %%r8\n\t"                                    \
+         "movq 32(%%rax), %%rcx\n\t"                                   \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_6W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6)   \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[7];                          \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      _argvec[4] = (unsigned long)(arg4);                         \
-      _argvec[5] = (unsigned long)(arg5);                         \
-      _argvec[6] = (unsigned long)(arg6);                         \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "movq 48(%%rax), %%r9\n\t"                               \
-         "movq 40(%%rax), %%r8\n\t"                               \
-         "movq 32(%%rax), %%rcx\n\t"                              \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_6W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6)        \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[7];                               \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      _argvec[4] = (unsigned long)(arg4);                              \
+      _argvec[5] = (unsigned long)(arg5);                              \
+      _argvec[6] = (unsigned long)(arg6);                              \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "movq 48(%%rax), %%r9\n\t"                                    \
+         "movq 40(%%rax), %%r8\n\t"                                    \
+         "movq 32(%%rax), %%rcx\n\t"                                   \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_7W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
-                                 arg7)                            \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[8];                          \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      _argvec[4] = (unsigned long)(arg4);                         \
-      _argvec[5] = (unsigned long)(arg5);                         \
-      _argvec[6] = (unsigned long)(arg6);                         \
-      _argvec[7] = (unsigned long)(arg7);                         \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $136,%%rsp\n\t"                                    \
-         "pushq 56(%%rax)\n\t"                                    \
-         "movq 48(%%rax), %%r9\n\t"                               \
-         "movq 40(%%rax), %%r8\n\t"                               \
-         "movq 32(%%rax), %%rcx\n\t"                              \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $8, %%rsp\n"                                       \
-         "addq $136,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_7W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,        \
+                                 arg7)                                 \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[8];                               \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      _argvec[4] = (unsigned long)(arg4);                              \
+      _argvec[5] = (unsigned long)(arg5);                              \
+      _argvec[6] = (unsigned long)(arg6);                              \
+      _argvec[7] = (unsigned long)(arg7);                              \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $136,%%rsp\n\t"                                         \
+         "pushq 56(%%rax)\n\t"                                         \
+         "movq 48(%%rax), %%r9\n\t"                                    \
+         "movq 40(%%rax), %%r8\n\t"                                    \
+         "movq 32(%%rax), %%rcx\n\t"                                   \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_8W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
-                                 arg7,arg8)                       \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[9];                          \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      _argvec[4] = (unsigned long)(arg4);                         \
-      _argvec[5] = (unsigned long)(arg5);                         \
-      _argvec[6] = (unsigned long)(arg6);                         \
-      _argvec[7] = (unsigned long)(arg7);                         \
-      _argvec[8] = (unsigned long)(arg8);                         \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "pushq 64(%%rax)\n\t"                                    \
-         "pushq 56(%%rax)\n\t"                                    \
-         "movq 48(%%rax), %%r9\n\t"                               \
-         "movq 40(%%rax), %%r8\n\t"                               \
-         "movq 32(%%rax), %%rcx\n\t"                              \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $16, %%rsp\n"                                      \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_8W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,        \
+                                 arg7,arg8)                            \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[9];                               \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      _argvec[4] = (unsigned long)(arg4);                              \
+      _argvec[5] = (unsigned long)(arg5);                              \
+      _argvec[6] = (unsigned long)(arg6);                              \
+      _argvec[7] = (unsigned long)(arg7);                              \
+      _argvec[8] = (unsigned long)(arg8);                              \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "pushq 64(%%rax)\n\t"                                         \
+         "pushq 56(%%rax)\n\t"                                         \
+         "movq 48(%%rax), %%r9\n\t"                                    \
+         "movq 40(%%rax), %%r8\n\t"                                    \
+         "movq 32(%%rax), %%rcx\n\t"                                   \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_9W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
-                                 arg7,arg8,arg9)                  \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[10];                         \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      _argvec[4] = (unsigned long)(arg4);                         \
-      _argvec[5] = (unsigned long)(arg5);                         \
-      _argvec[6] = (unsigned long)(arg6);                         \
-      _argvec[7] = (unsigned long)(arg7);                         \
-      _argvec[8] = (unsigned long)(arg8);                         \
-      _argvec[9] = (unsigned long)(arg9);                         \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $136,%%rsp\n\t"                                    \
-         "pushq 72(%%rax)\n\t"                                    \
-         "pushq 64(%%rax)\n\t"                                    \
-         "pushq 56(%%rax)\n\t"                                    \
-         "movq 48(%%rax), %%r9\n\t"                               \
-         "movq 40(%%rax), %%r8\n\t"                               \
-         "movq 32(%%rax), %%rcx\n\t"                              \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $24, %%rsp\n"                                      \
-         "addq $136,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_9W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,        \
+                                 arg7,arg8,arg9)                       \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[10];                              \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      _argvec[4] = (unsigned long)(arg4);                              \
+      _argvec[5] = (unsigned long)(arg5);                              \
+      _argvec[6] = (unsigned long)(arg6);                              \
+      _argvec[7] = (unsigned long)(arg7);                              \
+      _argvec[8] = (unsigned long)(arg8);                              \
+      _argvec[9] = (unsigned long)(arg9);                              \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $136,%%rsp\n\t"                                         \
+         "pushq 72(%%rax)\n\t"                                         \
+         "pushq 64(%%rax)\n\t"                                         \
+         "pushq 56(%%rax)\n\t"                                         \
+         "movq 48(%%rax), %%r9\n\t"                                    \
+         "movq 40(%%rax), %%r8\n\t"                                    \
+         "movq 32(%%rax), %%rcx\n\t"                                   \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_10W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
-                                  arg7,arg8,arg9,arg10)           \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[11];                         \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      _argvec[4] = (unsigned long)(arg4);                         \
-      _argvec[5] = (unsigned long)(arg5);                         \
-      _argvec[6] = (unsigned long)(arg6);                         \
-      _argvec[7] = (unsigned long)(arg7);                         \
-      _argvec[8] = (unsigned long)(arg8);                         \
-      _argvec[9] = (unsigned long)(arg9);                         \
-      _argvec[10] = (unsigned long)(arg10);                       \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "pushq 80(%%rax)\n\t"                                    \
-         "pushq 72(%%rax)\n\t"                                    \
-         "pushq 64(%%rax)\n\t"                                    \
-         "pushq 56(%%rax)\n\t"                                    \
-         "movq 48(%%rax), %%r9\n\t"                               \
-         "movq 40(%%rax), %%r8\n\t"                               \
-         "movq 32(%%rax), %%rcx\n\t"                              \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $32, %%rsp\n"                                      \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_10W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,       \
+                                  arg7,arg8,arg9,arg10)                \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[11];                              \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      _argvec[4] = (unsigned long)(arg4);                              \
+      _argvec[5] = (unsigned long)(arg5);                              \
+      _argvec[6] = (unsigned long)(arg6);                              \
+      _argvec[7] = (unsigned long)(arg7);                              \
+      _argvec[8] = (unsigned long)(arg8);                              \
+      _argvec[9] = (unsigned long)(arg9);                              \
+      _argvec[10] = (unsigned long)(arg10);                            \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "pushq 80(%%rax)\n\t"                                         \
+         "pushq 72(%%rax)\n\t"                                         \
+         "pushq 64(%%rax)\n\t"                                         \
+         "pushq 56(%%rax)\n\t"                                         \
+         "movq 48(%%rax), %%r9\n\t"                                    \
+         "movq 40(%%rax), %%r8\n\t"                                    \
+         "movq 32(%%rax), %%rcx\n\t"                                   \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_11W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
-                                  arg7,arg8,arg9,arg10,arg11)     \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[12];                         \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      _argvec[4] = (unsigned long)(arg4);                         \
-      _argvec[5] = (unsigned long)(arg5);                         \
-      _argvec[6] = (unsigned long)(arg6);                         \
-      _argvec[7] = (unsigned long)(arg7);                         \
-      _argvec[8] = (unsigned long)(arg8);                         \
-      _argvec[9] = (unsigned long)(arg9);                         \
-      _argvec[10] = (unsigned long)(arg10);                       \
-      _argvec[11] = (unsigned long)(arg11);                       \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $136,%%rsp\n\t"                                    \
-         "pushq 88(%%rax)\n\t"                                    \
-         "pushq 80(%%rax)\n\t"                                    \
-         "pushq 72(%%rax)\n\t"                                    \
-         "pushq 64(%%rax)\n\t"                                    \
-         "pushq 56(%%rax)\n\t"                                    \
-         "movq 48(%%rax), %%r9\n\t"                               \
-         "movq 40(%%rax), %%r8\n\t"                               \
-         "movq 32(%%rax), %%rcx\n\t"                              \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $40, %%rsp\n"                                      \
-         "addq $136,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_11W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,       \
+                                  arg7,arg8,arg9,arg10,arg11)          \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[12];                              \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      _argvec[4] = (unsigned long)(arg4);                              \
+      _argvec[5] = (unsigned long)(arg5);                              \
+      _argvec[6] = (unsigned long)(arg6);                              \
+      _argvec[7] = (unsigned long)(arg7);                              \
+      _argvec[8] = (unsigned long)(arg8);                              \
+      _argvec[9] = (unsigned long)(arg9);                              \
+      _argvec[10] = (unsigned long)(arg10);                            \
+      _argvec[11] = (unsigned long)(arg11);                            \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $136,%%rsp\n\t"                                         \
+         "pushq 88(%%rax)\n\t"                                         \
+         "pushq 80(%%rax)\n\t"                                         \
+         "pushq 72(%%rax)\n\t"                                         \
+         "pushq 64(%%rax)\n\t"                                         \
+         "pushq 56(%%rax)\n\t"                                         \
+         "movq 48(%%rax), %%r9\n\t"                                    \
+         "movq 40(%%rax), %%r8\n\t"                                    \
+         "movq 32(%%rax), %%rcx\n\t"                                   \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#define CALL_FN_W_12W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
-                                arg7,arg8,arg9,arg10,arg11,arg12) \
-   do {                                                           \
-      volatile OrigFn        _orig = (orig);                      \
-      volatile unsigned long _argvec[13];                         \
-      volatile unsigned long _res;                                \
-      _argvec[0] = (unsigned long)_orig.nraddr;                   \
-      _argvec[1] = (unsigned long)(arg1);                         \
-      _argvec[2] = (unsigned long)(arg2);                         \
-      _argvec[3] = (unsigned long)(arg3);                         \
-      _argvec[4] = (unsigned long)(arg4);                         \
-      _argvec[5] = (unsigned long)(arg5);                         \
-      _argvec[6] = (unsigned long)(arg6);                         \
-      _argvec[7] = (unsigned long)(arg7);                         \
-      _argvec[8] = (unsigned long)(arg8);                         \
-      _argvec[9] = (unsigned long)(arg9);                         \
-      _argvec[10] = (unsigned long)(arg10);                       \
-      _argvec[11] = (unsigned long)(arg11);                       \
-      _argvec[12] = (unsigned long)(arg12);                       \
-      __asm__ volatile(                                           \
-         VALGRIND_CFI_PROLOGUE                                    \
-         "subq $128,%%rsp\n\t"                                    \
-         "pushq 96(%%rax)\n\t"                                    \
-         "pushq 88(%%rax)\n\t"                                    \
-         "pushq 80(%%rax)\n\t"                                    \
-         "pushq 72(%%rax)\n\t"                                    \
-         "pushq 64(%%rax)\n\t"                                    \
-         "pushq 56(%%rax)\n\t"                                    \
-         "movq 48(%%rax), %%r9\n\t"                               \
-         "movq 40(%%rax), %%r8\n\t"                               \
-         "movq 32(%%rax), %%rcx\n\t"                              \
-         "movq 24(%%rax), %%rdx\n\t"                              \
-         "movq 16(%%rax), %%rsi\n\t"                              \
-         "movq 8(%%rax), %%rdi\n\t"                               \
-         "movq (%%rax), %%rax\n\t"  /* target->%rax */            \
-         VALGRIND_CALL_NOREDIR_RAX                                \
-         "addq $48, %%rsp\n"                                      \
-         "addq $128,%%rsp\n\t"                                    \
-         VALGRIND_CFI_EPILOGUE                                    \
-         : /*out*/   "=a" (_res)                                  \
-         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r15"   \
-      );                                                          \
-      lval = (__typeof__(lval)) _res;                             \
+#define CALL_FN_W_12W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,       \
+                                arg7,arg8,arg9,arg10,arg11,arg12)      \
+   do {                                                                \
+      volatile OrigFn        _orig = (orig);                           \
+      volatile unsigned long _argvec[13];                              \
+      volatile unsigned long _res;                                     \
+      _argvec[0] = (unsigned long)_orig.nraddr;                        \
+      _argvec[1] = (unsigned long)(arg1);                              \
+      _argvec[2] = (unsigned long)(arg2);                              \
+      _argvec[3] = (unsigned long)(arg3);                              \
+      _argvec[4] = (unsigned long)(arg4);                              \
+      _argvec[5] = (unsigned long)(arg5);                              \
+      _argvec[6] = (unsigned long)(arg6);                              \
+      _argvec[7] = (unsigned long)(arg7);                              \
+      _argvec[8] = (unsigned long)(arg8);                              \
+      _argvec[9] = (unsigned long)(arg9);                              \
+      _argvec[10] = (unsigned long)(arg10);                            \
+      _argvec[11] = (unsigned long)(arg11);                            \
+      _argvec[12] = (unsigned long)(arg12);                            \
+      __asm__ volatile(                                                \
+         VALGRIND_CFI_PROLOGUE                                         \
+         VALGRIND_ALIGN_STACK                                          \
+         "subq $128,%%rsp\n\t"                                         \
+         "pushq 96(%%rax)\n\t"                                         \
+         "pushq 88(%%rax)\n\t"                                         \
+         "pushq 80(%%rax)\n\t"                                         \
+         "pushq 72(%%rax)\n\t"                                         \
+         "pushq 64(%%rax)\n\t"                                         \
+         "pushq 56(%%rax)\n\t"                                         \
+         "movq 48(%%rax), %%r9\n\t"                                    \
+         "movq 40(%%rax), %%r8\n\t"                                    \
+         "movq 32(%%rax), %%rcx\n\t"                                   \
+         "movq 24(%%rax), %%rdx\n\t"                                   \
+         "movq 16(%%rax), %%rsi\n\t"                                   \
+         "movq 8(%%rax), %%rdi\n\t"                                    \
+         "movq (%%rax), %%rax\n\t"  /* target->%rax */                 \
+         VALGRIND_CALL_NOREDIR_RAX                                     \
+         VALGRIND_RESTORE_STACK                                        \
+         VALGRIND_CFI_EPILOGUE                                         \
+         : /*out*/   "=a" (_res)                                       \
+         : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER                 \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r14", "r15" \
+      );                                                               \
+      lval = (__typeof__(lval)) _res;                                  \
    } while (0)
 
-#endif /* PLAT_amd64_linux || PLAT_amd64_darwin */
+#endif /* PLAT_amd64_linux || PLAT_amd64_darwin || PLAT_amd64_solaris */
 
 /* ------------------------ ppc32-linux ------------------------ */
 
@@ -1726,6 +2281,17 @@ typedef
    "r0", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10",   \
    "r11", "r12", "r13"
 
+/* Macros to save and align the stack before making a function
+   call and restore it afterwards as gcc may not keep the stack
+   pointer aligned if it doesn't realise calls are being made
+   to other functions. */
+
+#define VALGRIND_ALIGN_STACK               \
+      "mr 28,1\n\t"                        \
+      "rlwinm 1,1,0,0,27\n\t"
+#define VALGRIND_RESTORE_STACK             \
+      "mr 1,28\n\t"
+
 /* These CALL_FN_ macros assume that on ppc32-linux, 
    sizeof(unsigned long) == 4. */
 
@@ -1736,13 +2302,15 @@ typedef
       volatile unsigned long _res;                                \
       _argvec[0] = (unsigned long)_orig.nraddr;                   \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1755,14 +2323,16 @@ typedef
       _argvec[0] = (unsigned long)_orig.nraddr;                   \
       _argvec[1] = (unsigned long)arg1;                           \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "lwz 3,4(11)\n\t"   /* arg1->r3 */                       \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1776,15 +2346,17 @@ typedef
       _argvec[1] = (unsigned long)arg1;                           \
       _argvec[2] = (unsigned long)arg2;                           \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "lwz 3,4(11)\n\t"   /* arg1->r3 */                       \
          "lwz 4,8(11)\n\t"                                        \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1799,16 +2371,18 @@ typedef
       _argvec[2] = (unsigned long)arg2;                           \
       _argvec[3] = (unsigned long)arg3;                           \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "lwz 3,4(11)\n\t"   /* arg1->r3 */                       \
          "lwz 4,8(11)\n\t"                                        \
          "lwz 5,12(11)\n\t"                                       \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1824,6 +2398,7 @@ typedef
       _argvec[3] = (unsigned long)arg3;                           \
       _argvec[4] = (unsigned long)arg4;                           \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "lwz 3,4(11)\n\t"   /* arg1->r3 */                       \
          "lwz 4,8(11)\n\t"                                        \
@@ -1831,10 +2406,11 @@ typedef
          "lwz 6,16(11)\n\t"  /* arg4->r6 */                       \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1851,6 +2427,7 @@ typedef
       _argvec[4] = (unsigned long)arg4;                           \
       _argvec[5] = (unsigned long)arg5;                           \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "lwz 3,4(11)\n\t"   /* arg1->r3 */                       \
          "lwz 4,8(11)\n\t"                                        \
@@ -1859,10 +2436,11 @@ typedef
          "lwz 7,20(11)\n\t"                                       \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1880,6 +2458,7 @@ typedef
       _argvec[5] = (unsigned long)arg5;                           \
       _argvec[6] = (unsigned long)arg6;                           \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "lwz 3,4(11)\n\t"   /* arg1->r3 */                       \
          "lwz 4,8(11)\n\t"                                        \
@@ -1889,10 +2468,11 @@ typedef
          "lwz 8,24(11)\n\t"                                       \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1912,6 +2492,7 @@ typedef
       _argvec[6] = (unsigned long)arg6;                           \
       _argvec[7] = (unsigned long)arg7;                           \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "lwz 3,4(11)\n\t"   /* arg1->r3 */                       \
          "lwz 4,8(11)\n\t"                                        \
@@ -1922,10 +2503,11 @@ typedef
          "lwz 9,28(11)\n\t"                                       \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1946,6 +2528,7 @@ typedef
       _argvec[7] = (unsigned long)arg7;                           \
       _argvec[8] = (unsigned long)arg8;                           \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "lwz 3,4(11)\n\t"   /* arg1->r3 */                       \
          "lwz 4,8(11)\n\t"                                        \
@@ -1957,10 +2540,11 @@ typedef
          "lwz 10,32(11)\n\t" /* arg8->r10 */                      \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -1982,6 +2566,7 @@ typedef
       _argvec[8] = (unsigned long)arg8;                           \
       _argvec[9] = (unsigned long)arg9;                           \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "addi 1,1,-16\n\t"                                       \
          /* arg9 */                                               \
@@ -1998,11 +2583,11 @@ typedef
          "lwz 10,32(11)\n\t" /* arg8->r10 */                      \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
-         "addi 1,1,16\n\t"                                        \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2025,6 +2610,7 @@ typedef
       _argvec[9] = (unsigned long)arg9;                           \
       _argvec[10] = (unsigned long)arg10;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "addi 1,1,-16\n\t"                                       \
          /* arg10 */                                              \
@@ -2044,11 +2630,11 @@ typedef
          "lwz 10,32(11)\n\t" /* arg8->r10 */                      \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
-         "addi 1,1,16\n\t"                                        \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2072,6 +2658,7 @@ typedef
       _argvec[10] = (unsigned long)arg10;                         \
       _argvec[11] = (unsigned long)arg11;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "addi 1,1,-32\n\t"                                       \
          /* arg11 */                                              \
@@ -2094,11 +2681,11 @@ typedef
          "lwz 10,32(11)\n\t" /* arg8->r10 */                      \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
-         "addi 1,1,32\n\t"                                        \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2123,6 +2710,7 @@ typedef
       _argvec[11] = (unsigned long)arg11;                         \
       _argvec[12] = (unsigned long)arg12;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "addi 1,1,-32\n\t"                                       \
          /* arg12 */                                              \
@@ -2148,11 +2736,11 @@ typedef
          "lwz 10,32(11)\n\t" /* arg8->r10 */                      \
          "lwz 11,0(11)\n\t"  /* target->r11 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
-         "addi 1,1,32\n\t"                                        \
+         VALGRIND_RESTORE_STACK                                   \
          "mr %0,3"                                                \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2161,7 +2749,7 @@ typedef
 
 /* ------------------------ ppc64-linux ------------------------ */
 
-#if defined(PLAT_ppc64_linux)
+#if defined(PLAT_ppc64be_linux)
 
 /* ARGREGS: r3 r4 r5 r6 r7 r8 r9 r10 (the rest on stack somewhere) */
 
@@ -2169,8 +2757,19 @@ typedef
 #define __CALLER_SAVED_REGS                                       \
    "lr", "ctr", "xer",                                            \
    "cr0", "cr1", "cr2", "cr3", "cr4", "cr5", "cr6", "cr7",        \
-   "r0", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10",   \
+   "r0", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10",         \
    "r11", "r12", "r13"
+
+/* Macros to save and align the stack before making a function
+   call and restore it afterwards as gcc may not keep the stack
+   pointer aligned if it doesn't realise calls are being made
+   to other functions. */
+
+#define VALGRIND_ALIGN_STACK               \
+      "mr 28,1\n\t"                        \
+      "rldicr 1,1,0,59\n\t"
+#define VALGRIND_RESTORE_STACK             \
+      "mr 1,28\n\t"
 
 /* These CALL_FN_ macros assume that on ppc64-linux, sizeof(unsigned
    long) == 8. */
@@ -2184,6 +2783,7 @@ typedef
       _argvec[1] = (unsigned long)_orig.r2;                       \
       _argvec[2] = (unsigned long)_orig.nraddr;                   \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2191,10 +2791,11 @@ typedef
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
-         "ld 2,-16(11)" /* restore tocptr */                      \
+         "ld 2,-16(11)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2209,6 +2810,7 @@ typedef
       _argvec[2]   = (unsigned long)_orig.nraddr;                 \
       _argvec[2+1] = (unsigned long)arg1;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2217,10 +2819,11 @@ typedef
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
-         "ld 2,-16(11)" /* restore tocptr */                      \
+         "ld 2,-16(11)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2236,6 +2839,7 @@ typedef
       _argvec[2+1] = (unsigned long)arg1;                         \
       _argvec[2+2] = (unsigned long)arg2;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2245,10 +2849,11 @@ typedef
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
-         "ld 2,-16(11)" /* restore tocptr */                      \
+         "ld 2,-16(11)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2265,6 +2870,7 @@ typedef
       _argvec[2+2] = (unsigned long)arg2;                         \
       _argvec[2+3] = (unsigned long)arg3;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2275,10 +2881,11 @@ typedef
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
-         "ld 2,-16(11)" /* restore tocptr */                      \
+         "ld 2,-16(11)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2296,6 +2903,7 @@ typedef
       _argvec[2+3] = (unsigned long)arg3;                         \
       _argvec[2+4] = (unsigned long)arg4;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2307,10 +2915,11 @@ typedef
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
-         "ld 2,-16(11)" /* restore tocptr */                      \
+         "ld 2,-16(11)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2329,6 +2938,7 @@ typedef
       _argvec[2+4] = (unsigned long)arg4;                         \
       _argvec[2+5] = (unsigned long)arg5;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2341,10 +2951,11 @@ typedef
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
-         "ld 2,-16(11)" /* restore tocptr */                      \
+         "ld 2,-16(11)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2364,6 +2975,7 @@ typedef
       _argvec[2+5] = (unsigned long)arg5;                         \
       _argvec[2+6] = (unsigned long)arg6;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2377,10 +2989,11 @@ typedef
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
-         "ld 2,-16(11)" /* restore tocptr */                      \
+         "ld 2,-16(11)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2402,6 +3015,7 @@ typedef
       _argvec[2+6] = (unsigned long)arg6;                         \
       _argvec[2+7] = (unsigned long)arg7;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2416,10 +3030,11 @@ typedef
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
-         "ld 2,-16(11)" /* restore tocptr */                      \
+         "ld 2,-16(11)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2442,6 +3057,7 @@ typedef
       _argvec[2+7] = (unsigned long)arg7;                         \
       _argvec[2+8] = (unsigned long)arg8;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2457,10 +3073,11 @@ typedef
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R11                  \
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
-         "ld 2,-16(11)" /* restore tocptr */                      \
+         "ld 2,-16(11)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2484,6 +3101,7 @@ typedef
       _argvec[2+8] = (unsigned long)arg8;                         \
       _argvec[2+9] = (unsigned long)arg9;                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2505,10 +3123,10 @@ typedef
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
          "ld 2,-16(11)\n\t" /* restore tocptr */                  \
-         "addi 1,1,128"     /* restore frame */                   \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2533,6 +3151,7 @@ typedef
       _argvec[2+9] = (unsigned long)arg9;                         \
       _argvec[2+10] = (unsigned long)arg10;                       \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2557,10 +3176,10 @@ typedef
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
          "ld 2,-16(11)\n\t" /* restore tocptr */                  \
-         "addi 1,1,128"     /* restore frame */                   \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2586,6 +3205,7 @@ typedef
       _argvec[2+10] = (unsigned long)arg10;                       \
       _argvec[2+11] = (unsigned long)arg11;                       \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2613,10 +3233,10 @@ typedef
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
          "ld 2,-16(11)\n\t" /* restore tocptr */                  \
-         "addi 1,1,144"     /* restore frame */                   \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2643,6 +3263,7 @@ typedef
       _argvec[2+11] = (unsigned long)arg11;                       \
       _argvec[2+12] = (unsigned long)arg12;                       \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "mr 11,%1\n\t"                                           \
          "std 2,-16(11)\n\t"  /* save tocptr */                   \
          "ld   2,-8(11)\n\t"  /* use nraddr's tocptr */           \
@@ -2673,22 +3294,599 @@ typedef
          "mr 11,%1\n\t"                                           \
          "mr %0,3\n\t"                                            \
          "ld 2,-16(11)\n\t" /* restore tocptr */                  \
-         "addi 1,1,144"     /* restore frame */                   \
+         VALGRIND_RESTORE_STACK                                   \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "r" (&_argvec[2])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
 
-#endif /* PLAT_ppc64_linux */
+#endif /* PLAT_ppc64be_linux */
+
+/* ------------------------- ppc64le-linux ----------------------- */
+#if defined(PLAT_ppc64le_linux)
+
+/* ARGREGS: r3 r4 r5 r6 r7 r8 r9 r10 (the rest on stack somewhere) */
+
+/* These regs are trashed by the hidden call. */
+#define __CALLER_SAVED_REGS                                       \
+   "lr", "ctr", "xer",                                            \
+   "cr0", "cr1", "cr2", "cr3", "cr4", "cr5", "cr6", "cr7",        \
+   "r0", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10",         \
+   "r11", "r12", "r13"
+
+/* Macros to save and align the stack before making a function
+   call and restore it afterwards as gcc may not keep the stack
+   pointer aligned if it doesn't realise calls are being made
+   to other functions. */
+
+#define VALGRIND_ALIGN_STACK               \
+      "mr 28,1\n\t"                        \
+      "rldicr 1,1,0,59\n\t"
+#define VALGRIND_RESTORE_STACK             \
+      "mr 1,28\n\t"
+
+/* These CALL_FN_ macros assume that on ppc64-linux, sizeof(unsigned
+   long) == 8. */
+
+#define CALL_FN_W_v(lval, orig)                                   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+0];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1] = (unsigned long)_orig.r2;                       \
+      _argvec[2] = (unsigned long)_orig.nraddr;                   \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_W(lval, orig, arg1)                             \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+1];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WW(lval, orig, arg1,arg2)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+2];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WWW(lval, orig, arg1,arg2,arg3)                 \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+3];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WWWW(lval, orig, arg1,arg2,arg3,arg4)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+4];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      _argvec[2+4] = (unsigned long)arg4;                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld   6, 32(12)\n\t" /* arg4->r6 */                      \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_5W(lval, orig, arg1,arg2,arg3,arg4,arg5)        \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+5];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      _argvec[2+4] = (unsigned long)arg4;                         \
+      _argvec[2+5] = (unsigned long)arg5;                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld   6, 32(12)\n\t" /* arg4->r6 */                      \
+         "ld   7, 40(12)\n\t" /* arg5->r7 */                      \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_6W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6)   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+6];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      _argvec[2+4] = (unsigned long)arg4;                         \
+      _argvec[2+5] = (unsigned long)arg5;                         \
+      _argvec[2+6] = (unsigned long)arg6;                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld   6, 32(12)\n\t" /* arg4->r6 */                      \
+         "ld   7, 40(12)\n\t" /* arg5->r7 */                      \
+         "ld   8, 48(12)\n\t" /* arg6->r8 */                      \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_7W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7)                            \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+7];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      _argvec[2+4] = (unsigned long)arg4;                         \
+      _argvec[2+5] = (unsigned long)arg5;                         \
+      _argvec[2+6] = (unsigned long)arg6;                         \
+      _argvec[2+7] = (unsigned long)arg7;                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld   6, 32(12)\n\t" /* arg4->r6 */                      \
+         "ld   7, 40(12)\n\t" /* arg5->r7 */                      \
+         "ld   8, 48(12)\n\t" /* arg6->r8 */                      \
+         "ld   9, 56(12)\n\t" /* arg7->r9 */                      \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_8W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+8];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      _argvec[2+4] = (unsigned long)arg4;                         \
+      _argvec[2+5] = (unsigned long)arg5;                         \
+      _argvec[2+6] = (unsigned long)arg6;                         \
+      _argvec[2+7] = (unsigned long)arg7;                         \
+      _argvec[2+8] = (unsigned long)arg8;                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld   6, 32(12)\n\t" /* arg4->r6 */                      \
+         "ld   7, 40(12)\n\t" /* arg5->r7 */                      \
+         "ld   8, 48(12)\n\t" /* arg6->r8 */                      \
+         "ld   9, 56(12)\n\t" /* arg7->r9 */                      \
+         "ld  10, 64(12)\n\t" /* arg8->r10 */                     \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_9W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8,arg9)                  \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+9];                        \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      _argvec[2+4] = (unsigned long)arg4;                         \
+      _argvec[2+5] = (unsigned long)arg5;                         \
+      _argvec[2+6] = (unsigned long)arg6;                         \
+      _argvec[2+7] = (unsigned long)arg7;                         \
+      _argvec[2+8] = (unsigned long)arg8;                         \
+      _argvec[2+9] = (unsigned long)arg9;                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "addi 1,1,-128\n\t"  /* expand stack frame */            \
+         /* arg9 */                                               \
+         "ld  3,72(12)\n\t"                                       \
+         "std 3,96(1)\n\t"                                        \
+         /* args1-8 */                                            \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld   6, 32(12)\n\t" /* arg4->r6 */                      \
+         "ld   7, 40(12)\n\t" /* arg5->r7 */                      \
+         "ld   8, 48(12)\n\t" /* arg6->r8 */                      \
+         "ld   9, 56(12)\n\t" /* arg7->r9 */                      \
+         "ld  10, 64(12)\n\t" /* arg8->r10 */                     \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_10W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
+                                  arg7,arg8,arg9,arg10)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+10];                       \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      _argvec[2+4] = (unsigned long)arg4;                         \
+      _argvec[2+5] = (unsigned long)arg5;                         \
+      _argvec[2+6] = (unsigned long)arg6;                         \
+      _argvec[2+7] = (unsigned long)arg7;                         \
+      _argvec[2+8] = (unsigned long)arg8;                         \
+      _argvec[2+9] = (unsigned long)arg9;                         \
+      _argvec[2+10] = (unsigned long)arg10;                       \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "addi 1,1,-128\n\t"  /* expand stack frame */            \
+         /* arg10 */                                              \
+         "ld  3,80(12)\n\t"                                       \
+         "std 3,104(1)\n\t"                                       \
+         /* arg9 */                                               \
+         "ld  3,72(12)\n\t"                                       \
+         "std 3,96(1)\n\t"                                        \
+         /* args1-8 */                                            \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld   6, 32(12)\n\t" /* arg4->r6 */                      \
+         "ld   7, 40(12)\n\t" /* arg5->r7 */                      \
+         "ld   8, 48(12)\n\t" /* arg6->r8 */                      \
+         "ld   9, 56(12)\n\t" /* arg7->r9 */                      \
+         "ld  10, 64(12)\n\t" /* arg8->r10 */                     \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_11W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
+                                  arg7,arg8,arg9,arg10,arg11)     \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+11];                       \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      _argvec[2+4] = (unsigned long)arg4;                         \
+      _argvec[2+5] = (unsigned long)arg5;                         \
+      _argvec[2+6] = (unsigned long)arg6;                         \
+      _argvec[2+7] = (unsigned long)arg7;                         \
+      _argvec[2+8] = (unsigned long)arg8;                         \
+      _argvec[2+9] = (unsigned long)arg9;                         \
+      _argvec[2+10] = (unsigned long)arg10;                       \
+      _argvec[2+11] = (unsigned long)arg11;                       \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "addi 1,1,-144\n\t"  /* expand stack frame */            \
+         /* arg11 */                                              \
+         "ld  3,88(12)\n\t"                                       \
+         "std 3,112(1)\n\t"                                       \
+         /* arg10 */                                              \
+         "ld  3,80(12)\n\t"                                       \
+         "std 3,104(1)\n\t"                                       \
+         /* arg9 */                                               \
+         "ld  3,72(12)\n\t"                                       \
+         "std 3,96(1)\n\t"                                        \
+         /* args1-8 */                                            \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld   6, 32(12)\n\t" /* arg4->r6 */                      \
+         "ld   7, 40(12)\n\t" /* arg5->r7 */                      \
+         "ld   8, 48(12)\n\t" /* arg6->r8 */                      \
+         "ld   9, 56(12)\n\t" /* arg7->r9 */                      \
+         "ld  10, 64(12)\n\t" /* arg8->r10 */                     \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_12W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
+                                arg7,arg8,arg9,arg10,arg11,arg12) \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3+12];                       \
+      volatile unsigned long _res;                                \
+      /* _argvec[0] holds current r2 across the call */           \
+      _argvec[1]   = (unsigned long)_orig.r2;                     \
+      _argvec[2]   = (unsigned long)_orig.nraddr;                 \
+      _argvec[2+1] = (unsigned long)arg1;                         \
+      _argvec[2+2] = (unsigned long)arg2;                         \
+      _argvec[2+3] = (unsigned long)arg3;                         \
+      _argvec[2+4] = (unsigned long)arg4;                         \
+      _argvec[2+5] = (unsigned long)arg5;                         \
+      _argvec[2+6] = (unsigned long)arg6;                         \
+      _argvec[2+7] = (unsigned long)arg7;                         \
+      _argvec[2+8] = (unsigned long)arg8;                         \
+      _argvec[2+9] = (unsigned long)arg9;                         \
+      _argvec[2+10] = (unsigned long)arg10;                       \
+      _argvec[2+11] = (unsigned long)arg11;                       \
+      _argvec[2+12] = (unsigned long)arg12;                       \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "mr 12,%1\n\t"                                           \
+         "std 2,-16(12)\n\t"  /* save tocptr */                   \
+         "ld   2,-8(12)\n\t"  /* use nraddr's tocptr */           \
+         "addi 1,1,-144\n\t"  /* expand stack frame */            \
+         /* arg12 */                                              \
+         "ld  3,96(12)\n\t"                                       \
+         "std 3,120(1)\n\t"                                       \
+         /* arg11 */                                              \
+         "ld  3,88(12)\n\t"                                       \
+         "std 3,112(1)\n\t"                                       \
+         /* arg10 */                                              \
+         "ld  3,80(12)\n\t"                                       \
+         "std 3,104(1)\n\t"                                       \
+         /* arg9 */                                               \
+         "ld  3,72(12)\n\t"                                       \
+         "std 3,96(1)\n\t"                                        \
+         /* args1-8 */                                            \
+         "ld   3, 8(12)\n\t"  /* arg1->r3 */                      \
+         "ld   4, 16(12)\n\t" /* arg2->r4 */                      \
+         "ld   5, 24(12)\n\t" /* arg3->r5 */                      \
+         "ld   6, 32(12)\n\t" /* arg4->r6 */                      \
+         "ld   7, 40(12)\n\t" /* arg5->r7 */                      \
+         "ld   8, 48(12)\n\t" /* arg6->r8 */                      \
+         "ld   9, 56(12)\n\t" /* arg7->r9 */                      \
+         "ld  10, 64(12)\n\t" /* arg8->r10 */                     \
+         "ld  12, 0(12)\n\t"  /* target->r12 */                   \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R12                  \
+         "mr 12,%1\n\t"                                           \
+         "mr %0,3\n\t"                                            \
+         "ld 2,-16(12)\n\t" /* restore tocptr */                  \
+         VALGRIND_RESTORE_STACK                                   \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[2])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r28"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#endif /* PLAT_ppc64le_linux */
 
 /* ------------------------- arm-linux ------------------------- */
 
 #if defined(PLAT_arm_linux)
 
 /* These regs are trashed by the hidden call. */
-#define __CALLER_SAVED_REGS "r0", "r1", "r2", "r3","r4","r14"
+#define __CALLER_SAVED_REGS "r0", "r1", "r2", "r3","r4", "r12", "r14"
+
+/* Macros to save and align the stack before making a function
+   call and restore it afterwards as gcc may not keep the stack
+   pointer aligned if it doesn't realise calls are being made
+   to other functions. */
+
+/* This is a bit tricky.  We store the original stack pointer in r10
+   as it is callee-saves.  gcc doesn't allow the use of r11 for some
+   reason.  Also, we can't directly "bic" the stack pointer in thumb
+   mode since r13 isn't an allowed register number in that context.
+   So use r4 as a temporary, since that is about to get trashed
+   anyway, just after each use of this macro.  Side effect is we need
+   to be very careful about any future changes, since
+   VALGRIND_ALIGN_STACK simply assumes r4 is usable. */
+#define VALGRIND_ALIGN_STACK               \
+      "mov r10, sp\n\t"                    \
+      "mov r4,  sp\n\t"                    \
+      "bic r4,  r4, #7\n\t"                \
+      "mov sp,  r4\n\t"
+#define VALGRIND_RESTORE_STACK             \
+      "mov sp,  r10\n\t"
 
 /* These CALL_FN_ macros assume that on arm-linux, sizeof(unsigned
    long) == 4. */
@@ -2700,12 +3898,14 @@ typedef
       volatile unsigned long _res;                                \
       _argvec[0] = (unsigned long)_orig.nraddr;                   \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0\n"                                           \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2718,13 +3918,15 @@ typedef
       _argvec[0] = (unsigned long)_orig.nraddr;                   \
       _argvec[1] = (unsigned long)(arg1);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "ldr r0, [%1, #4] \n\t"                                  \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0\n"                                           \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory",  __CALLER_SAVED_REGS         \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2738,14 +3940,16 @@ typedef
       _argvec[1] = (unsigned long)(arg1);                         \
       _argvec[2] = (unsigned long)(arg2);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "ldr r0, [%1, #4] \n\t"                                  \
          "ldr r1, [%1, #8] \n\t"                                  \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0\n"                                           \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2760,15 +3964,17 @@ typedef
       _argvec[2] = (unsigned long)(arg2);                         \
       _argvec[3] = (unsigned long)(arg3);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "ldr r0, [%1, #4] \n\t"                                  \
          "ldr r1, [%1, #8] \n\t"                                  \
          "ldr r2, [%1, #12] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0\n"                                           \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2784,16 +3990,18 @@ typedef
       _argvec[3] = (unsigned long)(arg3);                         \
       _argvec[4] = (unsigned long)(arg4);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "ldr r0, [%1, #4] \n\t"                                  \
          "ldr r1, [%1, #8] \n\t"                                  \
          "ldr r2, [%1, #12] \n\t"                                 \
          "ldr r3, [%1, #16] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0"                                             \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2810,6 +4018,8 @@ typedef
       _argvec[4] = (unsigned long)(arg4);                         \
       _argvec[5] = (unsigned long)(arg5);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "sub sp, sp, #4 \n\t"                                    \
          "ldr r0, [%1, #20] \n\t"                                 \
          "push {r0} \n\t"                                         \
          "ldr r0, [%1, #4] \n\t"                                  \
@@ -2818,11 +4028,11 @@ typedef
          "ldr r3, [%1, #16] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
-         "add sp, sp, #4 \n\t"                                    \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0"                                             \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2840,6 +4050,7 @@ typedef
       _argvec[5] = (unsigned long)(arg5);                         \
       _argvec[6] = (unsigned long)(arg6);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "ldr r0, [%1, #20] \n\t"                                 \
          "ldr r1, [%1, #24] \n\t"                                 \
          "push {r0, r1} \n\t"                                     \
@@ -2849,11 +4060,11 @@ typedef
          "ldr r3, [%1, #16] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
-         "add sp, sp, #8 \n\t"                                    \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0"                                             \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2873,6 +4084,8 @@ typedef
       _argvec[6] = (unsigned long)(arg6);                         \
       _argvec[7] = (unsigned long)(arg7);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "sub sp, sp, #4 \n\t"                                    \
          "ldr r0, [%1, #20] \n\t"                                 \
          "ldr r1, [%1, #24] \n\t"                                 \
          "ldr r2, [%1, #28] \n\t"                                 \
@@ -2883,11 +4096,11 @@ typedef
          "ldr r3, [%1, #16] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
-         "add sp, sp, #12 \n\t"                                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0"                                             \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2908,6 +4121,7 @@ typedef
       _argvec[7] = (unsigned long)(arg7);                         \
       _argvec[8] = (unsigned long)(arg8);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "ldr r0, [%1, #20] \n\t"                                 \
          "ldr r1, [%1, #24] \n\t"                                 \
          "ldr r2, [%1, #28] \n\t"                                 \
@@ -2919,11 +4133,11 @@ typedef
          "ldr r3, [%1, #16] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
-         "add sp, sp, #16 \n\t"                                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0"                                             \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2945,6 +4159,8 @@ typedef
       _argvec[8] = (unsigned long)(arg8);                         \
       _argvec[9] = (unsigned long)(arg9);                         \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "sub sp, sp, #4 \n\t"                                    \
          "ldr r0, [%1, #20] \n\t"                                 \
          "ldr r1, [%1, #24] \n\t"                                 \
          "ldr r2, [%1, #28] \n\t"                                 \
@@ -2957,11 +4173,11 @@ typedef
          "ldr r3, [%1, #16] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
-         "add sp, sp, #20 \n\t"                                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0"                                             \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -2984,6 +4200,7 @@ typedef
       _argvec[9] = (unsigned long)(arg9);                         \
       _argvec[10] = (unsigned long)(arg10);                       \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "ldr r0, [%1, #40] \n\t"                                 \
          "push {r0} \n\t"                                         \
          "ldr r0, [%1, #20] \n\t"                                 \
@@ -2998,11 +4215,11 @@ typedef
          "ldr r3, [%1, #16] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
-         "add sp, sp, #24 \n\t"                                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0"                                             \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -3027,6 +4244,8 @@ typedef
       _argvec[10] = (unsigned long)(arg10);                       \
       _argvec[11] = (unsigned long)(arg11);                       \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "sub sp, sp, #4 \n\t"                                    \
          "ldr r0, [%1, #40] \n\t"                                 \
          "ldr r1, [%1, #44] \n\t"                                 \
          "push {r0, r1} \n\t"                                     \
@@ -3042,11 +4261,11 @@ typedef
          "ldr r3, [%1, #16] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
-         "add sp, sp, #28 \n\t"                                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0"                                             \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory",__CALLER_SAVED_REGS           \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
@@ -3072,6 +4291,7 @@ typedef
       _argvec[11] = (unsigned long)(arg11);                       \
       _argvec[12] = (unsigned long)(arg12);                       \
       __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
          "ldr r0, [%1, #40] \n\t"                                 \
          "ldr r1, [%1, #44] \n\t"                                 \
          "ldr r2, [%1, #48] \n\t"                                 \
@@ -3088,16 +4308,467 @@ typedef
          "ldr r3, [%1, #16] \n\t"                                 \
          "ldr r4, [%1] \n\t"  /* target->r4 */                    \
          VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_R4                   \
-         "add sp, sp, #32 \n\t"                                   \
+         VALGRIND_RESTORE_STACK                                   \
          "mov %0, r0"                                             \
          : /*out*/   "=r" (_res)                                  \
          : /*in*/    "0" (&_argvec[0])                            \
-         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS          \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "r10"   \
       );                                                          \
       lval = (__typeof__(lval)) _res;                             \
    } while (0)
 
 #endif /* PLAT_arm_linux */
+
+/* ------------------------ arm64-linux ------------------------ */
+
+#if defined(PLAT_arm64_linux) || defined(PLAT_arm64_freebsd)
+
+/* These regs are trashed by the hidden call. */
+#define __CALLER_SAVED_REGS \
+     "x0", "x1", "x2", "x3","x4", "x5", "x6", "x7", "x8", "x9",   \
+     "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17",      \
+     "x18", "x19", "x20", "x30",                                  \
+     "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9",  \
+     "v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17",      \
+     "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25",      \
+     "v26", "v27", "v28", "v29", "v30", "v31"
+
+/* x21 is callee-saved, so we can use it to save and restore SP around
+   the hidden call. */
+#define VALGRIND_ALIGN_STACK               \
+      "mov x21, sp\n\t"                    \
+      "bic sp, x21, #15\n\t"
+#define VALGRIND_RESTORE_STACK             \
+      "mov sp,  x21\n\t"
+
+/* These CALL_FN_ macros assume that on arm64-linux,
+   sizeof(unsigned long) == 8. */
+
+#define CALL_FN_W_v(lval, orig)                                   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[1];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0\n"                                           \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_W(lval, orig, arg1)                             \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[2];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0\n"                                           \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WW(lval, orig, arg1,arg2)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0\n"                                           \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WWW(lval, orig, arg1,arg2,arg3)                 \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[4];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0\n"                                           \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WWWW(lval, orig, arg1,arg2,arg3,arg4)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[5];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x3, [%1, #32] \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0"                                             \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_5W(lval, orig, arg1,arg2,arg3,arg4,arg5)        \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[6];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x3, [%1, #32] \n\t"                                 \
+         "ldr x4, [%1, #40] \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0"                                             \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_6W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6)   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[7];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x3, [%1, #32] \n\t"                                 \
+         "ldr x4, [%1, #40] \n\t"                                 \
+         "ldr x5, [%1, #48] \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0"                                             \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_7W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7)                            \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[8];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x3, [%1, #32] \n\t"                                 \
+         "ldr x4, [%1, #40] \n\t"                                 \
+         "ldr x5, [%1, #48] \n\t"                                 \
+         "ldr x6, [%1, #56] \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0"                                             \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_8W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[9];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x3, [%1, #32] \n\t"                                 \
+         "ldr x4, [%1, #40] \n\t"                                 \
+         "ldr x5, [%1, #48] \n\t"                                 \
+         "ldr x6, [%1, #56] \n\t"                                 \
+         "ldr x7, [%1, #64] \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0"                                             \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_9W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8,arg9)                  \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[10];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "sub sp, sp, #0x20 \n\t"                                 \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x3, [%1, #32] \n\t"                                 \
+         "ldr x4, [%1, #40] \n\t"                                 \
+         "ldr x5, [%1, #48] \n\t"                                 \
+         "ldr x6, [%1, #56] \n\t"                                 \
+         "ldr x7, [%1, #64] \n\t"                                 \
+         "ldr x8, [%1, #72] \n\t"                                 \
+         "str x8, [sp, #0]  \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0"                                             \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_10W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
+                                  arg7,arg8,arg9,arg10)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[11];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      _argvec[10] = (unsigned long)(arg10);                       \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "sub sp, sp, #0x20 \n\t"                                 \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x3, [%1, #32] \n\t"                                 \
+         "ldr x4, [%1, #40] \n\t"                                 \
+         "ldr x5, [%1, #48] \n\t"                                 \
+         "ldr x6, [%1, #56] \n\t"                                 \
+         "ldr x7, [%1, #64] \n\t"                                 \
+         "ldr x8, [%1, #72] \n\t"                                 \
+         "str x8, [sp, #0]  \n\t"                                 \
+         "ldr x8, [%1, #80] \n\t"                                 \
+         "str x8, [sp, #8]  \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0"                                             \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_11W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
+                                  arg7,arg8,arg9,arg10,arg11)     \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[12];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      _argvec[10] = (unsigned long)(arg10);                       \
+      _argvec[11] = (unsigned long)(arg11);                       \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "sub sp, sp, #0x30 \n\t"                                 \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x3, [%1, #32] \n\t"                                 \
+         "ldr x4, [%1, #40] \n\t"                                 \
+         "ldr x5, [%1, #48] \n\t"                                 \
+         "ldr x6, [%1, #56] \n\t"                                 \
+         "ldr x7, [%1, #64] \n\t"                                 \
+         "ldr x8, [%1, #72] \n\t"                                 \
+         "str x8, [sp, #0]  \n\t"                                 \
+         "ldr x8, [%1, #80] \n\t"                                 \
+         "str x8, [sp, #8]  \n\t"                                 \
+         "ldr x8, [%1, #88] \n\t"                                 \
+         "str x8, [sp, #16] \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0"                                             \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_12W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
+                                  arg7,arg8,arg9,arg10,arg11,     \
+                                  arg12)                          \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[13];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      _argvec[10] = (unsigned long)(arg10);                       \
+      _argvec[11] = (unsigned long)(arg11);                       \
+      _argvec[12] = (unsigned long)(arg12);                       \
+      __asm__ volatile(                                           \
+         VALGRIND_ALIGN_STACK                                     \
+         "sub sp, sp, #0x30 \n\t"                                 \
+         "ldr x0, [%1, #8] \n\t"                                  \
+         "ldr x1, [%1, #16] \n\t"                                 \
+         "ldr x2, [%1, #24] \n\t"                                 \
+         "ldr x3, [%1, #32] \n\t"                                 \
+         "ldr x4, [%1, #40] \n\t"                                 \
+         "ldr x5, [%1, #48] \n\t"                                 \
+         "ldr x6, [%1, #56] \n\t"                                 \
+         "ldr x7, [%1, #64] \n\t"                                 \
+         "ldr x8, [%1, #72] \n\t"                                 \
+         "str x8, [sp, #0]  \n\t"                                 \
+         "ldr x8, [%1, #80] \n\t"                                 \
+         "str x8, [sp, #8]  \n\t"                                 \
+         "ldr x8, [%1, #88] \n\t"                                 \
+         "str x8, [sp, #16] \n\t"                                 \
+         "ldr x8, [%1, #96] \n\t"                                 \
+         "str x8, [sp, #24] \n\t"                                 \
+         "ldr x8, [%1] \n\t"  /* target->x8 */                    \
+         VALGRIND_BRANCH_AND_LINK_TO_NOREDIR_X8                   \
+         VALGRIND_RESTORE_STACK                                   \
+         "mov %0, x0"                                             \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS, "x21"   \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#endif /* PLAT_arm64_linux */
 
 /* ------------------------- s390x-linux ------------------------- */
 
@@ -3115,7 +4786,7 @@ typedef
       "lgr 1,%1\n\t" /* copy the argvec pointer in r1 */          \
       "lgr 7,11\n\t"                                              \
       "lgr 11,%2\n\t"                                             \
-      ".cfi_def_cfa r11, 0\n\t"
+      ".cfi_def_cfa 11, 0\n\t"
 #  define VALGRIND_CFI_EPILOGUE                                   \
       "lgr 11, 7\n\t"                                             \
       ".cfi_restore_state\n\t"
@@ -3126,16 +4797,34 @@ typedef
 #  define VALGRIND_CFI_EPILOGUE
 #endif
 
-
-
+/* Nb: On s390 the stack pointer is properly aligned *at all times*
+   according to the s390 GCC maintainer. (The ABI specification is not
+   precise in this regard.) Therefore, VALGRIND_ALIGN_STACK and
+   VALGRIND_RESTORE_STACK are not defined here. */
 
 /* These regs are trashed by the hidden call. Note that we overwrite
    r14 in s390_irgen_noredir (VEX/priv/guest_s390_irgen.c) to give the
    function a proper return address. All others are ABI defined call
    clobbers. */
-#define __CALLER_SAVED_REGS "0","1","2","3","4","5","14", \
-                           "f0","f1","f2","f3","f4","f5","f6","f7"
+#if defined(__VX__) || defined(__S390_VX__)
+#define __CALLER_SAVED_REGS "0", "1", "2", "3", "4", "5", "14",   \
+      "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7",             \
+      "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15",       \
+      "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23",     \
+      "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31"
+#else
+#define __CALLER_SAVED_REGS "0", "1", "2", "3", "4", "5", "14",   \
+      "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7"
+#endif
 
+/* Nb: Although r11 is modified in the asm snippets below (inside 
+   VALGRIND_CFI_PROLOGUE) it is not listed in the clobber section, for
+   two reasons:
+   (1) r11 is restored in VALGRIND_CFI_EPILOGUE, so effectively it is not
+       modified
+   (2) GCC will complain that r11 cannot appear inside a clobber section,
+       when compiled with -O -fno-omit-frame-pointer
+ */
 
 #define CALL_FN_W_v(lval, orig)                                  \
    do {                                                          \
@@ -3148,9 +4837,9 @@ typedef
          "aghi 15,-160\n\t"                                      \
          "lg 1, 0(1)\n\t"  /* target->r1 */                      \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,160\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "d" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"7"     \
@@ -3172,9 +4861,9 @@ typedef
          "lg 2, 8(1)\n\t"                                        \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,160\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"7"     \
@@ -3197,9 +4886,9 @@ typedef
          "lg 3,16(1)\n\t"                                        \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,160\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"7"     \
@@ -3224,9 +4913,9 @@ typedef
          "lg 4,24(1)\n\t"                                        \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,160\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"7"     \
@@ -3253,9 +4942,9 @@ typedef
          "lg 5,32(1)\n\t"                                        \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,160\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"7"     \
@@ -3284,9 +4973,9 @@ typedef
          "lg 6,40(1)\n\t"                                        \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,160\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"6","7" \
@@ -3318,9 +5007,9 @@ typedef
          "mvc 160(8,15), 48(1)\n\t"                              \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,168\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"6","7" \
@@ -3354,9 +5043,9 @@ typedef
          "mvc 168(8,15), 56(1)\n\t"                              \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,176\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"6","7" \
@@ -3392,9 +5081,9 @@ typedef
          "mvc 176(8,15), 64(1)\n\t"                              \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,184\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"6","7" \
@@ -3432,9 +5121,9 @@ typedef
          "mvc 184(8,15), 72(1)\n\t"                              \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,192\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"6","7" \
@@ -3474,9 +5163,9 @@ typedef
          "mvc 192(8,15), 80(1)\n\t"                              \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,200\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"6","7" \
@@ -3518,9 +5207,9 @@ typedef
          "mvc 200(8,15), 88(1)\n\t"                              \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,208\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"6","7" \
@@ -3564,9 +5253,9 @@ typedef
          "mvc 208(8,15), 96(1)\n\t"                              \
          "lg 1, 0(1)\n\t"                                        \
          VALGRIND_CALL_NOREDIR_R1                                \
-         "lgr %0, 2\n\t"                                         \
          "aghi 15,216\n\t"                                       \
          VALGRIND_CFI_EPILOGUE                                   \
+         "lgr %0, 2\n\t"                                         \
          : /*out*/   "=d" (_res)                                 \
          : /*in*/    "a" (&_argvec[0]) __FRAME_POINTER           \
          : /*trash*/ "cc", "memory", __CALLER_SAVED_REGS,"6","7" \
@@ -3577,6 +5266,1380 @@ typedef
 
 #endif /* PLAT_s390x_linux */
 
+/* ------------------------- mips32-linux ----------------------- */
+ 
+#if defined(PLAT_mips32_linux)
+
+/* These regs are trashed by the hidden call. */
+#define __CALLER_SAVED_REGS "$2", "$3", "$4", "$5", "$6",       \
+"$7", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
+"$25", "$31"
+
+/* These CALL_FN_ macros assume that on mips-linux, sizeof(unsigned
+   long) == 4. */
+
+#define CALL_FN_W_v(lval, orig)                                   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[1];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "subu $29, $29, 16 \n\t"                                 \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 16\n\t"                                  \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_W(lval, orig, arg1)                             \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+     volatile unsigned long _argvec[2];                           \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "subu $29, $29, 16 \n\t"                                 \
+         "lw $4, 4(%1) \n\t"   /* arg1*/                          \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 16 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory",  __CALLER_SAVED_REGS               \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WW(lval, orig, arg1,arg2)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "subu $29, $29, 16 \n\t"                                 \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 16 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WWW(lval, orig, arg1,arg2,arg3)                 \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[4];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "subu $29, $29, 16 \n\t"                                 \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 16 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WWWW(lval, orig, arg1,arg2,arg3,arg4)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[5];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "subu $29, $29, 16 \n\t"                                 \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $7, 16(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 16 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_5W(lval, orig, arg1,arg2,arg3,arg4,arg5)        \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[6];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "lw $4, 20(%1) \n\t"                                     \
+         "subu $29, $29, 24\n\t"                                  \
+         "sw $4, 16($29) \n\t"                                    \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $7, 16(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 24 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+#define CALL_FN_W_6W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6)   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[7];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "lw $4, 20(%1) \n\t"                                     \
+         "subu $29, $29, 32\n\t"                                  \
+         "sw $4, 16($29) \n\t"                                    \
+         "lw $4, 24(%1) \n\t"                                     \
+         "nop\n\t"                                                \
+         "sw $4, 20($29) \n\t"                                    \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $7, 16(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 32 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_7W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7)                            \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[8];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "lw $4, 20(%1) \n\t"                                     \
+         "subu $29, $29, 32\n\t"                                  \
+         "sw $4, 16($29) \n\t"                                    \
+         "lw $4, 24(%1) \n\t"                                     \
+         "sw $4, 20($29) \n\t"                                    \
+         "lw $4, 28(%1) \n\t"                                     \
+         "sw $4, 24($29) \n\t"                                    \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $7, 16(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 32 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_8W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[9];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "lw $4, 20(%1) \n\t"                                     \
+         "subu $29, $29, 40\n\t"                                  \
+         "sw $4, 16($29) \n\t"                                    \
+         "lw $4, 24(%1) \n\t"                                     \
+         "sw $4, 20($29) \n\t"                                    \
+         "lw $4, 28(%1) \n\t"                                     \
+         "sw $4, 24($29) \n\t"                                    \
+         "lw $4, 32(%1) \n\t"                                     \
+         "sw $4, 28($29) \n\t"                                    \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $7, 16(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 40 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_9W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8,arg9)                  \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[10];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "lw $4, 20(%1) \n\t"                                     \
+         "subu $29, $29, 40\n\t"                                  \
+         "sw $4, 16($29) \n\t"                                    \
+         "lw $4, 24(%1) \n\t"                                     \
+         "sw $4, 20($29) \n\t"                                    \
+         "lw $4, 28(%1) \n\t"                                     \
+         "sw $4, 24($29) \n\t"                                    \
+         "lw $4, 32(%1) \n\t"                                     \
+         "sw $4, 28($29) \n\t"                                    \
+         "lw $4, 36(%1) \n\t"                                     \
+         "sw $4, 32($29) \n\t"                                    \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $7, 16(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 40 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_10W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
+                                  arg7,arg8,arg9,arg10)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[11];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      _argvec[10] = (unsigned long)(arg10);                       \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "lw $4, 20(%1) \n\t"                                     \
+         "subu $29, $29, 48\n\t"                                  \
+         "sw $4, 16($29) \n\t"                                    \
+         "lw $4, 24(%1) \n\t"                                     \
+         "sw $4, 20($29) \n\t"                                    \
+         "lw $4, 28(%1) \n\t"                                     \
+         "sw $4, 24($29) \n\t"                                    \
+         "lw $4, 32(%1) \n\t"                                     \
+         "sw $4, 28($29) \n\t"                                    \
+         "lw $4, 36(%1) \n\t"                                     \
+         "sw $4, 32($29) \n\t"                                    \
+         "lw $4, 40(%1) \n\t"                                     \
+         "sw $4, 36($29) \n\t"                                    \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $7, 16(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 48 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_11W(lval, orig, arg1,arg2,arg3,arg4,arg5,       \
+                                  arg6,arg7,arg8,arg9,arg10,      \
+                                  arg11)                          \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[12];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      _argvec[10] = (unsigned long)(arg10);                       \
+      _argvec[11] = (unsigned long)(arg11);                       \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "lw $4, 20(%1) \n\t"                                     \
+         "subu $29, $29, 48\n\t"                                  \
+         "sw $4, 16($29) \n\t"                                    \
+         "lw $4, 24(%1) \n\t"                                     \
+         "sw $4, 20($29) \n\t"                                    \
+         "lw $4, 28(%1) \n\t"                                     \
+         "sw $4, 24($29) \n\t"                                    \
+         "lw $4, 32(%1) \n\t"                                     \
+         "sw $4, 28($29) \n\t"                                    \
+         "lw $4, 36(%1) \n\t"                                     \
+         "sw $4, 32($29) \n\t"                                    \
+         "lw $4, 40(%1) \n\t"                                     \
+         "sw $4, 36($29) \n\t"                                    \
+         "lw $4, 44(%1) \n\t"                                     \
+         "sw $4, 40($29) \n\t"                                    \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $7, 16(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 48 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_12W(lval, orig, arg1,arg2,arg3,arg4,arg5,       \
+                                  arg6,arg7,arg8,arg9,arg10,      \
+                                  arg11,arg12)                    \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[13];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      _argvec[10] = (unsigned long)(arg10);                       \
+      _argvec[11] = (unsigned long)(arg11);                       \
+      _argvec[12] = (unsigned long)(arg12);                       \
+      __asm__ volatile(                                           \
+         "subu $29, $29, 8 \n\t"                                  \
+         "sw $28, 0($29) \n\t"                                    \
+         "sw $31, 4($29) \n\t"                                    \
+         "lw $4, 20(%1) \n\t"                                     \
+         "subu $29, $29, 56\n\t"                                  \
+         "sw $4, 16($29) \n\t"                                    \
+         "lw $4, 24(%1) \n\t"                                     \
+         "sw $4, 20($29) \n\t"                                    \
+         "lw $4, 28(%1) \n\t"                                     \
+         "sw $4, 24($29) \n\t"                                    \
+         "lw $4, 32(%1) \n\t"                                     \
+         "sw $4, 28($29) \n\t"                                    \
+         "lw $4, 36(%1) \n\t"                                     \
+         "sw $4, 32($29) \n\t"                                    \
+         "lw $4, 40(%1) \n\t"                                     \
+         "sw $4, 36($29) \n\t"                                    \
+         "lw $4, 44(%1) \n\t"                                     \
+         "sw $4, 40($29) \n\t"                                    \
+         "lw $4, 48(%1) \n\t"                                     \
+         "sw $4, 44($29) \n\t"                                    \
+         "lw $4, 4(%1) \n\t"                                      \
+         "lw $5, 8(%1) \n\t"                                      \
+         "lw $6, 12(%1) \n\t"                                     \
+         "lw $7, 16(%1) \n\t"                                     \
+         "lw $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "addu $29, $29, 56 \n\t"                                 \
+         "lw $28, 0($29) \n\t"                                    \
+         "lw $31, 4($29) \n\t"                                    \
+         "addu $29, $29, 8 \n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#endif /* PLAT_mips32_linux */
+
+/* ------------------------- nanomips-linux -------------------- */
+
+#if defined(PLAT_nanomips_linux)
+
+/* These regs are trashed by the hidden call. */
+#define __CALLER_SAVED_REGS "$t4", "$t5", "$a0", "$a1", "$a2",     \
+"$a3", "$a4", "$a5", "$a6", "$a7", "$t0", "$t1", "$t2", "$t3",     \
+"$t8","$t9", "$at"
+
+/* These CALL_FN_ macros assume that on mips-linux, sizeof(unsigned
+   long) == 4. */
+
+#define CALL_FN_W_v(lval, orig)                                   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[1];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      __asm__ volatile(                                           \
+         "lw $t9, 0(%1)\n\t"                                      \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0\n"                                         \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_W(lval, orig, arg1)                             \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[2];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      __asm__ volatile(                                           \
+         "lw $t9, 0(%1)\n\t"                                      \
+         "lw $a0, 4(%1)\n\t"                                      \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0\n"                                         \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WW(lval, orig, arg1,arg2)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[3];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      __asm__ volatile(                                           \
+         "lw $t9, 0(%1)\n\t"                                      \
+         "lw $a0, 4(%1)\n\t"                                      \
+         "lw $a1, 8(%1)\n\t"                                      \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0\n"                                         \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WWW(lval, orig, arg1,arg2,arg3)                 \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[4];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      __asm__ volatile(                                           \
+         "lw $t9, 0(%1)\n\t"                                      \
+         "lw $a0, 4(%1)\n\t"                                      \
+         "lw $a1, 8(%1)\n\t"                                      \
+         "lw $a2,12(%1)\n\t"                                      \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0\n"                                         \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_WWWW(lval, orig, arg1,arg2,arg3,arg4)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[5];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      __asm__ volatile(                                           \
+         "lw $t9, 0(%1)\n\t"                                      \
+         "lw $a0, 4(%1)\n\t"                                      \
+         "lw $a1, 8(%1)\n\t"                                      \
+         "lw $a2,12(%1)\n\t"                                      \
+         "lw $a3,16(%1)\n\t"                                      \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0\n"                                         \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_5W(lval, orig, arg1,arg2,arg3,arg4,arg5)        \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[6];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      __asm__ volatile(                                           \
+         "lw $t9, 0(%1)\n\t"                                      \
+         "lw $a0, 4(%1)\n\t"                                      \
+         "lw $a1, 8(%1)\n\t"                                      \
+         "lw $a2,12(%1)\n\t"                                      \
+         "lw $a3,16(%1)\n\t"                                      \
+         "lw $a4,20(%1)\n\t"                                      \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0\n"                                         \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+#define CALL_FN_W_6W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6)   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[7];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      __asm__ volatile(                                           \
+         "lw $t9, 0(%1)\n\t"                                      \
+         "lw $a0, 4(%1)\n\t"                                      \
+         "lw $a1, 8(%1)\n\t"                                      \
+         "lw $a2,12(%1)\n\t"                                      \
+         "lw $a3,16(%1)\n\t"                                      \
+         "lw $a4,20(%1)\n\t"                                      \
+         "lw $a5,24(%1)\n\t"                                      \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0\n"                                         \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_7W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7)                            \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[8];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      __asm__ volatile(                                           \
+         "lw $t9, 0(%1)\n\t"                                      \
+         "lw $a0, 4(%1)\n\t"                                      \
+         "lw $a1, 8(%1)\n\t"                                      \
+         "lw $a2,12(%1)\n\t"                                      \
+         "lw $a3,16(%1)\n\t"                                      \
+         "lw $a4,20(%1)\n\t"                                      \
+         "lw $a5,24(%1)\n\t"                                      \
+         "lw $a6,28(%1)\n\t"                                      \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0\n"                                         \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_8W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[9];                          \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      __asm__ volatile(                                           \
+         "lw $t9, 0(%1)\n\t"                                      \
+         "lw $a0, 4(%1)\n\t"                                      \
+         "lw $a1, 8(%1)\n\t"                                      \
+         "lw $a2,12(%1)\n\t"                                      \
+         "lw $a3,16(%1)\n\t"                                      \
+         "lw $a4,20(%1)\n\t"                                      \
+         "lw $a5,24(%1)\n\t"                                      \
+         "lw $a6,28(%1)\n\t"                                      \
+         "lw $a7,32(%1)\n\t"                                      \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0\n"                                         \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_9W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8,arg9)                  \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[10];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      __asm__ volatile(                                           \
+         "addiu $sp, $sp, -16  \n\t"                              \
+         "lw $t9,36(%1)        \n\t"                              \
+         "sw $t9, 0($sp)       \n\t"                              \
+         "lw $t9, 0(%1)        \n\t"                              \
+         "lw $a0, 4(%1)        \n\t"                              \
+         "lw $a1, 8(%1)        \n\t"                              \
+         "lw $a2,12(%1)        \n\t"                              \
+         "lw $a3,16(%1)        \n\t"                              \
+         "lw $a4,20(%1)        \n\t"                              \
+         "lw $a5,24(%1)        \n\t"                              \
+         "lw $a6,28(%1)        \n\t"                              \
+         "lw $a7,32(%1)        \n\t"                              \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0         \n\t"                              \
+         "addiu $sp, $sp, 16   \n\t"                              \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_10W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
+                                  arg7,arg8,arg9,arg10)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[11];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      _argvec[10] = (unsigned long)(arg10);                       \
+      __asm__ volatile(                                           \
+         "addiu $sp, $sp, -16  \n\t"                              \
+         "lw $t9,36(%1)        \n\t"                              \
+         "sw $t9, 0($sp)       \n\t"                              \
+         "lw $t9,40(%1)        \n\t"                              \
+         "sw $t9, 4($sp)       \n\t"                              \
+         "lw $t9, 0(%1)        \n\t"                              \
+         "lw $a0, 4(%1)        \n\t"                              \
+         "lw $a1, 8(%1)        \n\t"                              \
+         "lw $a2,12(%1)        \n\t"                              \
+         "lw $a3,16(%1)        \n\t"                              \
+         "lw $a4,20(%1)        \n\t"                              \
+         "lw $a5,24(%1)        \n\t"                              \
+         "lw $a6,28(%1)        \n\t"                              \
+         "lw $a7,32(%1)        \n\t"                              \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0         \n\t"                              \
+         "addiu $sp, $sp, 16   \n\t"                              \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_11W(lval, orig, arg1,arg2,arg3,arg4,arg5,       \
+                                  arg6,arg7,arg8,arg9,arg10,      \
+                                  arg11)                          \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[12];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      _argvec[10] = (unsigned long)(arg10);                       \
+      _argvec[11] = (unsigned long)(arg11);                       \
+      __asm__ volatile(                                           \
+         "addiu $sp, $sp, -16  \n\t"                              \
+         "lw $t9,36(%1)        \n\t"                              \
+         "sw $t9, 0($sp)       \n\t"                              \
+         "lw $t9,40(%1)        \n\t"                              \
+         "sw $t9, 4($sp)       \n\t"                              \
+         "lw $t9,44(%1)        \n\t"                              \
+         "sw $t9, 8($sp)       \n\t"                              \
+         "lw $t9, 0(%1)        \n\t"                              \
+         "lw $a0, 4(%1)        \n\t"                              \
+         "lw $a1, 8(%1)        \n\t"                              \
+         "lw $a2,12(%1)        \n\t"                              \
+         "lw $a3,16(%1)        \n\t"                              \
+         "lw $a4,20(%1)        \n\t"                              \
+         "lw $a5,24(%1)        \n\t"                              \
+         "lw $a6,28(%1)        \n\t"                              \
+         "lw $a7,32(%1)        \n\t"                              \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0         \n\t"                              \
+         "addiu $sp, $sp, 16   \n\t"                              \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#define CALL_FN_W_12W(lval, orig, arg1,arg2,arg3,arg4,arg5,       \
+                                  arg6,arg7,arg8,arg9,arg10,      \
+                                  arg11,arg12)                    \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long _argvec[13];                         \
+      volatile unsigned long _res;                                \
+      _argvec[0] = (unsigned long)_orig.nraddr;                   \
+      _argvec[1] = (unsigned long)(arg1);                         \
+      _argvec[2] = (unsigned long)(arg2);                         \
+      _argvec[3] = (unsigned long)(arg3);                         \
+      _argvec[4] = (unsigned long)(arg4);                         \
+      _argvec[5] = (unsigned long)(arg5);                         \
+      _argvec[6] = (unsigned long)(arg6);                         \
+      _argvec[7] = (unsigned long)(arg7);                         \
+      _argvec[8] = (unsigned long)(arg8);                         \
+      _argvec[9] = (unsigned long)(arg9);                         \
+      _argvec[10] = (unsigned long)(arg10);                       \
+      _argvec[11] = (unsigned long)(arg11);                       \
+      _argvec[12] = (unsigned long)(arg12);                       \
+      __asm__ volatile(                                           \
+         "addiu $sp, $sp, -16  \n\t"                              \
+         "lw $t9,36(%1)        \n\t"                              \
+         "sw $t9, 0($sp)       \n\t"                              \
+         "lw $t9,40(%1)        \n\t"                              \
+         "sw $t9, 4($sp)       \n\t"                              \
+         "lw $t9,44(%1)        \n\t"                              \
+         "sw $t9, 8($sp)       \n\t"                              \
+         "lw $t9,48(%1)        \n\t"                              \
+         "sw $t9,12($sp)       \n\t"                              \
+         "lw $t9, 0(%1)        \n\t"                              \
+         "lw $a0, 4(%1)        \n\t"                              \
+         "lw $a1, 8(%1)        \n\t"                              \
+         "lw $a2,12(%1)        \n\t"                              \
+         "lw $a3,16(%1)        \n\t"                              \
+         "lw $a4,20(%1)        \n\t"                              \
+         "lw $a5,24(%1)        \n\t"                              \
+         "lw $a6,28(%1)        \n\t"                              \
+         "lw $a7,32(%1)        \n\t"                              \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $a0         \n\t"                              \
+         "addiu $sp, $sp, 16   \n\t"                              \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) _res;                             \
+   } while (0)
+
+#endif /* PLAT_nanomips_linux */
+
+/* ------------------------- mips64-linux ------------------------- */
+
+#if defined(PLAT_mips64_linux)
+
+/* These regs are trashed by the hidden call. */
+#define __CALLER_SAVED_REGS "$2", "$3", "$4", "$5", "$6",       \
+"$7", "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", \
+"$25", "$31"
+
+/* These CALL_FN_ macros assume that on mips64-linux,
+   sizeof(long long) == 8. */
+
+#define MIPS64_LONG2REG_CAST(x) ((long long)(long)x)
+
+#define CALL_FN_W_v(lval, orig)                                   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[1];                     \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      __asm__ volatile(                                           \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "0" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_W(lval, orig, arg1)                             \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[2];                     \
+      volatile unsigned long long  _res;                          \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      __asm__ volatile(                                           \
+         "ld $4, 8(%1)\n\t"   /* arg1*/                           \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_WW(lval, orig, arg1,arg2)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[3];                     \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = _orig.nraddr;                                  \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      __asm__ volatile(                                           \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+
+#define CALL_FN_W_WWW(lval, orig, arg1,arg2,arg3)                 \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[4];                     \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = _orig.nraddr;                                  \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      __asm__ volatile(                                           \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_WWWW(lval, orig, arg1,arg2,arg3,arg4)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[5];                     \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      _argvec[4] = MIPS64_LONG2REG_CAST(arg4);                    \
+      __asm__ volatile(                                           \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $7, 32(%1)\n\t"                                      \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_5W(lval, orig, arg1,arg2,arg3,arg4,arg5)        \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[6];                     \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      _argvec[4] = MIPS64_LONG2REG_CAST(arg4);                    \
+      _argvec[5] = MIPS64_LONG2REG_CAST(arg5);                    \
+      __asm__ volatile(                                           \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $7, 32(%1)\n\t"                                      \
+         "ld $8, 40(%1)\n\t"                                      \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_6W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6)   \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[7];                     \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      _argvec[4] = MIPS64_LONG2REG_CAST(arg4);                    \
+      _argvec[5] = MIPS64_LONG2REG_CAST(arg5);                    \
+      _argvec[6] = MIPS64_LONG2REG_CAST(arg6);                    \
+      __asm__ volatile(                                           \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $7, 32(%1)\n\t"                                      \
+         "ld $8, 40(%1)\n\t"                                      \
+         "ld $9, 48(%1)\n\t"                                      \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_7W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7)                            \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[8];                     \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      _argvec[4] = MIPS64_LONG2REG_CAST(arg4);                    \
+      _argvec[5] = MIPS64_LONG2REG_CAST(arg5);                    \
+      _argvec[6] = MIPS64_LONG2REG_CAST(arg6);                    \
+      _argvec[7] = MIPS64_LONG2REG_CAST(arg7);                    \
+      __asm__ volatile(                                           \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $7, 32(%1)\n\t"                                      \
+         "ld $8, 40(%1)\n\t"                                      \
+         "ld $9, 48(%1)\n\t"                                      \
+         "ld $10, 56(%1)\n\t"                                     \
+         "ld $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_8W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8)                       \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[9];                     \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      _argvec[4] = MIPS64_LONG2REG_CAST(arg4);                    \
+      _argvec[5] = MIPS64_LONG2REG_CAST(arg5);                    \
+      _argvec[6] = MIPS64_LONG2REG_CAST(arg6);                    \
+      _argvec[7] = MIPS64_LONG2REG_CAST(arg7);                    \
+      _argvec[8] = MIPS64_LONG2REG_CAST(arg8);                    \
+      __asm__ volatile(                                           \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $7, 32(%1)\n\t"                                      \
+         "ld $8, 40(%1)\n\t"                                      \
+         "ld $9, 48(%1)\n\t"                                      \
+         "ld $10, 56(%1)\n\t"                                     \
+         "ld $11, 64(%1)\n\t"                                     \
+         "ld $25, 0(%1) \n\t"  /* target->t9 */                   \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_9W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,   \
+                                 arg7,arg8,arg9)                  \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[10];                    \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      _argvec[4] = MIPS64_LONG2REG_CAST(arg4);                    \
+      _argvec[5] = MIPS64_LONG2REG_CAST(arg5);                    \
+      _argvec[6] = MIPS64_LONG2REG_CAST(arg6);                    \
+      _argvec[7] = MIPS64_LONG2REG_CAST(arg7);                    \
+      _argvec[8] = MIPS64_LONG2REG_CAST(arg8);                    \
+      _argvec[9] = MIPS64_LONG2REG_CAST(arg9);                    \
+      __asm__ volatile(                                           \
+         "dsubu $29, $29, 8\n\t"                                  \
+         "ld $4, 72(%1)\n\t"                                      \
+         "sd $4, 0($29)\n\t"                                      \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $7, 32(%1)\n\t"                                      \
+         "ld $8, 40(%1)\n\t"                                      \
+         "ld $9, 48(%1)\n\t"                                      \
+         "ld $10, 56(%1)\n\t"                                     \
+         "ld $11, 64(%1)\n\t"                                     \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "daddu $29, $29, 8\n\t"                                  \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_10W(lval, orig, arg1,arg2,arg3,arg4,arg5,arg6,  \
+                                  arg7,arg8,arg9,arg10)           \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[11];                    \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      _argvec[4] = MIPS64_LONG2REG_CAST(arg4);                    \
+      _argvec[5] = MIPS64_LONG2REG_CAST(arg5);                    \
+      _argvec[6] = MIPS64_LONG2REG_CAST(arg6);                    \
+      _argvec[7] = MIPS64_LONG2REG_CAST(arg7);                    \
+      _argvec[8] = MIPS64_LONG2REG_CAST(arg8);                    \
+      _argvec[9] = MIPS64_LONG2REG_CAST(arg9);                    \
+      _argvec[10] = MIPS64_LONG2REG_CAST(arg10);                  \
+      __asm__ volatile(                                           \
+         "dsubu $29, $29, 16\n\t"                                 \
+         "ld $4, 72(%1)\n\t"                                      \
+         "sd $4, 0($29)\n\t"                                      \
+         "ld $4, 80(%1)\n\t"                                      \
+         "sd $4, 8($29)\n\t"                                      \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $7, 32(%1)\n\t"                                      \
+         "ld $8, 40(%1)\n\t"                                      \
+         "ld $9, 48(%1)\n\t"                                      \
+         "ld $10, 56(%1)\n\t"                                     \
+         "ld $11, 64(%1)\n\t"                                     \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "daddu $29, $29, 16\n\t"                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_11W(lval, orig, arg1,arg2,arg3,arg4,arg5,       \
+                                  arg6,arg7,arg8,arg9,arg10,      \
+                                  arg11)                          \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[12];                    \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      _argvec[4] = MIPS64_LONG2REG_CAST(arg4);                    \
+      _argvec[5] = MIPS64_LONG2REG_CAST(arg5);                    \
+      _argvec[6] = MIPS64_LONG2REG_CAST(arg6);                    \
+      _argvec[7] = MIPS64_LONG2REG_CAST(arg7);                    \
+      _argvec[8] = MIPS64_LONG2REG_CAST(arg8);                    \
+      _argvec[9] = MIPS64_LONG2REG_CAST(arg9);                    \
+      _argvec[10] = MIPS64_LONG2REG_CAST(arg10);                  \
+      _argvec[11] = MIPS64_LONG2REG_CAST(arg11);                  \
+      __asm__ volatile(                                           \
+         "dsubu $29, $29, 24\n\t"                                 \
+         "ld $4, 72(%1)\n\t"                                      \
+         "sd $4, 0($29)\n\t"                                      \
+         "ld $4, 80(%1)\n\t"                                      \
+         "sd $4, 8($29)\n\t"                                      \
+         "ld $4, 88(%1)\n\t"                                      \
+         "sd $4, 16($29)\n\t"                                     \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $7, 32(%1)\n\t"                                      \
+         "ld $8, 40(%1)\n\t"                                      \
+         "ld $9, 48(%1)\n\t"                                      \
+         "ld $10, 56(%1)\n\t"                                     \
+         "ld $11, 64(%1)\n\t"                                     \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "daddu $29, $29, 24\n\t"                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#define CALL_FN_W_12W(lval, orig, arg1,arg2,arg3,arg4,arg5,       \
+                                  arg6,arg7,arg8,arg9,arg10,      \
+                                  arg11,arg12)                    \
+   do {                                                           \
+      volatile OrigFn        _orig = (orig);                      \
+      volatile unsigned long long _argvec[13];                    \
+      volatile unsigned long long _res;                           \
+      _argvec[0] = MIPS64_LONG2REG_CAST(_orig.nraddr);            \
+      _argvec[1] = MIPS64_LONG2REG_CAST(arg1);                    \
+      _argvec[2] = MIPS64_LONG2REG_CAST(arg2);                    \
+      _argvec[3] = MIPS64_LONG2REG_CAST(arg3);                    \
+      _argvec[4] = MIPS64_LONG2REG_CAST(arg4);                    \
+      _argvec[5] = MIPS64_LONG2REG_CAST(arg5);                    \
+      _argvec[6] = MIPS64_LONG2REG_CAST(arg6);                    \
+      _argvec[7] = MIPS64_LONG2REG_CAST(arg7);                    \
+      _argvec[8] = MIPS64_LONG2REG_CAST(arg8);                    \
+      _argvec[9] = MIPS64_LONG2REG_CAST(arg9);                    \
+      _argvec[10] = MIPS64_LONG2REG_CAST(arg10);                  \
+      _argvec[11] = MIPS64_LONG2REG_CAST(arg11);                  \
+      _argvec[12] = MIPS64_LONG2REG_CAST(arg12);                  \
+      __asm__ volatile(                                           \
+         "dsubu $29, $29, 32\n\t"                                 \
+         "ld $4, 72(%1)\n\t"                                      \
+         "sd $4, 0($29)\n\t"                                      \
+         "ld $4, 80(%1)\n\t"                                      \
+         "sd $4, 8($29)\n\t"                                      \
+         "ld $4, 88(%1)\n\t"                                      \
+         "sd $4, 16($29)\n\t"                                     \
+         "ld $4, 96(%1)\n\t"                                      \
+         "sd $4, 24($29)\n\t"                                     \
+         "ld $4, 8(%1)\n\t"                                       \
+         "ld $5, 16(%1)\n\t"                                      \
+         "ld $6, 24(%1)\n\t"                                      \
+         "ld $7, 32(%1)\n\t"                                      \
+         "ld $8, 40(%1)\n\t"                                      \
+         "ld $9, 48(%1)\n\t"                                      \
+         "ld $10, 56(%1)\n\t"                                     \
+         "ld $11, 64(%1)\n\t"                                     \
+         "ld $25, 0(%1)\n\t"  /* target->t9 */                    \
+         VALGRIND_CALL_NOREDIR_T9                                 \
+         "daddu $29, $29, 32\n\t"                                 \
+         "move %0, $2\n"                                          \
+         : /*out*/   "=r" (_res)                                  \
+         : /*in*/    "r" (&_argvec[0])                            \
+         : /*trash*/ "memory", __CALLER_SAVED_REGS                \
+      );                                                          \
+      lval = (__typeof__(lval)) (long)_res;                       \
+   } while (0)
+
+#endif /* PLAT_mips64_linux */
 
 /* ------------------------------------------------------------------ */
 /* ARCHITECTURE INDEPENDENT MACROS for CLIENT REQUESTS.               */
@@ -3600,8 +6663,9 @@ typedef
 
 /* !! ABIWARNING !! ABIWARNING !! ABIWARNING !! ABIWARNING !! 
    This enum comprises an ABI exported by Valgrind to programs
-   which use client requests.  DO NOT CHANGE THE ORDER OF THESE
-   ENTRIES, NOR DELETE ANY -- add new ones at the end. */
+   which use client requests.  DO NOT CHANGE THE NUMERIC VALUES OF THESE
+   ENTRIES, NOR DELETE ANY -- add new ones at the end of the most
+   relevant group. */
 typedef
    enum { VG_USERREQ__RUNNING_ON_VALGRIND  = 0x1001,
           VG_USERREQ__DISCARD_TRANSLATIONS = 0x1002,
@@ -3621,9 +6685,13 @@ typedef
              errors. */
           VG_USERREQ__COUNT_ERRORS = 0x1201,
 
-          /* Allows a string (gdb monitor command) to be passed to the tool
-             Used for interaction with vgdb/gdb */
+          /* Allows the client program and/or gdbserver to execute a monitor
+             command. */
           VG_USERREQ__GDB_MONITOR_COMMAND = 0x1202,
+
+          /* Allows the client program to change a dynamic command line
+             option.  */
+          VG_USERREQ__CLO_CHANGE = 0x1203,
 
           /* These are useful and can be interpreted by any tool that
              tracks malloc() et al, by using vg_replace_malloc.c. */
@@ -3669,7 +6737,15 @@ typedef
              disablement indicator.  Hence 1 disables or further
              disables errors, and -1 moves back towards enablement.
              Other values are not allowed. */
-          VG_USERREQ__CHANGE_ERR_DISABLEMENT = 0x1801
+          VG_USERREQ__CHANGE_ERR_DISABLEMENT = 0x1801,
+
+          /* Some requests used for Valgrind internal, such as
+             self-test or self-hosting. */
+          /* Initialise IR injection */
+          VG_USERREQ__VEX_INIT_FOR_IRI = 0x1901,
+          /* Used by Inner Valgrind to inform Outer Valgrind where to
+             find the list of inner guest threads */
+          VG_USERREQ__INNER_THREADS    = 0x1902
    } Vg_ClientRequest;
 
 #if !defined(__GNUC__)
@@ -3695,13 +6771,17 @@ typedef
     VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__DISCARD_TRANSLATIONS,  \
                                     _qzz_addr, _qzz_len, 0, 0, 0)
 
+#define VALGRIND_INNER_THREADS(_qzz_addr)                               \
+   VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__INNER_THREADS,           \
+                                   _qzz_addr, 0, 0, 0, 0)
+
 
 /* These requests are for getting Valgrind itself to print something.
    Possibly with a backtrace.  This is a really ugly hack.  The return value
    is the number of characters printed, excluding the "**<pid>** " part at the
    start and the backtrace (if present). */
 
-#if defined(__GNUC__) || defined(__INTEL_COMPILER)
+#if defined(__GNUC__) || defined(__INTEL_COMPILER) && !defined(_MSC_VER)
 /* Modern GCC will optimize the static routine out if unused,
    and unused attribute will shut down warnings about it.  */
 static int VALGRIND_PRINTF(const char *format, ...)
@@ -3714,16 +6794,17 @@ __inline
 VALGRIND_PRINTF(const char *format, ...)
 {
 #if defined(NVALGRIND)
+   (void)format;
    return 0;
 #else /* NVALGRIND */
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW64__)
    uintptr_t _qzz_res;
 #else
    unsigned long _qzz_res;
 #endif
    va_list vargs;
    va_start(vargs, format);
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW64__)
    _qzz_res = VALGRIND_DO_CLIENT_REQUEST_EXPR(0,
                               VG_USERREQ__PRINTF_VALIST_BY_REF,
                               (uintptr_t)format,
@@ -3741,7 +6822,7 @@ VALGRIND_PRINTF(const char *format, ...)
 #endif /* NVALGRIND */
 }
 
-#if defined(__GNUC__) || defined(__INTEL_COMPILER)
+#if defined(__GNUC__) || defined(__INTEL_COMPILER) && !defined(_MSC_VER)
 static int VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
    __attribute__((format(__printf__, 1, 2), __unused__));
 #endif
@@ -3752,16 +6833,17 @@ __inline
 VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
 {
 #if defined(NVALGRIND)
+   (void)format;
    return 0;
 #else /* NVALGRIND */
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW64__)
    uintptr_t _qzz_res;
 #else
    unsigned long _qzz_res;
 #endif
    va_list vargs;
    va_start(vargs, format);
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW64__)
    _qzz_res = VALGRIND_DO_CLIENT_REQUEST_EXPR(0,
                               VG_USERREQ__PRINTF_BACKTRACE_VALIST_BY_REF,
                               (uintptr_t)format,
@@ -3781,7 +6863,7 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
 
 
 /* These requests allow control to move from the simulated CPU to the
-   real CPU, calling an arbitary function.
+   real CPU, calling an arbitrary function.
    
    Note that the current ThreadId is inserted as the first argument.
    So this call:
@@ -3962,6 +7044,38 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
     VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__CREATE_MEMPOOL,   \
                                     pool, rzB, is_zeroed, 0, 0)
 
+/* Create a memory pool with some flags specifying extended behaviour.
+   When flags is zero, the behaviour is identical to VALGRIND_CREATE_MEMPOOL.
+   
+   The flag VALGRIND_MEMPOOL_METAPOOL specifies that the pieces of memory 
+   associated with the pool using VALGRIND_MEMPOOL_ALLOC  will be used
+   by the application as superblocks to dole out MALLOC_LIKE blocks using
+   VALGRIND_MALLOCLIKE_BLOCK. In other words, a meta pool is a "2 levels"
+   pool : first level is the blocks described by VALGRIND_MEMPOOL_ALLOC.
+   The second level blocks are described using VALGRIND_MALLOCLIKE_BLOCK.
+   Note that the association between the pool and the second level blocks
+   is implicit : second level blocks will be located inside first level
+   blocks. It is necessary to use the VALGRIND_MEMPOOL_METAPOOL flag
+   for such 2 levels pools, as otherwise valgrind will detect overlapping
+   memory blocks, and will abort execution (e.g. during leak search).
+
+   Such a meta pool can also be marked as an 'auto free' pool using the flag
+   VALGRIND_MEMPOOL_AUTO_FREE, which must be OR-ed together with the
+   VALGRIND_MEMPOOL_METAPOOL. For an 'auto free' pool, VALGRIND_MEMPOOL_FREE
+   will automatically free the second level blocks that are contained
+   inside the first level block freed with VALGRIND_MEMPOOL_FREE.
+   In other words, calling VALGRIND_MEMPOOL_FREE will cause implicit calls
+   to VALGRIND_FREELIKE_BLOCK for all the second level blocks included
+   in the first level block.
+   Note: it is an error to use the VALGRIND_MEMPOOL_AUTO_FREE flag
+   without the VALGRIND_MEMPOOL_METAPOOL flag.
+*/
+#define VALGRIND_MEMPOOL_AUTO_FREE  1
+#define VALGRIND_MEMPOOL_METAPOOL   2
+#define VALGRIND_CREATE_MEMPOOL_EXT(pool, rzB, is_zeroed, flags)        \
+   VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__CREATE_MEMPOOL,          \
+                                   pool, rzB, is_zeroed, flags, 0)
+
 /* Destroy a memory pool. */
 #define VALGRIND_DESTROY_MEMPOOL(pool)                            \
     VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__DESTROY_MEMPOOL,  \
@@ -3998,7 +7112,9 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
                                VG_USERREQ__MEMPOOL_EXISTS,        \
                                pool, 0, 0, 0, 0)
 
-/* Mark a piece of memory as being a stack. Returns a stack id. */
+/* Mark a piece of memory as being a stack. Returns a stack id.
+   start is the lowest addressable stack byte, end is the highest
+   addressable stack byte. */
 #define VALGRIND_STACK_REGISTER(start, end)                       \
     (unsigned)VALGRIND_DO_CLIENT_REQUEST_EXPR(0,                  \
                                VG_USERREQ__STACK_REGISTER,        \
@@ -4010,7 +7126,9 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
     VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__STACK_DEREGISTER, \
                                     id, 0, 0, 0, 0)
 
-/* Change the start and end address of the stack id. */
+/* Change the start and end address of the stack id.
+   start is the new lowest addressable stack byte, end is the new highest
+   addressable stack byte. */
 #define VALGRIND_STACK_CHANGE(id, start, end)                     \
     VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__STACK_CHANGE,     \
                                     id, start, end, 0, 0)
@@ -4047,14 +7165,39 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
     VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__CHANGE_ERR_DISABLEMENT, \
                                     -1, 0, 0, 0, 0)
 
+/* Execute a monitor command from the client program.
+   If a connection is opened with GDB, the output will be sent
+   according to the output mode set for vgdb.
+   If no connection is opened, output will go to the log output.
+   Returns 1 if command not recognised, 0 otherwise. */
+#define VALGRIND_MONITOR_COMMAND(command)                               \
+   VALGRIND_DO_CLIENT_REQUEST_EXPR(0, VG_USERREQ__GDB_MONITOR_COMMAND, \
+                                   command, 0, 0, 0, 0)
+
+
+/* Change the value of a dynamic command line option.
+   Note that unknown or not dynamically changeable options
+   will cause a warning message to be output.  */
+#define VALGRIND_CLO_CHANGE(option)                           \
+   VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__CLO_CHANGE, \
+                                   option, 0, 0, 0, 0)
+
+
 #undef PLAT_x86_darwin
 #undef PLAT_amd64_darwin
 #undef PLAT_x86_win32
+#undef PLAT_amd64_win64
 #undef PLAT_x86_linux
 #undef PLAT_amd64_linux
 #undef PLAT_ppc32_linux
-#undef PLAT_ppc64_linux
+#undef PLAT_ppc64be_linux
+#undef PLAT_ppc64le_linux
 #undef PLAT_arm_linux
 #undef PLAT_s390x_linux
+#undef PLAT_mips32_linux
+#undef PLAT_mips64_linux
+#undef PLAT_nanomips_linux
+#undef PLAT_x86_solaris
+#undef PLAT_amd64_solaris
 
 #endif   /* __VALGRIND_H */

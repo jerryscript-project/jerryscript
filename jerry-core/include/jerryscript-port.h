@@ -144,9 +144,10 @@ void jerry_port_context_free (void);
  * The implementation can decide whether error and debug messages are logged to
  * the console, or saved to a database or to a file.
  *
- * @param message_p: the message to log.
+ * @param buffer_p: input buffer that is a zero-terminated UTF-8 string
+ * @param buffer_size: data size
  */
-void jerry_port_log (const char *message_p);
+void jerry_port_log_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size);
 
 /**
  * Print a buffer to standard output

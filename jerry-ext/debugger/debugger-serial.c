@@ -402,7 +402,7 @@ jerryx_debugger_serial_create (const char *config) /**< specify the configuratio
 bool
 jerryx_debugger_serial_create (const char *config)
 {
-  JERRYX_UNUSED (config);
+  JERRY_UNUSED (config);
   return false;
 } /* jerryx_debugger_serial_create */
 

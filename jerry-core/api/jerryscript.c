@@ -5077,49 +5077,33 @@ jerry_log_set_level (jerry_log_level_t level)
  * Log a zero-terminated string message.
  *
  * @param str_p: message
+ * @param str_size: size of message
  */
 static void
-jerry_log_string (const char *str_p)
+jerry_log_string (const jerry_char_t *str_p, jerry_size_t str_size)
 {
-  jerry_port_log (str_p);
+  jerry_port_log_buffer (str_p, str_size);
 
 #if JERRY_DEBUGGER
   if (jerry_debugger_is_connected ())
   {
-    jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
-                                JERRY_DEBUGGER_OUTPUT_LOG,
-                                (const uint8_t *) str_p,
-                                strlen (str_p));
+    jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT, JERRY_DEBUGGER_OUTPUT_LOG, str_p, str_size);
   }
 #endif /* JERRY_DEBUGGER */
 } /* jerry_log_string */
 
 /**
- * Log a fixed-size string message.
+ * Log a zero-terminated number string message.
  *
- * @param str_p: message
- * @param size: size
- * @param buffer_p: buffer to use
+ * @param cursor_p: the number string cursor
+ * @param buffer_p: buffer used to construct the number string
  */
 static void
-jerry_log_string_fixed (const char *str_p, size_t size, char *buffer_p)
+jerry_log_cursor (const jerry_char_t *cursor_p, jerry_char_t *buffer_p)
 {
-  const size_t batch_size = JERRY_LOG_BUFFER_SIZE - 1;
-
-  while (size > batch_size)
-  {
-    memcpy (buffer_p, str_p, batch_size);
-    buffer_p[batch_size] = '\0';
-    jerry_log_string (buffer_p);
-
-    str_p += batch_size;
-    size -= batch_size;
-  }
-
-  memcpy (buffer_p, str_p, size);
-  buffer_p[size] = '\0';
-  jerry_log_string (buffer_p);
-} /* jerry_log_string_fixed */
+  jerry_char_t *tail_p = buffer_p + JERRY_LOG_BUFFER_SIZE - 1;
+  jerry_log_string (cursor_p, (jerry_size_t) (tail_p - cursor_p));
+} /* jerry_log_cursor */
 
 /**
  * Format an unsigned number.
@@ -5132,11 +5116,13 @@ jerry_log_string_fixed (const char *str_p, size_t size, char *buffer_p)
  *
  * @return formatted number as string
  */
-static char *
-jerry_format_unsigned (unsigned int num, uint8_t width, char padding, uint8_t radix, char *buffer_p)
+static jerry_char_t *
+jerry_format_unsigned (unsigned int num, uint8_t width, jerry_char_t padding, uint8_t radix, jerry_char_t *buffer_p)
 {
-  static const char digits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-  char *cursor_p = buffer_p + JERRY_LOG_BUFFER_SIZE;
+  static const jerry_char_t digits[] = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+  };
+  jerry_char_t *cursor_p = buffer_p + JERRY_LOG_BUFFER_SIZE;
   *(--cursor_p) = '\0';
   uint8_t count = 0;
 
@@ -5166,8 +5152,8 @@ jerry_format_unsigned (unsigned int num, uint8_t width, char padding, uint8_t ra
  *
  * @return formatted number as string
  */
-static char *
-jerry_format_int (int num, uint8_t width, char padding, char *buffer_p)
+static jerry_char_t *
+jerry_format_int (int num, uint8_t width, jerry_char_t padding, jerry_char_t *buffer_p)
 {
   if (num >= 0)
   {
@@ -5178,15 +5164,15 @@ jerry_format_int (int num, uint8_t width, char padding, char *buffer_p)
 
   if (padding == '0' && width > 0)
   {
-    char *cursor_p = jerry_format_unsigned ((unsigned) num, --width, padding, 10, buffer_p);
+    jerry_char_t *cursor_p = jerry_format_unsigned ((unsigned) num, --width, padding, 10, buffer_p);
     *(--cursor_p) = '-';
     return cursor_p;
   }
 
-  char *cursor_p = jerry_format_unsigned ((unsigned) num, 0, ' ', 10, buffer_p);
+  jerry_char_t *cursor_p = jerry_format_unsigned ((unsigned) num, 0, ' ', 10, buffer_p);
   *(--cursor_p) = '-';
 
-  char *indent_p = buffer_p + JERRY_LOG_BUFFER_SIZE - width - 1;
+  jerry_char_t *indent_p = buffer_p + JERRY_LOG_BUFFER_SIZE - width - 1;
 
   while (cursor_p > indent_p)
   {
@@ -5220,9 +5206,9 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
   }
 
   va_list vl;
-  char buffer_p[JERRY_LOG_BUFFER_SIZE];
-  uint32_t buffer_index = 0;
-  const char *cursor_p = format_p;
+  jerry_char_t buffer_p[JERRY_LOG_BUFFER_SIZE];
+  jerry_size_t buffer_index = 0;
+  const jerry_char_t *cursor_p = (const jerry_char_t *) format_p;
   va_start (vl, format_p);
 
   while (*cursor_p != '\0')
@@ -5230,7 +5216,7 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
     if (*cursor_p == '%' || buffer_index > JERRY_LOG_BUFFER_SIZE - 2)
     {
       buffer_p[buffer_index] = '\0';
-      jerry_log_string (buffer_p);
+      jerry_log_string (buffer_p, buffer_index);
       buffer_index = 0;
     }
 
@@ -5242,8 +5228,8 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
 
     ++cursor_p;
     uint8_t width = 0;
-    size_t precision = 0;
-    char padding = ' ';
+    jerry_size_t precision = 0;
+    jerry_char_t padding = ' ';
 
     if (*cursor_p == '0')
     {
@@ -5263,7 +5249,7 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
     }
     else if (*cursor_p == '.' && *(cursor_p + 1) == '*')
     {
-      precision = (size_t) va_arg (vl, int);
+      precision = (jerry_size_t) va_arg (vl, int);
       cursor_p += 2;
     }
 
@@ -5278,36 +5264,36 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
     {
       case 's':
       {
-        char *str_p = va_arg (vl, char *);
+        jerry_char_t *str_p = va_arg (vl, jerry_char_t *);
 
         if (precision == 0)
         {
-          jerry_log_string (str_p);
+          jerry_log_string (str_p, (jerry_size_t) strlen ((const char *) str_p));
           break;
         }
 
-        jerry_log_string_fixed (str_p, precision, buffer_p);
+        jerry_log_string (str_p, precision);
         break;
       }
       case 'c':
       {
         /* Arguments of types narrower than int are promoted to int for variadic functions */
-        buffer_p[buffer_index++] = (char) va_arg (vl, int);
+        buffer_p[buffer_index++] = (jerry_char_t) va_arg (vl, int);
         break;
       }
       case 'd':
       {
-        jerry_log_string (jerry_format_int (va_arg (vl, int), width, padding, buffer_p));
+        jerry_log_cursor (jerry_format_int (va_arg (vl, int), width, padding, buffer_p), buffer_p);
         break;
       }
       case 'u':
       {
-        jerry_log_string (jerry_format_unsigned (va_arg (vl, unsigned int), width, padding, 10, buffer_p));
+        jerry_log_cursor (jerry_format_unsigned (va_arg (vl, unsigned int), width, padding, 10, buffer_p), buffer_p);
         break;
       }
       case 'x':
       {
-        jerry_log_string (jerry_format_unsigned (va_arg (vl, unsigned int), width, padding, 16, buffer_p));
+        jerry_log_cursor (jerry_format_unsigned (va_arg (vl, unsigned int), width, padding, 16, buffer_p), buffer_p);
         break;
       }
       default:
@@ -5321,7 +5307,7 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
   if (buffer_index > 0)
   {
     buffer_p[buffer_index] = '\0';
-    jerry_log_string (buffer_p);
+    jerry_log_string (buffer_p, buffer_index);
   }
 
   va_end (vl);

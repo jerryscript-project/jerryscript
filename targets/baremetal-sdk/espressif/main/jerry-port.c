@@ -31,10 +31,10 @@
 static const char ESP_JS_TAG[] = "JS";
 
 void
-jerry_port_log (const char *message_p)
+jerry_port_log_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  ESP_LOGI (ESP_JS_TAG, "%s", message_p);
-} /* jerry_port_log */
+  ESP_LOGI (ESP_JS_TAG, "%s", buffer_p);
+} /* jerry_port_log_buffer */
 
 void
 jerry_port_fatal (jerry_fatal_code_t code)

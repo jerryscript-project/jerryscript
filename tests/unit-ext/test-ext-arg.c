@@ -183,7 +183,7 @@ my_custom_transform (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS 
   {
     jerry_value_free (to_number);
 
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "It can not be converted to a number.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("It can not be converted to a number."));
   }
 
   int expected_num = (int) c_arg_p->extra_info;
@@ -191,7 +191,7 @@ my_custom_transform (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS 
 
   if (get_num != expected_num)
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "Number value is not expected.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("Number value is not expected."));
   }
 
   return jerry_undefined ();
@@ -311,18 +311,16 @@ test_validator_prop1_handler (const jerry_call_info_t *call_info_p, /**< call in
   double native2 = 0;
   double native3 = 3;
 
-  const char *name_p[] = { "prop1", "prop2", "prop3" };
+  const jerry_value_t name_p[] = { jerry_string_sz ("prop1"), jerry_string_sz ("prop2"), jerry_string_sz ("prop3") };
 
   jerryx_arg_t mapping[] = { jerryx_arg_boolean (&native1, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
                              jerryx_arg_number (&native2, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
                              jerryx_arg_number (&native3, JERRYX_ARG_COERCE, JERRYX_ARG_OPTIONAL) };
 
-  jerry_value_t is_ok = jerryx_arg_transform_object_properties (args_p[0],
-                                                                (const jerry_char_t **) name_p,
-                                                                ARRAY_SIZE (name_p),
-                                                                mapping,
-                                                                ARRAY_SIZE (mapping));
+  jerry_value_t is_ok =
+    jerryx_arg_transform_object_properties (args_p[0], name_p, ARRAY_SIZE (name_p), mapping, ARRAY_SIZE (mapping));
 
+  jerry_value_list_free (name_p, ARRAY_SIZE (name_p));
   TEST_ASSERT (!jerry_value_is_exception (is_ok));
   TEST_ASSERT (native1);
   TEST_ASSERT (native2 == 1.5);
@@ -350,13 +348,13 @@ test_validator_prop2_handler (const jerry_call_info_t *call_info_p, /**< call in
 
   jerryx_arg_object_props_t prop_info;
 
-  const char *name_p[] = { "prop1", "prop2", "prop3" };
+  const jerry_value_t name_p[] = { jerry_string_sz ("prop1"), jerry_string_sz ("prop2"), jerry_string_sz ("prop3") };
 
   jerryx_arg_t prop_mapping[] = { jerryx_arg_boolean (&native1, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
                                   jerryx_arg_number (&native2, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
                                   jerryx_arg_number (&native3, JERRYX_ARG_COERCE, JERRYX_ARG_OPTIONAL) };
 
-  prop_info.name_p = (const jerry_char_t **) name_p;
+  prop_info.name_p = name_p;
   prop_info.name_cnt = 3;
   prop_info.c_arg_p = prop_mapping;
   prop_info.c_arg_cnt = 3;
@@ -367,6 +365,7 @@ test_validator_prop2_handler (const jerry_call_info_t *call_info_p, /**< call in
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
+  jerry_value_list_free (name_p, ARRAY_SIZE (name_p));
   TEST_ASSERT (!jerry_value_is_exception (is_ok));
 
   if (validator_prop_count == 1)
@@ -392,19 +391,17 @@ test_validator_prop3_handler (const jerry_call_info_t *call_info_p, /**< call in
   bool native1 = false;
   bool native2 = true;
 
-  const char *name_p[] = { "prop1", "prop2" };
+  const jerry_value_t name_p[] = { jerry_string_sz ("prop1"), jerry_string_sz ("prop2") };
 
   jerryx_arg_t mapping[] = {
     jerryx_arg_boolean (&native1, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
     jerryx_arg_boolean (&native2, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
   };
 
-  jerry_value_t is_ok = jerryx_arg_transform_object_properties (args_p[0],
-                                                                (const jerry_char_t **) name_p,
-                                                                ARRAY_SIZE (name_p),
-                                                                mapping,
-                                                                ARRAY_SIZE (mapping));
+  jerry_value_t is_ok =
+    jerryx_arg_transform_object_properties (args_p[0], name_p, ARRAY_SIZE (name_p), mapping, ARRAY_SIZE (mapping));
 
+  jerry_value_list_free (name_p, ARRAY_SIZE (name_p));
   TEST_ASSERT (jerry_value_is_exception (is_ok));
   TEST_ASSERT (!native1);
   TEST_ASSERT (native2);
@@ -718,7 +715,7 @@ jerry_arg_to_double_or_bool_t (jerryx_arg_js_iterator_t *js_arg_iter_p, const je
   /* Fall through indicates that whatever they gave us, it wasn't
    * one of the types we were expecting... */
   jerry_value_free (conversion_result);
-  return jerry_throw_sz (JERRY_ERROR_TYPE, "double_or_bool-type error.");
+  return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("double_or_bool-type error."));
 } /* jerry_arg_to_double_or_bool_t */
 
 /**
@@ -758,7 +755,7 @@ static void
 test_utf8_string (void)
 {
   /* test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
-  jerry_value_t str = jerry_string_sz ("\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
+  jerry_value_t str = jerry_string_cesu8 (JERRY_ZSTR_ARG ("\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80"));
   char expect_utf8_buf[] = "\x73\x74\x72\x3a \xf0\x90\x90\x80";
   size_t buf_len = sizeof (expect_utf8_buf) - 1;
   JERRY_VLA (char, buf, buf_len + 1);
@@ -811,13 +808,12 @@ create_object_b_handler (const jerry_call_info_t *call_info_p, /**< call informa
  * Register a JavaScript function in the global object.
  */
 static void
-register_js_function (const char *name_p, /**< name of the function */
+register_js_function (jerry_value_t function_name_val, /**< name of the function that will be free/take */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
   jerry_value_t global_obj_val = jerry_current_realm ();
 
   jerry_value_t function_val = jerry_function_external (handler_p);
-  jerry_value_t function_name_val = jerry_string_sz (name_p);
   jerry_value_t result_val = jerry_object_set (global_obj_val, function_name_val, function_val);
 
   jerry_value_free (function_name_val);
@@ -834,20 +830,20 @@ main (void)
 
   test_utf8_string ();
 
-  register_js_function ("test_validator1", test_validator1_handler);
-  register_js_function ("test_validator2", test_validator2_handler);
-  register_js_function ("test_validator3", test_validator3_handler);
-  register_js_function ("test_validator_int1", test_validator_int1_handler);
-  register_js_function ("test_validator_int2", test_validator_int2_handler);
-  register_js_function ("test_validator_int3", test_validator_int3_handler);
-  register_js_function ("MyObjectA", create_object_a_handler);
-  register_js_function ("MyObjectB", create_object_b_handler);
-  register_js_function ("test_validator_prop1", test_validator_prop1_handler);
-  register_js_function ("test_validator_prop2", test_validator_prop2_handler);
-  register_js_function ("test_validator_prop3", test_validator_prop3_handler);
-  register_js_function ("test_validator_array1", test_validator_array1_handler);
-  register_js_function ("test_validator_array2", test_validator_array2_handler);
-  register_js_function ("test_validator_restore", test_validator_restore_handler);
+  register_js_function (jerry_string_sz ("test_validator1"), test_validator1_handler);
+  register_js_function (jerry_string_sz ("test_validator2"), test_validator2_handler);
+  register_js_function (jerry_string_sz ("test_validator3"), test_validator3_handler);
+  register_js_function (jerry_string_sz ("test_validator_int1"), test_validator_int1_handler);
+  register_js_function (jerry_string_sz ("test_validator_int2"), test_validator_int2_handler);
+  register_js_function (jerry_string_sz ("test_validator_int3"), test_validator_int3_handler);
+  register_js_function (jerry_string_sz ("MyObjectA"), create_object_a_handler);
+  register_js_function (jerry_string_sz ("MyObjectB"), create_object_b_handler);
+  register_js_function (jerry_string_sz ("test_validator_prop1"), test_validator_prop1_handler);
+  register_js_function (jerry_string_sz ("test_validator_prop2"), test_validator_prop2_handler);
+  register_js_function (jerry_string_sz ("test_validator_prop3"), test_validator_prop3_handler);
+  register_js_function (jerry_string_sz ("test_validator_array1"), test_validator_array1_handler);
+  register_js_function (jerry_string_sz ("test_validator_array2"), test_validator_array2_handler);
+  register_js_function (jerry_string_sz ("test_validator_restore"), test_validator_restore_handler);
 
   jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
   TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));

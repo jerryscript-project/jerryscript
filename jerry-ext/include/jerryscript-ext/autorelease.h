@@ -27,7 +27,7 @@ JERRY_C_API_BEGIN
  * Example usage:
  * static void foo (bool enable)
  * {
- *   JERRYX_AR_VALUE_T bar = jerry_string (...);
+ *   JERRYX_AR_VALUE_T bar = jerry_string_utf8 (...);
  *
  *   if (enable) {
  *     JERRYX_AR_VALUE_T baz = jerry_current_realm ();

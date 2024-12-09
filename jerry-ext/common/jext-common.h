@@ -23,11 +23,6 @@
 #include "jerryscript.h"
 
 /*
- * Make sure unused parameters, variables, or expressions trigger no compiler warning.
- */
-#define JERRYX_UNUSED(x) ((void) (x))
-
-/*
  * Asserts
  *
  * Warning:
@@ -70,7 +65,7 @@ void JERRY_ATTR_NORETURN jerry_unreachable (const char *file, const char *functi
   {                      \
     if (false)           \
     {                    \
-      JERRYX_UNUSED (x); \
+      JERRY_UNUSED (x);  \
     }                    \
   } while (0)
 

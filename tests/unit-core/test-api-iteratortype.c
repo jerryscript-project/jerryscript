@@ -70,7 +70,7 @@ main (void)
     ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_undefined ()),
     ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_null ()),
     ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_string_sz ("foo")),
-    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_throw_sz (JERRY_ERROR_TYPE, "error")),
+    ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("error"))),
 
     ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_object ()),
     ENTRY (JERRY_ITERATOR_TYPE_NONE, jerry_array (10)),

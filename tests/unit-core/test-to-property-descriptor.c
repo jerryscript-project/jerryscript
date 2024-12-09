@@ -29,9 +29,8 @@ create_property_descriptor (const char *script_p) /**< source code */
 static void
 check_attribute (jerry_value_t attribute, /**< attribute to be checked */
                  jerry_value_t object, /**< original object */
-                 const char *name_p) /**< name of the attribute */
+                 jerry_value_t prop_name) /**< name of the attribute that will be free/take */
 {
-  jerry_value_t prop_name = jerry_string_sz (name_p);
   jerry_value_t value = jerry_object_get (object, prop_name);
 
   if (jerry_value_is_undefined (value))
@@ -74,7 +73,7 @@ main (void)
 
   jerry_property_descriptor_t prop_desc = to_property_descriptor (object);
 
-  check_attribute (prop_desc.value, object, "value");
+  check_attribute (prop_desc.value, object, jerry_string_sz ("value"));
 
   TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED);
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_GET_DEFINED));
@@ -115,8 +114,8 @@ main (void)
 
   prop_desc = to_property_descriptor (object);
 
-  check_attribute (prop_desc.getter, object, "get");
-  check_attribute (prop_desc.setter, object, "set");
+  check_attribute (prop_desc.getter, object, jerry_string_sz ("get"));
+  check_attribute (prop_desc.setter, object, jerry_string_sz ("set"));
 
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED));
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED));
@@ -135,7 +134,7 @@ main (void)
 
   prop_desc = to_property_descriptor (object);
 
-  check_attribute (prop_desc.getter, object, "get");
+  check_attribute (prop_desc.getter, object, jerry_string_sz ("get"));
 
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED));
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED));
@@ -154,7 +153,7 @@ main (void)
 
   prop_desc = to_property_descriptor (object);
 
-  check_attribute (prop_desc.setter, object, "set");
+  check_attribute (prop_desc.setter, object, jerry_string_sz ("set"));
 
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED));
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED));

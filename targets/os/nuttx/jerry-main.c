@@ -96,16 +96,17 @@ str_to_uint (const char *num_str_p, /**< string to convert */
  * Register a JavaScript function in the global object.
  */
 static void
-register_js_function (const char *name_p, /**< name of the function */
+register_js_function (jerry_value_t function_name_val, /**< name of the function that will be free/take */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t result_val = jerryx_register_global (name_p, handler_p);
+  jerry_value_t result_val = jerryx_register_global (jerry_value_copy (function_name_val), handler_p);
 
   if (jerry_value_is_exception (result_val))
   {
-    jerry_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register '%s' method.", name_p);
+    jerry_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register '%S' method.", function_name_val);
   }
 
+  jerry_value_free (function_name_val);
   jerry_value_free (result_val);
 } /* register_js_function */
 
@@ -197,9 +198,9 @@ jerry_main (int argc, char *argv[])
     jerryx_debugger_after_connect (jerryx_debugger_tcp_create (debug_port) && jerryx_debugger_ws_create ());
   }
 
-  register_js_function ("assert", jerryx_handler_assert);
-  register_js_function ("gc", jerryx_handler_gc);
-  register_js_function ("print", jerryx_handler_print);
+  register_js_function (jerry_string_sz("assert"), jerryx_handler_assert);
+  register_js_function (jerry_string_sz("gc"), jerryx_handler_gc);
+  register_js_function (jerry_string_sz("print"), jerryx_handler_print);
 
   jerry_value_t ret_value = jerry_undefined ();
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;

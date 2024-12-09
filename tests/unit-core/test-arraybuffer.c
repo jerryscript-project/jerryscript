@@ -22,12 +22,11 @@
  * Register a JavaScript value in the global object.
  */
 static void
-register_js_value (const char *name_p, /**< name of the function */
+register_js_value (jerry_value_t name_val, /**< name of the function that will be free/take*/
                    jerry_value_t value) /**< JS value */
 {
   jerry_value_t global_obj_val = jerry_current_realm ();
 
-  jerry_value_t name_val = jerry_string_sz (name_p);
   jerry_value_t result_val = jerry_object_set (global_obj_val, name_val, value);
   TEST_ASSERT (jerry_value_is_boolean (result_val));
 
@@ -105,7 +104,7 @@ test_write_with_offset (uint8_t offset) /**< offset for buffer write. */
 {
   {
     jerry_value_t offset_val = jerry_number (offset);
-    register_js_value ("offset", offset_val);
+    register_js_value (jerry_string_sz ("offset"), offset_val);
     jerry_value_free (offset_val);
   }
 
@@ -215,7 +214,7 @@ main (void)
   jerry_arraybuffer_allocator (test_allocate_cb, test_free_cb, (void *) &allocate_mode);
 
   jerry_value_t function_val = jerry_function_external (assert_handler);
-  register_js_value ("assert", function_val);
+  register_js_value (jerry_string_sz ("assert"), function_val);
   jerry_value_free (function_val);
 
   /* Test array buffer queries */
@@ -347,7 +346,7 @@ main (void)
     const uint32_t buffer_size = 20;
 
     jerry_value_t input_buffer = jerry_arraybuffer_external (NULL, buffer_size, (void *) &allocate_count);
-    register_js_value ("input_buffer", input_buffer);
+    register_js_value (jerry_string_sz ("input_buffer"), input_buffer);
     jerry_value_free (input_buffer);
 
     const jerry_char_t eval_arraybuffer_src[] = TEST_STRING_LITERAL ("var array = new Uint8Array(input_buffer);"

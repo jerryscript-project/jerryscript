@@ -19,17 +19,17 @@
 
 static int free_count = 0;
 
-static const char *external_1 = "External string! External string! External string! External string!";
-static const char *external_2 = "Object";
-static const char *external_3 = "x!?:s";
-static const char *external_4 = "Object property external string! Object property external string!";
+#define external_1 "External string! External string! External string! External string!"
+#define external_2 "Object"
+#define external_3 "x!?:s"
+#define external_4 "Object property external string! Object property external string!"
 
 static void
 external_string_free_callback_1 (jerry_char_t *string_p, /**< string pointer */
                                  jerry_size_t string_size, /**< size of the string */
                                  void *user_p) /**< user pointer */
 {
-  TEST_ASSERT ((const char *) string_p == external_1);
+  TEST_ASSERT (strcmp ((char *) string_p, external_1) == 0);
   TEST_ASSERT (string_size == strlen (external_1));
   TEST_ASSERT (user_p == NULL);
   free_count++;
@@ -40,7 +40,7 @@ external_string_free_callback_2 (jerry_char_t *string_p, /**< string pointer */
                                  jerry_size_t string_size, /**< size of the string */
                                  void *user_p) /**< user pointer */
 {
-  TEST_ASSERT ((const char *) string_p == external_2);
+  TEST_ASSERT (strcmp ((char *) string_p, external_2) == 0);
   TEST_ASSERT (string_size == strlen (external_2));
   TEST_ASSERT (user_p == (void *) &free_count);
   free_count++;
@@ -51,7 +51,7 @@ external_string_free_callback_3 (jerry_char_t *string_p, /**< string pointer */
                                  jerry_size_t string_size, /**< size of the string */
                                  void *user_p) /**< user pointer */
 {
-  TEST_ASSERT ((const char *) string_p == external_3);
+  TEST_ASSERT (strcmp ((char *) string_p, external_3) == 0);
   TEST_ASSERT (string_size == strlen (external_3));
   TEST_ASSERT (user_p == (void *) string_p);
   free_count++;
@@ -102,7 +102,8 @@ main (void)
   TEST_ASSERT (free_count == 2);
 
   jerry_string_external_on_free (external_string_free_callback_3);
-  external_string = jerry_string_external_sz (external_3, (void *) external_3);
+  jerry_string_t str = { JERRY_ZSTR_ARG (external_3) };
+  external_string = jerry_string_external (str.ptr, str.size, (void *) str.ptr);
   TEST_ASSERT (free_count == 3);
   TEST_ASSERT (jerry_string_user_ptr (external_string, &is_external) == NULL);
   TEST_ASSERT (!is_external);

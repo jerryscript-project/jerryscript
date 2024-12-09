@@ -35,7 +35,7 @@ jerryx_debugger_after_connect (bool success) /**< tells whether the connection
     jerry_debugger_transport_close ();
   }
 #else /* !(defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) */
-  JERRYX_UNUSED (success);
+  JERRY_UNUSED (success);
 #endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */
 } /* jerryx_debugger_after_connect */
 

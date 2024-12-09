@@ -50,6 +50,7 @@ OPTIONS_UNITTESTS = ['--unittests=on', '--jerry-cmdline=off', '--error-messages=
 OPTIONS_DOCTESTS = ['--doctests=on', '--jerry-cmdline=off', '--error-messages=on',
                     '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on']
 OPTIONS_PROMISE_CALLBACK = ['--promise-callback=on']
+OPTIONS_HEAP_SIZE = ['--mem-heap=1024']
 
 # Test options for unittests
 JERRY_UNITTESTS_OPTIONS = [
@@ -67,15 +68,15 @@ JERRY_UNITTESTS_OPTIONS = [
 # Test options for jerry-tests
 JERRY_TESTS_OPTIONS = [
     Options('jerry_tests',
-            OPTIONS_COMMON +  OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT + OPTIONS_MEM_STRESS),
+            OPTIONS_COMMON +  OPTIONS_STACK_LIMIT + OPTIONS_HEAP_SIZE + OPTIONS_GC_MARK_LIMIT + OPTIONS_MEM_STRESS),
     Options('jerry_tests-snapshot',
-            OPTIONS_COMMON + OPTIONS_SNAPSHOT + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT,
+            OPTIONS_COMMON + OPTIONS_SNAPSHOT + OPTIONS_HEAP_SIZE + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT,
             ['--snapshot']),
     Options('jerry_tests-cpointer_32bit',
-            OPTIONS_COMMON + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
-            + ['--cpointer-32bit=on', '--mem-heap=1024']),
+            OPTIONS_COMMON + OPTIONS_STACK_LIMIT + OPTIONS_HEAP_SIZE + OPTIONS_GC_MARK_LIMIT
+            + ['--cpointer-32bit=on']),
     Options('jerry_tests-external_context',
-            OPTIONS_COMMON + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
+            OPTIONS_COMMON + OPTIONS_STACK_LIMIT + OPTIONS_HEAP_SIZE + OPTIONS_GC_MARK_LIMIT
             + ['--external-context=on']),
 ]
 

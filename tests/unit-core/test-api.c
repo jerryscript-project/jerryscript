@@ -99,7 +99,7 @@ handler_throw_test (const jerry_call_info_t *call_info_p, /**< call information 
           (void *) args_p,
           (unsigned int) args_cnt);
 
-  return jerry_throw_sz (JERRY_ERROR_TYPE, "error");
+  return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("error"));
 } /* handler_throw_test */
 
 static void
@@ -310,9 +310,8 @@ foreach_subset (const jerry_value_t name, /**< field name */
 
 static jerry_value_t
 get_property (const jerry_value_t obj_val, /**< object value */
-              const char *str_p) /**< property name */
+              jerry_value_t prop_name_val) /**< property name that will be free/take*/
 {
-  jerry_value_t prop_name_val = jerry_string_sz (str_p);
   jerry_value_t ret_val = jerry_object_get (obj_val, prop_name_val);
   jerry_value_free (prop_name_val);
   return ret_val;
@@ -320,10 +319,9 @@ get_property (const jerry_value_t obj_val, /**< object value */
 
 static jerry_value_t
 set_property (const jerry_value_t obj_val, /**< object value */
-              const char *str_p, /**< property name */
+              jerry_value_t prop_name_val, /**< property name that will be free/take*/
               const jerry_value_t val) /**< value to set */
 {
-  jerry_value_t prop_name_val = jerry_string_sz (str_p);
   jerry_value_t ret_val = jerry_object_set (obj_val, prop_name_val, val);
   jerry_value_free (prop_name_val);
   return ret_val;
@@ -394,18 +392,18 @@ main (void)
   global_obj_val = jerry_current_realm ();
 
   /* Get global.boo (non-existing field) */
-  val_t = get_property (global_obj_val, "boo");
+  val_t = get_property (global_obj_val, jerry_string_sz ("boo"));
   TEST_ASSERT (!jerry_value_is_exception (val_t));
   TEST_ASSERT (jerry_value_is_undefined (val_t));
 
   /* Get global.t */
-  val_t = get_property (global_obj_val, "t");
+  val_t = get_property (global_obj_val, jerry_string_sz ("t"));
   TEST_ASSERT (!jerry_value_is_exception (val_t));
   TEST_ASSERT (jerry_value_is_number (val_t) && jerry_value_as_number (val_t) == 1.0);
   jerry_value_free (val_t);
 
   /* Get global.foo */
-  val_foo = get_property (global_obj_val, "foo");
+  val_foo = get_property (global_obj_val, jerry_string_sz ("foo"));
   TEST_ASSERT (!jerry_value_is_exception (val_foo));
   TEST_ASSERT (jerry_value_is_object (val_foo));
 
@@ -418,7 +416,7 @@ main (void)
   jerry_value_free (res);
 
   /* Get global.bar */
-  val_bar = get_property (global_obj_val, "bar");
+  val_bar = get_property (global_obj_val, jerry_string_sz ("bar"));
   TEST_ASSERT (!jerry_value_is_exception (val_bar));
   TEST_ASSERT (jerry_value_is_object (val_bar));
 
@@ -432,7 +430,7 @@ main (void)
   /* Set global.t = "abcd" */
   jerry_value_free (args[0]);
   args[0] = jerry_string_sz ("abcd");
-  res = set_property (global_obj_val, "t", args[0]);
+  res = set_property (global_obj_val, jerry_string_sz ("t"), args[0]);
   TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_true (res));
   jerry_value_free (res);
@@ -451,20 +449,20 @@ main (void)
   jerry_value_free (args[1]);
 
   /* Get global.A */
-  val_A = get_property (global_obj_val, "A");
+  val_A = get_property (global_obj_val, jerry_string_sz ("A"));
   TEST_ASSERT (!jerry_value_is_exception (val_A));
   TEST_ASSERT (jerry_value_is_object (val_A));
 
   /* Get A.prototype */
   is_ok = jerry_value_is_constructor (val_A);
   TEST_ASSERT (is_ok);
-  val_A_prototype = get_property (val_A, "prototype");
+  val_A_prototype = get_property (val_A, jerry_string_sz ("prototype"));
   TEST_ASSERT (!jerry_value_is_exception (val_A_prototype));
   TEST_ASSERT (jerry_value_is_object (val_A_prototype));
   jerry_value_free (val_A);
 
   /* Set A.prototype.foo = global.foo */
-  res = set_property (val_A_prototype, "foo", val_foo);
+  res = set_property (val_A_prototype, jerry_string_sz ("foo"), val_foo);
   TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_true (res));
   jerry_value_free (res);
@@ -472,18 +470,18 @@ main (void)
   jerry_value_free (val_foo);
 
   /* Get global.a */
-  val_a = get_property (global_obj_val, "a");
+  val_a = get_property (global_obj_val, jerry_string_sz ("a"));
   TEST_ASSERT (!jerry_value_is_exception (val_a));
   TEST_ASSERT (jerry_value_is_object (val_a));
 
   /* Get a.t */
-  res = get_property (val_a, "t");
+  res = get_property (val_a, jerry_string_sz ("t"));
   TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_number (res) && jerry_value_as_number (res) == 12.0);
   jerry_value_free (res);
 
   /* foreach properties */
-  val_p = get_property (global_obj_val, "p");
+  val_p = get_property (global_obj_val, jerry_string_sz ("p"));
   is_ok = jerry_object_foreach (val_p, foreach, (void *) "user_data");
   TEST_ASSERT (is_ok);
 
@@ -495,13 +493,13 @@ main (void)
   jerry_value_free (val_p);
 
   /* foreach with throw test */
-  val_np = get_property (global_obj_val, "np");
+  val_np = get_property (global_obj_val, jerry_string_sz ("np"));
   is_ok = !jerry_object_foreach (val_np, foreach_exception, NULL);
   TEST_ASSERT (is_ok);
   jerry_value_free (val_np);
 
   /* Get a.foo */
-  val_a_foo = get_property (val_a, "foo");
+  val_a_foo = get_property (val_a, jerry_string_sz ("foo"));
   TEST_ASSERT (!jerry_value_is_exception (val_a_foo));
   TEST_ASSERT (jerry_value_is_object (val_a_foo));
 
@@ -518,13 +516,13 @@ main (void)
   external_func_val = jerry_function_external (handler);
   TEST_ASSERT (jerry_value_is_function (external_func_val) && jerry_value_is_constructor (external_func_val));
 
-  res = set_property (global_obj_val, "external", external_func_val);
+  res = set_property (global_obj_val, jerry_string_sz ("external"), external_func_val);
   TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_true (res));
   jerry_value_free (external_func_val);
 
   /* Call 'call_external' function that should call external function created above */
-  val_call_external = get_property (global_obj_val, "call_external");
+  val_call_external = get_property (global_obj_val, jerry_string_sz ("call_external"));
   TEST_ASSERT (!jerry_value_is_exception (val_call_external));
   TEST_ASSERT (jerry_value_is_object (val_call_external));
   res = jerry_call (val_call_external, global_obj_val, NULL, 0);
@@ -542,7 +540,7 @@ main (void)
   external_construct_val = jerry_function_external (handler_construct);
   TEST_ASSERT (jerry_value_is_function (external_construct_val) && jerry_value_is_constructor (external_construct_val));
 
-  res = set_property (global_obj_val, "external_construct", external_construct_val);
+  res = set_property (global_obj_val, jerry_string_sz ("external_construct"), external_construct_val);
   TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_true (res));
   jerry_value_free (res);
@@ -552,7 +550,7 @@ main (void)
   res = jerry_construct (external_construct_val, args, 1);
   TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_object (res));
-  val_value_field = get_property (res, "value_field");
+  val_value_field = get_property (res, jerry_string_sz ("value_field"));
 
   /* Get 'value_field' of constructed object */
   TEST_ASSERT (!jerry_value_is_exception (val_value_field));
@@ -584,13 +582,13 @@ main (void)
   throw_test_handler_val = jerry_function_external (handler_throw_test);
   TEST_ASSERT (jerry_value_is_function (throw_test_handler_val));
 
-  res = set_property (global_obj_val, "throw_test", throw_test_handler_val);
+  res = set_property (global_obj_val, jerry_string_sz ("throw_test"), throw_test_handler_val);
   TEST_ASSERT (!jerry_value_is_exception (res));
   TEST_ASSERT (jerry_value_is_true (res));
   jerry_value_free (res);
   jerry_value_free (throw_test_handler_val);
 
-  val_t = get_property (global_obj_val, "call_throw_test");
+  val_t = get_property (global_obj_val, jerry_string_sz ("call_throw_test"));
   TEST_ASSERT (!jerry_value_is_exception (val_t));
   TEST_ASSERT (jerry_value_is_object (val_t));
 
@@ -600,7 +598,7 @@ main (void)
   jerry_value_free (res);
 
   /* Test: Unhandled exception in called function */
-  val_t = get_property (global_obj_val, "throw_reference_error");
+  val_t = get_property (global_obj_val, jerry_string_sz ("throw_reference_error"));
   TEST_ASSERT (!jerry_value_is_exception (val_t));
   TEST_ASSERT (jerry_value_is_object (val_t));
 
@@ -627,7 +625,7 @@ main (void)
   jerry_value_free (obj_val);
 
   /* Test: Unhandled exception in function called, as constructor */
-  val_t = get_property (global_obj_val, "throw_reference_error");
+  val_t = get_property (global_obj_val, jerry_string_sz ("throw_reference_error"));
   TEST_ASSERT (!jerry_value_is_exception (val_t));
   TEST_ASSERT (jerry_value_is_object (val_t));
 
@@ -1047,7 +1045,7 @@ main (void)
 
   /* call jerry_string_sz functions which will returns with the registered external magic strings */
   args[0] = jerry_string_sz ("console");
-  args[1] = jerry_string_sz ("\xed\xa0\x80\xed\xb6\x8a"); /**< greek zero sign */
+  args[1] = jerry_string_cesu8 (JERRY_ZSTR_ARG ("\xed\xa0\x80\xed\xb6\x8a")); /**< greek zero sign */
 
   cesu8_length = jerry_string_length (args[0]);
   cesu8_sz = jerry_string_size (args[0], JERRY_ENCODING_CESU8);

@@ -31,7 +31,7 @@ typedef jerry_value_t (*jerryx_native_module_on_resolve_t) (void);
  */
 typedef struct jerryx_native_module_t
 {
-  const jerry_char_t *name_p; /**< name of the module */
+  jerry_string_t name; /**< name of the module */
   const jerryx_native_module_on_resolve_t on_resolve_p; /**< function that returns a new instance of the module */
   struct jerryx_native_module_t *next_p; /**< pointer to next module in the list */
 } jerryx_native_module_t;
@@ -99,19 +99,19 @@ typedef struct jerryx_native_module_t
  */
 #define JERRYX_NATIVE_MODULE(module_name, on_resolve_cb) JERRYX_NATIVE_MODULE_IMPLEM (module_name, on_resolve_cb)
 
-#define JERRYX_NATIVE_MODULE_IMPLEM(module_name, on_resolve_cb)                                          \
-  static jerryx_native_module_t _##module_name##_definition = { .name_p = (jerry_char_t *) #module_name, \
-                                                                .on_resolve_p = (on_resolve_cb),         \
-                                                                .next_p = NULL };                        \
-                                                                                                         \
-  JERRYX_MODULE_CONSTRUCTOR (module_name##_register)                                                     \
-  {                                                                                                      \
-    jerryx_native_module_register (&_##module_name##_definition);                                        \
-  }                                                                                                      \
-                                                                                                         \
-  JERRYX_MODULE_DESTRUCTOR (module_name##_unregister)                                                    \
-  {                                                                                                      \
-    jerryx_native_module_unregister (&_##module_name##_definition);                                      \
+#define JERRYX_NATIVE_MODULE_IMPLEM(module_name, on_resolve_cb)                                            \
+  static jerryx_native_module_t _##module_name##_definition = { .name = { JERRY_ZSTR_ARG (#module_name) }, \
+                                                                .on_resolve_p = (on_resolve_cb),           \
+                                                                .next_p = NULL };                          \
+                                                                                                           \
+  JERRYX_MODULE_CONSTRUCTOR (module_name##_register)                                                       \
+  {                                                                                                        \
+    jerryx_native_module_register (&_##module_name##_definition);                                          \
+  }                                                                                                        \
+                                                                                                           \
+  JERRYX_MODULE_DESTRUCTOR (module_name##_unregister)                                                      \
+  {                                                                                                        \
+    jerryx_native_module_unregister (&_##module_name##_definition);                                        \
   }
 
 /**

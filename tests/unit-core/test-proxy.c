@@ -111,10 +111,9 @@ handler_set (const jerry_call_info_t *call_info_p, /**< call information */
 
 static void
 set_property (jerry_value_t target, /**< target object */
-              const char *name_p, /**< name of the property */
+              jerry_value_t name_val, /**< name of the property that will be free/take */
               jerry_value_t value) /**< value of the property */
 {
-  jerry_value_t name_val = jerry_string_sz (name_p);
   jerry_value_t result_val = jerry_object_set (target, name_val, value);
 
   TEST_ASSERT (jerry_value_is_boolean (result_val));
@@ -124,9 +123,8 @@ set_property (jerry_value_t target, /**< target object */
 
 static jerry_value_t
 get_property (jerry_value_t target, /**< target object */
-              const char *name_p) /**< name of the property */
+              jerry_value_t name_val) /**< name of the property that will be free/take */
 {
-  jerry_value_t name_val = jerry_string_sz (name_p);
   jerry_value_t result_val = jerry_object_get (target, name_val);
 
   TEST_ASSERT (!jerry_value_is_exception (result_val));
@@ -136,11 +134,11 @@ get_property (jerry_value_t target, /**< target object */
 
 static void
 set_function (jerry_value_t target, /**< target object */
-              const char *name_p, /**< name of the function */
+              jerry_value_t name_val, /**< name of the function that will be free/take */
               jerry_external_handler_t handler_p) /**< function callback */
 {
   jerry_value_t function_val = jerry_function_external (handler_p);
-  set_property (target, name_p, function_val);
+  set_property (target, name_val, function_val);
   jerry_value_free (function_val);
 } /* set_function */
 
@@ -193,7 +191,7 @@ static void
 test_proxy_native (void)
 {
   jerry_value_t handler = jerry_object ();
-  set_function (handler, "get", proxy_native_handler_get);
+  set_function (handler, jerry_string_sz ("get"), proxy_native_handler_get);
 
   jerry_value_t target = jerry_object ();
   jerry_value_t proxy = jerry_proxy (target, handler);
@@ -233,15 +231,15 @@ main (void)
 
   jerry_value_t handler = jerry_object ();
   {
-    set_function (handler, "get", handler_get);
-    set_function (handler, "set", handler_set);
+    set_function (handler, jerry_string_sz ("get"), handler_get);
+    set_function (handler, jerry_string_sz ("set"), handler_set);
   }
 
   jerry_value_t target = jerry_object ();
   jerry_value_t proxy = jerry_proxy (target, handler);
   {
     jerry_value_t global = jerry_current_realm ();
-    set_property (global, "pdemo", proxy);
+    set_property (global, jerry_string_sz ("pdemo"), proxy);
     jerry_value_free (global);
   }
 
@@ -257,7 +255,7 @@ main (void)
   }
 
   {
-    jerry_value_t res = get_property (proxy, "value");
+    jerry_value_t res = get_property (proxy, jerry_string_sz ("value"));
     TEST_ASSERT (jerry_value_is_number (res));
     TEST_ASSERT (jerry_value_as_number (res) == 2.0);
     jerry_value_free (res);
@@ -290,12 +288,12 @@ main (void)
 
   {
     jerry_value_t new_value = jerry_number (12);
-    set_property (proxy, "value", new_value);
+    set_property (proxy, jerry_string_sz ("value"), new_value);
     jerry_value_free (new_value);
   }
 
   {
-    jerry_value_t res = get_property (proxy, "value");
+    jerry_value_t res = get_property (proxy, jerry_string_sz ("value"));
     TEST_ASSERT (jerry_value_is_number (res));
     TEST_ASSERT (jerry_value_as_number (res) == 13.0);
     jerry_value_free (res);

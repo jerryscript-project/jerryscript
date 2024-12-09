@@ -19,10 +19,9 @@
 
 static void
 create_number_property (jerry_value_t object_value, /**< object value */
-                        char *name_p, /**< name */
+                        jerry_value_t name_value, /**< name that will be take/free*/
                         double number) /**< value */
 {
-  jerry_value_t name_value = jerry_string_sz (name_p);
   jerry_value_t number_value = jerry_number (number);
   jerry_value_t result_value = jerry_object_set (object_value, name_value, number_value);
   TEST_ASSERT (!jerry_value_is_exception (result_value));
@@ -34,9 +33,8 @@ create_number_property (jerry_value_t object_value, /**< object value */
 
 static double
 get_number_property (jerry_value_t object_value, /**< object value */
-                     char *name_p) /**< name */
+                     jerry_value_t name_value) /**< name that will be free/take */
 {
-  jerry_value_t name_value = jerry_string_sz (name_p);
   jerry_value_t result_value = jerry_object_get (object_value, name_value);
   TEST_ASSERT (!jerry_value_is_exception (result_value));
   TEST_ASSERT (jerry_value_is_number (result_value));
@@ -117,10 +115,10 @@ main (void)
 
   jerry_value_t realm_value = jerry_realm ();
 
-  create_number_property (global_value, "a", 3.5);
-  create_number_property (global_value, "b", 7.25);
-  create_number_property (realm_value, "a", -1.25);
-  create_number_property (realm_value, "b", -6.75);
+  create_number_property (global_value, jerry_string_sz ("a"), 3.5);
+  create_number_property (global_value, jerry_string_sz ("b"), 7.25);
+  create_number_property (realm_value, jerry_string_sz ("a"), -1.25);
+  create_number_property (realm_value, jerry_string_sz ("b"), -6.75);
 
   TEST_ASSERT (eval_and_get_number ("a") == 3.5);
 
@@ -170,15 +168,15 @@ main (void)
   TEST_ASSERT (jerry_value_is_boolean (result_value) && jerry_value_is_true (result_value));
   jerry_value_free (result_value);
 
-  create_number_property (object_value, "x", 7.25);
-  create_number_property (object_value, "y", 1.25);
+  create_number_property (object_value, jerry_string_sz ("x"), 7.25);
+  create_number_property (object_value, jerry_string_sz ("y"), 1.25);
 
   result_value = jerry_set_realm (realm_value);
   TEST_ASSERT (!jerry_value_is_exception (result_value));
   TEST_ASSERT (eval_and_get_number ("var z = -5.5; x + this.y") == 8.5);
   jerry_set_realm (result_value);
 
-  TEST_ASSERT (get_number_property (object_value, "z") == -5.5);
+  TEST_ASSERT (get_number_property (object_value, jerry_string_sz ("z")) == -5.5);
 
   result_value = jerry_realm_this (realm_value);
   TEST_ASSERT (result_value == object_value);
@@ -203,7 +201,7 @@ main (void)
     TEST_ASSERT (eval_and_get_number ("var z = 1.5; z") == 1.5);
     jerry_set_realm (old_realm_value);
 
-    TEST_ASSERT (get_number_property (target_value, "z") == 1.5);
+    TEST_ASSERT (get_number_property (target_value, jerry_string_sz ("z")) == 1.5);
     jerry_value_free (target_value);
 
     /* Check isExtensible error. */
@@ -241,7 +239,7 @@ main (void)
   jerry_set_realm (result_value);
 
   /* Script is compiled in another realm. */
-  create_number_property (realm_value, "global1", 7.5);
+  create_number_property (realm_value, jerry_string_sz ("global1"), 7.5);
   result_value = jerry_run (script_value);
   TEST_ASSERT (!jerry_value_is_exception (result_value));
 
@@ -250,7 +248,7 @@ main (void)
   jerry_value_free (result_value);
   jerry_value_free (script_value);
 
-  TEST_ASSERT (get_number_property (realm_value, "global2") == 6.5);
+  TEST_ASSERT (get_number_property (realm_value, jerry_string_sz ("global2")) == 6.5);
 
   jerry_value_free (realm_value);
 

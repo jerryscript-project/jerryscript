@@ -56,7 +56,7 @@ jerryx_arg_transform_number_strict_common (jerryx_arg_js_iterator_t *js_arg_iter
 
   if (!jerry_value_is_number (js_arg))
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "It is not a number.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("It is not a number."));
   }
 
   *number_p = jerry_value_as_number (js_arg);
@@ -83,7 +83,7 @@ jerryx_arg_transform_number_common (jerryx_arg_js_iterator_t *js_arg_iter_p, /**
   {
     jerry_value_free (to_number);
 
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "It can not be converted to a number.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("It can not be converted to a number."));
   }
 
   *number_p = jerry_value_as_number (to_number);
@@ -133,14 +133,14 @@ jerryx_arg_helper_process_double (double *d, /**< [in, out] the number to be pro
 {
   if (*d != *d) /* isnan (*d) triggers conversion warning on clang<9 */
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "The number is NaN.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("The number is NaN."));
   }
 
   if (option.clamp == JERRYX_ARG_NO_CLAMP)
   {
     if (*d > max || *d < min)
     {
-      return jerry_throw_sz (JERRY_ERROR_TYPE, "The number is out of range.");
+      return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("The number is out of range."));
     }
   }
   else
@@ -220,7 +220,7 @@ jerryx_arg_transform_boolean_strict (jerryx_arg_js_iterator_t *js_arg_iter_p, /*
 
   if (!jerry_value_is_boolean (js_arg))
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "It is not a boolean.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("It is not a boolean."));
   }
 
   bool *dest = c_arg_p->dest;
@@ -268,7 +268,7 @@ jerryx_arg_string_to_buffer_common_routine (jerry_value_t js_arg, /**< JS arg */
 
   if (size > target_buf_size - 1)
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "Buffer size is not large enough.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("Buffer size is not large enough."));
   }
 
   jerry_string_to_buffer (js_arg, encoding, target_p, target_buf_size);
@@ -292,7 +292,7 @@ jerryx_arg_transform_string_strict_common (jerryx_arg_js_iterator_t *js_arg_iter
 
   if (!jerry_value_is_string (js_arg))
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "It is not a string.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("It is not a string."));
   }
 
   return jerryx_arg_string_to_buffer_common_routine (js_arg, c_arg_p, encoding);
@@ -317,7 +317,7 @@ jerryx_arg_transform_string_common (jerryx_arg_js_iterator_t *js_arg_iter_p, /**
   {
     jerry_value_free (to_string);
 
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "It can not be converted to a string.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("It can not be converted to a string."));
   }
 
   jerry_value_t ret = jerryx_arg_string_to_buffer_common_routine (to_string, c_arg_p, encoding);
@@ -404,7 +404,7 @@ jerryx_arg_transform_function (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< ava
 
   if (!jerry_value_is_function (js_arg))
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "It is not a function.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("It is not a function."));
   }
 
   jerry_value_t *func_p = c_arg_p->dest;
@@ -428,7 +428,7 @@ jerryx_arg_transform_native_pointer (jerryx_arg_js_iterator_t *js_arg_iter_p, /*
 
   if (!jerry_value_is_object (js_arg))
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "It is not an object.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("It is not an object."));
   }
 
   const jerry_object_native_info_t *expected_info_p;
@@ -438,7 +438,8 @@ jerryx_arg_transform_native_pointer (jerryx_arg_js_iterator_t *js_arg_iter_p, /*
 
   if (*ptr_p == NULL)
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "The object has no native pointer or type does not match.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE,
+                           jerry_string_sz ("The object has no native pointer or type does not match."));
   }
 
   return jerry_undefined ();

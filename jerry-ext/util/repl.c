@@ -50,7 +50,7 @@ jerryx_repl (const jerry_char_t *prompt_p, jerry_size_t prompt_size)
     if (!jerry_validate_string (line_p, length, JERRY_ENCODING_UTF8))
     {
       jerry_port_line_free (line_p);
-      result = jerry_throw_sz (JERRY_ERROR_SYNTAX, "Input is not a valid UTF-8 string");
+      result = jerry_throw_sz (JERRY_ERROR_SYNTAX, jerry_string_sz ("Input is not a valid UTF-8 string"));
       goto exception;
     }
 

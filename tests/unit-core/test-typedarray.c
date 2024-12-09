@@ -26,7 +26,7 @@
 typedef struct
 {
   jerry_typedarray_type_t typedarray_type; /**< what kind of TypedArray */
-  char *constructor_name; /**< JS constructor name for TypedArray */
+  jerry_value_t constructor_name; /**< JS constructor name for TypedArray */
   uint32_t element_count; /**< number of elements for the TypedArray */
   uint32_t bytes_per_element; /**< bytes per elment of the given typedarray_type */
 } test_entry_t;
@@ -35,12 +35,11 @@ typedef struct
  * Register a JavaScript value in the global object.
  */
 static void
-register_js_value (const char *name_p, /**< name of the function */
+register_js_value (jerry_value_t name_val, /**< name of the function that will be free/take */
                    jerry_value_t value) /**< function callback */
 {
   jerry_value_t global_obj_val = jerry_current_realm ();
 
-  jerry_value_t name_val = jerry_string_sz (name_p);
   jerry_value_t result_val = jerry_object_set (global_obj_val, name_val, value);
 
   jerry_value_free (name_val);
@@ -108,18 +107,16 @@ test_typedarray_queries (test_entry_t test_entries[]) /**< test cases */
 {
   jerry_value_t global_obj_val = jerry_current_realm ();
 
-  for (uint32_t i = 0; test_entries[i].constructor_name != NULL; i++)
+  for (uint32_t i = 0; !jerry_value_is_undefined (test_entries[i].constructor_name); i++)
   {
     /* Create TypedArray via construct call */
     {
-      jerry_value_t prop_name = jerry_string_sz (test_entries[i].constructor_name);
-      jerry_value_t prop_value = jerry_object_get (global_obj_val, prop_name);
+      jerry_value_t prop_value = jerry_object_get (global_obj_val, test_entries[i].constructor_name);
       TEST_ASSERT (!jerry_value_is_exception (prop_value));
       jerry_value_t length_arg = jerry_number (test_entries[i].element_count);
 
       jerry_value_t typedarray = jerry_construct (prop_value, &length_arg, 1);
 
-      jerry_value_free (prop_name);
       jerry_value_free (prop_value);
       jerry_value_free (length_arg);
 
@@ -223,7 +220,7 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
 {
   const uint32_t arraybuffer_size = 256;
 
-  for (uint32_t i = 0; test_entries[i].constructor_name != NULL; i++)
+  for (uint32_t i = 0; !jerry_value_is_undefined (test_entries[i].constructor_name); i++)
   {
     const uint32_t offset = 8;
     uint32_t element_count = test_entries[i].element_count;
@@ -248,8 +245,8 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
       jerry_value_t js_offset = jerry_number (offset);
       jerry_value_t js_element_count = jerry_number (element_count);
 
-      register_js_value ("expected_offset", js_offset);
-      register_js_value ("expected_length", js_element_count);
+      register_js_value (jerry_string_sz ("expected_offset"), js_offset);
+      register_js_value (jerry_string_sz ("expected_length"), js_element_count);
 
       typedarray =
         jerry_typedarray_with_buffer_span (test_entries[i].typedarray_type, arraybuffer, offset, element_count);
@@ -260,7 +257,7 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
       jerry_value_free (arraybuffer);
     }
 
-    register_js_value ("array", typedarray);
+    register_js_value (jerry_string_sz ("array"), typedarray);
 
     const jerry_char_t test_exptected_src[] =
       TEST_STRING_LITERAL ("assert (array.length == expected_length,"
@@ -324,7 +321,7 @@ test_property_by_index (test_entry_t test_entries[])
   uint64_t test_uint64_numbers[5] = { 83, 0, 1, UINT32_MAX, UINT64_MAX };
   int64_t test_int64_numbers[5] = { INT64_MAX, INT64_MIN, 0, INT32_MAX, INT32_MIN };
 
-  for (uint32_t i = 0; test_entries[i].constructor_name != NULL; i++)
+  for (uint32_t i = 0; !jerry_value_is_undefined (test_entries[i].constructor_name); i++)
   {
     jerry_value_t test_number;
     uint32_t test_numbers_length = sizeof (test_int_numbers) / sizeof (int);
@@ -496,6 +493,18 @@ test_property_by_index (test_entry_t test_entries[])
   }
 } /* test_property_by_index */
 
+/**
+ * Test entries free
+ */
+static void
+test_entries_free (test_entry_t test_entries[])
+{
+  for (uint32_t i = 0; !jerry_value_is_undefined (test_entries[i].constructor_name); i++)
+  {
+    jerry_value_free (test_entries[i].constructor_name);
+  }
+} /* test_entries_free */
+
 static void
 test_detached_arraybuffer (void)
 {
@@ -575,11 +584,12 @@ main (void)
   }
 
   jerry_value_t function_val = jerry_function_external (assert_handler);
-  register_js_value ("assert", function_val);
+  register_js_value (jerry_string_sz ("assert"), function_val);
   jerry_value_free (function_val);
 
   test_entry_t test_entries[] = {
-#define TEST_ENTRY(TYPE, CONSTRUCTOR, COUNT, BYTES_PER_ELEMENT) { TYPE, CONSTRUCTOR, COUNT, BYTES_PER_ELEMENT }
+#define TEST_ENTRY(TYPE, CONSTRUCTOR, COUNT, BYTES_PER_ELEMENT) \
+  { TYPE, jerry_string_sz (CONSTRUCTOR), COUNT, BYTES_PER_ELEMENT }
 
     TEST_ENTRY (JERRY_TYPEDARRAY_UINT8, "Uint8Array", 12, 1),
     TEST_ENTRY (JERRY_TYPEDARRAY_UINT8CLAMPED, "Uint8ClampedArray", 12, 1),
@@ -595,7 +605,7 @@ main (void)
     TEST_ENTRY (JERRY_TYPEDARRAY_BIGINT64, "BigInt64Array", 12, 8),
     TEST_ENTRY (JERRY_TYPEDARRAY_BIGUINT64, "BigUint64Array", 12, 8),
 
-    TEST_ENTRY (JERRY_TYPEDARRAY_INVALID, NULL, 0, 0)
+    { JERRY_TYPEDARRAY_INVALID, jerry_undefined (), 0, 0 }
 #undef TEST_ENTRY
   };
 
@@ -624,9 +634,9 @@ main (void)
       jerry_value_t js_element_count = jerry_number (element_count);
       jerry_value_t js_expected_value = jerry_number (expected_value);
 
-      register_js_value ("array", array);
-      register_js_value ("expected_length", js_element_count);
-      register_js_value ("expected_value", js_expected_value);
+      register_js_value (jerry_string_sz ("array"), array);
+      register_js_value (jerry_string_sz ("expected_length"), js_element_count);
+      register_js_value (jerry_string_sz ("expected_value"), js_expected_value);
 
       jerry_value_free (js_element_count);
       jerry_value_free (js_expected_value);
@@ -673,6 +683,8 @@ main (void)
 
   test_property_by_index (test_entries);
 
+  test_entries_free (test_entries);
+
   /* test invalid things */
   {
     jerry_value_t values[] = {
@@ -682,7 +694,7 @@ main (void)
       jerry_object (),
       jerry_null (),
       jerry_arraybuffer (16),
-      jerry_error_sz (JERRY_ERROR_TYPE, "error"),
+      jerry_error_sz (JERRY_ERROR_TYPE, jerry_string_sz ("error")),
       jerry_undefined (),
       jerry_promise (),
     };

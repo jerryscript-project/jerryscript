@@ -339,14 +339,13 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
   /* To avoid cppcheck warning. */
   parse_options.argument_list = 0;
   parse_options.source_name =
-    jerry_string ((const jerry_char_t *) file_name_p, (jerry_size_t) strlen (file_name_p), JERRY_ENCODING_UTF8);
+    jerry_string_utf8 ((const jerry_char_t *) file_name_p, (jerry_size_t) strlen (file_name_p));
 
   if (function_args_p != NULL)
   {
     parse_options.options |= JERRY_PARSE_HAS_ARGUMENT_LIST;
-    parse_options.argument_list = jerry_string ((const jerry_char_t *) function_args_p,
-                                                (jerry_size_t) strlen (function_args_p),
-                                                JERRY_ENCODING_UTF8);
+    parse_options.argument_list =
+      jerry_string_utf8 ((const jerry_char_t *) function_args_p, (jerry_size_t) strlen (function_args_p));
   }
 
   jerry_value_t snapshot_result = jerry_parse ((jerry_char_t *) source_p, source_length, &parse_options);

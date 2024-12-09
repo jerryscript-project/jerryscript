@@ -35,13 +35,13 @@ jerryx_source_parse_script (const char *path_p)
   if (source_p == NULL)
   {
     jerry_log (JERRY_LOG_LEVEL_ERROR, "Failed to open file: %s\n", path_p);
-    return jerry_throw_sz (JERRY_ERROR_SYNTAX, "Source file not found");
+    return jerry_throw_sz (JERRY_ERROR_SYNTAX, jerry_string_sz ("Source file not found"));
   }
 
   if (!jerry_validate_string (source_p, source_size, JERRY_ENCODING_UTF8))
   {
     jerry_port_source_free (source_p);
-    return jerry_throw_sz (JERRY_ERROR_SYNTAX, "Input is not a valid UTF-8 encoded string.");
+    return jerry_throw_sz (JERRY_ERROR_SYNTAX, jerry_string_sz ("Input is not a valid UTF-8 encoded string."));
   }
 
   jerry_parse_options_t parse_options;
@@ -118,7 +118,7 @@ jerryx_source_exec_snapshot (const char *path_p, size_t function_index)
   if (source_p == NULL)
   {
     jerry_log (JERRY_LOG_LEVEL_ERROR, "Failed to open file: %s\n", path_p);
-    return jerry_throw_sz (JERRY_ERROR_SYNTAX, "Snapshot file not found");
+    return jerry_throw_sz (JERRY_ERROR_SYNTAX, jerry_string_sz ("Snapshot file not found"));
   }
 
   jerry_value_t result =
@@ -148,7 +148,7 @@ jerryx_source_exec_stdin (void)
     source_p = realloc (source_p, new_size);
     if (source_p == NULL)
     {
-      return jerry_throw_sz (JERRY_ERROR_COMMON, "Out of memory.");
+      return jerry_throw_sz (JERRY_ERROR_COMMON, jerry_string_sz ("Out of memory."));
     }
 
     memcpy (source_p + source_size, line_p, line_size);
@@ -159,7 +159,7 @@ jerryx_source_exec_stdin (void)
   if (!jerry_validate_string (source_p, source_size, JERRY_ENCODING_UTF8))
   {
     free (source_p);
-    return jerry_throw_sz (JERRY_ERROR_SYNTAX, "Input is not a valid UTF-8 encoded string.");
+    return jerry_throw_sz (JERRY_ERROR_SYNTAX, jerry_string_sz ("Input is not a valid UTF-8 encoded string."));
   }
 
   jerry_value_t result = jerry_parse (source_p, source_size, NULL);

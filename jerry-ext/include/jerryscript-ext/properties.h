@@ -16,7 +16,7 @@
 #ifndef JERRYX_PROPERTIES_H
 #define JERRYX_PROPERTIES_H
 
-#include "jerryscript-types.h"
+#include "jerryscript-core.h"
 
 JERRY_C_API_BEGIN
 
@@ -24,7 +24,7 @@ JERRY_C_API_BEGIN
  * Handler registration helper
  */
 
-bool jerryx_register_global (const char *name_p, jerry_external_handler_t handler_p);
+bool jerryx_register_global (jerry_value_t function_name_val, jerry_external_handler_t handler_p);
 
 /**
  * Struct used by the `jerryx_set_functions` method to
@@ -32,44 +32,44 @@ bool jerryx_register_global (const char *name_p, jerry_external_handler_t handle
  */
 typedef struct
 {
-  const char *name; /**< name of the property to add */
+  jerry_value_t name; /**< name of the property to add */
   jerry_value_t value; /**< value of the property */
 } jerryx_property_entry;
 
-#define JERRYX_PROPERTY_NUMBER(NAME, NUMBER) \
-  (jerryx_property_entry)                    \
-  {                                          \
-    NAME, jerry_number (NUMBER)              \
+#define JERRYX_PROPERTY_NUMBER(NAME, NUMBER)      \
+  (jerryx_property_entry)                         \
+  {                                               \
+    jerry_string_sz (NAME), jerry_number (NUMBER) \
   }
-#define JERRYX_PROPERTY_STRING(NAME, STR, SIZE)                                \
-  (jerryx_property_entry)                                                      \
-  {                                                                            \
-    NAME, jerry_string ((const jerry_char_t *) STR, SIZE, JERRY_ENCODING_UTF8) \
+#define JERRYX_PROPERTY_STRING(NAME, STR, SIZE)                                  \
+  (jerryx_property_entry)                                                        \
+  {                                                                              \
+    jerry_string_sz (NAME), jerry_string_utf8 ((const jerry_char_t *) STR, SIZE) \
   }
-#define JERRYX_PROPERTY_STRING_SZ(NAME, STR) \
-  (jerryx_property_entry)                    \
-  {                                          \
-    NAME, jerry_string_sz (STR)              \
+#define JERRYX_PROPERTY_STRING_SZ(NAME, STR)      \
+  (jerryx_property_entry)                         \
+  {                                               \
+    jerry_string_sz (NAME), jerry_string_sz (STR) \
   }
-#define JERRYX_PROPERTY_BOOLEAN(NAME, VALUE) \
-  (jerryx_property_entry)                    \
-  {                                          \
-    NAME, jerry_boolean (VALUE)              \
+#define JERRYX_PROPERTY_BOOLEAN(NAME, VALUE)      \
+  (jerryx_property_entry)                         \
+  {                                               \
+    jerry_string_sz (NAME), jerry_boolean (VALUE) \
   }
-#define JERRYX_PROPERTY_FUNCTION(NAME, FUNC) \
-  (jerryx_property_entry)                    \
-  {                                          \
-    NAME, jerry_function_external (FUNC)     \
+#define JERRYX_PROPERTY_FUNCTION(NAME, FUNC)               \
+  (jerryx_property_entry)                                  \
+  {                                                        \
+    jerry_string_sz (NAME), jerry_function_external (FUNC) \
   }
-#define JERRYX_PROPERTY_UNDEFINED(NAME) \
-  (jerryx_property_entry)               \
-  {                                     \
-    NAME, jerry_undefined ()            \
+#define JERRYX_PROPERTY_UNDEFINED(NAME)        \
+  (jerryx_property_entry)                      \
+  {                                            \
+    jerry_string_sz (NAME), jerry_undefined () \
   }
-#define JERRYX_PROPERTY_LIST_END() \
-  (jerryx_property_entry)          \
-  {                                \
-    NULL, 0                        \
+#define JERRYX_PROPERTY_LIST_END()         \
+  (jerryx_property_entry)                  \
+  {                                        \
+    jerry_undefined (), jerry_undefined () \
   }
 
 /**

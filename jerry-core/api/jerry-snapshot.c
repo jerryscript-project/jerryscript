@@ -1502,11 +1502,13 @@ jerry_append_number_to_buffer (uint8_t *buffer_p, /**< buffer */
                                uint8_t *buffer_end_p, /**< the end of the buffer */
                                lit_utf8_size_t number) /**< number */
 {
-  lit_utf8_byte_t uint32_to_str_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
+  lit_utf8_byte_t uint32_to_str_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED];
   lit_utf8_size_t utf8_str_size =
-    ecma_uint32_to_utf8_string (number, uint32_to_str_buffer, ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
+    ecma_uint32_to_utf8_string (number,
+                                uint32_to_str_buffer,
+                                ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED);
 
-  JERRY_ASSERT (utf8_str_size <= ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
+  JERRY_ASSERT (utf8_str_size < ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED);
 
   return jerry_append_chars_to_buffer (buffer_p,
                                        buffer_end_p,

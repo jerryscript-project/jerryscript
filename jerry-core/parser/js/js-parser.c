@@ -2418,12 +2418,12 @@ parser_parse_source (void *source_p, /**< source code */
 
   if (context.global_status_flags & ECMA_PARSE_INTERNAL_FREE_SOURCE)
   {
-    jmem_heap_free_block ((void *) context.source.ptr, context.source.size);
+    jmem_heap_free_block ((void *) context.source.ptr, context.source.size + 1);
   }
 
   if (context.global_status_flags & ECMA_PARSE_INTERNAL_FREE_ARG_LIST)
   {
-    jmem_heap_free_block ((void *) context.arguments.ptr, context.arguments.size);
+    jmem_heap_free_block ((void *) context.arguments.ptr, context.arguments.size + 1);
   }
 
   if (compiled_code_p != NULL)

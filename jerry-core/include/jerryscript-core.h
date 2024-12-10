@@ -450,7 +450,7 @@ void *jerry_string_user_ptr (const jerry_value_t value, bool *is_external);
  * @defgroup jerry-api-string-op Operations
  * @{
  */
-jerry_size_t jerry_string_substr (const jerry_value_t value, jerry_length_t start, jerry_length_t end);
+jerry_value_t jerry_string_substr (const jerry_value_t value, jerry_length_t start, jerry_length_t end);
 jerry_size_t jerry_string_to_buffer (const jerry_value_t value,
                                      jerry_encoding_t encoding,
                                      jerry_char_t *buffer_p,

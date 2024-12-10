@@ -159,6 +159,22 @@ main (void)
     jerry_value_free (test_str);
   }
 
+  /* Test jerry_string_substr */
+  {
+    jerry_value_t test_str = jerry_string_sz ("Hello World!");
+    jerry_value_t expected_str = jerry_string_sz ("Hello");
+
+    // Read the string into a byte buffer.
+    jerry_value_t sub_str = jerry_string_substr (test_str, 0, 5);
+
+    TEST_ASSERT (!strict_equals (sub_str, test_str));
+    TEST_ASSERT (strict_equals (sub_str, expected_str));
+
+    jerry_value_free (sub_str);
+    jerry_value_free (expected_str);
+    jerry_value_free (test_str);
+  }
+
   jerry_cleanup ();
 
   return 0;

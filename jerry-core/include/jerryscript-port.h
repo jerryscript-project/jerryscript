@@ -38,6 +38,15 @@ JERRY_C_API_BEGIN
  */
 
 /**
+ * The path style of the OS
+ */
+typedef enum
+{
+  JERRY_STYLE_WINDOWS,
+  JERRY_STYLE_UNIX,
+} jerry_path_style_t;
+
+/**
  * Error codes that can be passed by the engine when calling jerry_port_fatal
  */
 typedef enum
@@ -197,46 +206,29 @@ void jerry_port_line_free (jerry_char_t *buffer_p);
  */
 
 /**
- * Canonicalize a file path.
+ * Get the path style of the current OS
  *
- * If possible, the implementation should resolve symbolic links and other directory references found in the input path,
- * and create a fully canonicalized file path as the result.
- *
- * The function may return with NULL in case an error is encountered, in which case the calling operation will not
- * proceed.
- *
- * The implementation should allocate storage for the result path as necessary. Non-NULL return values will be passed
- * to `jerry_port_path_free` when the result is no longer needed by the caller, which can be used to finalize
- * dynamically allocated buffers.
- *
- * NOTE: The implementation must not return directly with the input, as the input buffer is released after the call.
- *
- * @param path_p: zero-terminated string containing the input path
- * @param path_size: size of the input path string in bytes, excluding terminating zero
- *
- * @return buffer with the normalized path if the operation is successful,
- *         NULL otherwise
+ * @return path style
  */
-jerry_char_t *jerry_port_path_normalize (const jerry_char_t *path_p, jerry_size_t path_size);
+jerry_path_style_t jerry_port_path_style (void);
 
 /**
- * Free a path buffer returned by jerry_port_path_normalize.
+ * Get the cwd, the output string will be zero-terminated
  *
- * @param path_p: the path buffer to free
+ * @param buffer_p: the buffer to storage the cwd
+ * @param buffer_size: the `buffer_p` buffer size, including '\0` terminator
+ *
+ * @note
+ * - cwd: current working directory
+ *
+ * @return The length of cwd, excluding '\0' terminator
+ *         - When buffer_p is `NULL` and get cwd succeed return length of cwd
+ *         - When buffer_p is `NULL` and get cwd failed return 0
+ *         - When buffer_p is not `NULL` and the `buffer_size - 1` just equal to
+ *           length of cwd; and get cwd succeed return `buffer_size - 1`.
+ *         - Otherwise means get cwd failed and return 0
  */
-void jerry_port_path_free (jerry_char_t *path_p);
-
-/**
- * Get the offset of the basename component in the input path.
- *
- * The implementation should return the offset of the first character after the last path separator found in the path.
- * This is used by the caller to split the path into a directory name and a file name.
- *
- * @param path_p: input zero-terminated path string
- *
- * @return offset of the basename component in the input path
- */
-jerry_size_t jerry_port_path_base (const jerry_char_t *path_p);
+jerry_size_t jerry_port_get_cwd (jerry_char_t *buffer_p, jerry_size_t buffer_size);
 
 /**
  * Open a source file and read its contents into a buffer.

@@ -1380,6 +1380,12 @@ typedef float ecma_number_t;
 #define ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32 10
 
 /**
+ * Maximum number of characters in string representation of ecma-uint32 plus one.
+ * That is the '\0' terminator
+ */
+#define ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED (ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32 + 1)
+
+/**
  * String is not a valid array index.
  */
 #define ECMA_STRING_NOT_ARRAY_INDEX UINT32_MAX

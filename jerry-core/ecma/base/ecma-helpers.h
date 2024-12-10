@@ -113,7 +113,7 @@ typedef enum
                                    utf8_str) /**< [out] lit_utf8_string_t to get */                    \
   lit_utf8_string_t utf8_str;                                                                          \
   uint8_t utf8_str##_flags = ECMA_STRING_FLAG_EMPTY;                                                   \
-  lit_utf8_byte_t utf8_str##_uint32_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];                      \
+  lit_utf8_byte_t utf8_str##_uint32_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED]; \
   (void) ecma_string_get_chars (ecma_str_ptr, &utf8_str, utf8_str##_uint32_buffer, &utf8_str##_flags); \
   JERRY_ASSERT (!(utf8_str##_flags & ECMA_STRING_FLAG_MUST_BE_FREED));
 
@@ -125,13 +125,13 @@ typedef enum
  * The string length name is `utf8_str##_length`
  *
  */
-#define ECMA_STRING_TO_UTF8_STRING_AND_LENGTH(ecma_str_ptr, /**< ecma string pointer */           \
-                                              utf8_str) /**< [out] lit_utf8_string_t to get */    \
-  lit_utf8_string_t utf8_str;                                                                     \
-  uint8_t utf8_str##_flags = ECMA_STRING_FLAG_IS_ASCII;                                           \
-  lit_utf8_byte_t utf8_str##_uint32_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];                 \
-  lit_utf8_size_t utf8_str##_length =                                                             \
-    ecma_string_get_chars (ecma_str_ptr, &utf8_str, utf8_str##_uint32_buffer, &utf8_str##_flags); \
+#define ECMA_STRING_TO_UTF8_STRING_AND_LENGTH(ecma_str_ptr, /**< ecma string pointer */                \
+                                              utf8_str) /**< [out] lit_utf8_string_t to get */         \
+  lit_utf8_string_t utf8_str;                                                                          \
+  uint8_t utf8_str##_flags = ECMA_STRING_FLAG_IS_ASCII;                                                \
+  lit_utf8_byte_t utf8_str##_uint32_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED]; \
+  lit_utf8_size_t utf8_str##_length =                                                                  \
+    ecma_string_get_chars (ecma_str_ptr, &utf8_str, utf8_str##_uint32_buffer, &utf8_str##_flags);      \
   JERRY_ASSERT (!(utf8_str##_flags & ECMA_STRING_FLAG_MUST_BE_FREED));
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
@@ -518,6 +518,7 @@ ecma_number_t ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p,
                                                    lit_utf8_size_t str_size,
                                                    uint32_t radix,
                                                    uint32_t option);
+lit_utf8_size_t ecma_string_get_uint32_size (const uint32_t uint32_number);
 lit_utf8_size_t ecma_uint32_to_utf8_string (uint32_t value, lit_utf8_byte_t *out_buffer_p, lit_utf8_size_t buffer_size);
 uint32_t ecma_number_to_uint32 (ecma_number_t num);
 int32_t ecma_number_to_int32 (ecma_number_t num);

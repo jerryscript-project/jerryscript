@@ -29,23 +29,20 @@ jerry_port_fatal (jerry_fatal_code_t code)
   exit ((int) code);
 } /* jerry_port_fatal */
 
-/**
- * Provide log message implementation for the engine.
- */
 void
-jerry_port_log (const char *message_p) /**< message */
+jerry_port_log_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  while (*message_p != '\0')
+  for (jerry_size_t i = 0; i < buffer_size; ++i)
   {
-    if (*message_p == '\n')
+    if (buffer_p[i] == '\n')
     {
       /* add CR for proper display in serial monitors */
       fputc ('\r', stderr);
     }
 
-    fputc (*message_p++, stderr);
+    fputc (buffer_p[i], stderr);
   }
-} /* jerry_port_log */
+} /* jerry_port_log_buffer */
 
 /**
  * Dummy function to get the time zone adjustment.

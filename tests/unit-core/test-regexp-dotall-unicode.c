@@ -24,10 +24,10 @@ main (void)
   jerry_init (JERRY_INIT_EMPTY);
 
   jerry_value_t undefined_this_arg = jerry_undefined ();
-  char pattern2[] = "\\u{61}.\\u{62}";
+#define pattern2 "\\u{61}.\\u{62}"
 
   uint16_t flags = JERRY_REGEXP_FLAG_DOTALL | JERRY_REGEXP_FLAG_UNICODE | JERRY_REGEXP_FLAG_STICKY;
-  jerry_value_t regex_obj = jerry_regexp_sz (pattern2, flags);
+  jerry_value_t regex_obj = jerry_regexp_sz (jerry_string_sz (pattern2), flags);
   TEST_ASSERT (jerry_value_is_object (regex_obj));
 
   const jerry_char_t func_src2[] = "return [regex.exec('a\\nb'), regex.dotAll, regex.sticky, regex.unicode ];";

@@ -30,14 +30,11 @@
 
 static const char ESP_JS_TAG[] = "JS";
 
-/**
- * Provide log message implementation for the engine.
- */
 void
-jerry_port_log (const char *message_p) /**< message */
+jerry_port_log_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  ESP_LOGI (ESP_JS_TAG, "%s", message_p);
-} /* jerry_port_log */
+  ESP_LOGI (ESP_JS_TAG, "%s", buffer_p);
+} /* jerry_port_log_buffer */
 
 /**
  * Implementation of jerry_port_fatal.

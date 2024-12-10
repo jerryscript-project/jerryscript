@@ -140,7 +140,7 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
                             size_t snapshot_buffer_size, /**< snapshot buffer size */
                             snapshot_globals_t *globals_p) /**< snapshot globals */
 {
-  const char *error_buffer_too_small_p = "Snapshot buffer too small";
+#define error_buffer_too_small_p "Snapshot buffer too small"
 
   if (!ecma_is_value_empty (globals_p->snapshot_error))
   {
@@ -180,7 +180,7 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
     /* Regular expression. */
     if (globals_p->snapshot_buffer_write_offset + sizeof (ecma_compiled_code_t) > snapshot_buffer_size)
     {
-      globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, error_buffer_too_small_p);
+      globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, jerry_string_sz (error_buffer_too_small_p));
       return 0;
     }
 
@@ -201,7 +201,7 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
                                              buffer_p,
                                              buffer_size))
     {
-      globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, error_buffer_too_small_p);
+      globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, jerry_string_sz (error_buffer_too_small_p));
       /* cannot return inside ECMA_FINALIZE_UTF8_STRING */
     }
 
@@ -235,7 +235,7 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
                                            compiled_code_p,
                                            ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
-    globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, error_buffer_too_small_p);
+    globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, jerry_string_sz (error_buffer_too_small_p));
     return 0;
   }
 

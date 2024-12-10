@@ -193,7 +193,7 @@ jerryx_handler_source_received (const jerry_char_t *source_name_p, /**< resource
 
   jerry_parse_options_t parse_options;
   parse_options.options = JERRY_PARSE_HAS_SOURCE_NAME;
-  parse_options.source_name = jerry_string (source_name_p, (jerry_size_t) source_name_size, JERRY_ENCODING_UTF8);
+  parse_options.source_name = jerry_string_utf8 (source_name_p, (jerry_size_t) source_name_size);
 
   jerry_value_t ret_val = jerry_parse (source_p, source_size, &parse_options);
 

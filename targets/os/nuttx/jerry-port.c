@@ -19,14 +19,12 @@
 
 #include "jerryscript-port.h"
 
-/**
- * Default implementation of jerry_port_log. Prints log messages to stderr.
- */
 void
-jerry_port_log (const char *message_p) /**< message */
+jerry_port_log_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  (void) message_p;
-} /* jerry_port_log */
+  JERRY_UNUSED (buffer_p);
+  JERRY_UNUSED (buffer_size);
+} /* jerry_port_log_buffer */
 
 /**
  * Read a line from standard input as a zero-terminated string.

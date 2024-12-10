@@ -24,11 +24,10 @@
  *         false - otherwise.
  */
 bool
-jerryx_register_global (const char *name_p, /**< name of the function */
+jerryx_register_global (jerry_value_t function_name_val, /**< name of the function that will be free/take */
                         jerry_external_handler_t handler_p) /**< function callback */
 {
   jerry_value_t global_obj_val = jerry_current_realm ();
-  jerry_value_t function_name_val = jerry_string_sz (name_p);
   jerry_value_t function_val = jerry_function_external (handler_p);
 
   jerry_value_t result_val = jerry_object_set (global_obj_val, function_name_val, function_val);
@@ -70,14 +69,11 @@ jerryx_set_properties (const jerry_value_t target_object, /**< target object */
     return JERRYX_SET_PROPERTIES_RESULT (jerry_undefined (), 0);
   }
 
-  for (; (entries[idx].name != NULL); idx++)
+  for (; !jerry_value_is_undefined (entries[idx].name); idx++)
   {
     const jerryx_property_entry *entry = &entries[idx];
 
-    jerry_value_t prop_name = jerry_string_sz (entry->name);
-    jerry_value_t result = jerry_object_set (target_object, prop_name, entry->value);
-
-    jerry_value_free (prop_name);
+    jerry_value_t result = jerry_object_set (target_object, entry->name, entry->value);
 
     // By API definition:
     // The jerry_object_set returns TRUE if there is no problem
@@ -88,6 +84,7 @@ jerryx_set_properties (const jerry_value_t target_object, /**< target object */
       return JERRYX_SET_PROPERTIES_RESULT (result, idx);
     }
 
+    jerry_value_free (entry->name);
     jerry_value_free (entry->value);
     jerry_value_free (result);
   }
@@ -111,8 +108,9 @@ jerryx_release_property_entry (const jerryx_property_entry entries[], /**< list 
     return;
   }
 
-  for (uint32_t idx = register_result.registered; entries[idx].name != NULL; idx++)
+  for (uint32_t idx = register_result.registered; !jerry_value_is_undefined (entries[idx].name); idx++)
   {
+    jerry_value_free (entries[idx].name);
     jerry_value_free (entries[idx].value);
   }
 } /* jerryx_release_property_entry */

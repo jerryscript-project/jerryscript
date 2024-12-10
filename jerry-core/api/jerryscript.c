@@ -2350,6 +2350,19 @@ jerry_value_free (jerry_value_t value) /**< value */
 } /* jerry_value_free */
 
 /**
+ * Release ownership of the argument value list
+ */
+void
+jerry_value_list_free (const jerry_value_t *value_list, /**< value list */
+                       jerry_size_t value_list_count) /**< value list count */
+{
+  for (jerry_size_t i = 0; i < value_list_count; i += 1)
+  {
+    jerry_value_free (value_list[i]);
+  }
+} /* jerry_value_list_free */
+
+/**
  * Create an array object value
  *
  * Note:
@@ -2380,8 +2393,13 @@ jerry_boolean (bool value) /**< bool value from which a jerry_value_t will be cr
 } /* jerry_boolean */
 
 /**
- * Create an Error object with the provided string value as the error message.
- * If the message value is not a string, the created error will not have a message property.
+ * Create an Error object with the provided `message` string value as the error `message` property.
+ * If the `message` value is not a string, the created error will not have a `message` property.
+ *
+ * @note
+ * - Important! The `error_type` argument *must not be* `JERRY_ERROR_NONE`.
+ *   Creating an Error object with no error type is not valid.
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
  *
  * @return Error object
  */
@@ -2391,44 +2409,37 @@ jerry_error (jerry_error_t error_type, /**< type of error */
 {
   jerry_assert_api_enabled ();
 
-  ecma_string_t *message_p = NULL;
-  if (ecma_is_value_string (message))
-  {
-    message_p = ecma_get_string_from_value (message);
-  }
-
-  ecma_object_t *error_object_p = ecma_new_standard_error ((jerry_error_t) error_type, message_p);
-
-  return ecma_make_object_value (error_object_p);
+  return ecma_error_value (error_type, message);
 } /* jerry_error */
 
 /**
- * Create an Error object with a zero-terminated string as a message. If the message string is NULL, the created error
- * will not have a message property.
+ * Create an Error object with the provided `message_sz` string value as the error `message` property.
+ * If the `message_sz` value is not a string, the created error will not have a `message` property.
+ *
+ * @note
+ * - Important! The `error_type` argument *must not be* `JERRY_ERROR_NONE`.
+ *   Creating an Error object with no error type is not valid.
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
+ * - The `message_sz` value will be freed in this function.
  *
  * @return Error object
  */
 jerry_value_t
 jerry_error_sz (jerry_error_t error_type, /**< type of error */
-                const char *message_p) /**< value of 'message' property
-                                        *   of constructed error object */
+                const jerry_value_t message_sz) /**< message of the error that will be free/take */
 {
-  jerry_value_t message = ECMA_VALUE_UNDEFINED;
+  jerry_assert_api_enabled ();
 
-  if (message_p != NULL)
-  {
-    message = jerry_string_sz (message_p);
-  }
-
-  ecma_value_t error = jerry_error (error_type, message);
-  ecma_free_value (message);
-
-  return error;
+  return ecma_error_value_sz (error_type, message_sz);
 } /* jerry_error_sz */
 
 /**
- * Create an exception by constructing an Error object with the specified type and the provided string value as the
- * error message.  If the message value is not a string, the created error will not have a message property.
+ * Create an exception by constructing an Error object with the specified type and the provided `message` string value
+ * as the error `message` property. If the `message` value is not a string, the created error will not have a `message`
+ * property.
+ *
+ * @note
+ * Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
  *
  * @return exception value
  */
@@ -2440,17 +2451,21 @@ jerry_throw (jerry_error_t error_type, /**< type of error */
 } /* jerry_throw */
 
 /**
- * Create an exception by constructing an Error object with the specified type and the provided zero-terminated ASCII
- * string as the error message.  If the message string is NULL, the created error will not have a message property.
+ * Create an exception by constructing an Error object with the specified type and the provided `message_sz` string
+ * value as the error `message` property. If the `message_sz` value is not a string, the created error will not have a
+ * `message` property.
+ *
+ * @note
+ * Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
+ * The `message_sz` will be freed in this function.
  *
  * @return exception value
  */
 jerry_value_t
 jerry_throw_sz (jerry_error_t error_type, /**< type of error */
-                const char *message_p) /**< value of 'message' property
-                                        *   of constructed error object */
+                const jerry_value_t message_sz) /**< message of the error that will be free/take */
 {
-  return jerry_throw_value (jerry_error_sz (error_type, message_p), true);
+  return jerry_throw_value (jerry_error_sz (error_type, message_sz), true);
 } /* jerry_throw_sz */
 
 /**
@@ -2657,23 +2672,56 @@ jerry_proxy_custom (const jerry_value_t target, /**< target argument */
 } /* jerry_proxy_custom */
 
 /**
- * Create string value from the input zero-terminated ASCII string.
+ * Create a string value from the input buffer using the CESU-8 encoding.
+ * The content of the buffer is assumed to be valid in the CESU-8 encoding,
+ * it's the callers responsibility to validate the input.
+ *
+ * See also: lit_is_valid_cesu8_string
+ *
+ * @note
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
  *
  * @return created string
  */
 jerry_value_t
-jerry_string_sz (const char *str_p) /**< pointer to string */
+jerry_string_cesu8 (const jerry_char_t *buffer_p, /**< pointer to buffer */
+                    jerry_size_t buffer_size) /**< buffer size */
 {
-  const jerry_char_t *data_p = (const jerry_char_t *) str_p;
-  return jerry_string (data_p, lit_zt_utf8_string_size (data_p), JERRY_ENCODING_CESU8);
-} /* jerry_string_sz */
+  jerry_assert_api_enabled ();
+  JERRY_ASSERT (lit_is_valid_cesu8_string (buffer_p, buffer_size));
+  return ecma_make_string_value (ecma_new_ecma_string_from_utf8 (buffer_p, buffer_size));
+} /* jerry_string_cesu8 */
+
+/**
+ * Create a string value from the input buffer using the UTF-8 encoding.
+ * The content of the buffer is assumed to be valid in the UTF-8 encoding,
+ * it's the callers responsibility to validate the input.
+ *
+ * See also: lit_is_valid_utf8_string
+ *
+ * @note
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
+ *
+ * @return created string
+ */
+jerry_value_t
+jerry_string_utf8 (const jerry_char_t *buffer_p, /**< pointer to buffer */
+                   jerry_size_t buffer_size) /**< buffer size */
+{
+  jerry_assert_api_enabled ();
+  JERRY_ASSERT (lit_is_valid_utf8_string (buffer_p, buffer_size, true));
+  return ecma_make_string_value (ecma_new_ecma_string_from_utf8_converted_to_cesu8 (buffer_p, buffer_size));
+} /* jerry_string_utf8 */
 
 /**
  * Create a string value from the input buffer using the specified encoding.
  * The content of the buffer is assumed to be valid in the specified encoding, it's the callers responsibility to
  * validate the input.
  *
- * See also: jerry_validate_string
+ * See also: jerry_string_cesu8 jerry_string_utf8
+ *
+ * @note
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
  *
  * @return created string
  */
@@ -2682,50 +2730,33 @@ jerry_string (const jerry_char_t *buffer_p, /**< pointer to buffer */
               jerry_size_t buffer_size, /**< buffer size */
               jerry_encoding_t encoding) /**< buffer encoding */
 {
-  jerry_assert_api_enabled ();
-  ecma_string_t *ecma_str_p = NULL;
-  JERRY_ASSERT (jerry_validate_string (buffer_p, buffer_size, encoding));
-
   switch (encoding)
   {
     case JERRY_ENCODING_CESU8:
     {
-      ecma_str_p = ecma_new_ecma_string_from_utf8 (buffer_p, buffer_size);
-      break;
+      return jerry_string_cesu8 (buffer_p, buffer_size);
     }
     case JERRY_ENCODING_UTF8:
     {
-      ecma_str_p = ecma_new_ecma_string_from_utf8_converted_to_cesu8 (buffer_p, buffer_size);
-      break;
+      return jerry_string_utf8 (buffer_p, buffer_size);
     }
     default:
     {
+      jerry_assert_api_enabled ();
       return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_INVALID_ENCODING));
     }
   }
-
-  return ecma_make_string_value (ecma_str_p);
 } /* jerry_string */
-
-/**
- * Create external string from input zero-terminated ASCII string.
- *
- * @return created external string
- */
-jerry_value_t
-jerry_string_external_sz (const char *str_p, /**< pointer to string */
-                          void *user_p) /**< user pointer passed to the callback when the string is freed */
-{
-  const jerry_char_t *data_p = (const jerry_char_t *) str_p;
-  return jerry_string_external (data_p, lit_zt_utf8_string_size (data_p), user_p);
-} /* jerry_string_external_sz */
 
 /**
  * Create external string from a valid CESU-8 encoded string.
  * The content of the buffer is assumed be encoded correctly, it's the callers responsibility to
  * validate the input.
  *
- * See also: jerry_validate_string
+ * See also: lit_is_valid_cesu8_string
+ *
+ * @note
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
  *
  * @return created external string
  */
@@ -2736,7 +2767,7 @@ jerry_string_external (const jerry_char_t *buffer_p, /**< pointer to string */
 {
   jerry_assert_api_enabled ();
 
-  JERRY_ASSERT (jerry_validate_string (buffer_p, buffer_size, JERRY_ENCODING_CESU8));
+  JERRY_ASSERT (lit_is_valid_cesu8_string (buffer_p, buffer_size));
   ecma_string_t *ecma_str_p = ecma_new_ecma_external_string_from_cesu8 (buffer_p, buffer_size, user_p);
   return ecma_make_string_value (ecma_str_p);
 } /* jerry_string_external_sz_sz */
@@ -2790,18 +2821,20 @@ jerry_bigint (const uint64_t *digits_p, /**< BigInt digits (lowest digit first) 
 /**
  * Creates a RegExp object with the given ASCII pattern and flags.
  *
+ * Note:
+ *      `pattern_sz` will be freed in this function
+ *
  * @return value of the constructed RegExp object.
  */
 jerry_value_t
-jerry_regexp_sz (const char *pattern_p, /**< RegExp pattern as zero-terminated ASCII string */
+jerry_regexp_sz (const jerry_value_t pattern_sz, /**< RegExp pattern string that will be free/take */
                  uint16_t flags) /**< RegExp flags */
 {
   jerry_assert_api_enabled ();
 
-  jerry_value_t pattern = jerry_string_sz (pattern_p);
-  jerry_value_t result = jerry_regexp (pattern, flags);
+  jerry_value_t result = jerry_regexp (pattern_sz, flags);
 
-  jerry_value_free (pattern);
+  jerry_value_free (pattern_sz);
   return jerry_return (result);
 } /* jerry_regexp_sz */
 
@@ -3135,18 +3168,20 @@ jerry_object_has (const jerry_value_t object, /**< object value */
 /**
  * Checks whether the object or it's prototype objects have the given property.
  *
+ * Note:
+ *      `key_sz` will be freed in this function
+ *
  * @return raised error - if the operation fail
  *         true/false API value  - depend on whether the property exists
  */
 jerry_value_t
 jerry_object_has_sz (const jerry_value_t object, /**< object value */
-                     const char *key_p) /**< property key */
+                     const jerry_value_t key_sz) /**< property key that will be free/take */
 {
   jerry_assert_api_enabled ();
 
-  jerry_value_t key_str = jerry_string_sz (key_p);
-  jerry_value_t result = jerry_object_has (object, key_str);
-  ecma_free_value (key_str);
+  jerry_value_t result = jerry_object_has (object, key_sz);
+  ecma_free_value (key_sz);
 
   return result;
 } /* jerry_object_has */
@@ -3236,18 +3271,20 @@ jerry_object_delete (jerry_value_t object, /**< object value */
 /**
  * Delete a property from an object.
  *
+ * Note:
+ *      `key_sz` will be freed in this function
+ *
  * @return boolean value - wether the property was deleted successfully
  *         exception - otherwise
  */
 jerry_value_t
 jerry_object_delete_sz (jerry_value_t object, /**< object value */
-                        const char *key_p) /**< property key */
+                        const jerry_value_t key_sz) /**< property name that will be free/take*/
 {
   jerry_assert_api_enabled ();
 
-  jerry_value_t key_str = jerry_string_sz (key_p);
-  jerry_value_t result = jerry_object_delete (object, key_str);
-  ecma_free_value (key_str);
+  jerry_value_t result = jerry_object_delete (object, key_sz);
+  ecma_free_value (key_sz);
 
   return result;
 } /* jerry_object_delete */
@@ -3351,6 +3388,7 @@ jerry_object_get (const jerry_value_t object, /**< object value */
  * Get value of a property to the specified object with the given name.
  *
  * Note:
+ *      `key_sz` will be freed in this function
  *      returned value must be freed with jerry_value_free, when it is no longer needed.
  *
  * @return value of the property - if success
@@ -3358,13 +3396,12 @@ jerry_object_get (const jerry_value_t object, /**< object value */
  */
 jerry_value_t
 jerry_object_get_sz (const jerry_value_t object, /**< object value */
-                     const char *key_p) /**< property key */
+                     const jerry_value_t key_sz) /**< property key that will be free/take */
 {
   jerry_assert_api_enabled ();
 
-  jerry_value_t key_str = jerry_string_sz (key_p);
-  jerry_value_t result = jerry_object_get (object, key_str);
-  ecma_free_value (key_str);
+  jerry_value_t result = jerry_object_get (object, key_sz);
+  ecma_free_value (key_sz);
 
   return result;
 } /* jerry_object_get */
@@ -3529,6 +3566,7 @@ jerry_object_set (jerry_value_t object, /**< object value */
  * Set a property to the specified object with the given name.
  *
  * Note:
+ *      `key_sz` will be freed in this function
  *      returned value must be freed with jerry_value_free, when it is no longer needed.
  *
  * @return true value - if the operation was successful
@@ -3536,14 +3574,13 @@ jerry_object_set (jerry_value_t object, /**< object value */
  */
 jerry_value_t
 jerry_object_set_sz (jerry_value_t object, /**< object value */
-                     const char *key_p, /**< property key */
+                     const jerry_value_t key_sz, /**< property key that will be free/take */
                      const jerry_value_t value) /**< value to set */
 {
   jerry_assert_api_enabled ();
 
-  jerry_value_t key_str = jerry_string_sz (key_p);
-  jerry_value_t result = jerry_object_set (object, key_str, value);
-  ecma_free_value (key_str);
+  jerry_value_t result = jerry_object_set (object, key_sz, value);
+  ecma_free_value (key_sz);
 
   return result;
 } /* jerry_object_set */
@@ -5082,49 +5119,33 @@ jerry_log_set_level (jerry_log_level_t level)
  * Log a zero-terminated string message.
  *
  * @param str_p: message
+ * @param str_size: size of message
  */
 static void
-jerry_log_string (const char *str_p)
+jerry_log_string (const jerry_char_t *str_p, jerry_size_t str_size)
 {
-  jerry_port_log (str_p);
+  jerry_port_log_buffer (str_p, str_size);
 
 #if JERRY_DEBUGGER
   if (jerry_debugger_is_connected ())
   {
-    jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
-                                JERRY_DEBUGGER_OUTPUT_LOG,
-                                (const uint8_t *) str_p,
-                                strlen (str_p));
+    jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT, JERRY_DEBUGGER_OUTPUT_LOG, str_p, str_size);
   }
 #endif /* JERRY_DEBUGGER */
 } /* jerry_log_string */
 
 /**
- * Log a fixed-size string message.
+ * Log a zero-terminated number string message.
  *
- * @param str_p: message
- * @param size: size
- * @param buffer_p: buffer to use
+ * @param cursor_p: the number string cursor
+ * @param buffer_p: buffer used to construct the number string
  */
 static void
-jerry_log_string_fixed (const char *str_p, size_t size, char *buffer_p)
+jerry_log_cursor (const jerry_char_t *cursor_p, jerry_char_t *buffer_p)
 {
-  const size_t batch_size = JERRY_LOG_BUFFER_SIZE - 1;
-
-  while (size > batch_size)
-  {
-    memcpy (buffer_p, str_p, batch_size);
-    buffer_p[batch_size] = '\0';
-    jerry_log_string (buffer_p);
-
-    str_p += batch_size;
-    size -= batch_size;
-  }
-
-  memcpy (buffer_p, str_p, size);
-  buffer_p[size] = '\0';
-  jerry_log_string (buffer_p);
-} /* jerry_log_string_fixed */
+  jerry_char_t *tail_p = buffer_p + JERRY_LOG_BUFFER_SIZE - 1;
+  jerry_log_string (cursor_p, (jerry_size_t) (tail_p - cursor_p));
+} /* jerry_log_cursor */
 
 /**
  * Format an unsigned number.
@@ -5137,11 +5158,13 @@ jerry_log_string_fixed (const char *str_p, size_t size, char *buffer_p)
  *
  * @return formatted number as string
  */
-static char *
-jerry_format_unsigned (unsigned int num, uint8_t width, char padding, uint8_t radix, char *buffer_p)
+static jerry_char_t *
+jerry_format_unsigned (unsigned int num, uint8_t width, jerry_char_t padding, uint8_t radix, jerry_char_t *buffer_p)
 {
-  static const char digits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-  char *cursor_p = buffer_p + JERRY_LOG_BUFFER_SIZE;
+  static const jerry_char_t digits[] = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+  };
+  jerry_char_t *cursor_p = buffer_p + JERRY_LOG_BUFFER_SIZE;
   *(--cursor_p) = '\0';
   uint8_t count = 0;
 
@@ -5171,8 +5194,8 @@ jerry_format_unsigned (unsigned int num, uint8_t width, char padding, uint8_t ra
  *
  * @return formatted number as string
  */
-static char *
-jerry_format_int (int num, uint8_t width, char padding, char *buffer_p)
+static jerry_char_t *
+jerry_format_int (int num, uint8_t width, jerry_char_t padding, jerry_char_t *buffer_p)
 {
   if (num >= 0)
   {
@@ -5183,15 +5206,15 @@ jerry_format_int (int num, uint8_t width, char padding, char *buffer_p)
 
   if (padding == '0' && width > 0)
   {
-    char *cursor_p = jerry_format_unsigned ((unsigned) num, --width, padding, 10, buffer_p);
+    jerry_char_t *cursor_p = jerry_format_unsigned ((unsigned) num, --width, padding, 10, buffer_p);
     *(--cursor_p) = '-';
     return cursor_p;
   }
 
-  char *cursor_p = jerry_format_unsigned ((unsigned) num, 0, ' ', 10, buffer_p);
+  jerry_char_t *cursor_p = jerry_format_unsigned ((unsigned) num, 0, ' ', 10, buffer_p);
   *(--cursor_p) = '-';
 
-  char *indent_p = buffer_p + JERRY_LOG_BUFFER_SIZE - width - 1;
+  jerry_char_t *indent_p = buffer_p + JERRY_LOG_BUFFER_SIZE - width - 1;
 
   while (cursor_p > indent_p)
   {
@@ -5225,9 +5248,9 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
   }
 
   va_list vl;
-  char buffer_p[JERRY_LOG_BUFFER_SIZE];
-  uint32_t buffer_index = 0;
-  const char *cursor_p = format_p;
+  jerry_char_t buffer_p[JERRY_LOG_BUFFER_SIZE];
+  jerry_size_t buffer_index = 0;
+  const jerry_char_t *cursor_p = (const jerry_char_t *) format_p;
   va_start (vl, format_p);
 
   while (*cursor_p != '\0')
@@ -5235,7 +5258,7 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
     if (*cursor_p == '%' || buffer_index > JERRY_LOG_BUFFER_SIZE - 2)
     {
       buffer_p[buffer_index] = '\0';
-      jerry_log_string (buffer_p);
+      jerry_log_string (buffer_p, buffer_index);
       buffer_index = 0;
     }
 
@@ -5247,8 +5270,8 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
 
     ++cursor_p;
     uint8_t width = 0;
-    size_t precision = 0;
-    char padding = ' ';
+    jerry_size_t precision = 0;
+    jerry_char_t padding = ' ';
 
     if (*cursor_p == '0')
     {
@@ -5268,7 +5291,7 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
     }
     else if (*cursor_p == '.' && *(cursor_p + 1) == '*')
     {
-      precision = (size_t) va_arg (vl, int);
+      precision = (jerry_size_t) va_arg (vl, int);
       cursor_p += 2;
     }
 
@@ -5283,36 +5306,59 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
     {
       case 's':
       {
-        char *str_p = va_arg (vl, char *);
+        jerry_char_t *str_p = va_arg (vl, jerry_char_t *);
 
         if (precision == 0)
         {
-          jerry_log_string (str_p);
+          jerry_log_string (str_p, (jerry_size_t) strlen ((const char *) str_p));
           break;
         }
 
-        jerry_log_string_fixed (str_p, precision, buffer_p);
+        jerry_log_string (str_p, precision);
+        break;
+      }
+      case 'S':
+      {
+        jerry_value_t str = va_arg (vl, jerry_value_t);
+        ecma_string_t *string2_p = ecma_op_to_string (str);
+        lit_utf8_size_t cesu8_string2_size;
+        lit_utf8_size_t cesu8_string2_length;
+        lit_utf8_byte_t uint32_to_string_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
+        uint8_t flags = ECMA_STRING_FLAG_EMPTY;
+
+        const lit_utf8_byte_t *cesu8_string2_p = ecma_string_get_chars (string2_p,
+                                                                        &cesu8_string2_size,
+                                                                        &cesu8_string2_length,
+                                                                        uint32_to_string_buffer,
+                                                                        &flags);
+        jerry_log_string (cesu8_string2_p, cesu8_string2_size);
+        if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
+        {
+          jmem_heap_free_block ((void *) cesu8_string2_p, cesu8_string2_size);
+        }
+
+        ecma_deref_ecma_string (string2_p);
         break;
       }
       case 'c':
       {
         /* Arguments of types narrower than int are promoted to int for variadic functions */
-        buffer_p[buffer_index++] = (char) va_arg (vl, int);
+        buffer_p[buffer_index++] = (jerry_char_t) va_arg (vl, int);
         break;
       }
       case 'd':
       {
-        jerry_log_string (jerry_format_int (va_arg (vl, int), width, padding, buffer_p));
+        jerry_log_cursor (jerry_format_int (va_arg (vl, int), width, padding, buffer_p), buffer_p);
         break;
       }
       case 'u':
       {
-        jerry_log_string (jerry_format_unsigned (va_arg (vl, unsigned int), width, padding, 10, buffer_p));
+        jerry_log_cursor (jerry_format_unsigned (va_arg (vl, unsigned int), width, padding, 10, buffer_p), buffer_p);
         break;
       }
       case 'x':
       {
-        jerry_log_string (jerry_format_unsigned (va_arg (vl, unsigned int), width, padding, 16, buffer_p));
+        jerry_log_cursor (jerry_format_unsigned (va_arg (vl, unsigned int), width, padding, 16, buffer_p), buffer_p);
         break;
       }
       default:
@@ -5326,7 +5372,7 @@ jerry_log (jerry_log_level_t level, const char *format_p, ...)
   if (buffer_index > 0)
   {
     buffer_p[buffer_index] = '\0';
-    jerry_log_string (buffer_p);
+    jerry_log_string (buffer_p, buffer_index);
   }
 
   va_end (vl);

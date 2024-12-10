@@ -25,7 +25,7 @@
 #ifndef S_ISDIR
 #define S_ISDIR(mode) (((mode) &S_IFMT) == S_IFDIR)
 #endif /* !defined(S_ISDIR) */
-#endif /* __GLIBC__ */
+#endif /* defined(__GLIBC__) || defined(_WIN32) */
 
 /**
  * Determines the size of the given file.
@@ -59,7 +59,7 @@ jerry_port_source_read (const char *file_name_p, /**< file name */
   {
     return NULL;
   }
-#endif /* __GLIBC__ */
+#endif /* defined(__GLIBC__) || defined(_WIN32) */
 
   FILE *file_p = fopen (file_name_p, "rb");
 
@@ -101,6 +101,16 @@ jerry_port_source_free (uint8_t *buffer_p) /**< buffer to free */
   free (buffer_p);
 } /* jerry_port_source_free */
 
+#if !defined(_WIN32)
+
+jerry_path_style_t
+jerry_port_path_style (void)
+{
+  return JERRY_PATH_STYLE_POSIX;
+} /* jerry_port_path_style */
+
+#endif /* !defined(_WIN32) */
+
 /**
  * These functions provide generic implementation for paths and are only enabled when the compiler support weak symbols,
  * and we are not building for a platform that has platform specific versions.
@@ -108,55 +118,22 @@ jerry_port_source_free (uint8_t *buffer_p) /**< buffer to free */
 #if defined(JERRY_WEAK_SYMBOL_SUPPORT) && !(defined(__unix__) || defined(__APPLE__) || defined(_WIN32))
 
 /**
- * Normalize a file path.
- *
- * @return a newly allocated buffer with the normalized path if the operation is successful,
- *         NULL otherwise
- */
-jerry_char_t *JERRY_ATTR_WEAK
-jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
-                           jerry_size_t path_size) /**< size of the path */
-{
-  jerry_char_t *buffer_p = (jerry_char_t *) malloc (path_size + 1);
-
-  if (buffer_p == NULL)
-  {
-    return NULL;
-  }
-
-  /* Also copy terminating zero byte. */
-  memcpy (buffer_p, path_p, path_size + 1);
-
-  return buffer_p;
-} /* jerry_port_path_normalize */
-
-/**
- * Free a path buffer returned by jerry_port_path_normalize.
- *
- * @param path_p: the path to free
- */
-void JERRY_ATTR_WEAK
-jerry_port_path_free (jerry_char_t *path_p)
-{
-  free (path_p);
-} /* jerry_port_path_free */
-
-/**
- * Computes the end of the directory part of a path.
- *
- * @return end of the directory part of a path.
+ * Default to `/`
  */
 jerry_size_t JERRY_ATTR_WEAK
-jerry_port_path_base (const jerry_char_t *path_p) /**< path */
+jerry_port_get_cwd (jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  const jerry_char_t *basename_p = (jerry_char_t *) strrchr ((char *) path_p, '/') + 1;
-
-  if (basename_p == NULL)
+  if (buffer_p == NULL)
   {
-    return 0;
+    return 1;
   }
-
-  return (jerry_size_t) (basename_p - path_p);
-} /* jerry_port_get_directory_end */
+  if (buffer_size == 2)
+  {
+    buffer_p[0] = '/';
+    buffer_p[1] = '\0';
+    return 1;
+  }
+  return 0;
+} /* jerry_port_get_cwd */
 
 #endif /* defined(JERRY_WEAK_SYMBOL_SUPPORT) && !(defined(__unix__) || defined(__APPLE__) || defined(_WIN32)) */

@@ -124,8 +124,8 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
     ecma_create_object (prototype_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) error_object_p;
-  extended_object_p->u.cls.type = ECMA_OBJECT_CLASS_ERROR;
-  extended_object_p->u.cls.u1.error_type = (uint8_t) error_type;
+  extended_object_p->u.cls.head.type = ECMA_OBJECT_CLASS_ERROR;
+  extended_object_p->u.cls.error.type = (uint8_t) error_type;
 
   if (message_string_p != NULL)
   {
@@ -285,7 +285,7 @@ ecma_get_error_type (ecma_object_t *error_object_p) /**< possible error object *
     return JERRY_ERROR_NONE;
   }
 
-  return (jerry_error_t) ((ecma_extended_object_t *) error_object_p)->u.cls.u1.error_type;
+  return (jerry_error_t) ((ecma_extended_object_t *) error_object_p)->u.cls.error.type;
 } /* ecma_get_error_type */
 
 /**

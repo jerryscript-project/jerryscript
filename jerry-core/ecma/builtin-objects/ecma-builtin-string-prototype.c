@@ -136,9 +136,9 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      JERRY_ASSERT (ecma_is_value_string (ext_object_p->u.cls.u3.value));
+      JERRY_ASSERT (ecma_is_value_string (ecma_object_cls_general (ext_object_p)->value));
 
-      return ecma_copy_value (ext_object_p->u.cls.u3.value);
+      return ecma_copy_value (ecma_object_cls_general (ext_object_p)->value);
     }
   }
 

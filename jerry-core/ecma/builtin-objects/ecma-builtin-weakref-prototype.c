@@ -74,7 +74,7 @@ ecma_builtin_weakref_prototype_object_deref (ecma_value_t this_arg) /**< this ar
     return ecma_raise_type_error (ECMA_ERR_TARGET_IS_NOT_WEAKREF);
   }
 
-  return ecma_copy_value (this_ext_obj->u.cls.u3.target);
+  return ecma_copy_value (this_ext_obj->u.cls.weakref.target);
 } /* ecma_builtin_weakref_prototype_object_deref */
 
 /**

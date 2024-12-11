@@ -89,8 +89,8 @@ ecma_op_create_symbol_object (const ecma_value_t value) /**< symbol value */
     ecma_create_object (prototype_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_SYMBOL;
-  ext_object_p->u.cls.u3.value = ecma_copy_value (value);
+  ext_object_p->u.cls.head.type = ECMA_OBJECT_CLASS_SYMBOL;
+  ecma_object_cls_general (ext_object_p)->value = ecma_copy_value (value);
 
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_symbol_object */
@@ -163,7 +163,7 @@ ecma_symbol_this_value (ecma_value_t this_arg) /**< this argument value */
 
     if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_SYMBOL))
     {
-      return ((ecma_extended_object_t *) object_p)->u.cls.u3.value;
+      return ecma_object_cls_general ((ecma_extended_object_t *) object_p)->value;
     }
   }
 

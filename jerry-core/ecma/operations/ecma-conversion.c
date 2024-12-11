@@ -569,8 +569,8 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
     ecma_create_object (ecma_builtin_get (proto_id), sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.type = class_type;
-  ext_object_p->u.cls.u3.value = ecma_copy_value_if_not_object (value);
+  ext_object_p->u.cls.head.type = class_type;
+  ecma_object_cls_general (ext_object_p)->value = ecma_copy_value_if_not_object (value);
 
   return ecma_make_object_value (object_p);
 } /* ecma_op_to_object */

@@ -309,9 +309,10 @@ ecma_op_container_free_entries (ecma_object_t *object_p) /**< collection object 
   JERRY_ASSERT (object_p != NULL);
 
   ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) object_p;
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
-  switch (map_object_p->u.cls.u2.container_id)
+  switch (map_object_p->u.cls.container.id)
   {
     case LIT_MAGIC_STRING_WEAKSET_UL:
     {
@@ -369,16 +370,16 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
   ecma_object_t *object_p = ecma_create_object (proto_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
   ecma_deref_object (proto_p);
   ecma_extended_object_t *map_obj_p = (ecma_extended_object_t *) object_p;
-  map_obj_p->u.cls.type = ECMA_OBJECT_CLASS_CONTAINER;
-  map_obj_p->u.cls.u1.container_flags = ECMA_CONTAINER_FLAGS_EMPTY;
-  map_obj_p->u.cls.u2.container_id = (uint16_t) lit_id;
+  map_obj_p->u.cls.head.type = ECMA_OBJECT_CLASS_CONTAINER;
+  map_obj_p->u.cls.container.flags = ECMA_CONTAINER_FLAGS_EMPTY;
+  map_obj_p->u.cls.container.id = (uint16_t) lit_id;
 
   if (lit_id == LIT_MAGIC_STRING_WEAKMAP_UL || lit_id == LIT_MAGIC_STRING_WEAKSET_UL)
   {
-    map_obj_p->u.cls.u1.container_flags |= ECMA_CONTAINER_FLAGS_WEAK;
+    map_obj_p->u.cls.container.flags |= ECMA_CONTAINER_FLAGS_WEAK;
   }
 
-  ECMA_SET_INTERNAL_VALUE_POINTER (map_obj_p->u.cls.u3.value, container_p);
+  ECMA_SET_INTERNAL_VALUE_POINTER (map_obj_p->u.cls.container.value, container_p);
 
   ecma_value_t set_value = ecma_make_object_value (object_p);
   ecma_value_t result = set_value;
@@ -547,7 +548,7 @@ ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
     ecma_object_t *map_object_p = ecma_get_object_from_value (this_arg);
 
     if (ecma_object_class_is (map_object_p, ECMA_OBJECT_CLASS_CONTAINER)
-        && ((ecma_extended_object_t *) map_object_p)->u.cls.u2.container_id == lit_id)
+        && ((ecma_extended_object_t *) map_object_p)->u.cls.container.id == lit_id)
     {
       return (ecma_extended_object_t *) map_object_p;
     }
@@ -572,7 +573,8 @@ ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
 ecma_value_t
 ecma_op_container_size (ecma_extended_object_t *map_object_p) /**< internal class id */
 {
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
   return ecma_make_uint32_value (ECMA_CONTAINER_GET_SIZE (container_p));
 } /* ecma_op_container_size */
@@ -593,7 +595,8 @@ ecma_op_container_get (ecma_extended_object_t *map_object_p, /**< map object */
     return ECMA_VALUE_UNDEFINED;
   }
 
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
   if (ECMA_CONTAINER_GET_SIZE (container_p) == 0)
   {
@@ -621,9 +624,10 @@ ecma_op_container_has (ecma_extended_object_t *map_object_p, /**< map object */
                        ecma_value_t key_arg, /**< key argument */
                        lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
-  if ((map_object_p->u.cls.u1.container_flags & ECMA_CONTAINER_FLAGS_WEAK) != 0 && !ecma_is_value_object (key_arg))
+  if ((map_object_p->u.cls.container.flags & ECMA_CONTAINER_FLAGS_WEAK) != 0 && !ecma_is_value_object (key_arg))
   {
     return ECMA_VALUE_FALSE;
   }
@@ -675,9 +679,10 @@ ecma_op_container_set (ecma_extended_object_t *map_object_p, /**< map object */
                        ecma_value_t value_arg, /**< value argument */
                        lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
-  if ((map_object_p->u.cls.u1.container_flags & ECMA_CONTAINER_FLAGS_WEAK) != 0 && !ecma_is_value_object (key_arg))
+  if ((map_object_p->u.cls.container.flags & ECMA_CONTAINER_FLAGS_WEAK) != 0 && !ecma_is_value_object (key_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_KEY_MUST_BE_AN_OBJECT);
   }
@@ -688,7 +693,7 @@ ecma_op_container_set (ecma_extended_object_t *map_object_p, /**< map object */
   {
     ecma_op_internal_buffer_append (container_p, ecma_op_container_set_noramlize_zero (key_arg), value_arg, lit_id);
 
-    if ((map_object_p->u.cls.u1.container_flags & ECMA_CONTAINER_FLAGS_WEAK) != 0)
+    if ((map_object_p->u.cls.container.flags & ECMA_CONTAINER_FLAGS_WEAK) != 0)
     {
       ecma_object_t *key_p = ecma_get_object_from_value (key_arg);
       ecma_op_object_set_weak (key_p, (ecma_object_t *) map_object_p);
@@ -725,7 +730,8 @@ ecma_op_container_foreach (ecma_extended_object_t *map_object_p, /**< map object
   ecma_object_t *func_object_p = ecma_get_object_from_value (predicate);
   ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
 
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
   uint8_t entry_size = ecma_op_container_entry_size (lit_id);
 
@@ -782,7 +788,8 @@ ecma_op_container_delete (ecma_extended_object_t *map_object_p, /**< map object 
                           ecma_value_t key_arg, /**< key argument */
                           lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
   ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, lit_id);
 
@@ -811,7 +818,8 @@ ecma_op_container_delete_weak (ecma_extended_object_t *map_object_p, /**< map ob
     return ECMA_VALUE_FALSE;
   }
 
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
   ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, lit_id);
 
@@ -839,12 +847,13 @@ ecma_op_container_find_weak_value (ecma_object_t *object_p, /**< internal contai
 {
   ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) object_p;
 
-  JERRY_ASSERT (map_object_p->u.cls.type == ECMA_OBJECT_CLASS_CONTAINER
-                && map_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKMAP_UL);
+  JERRY_ASSERT (map_object_p->u.cls.head.type == ECMA_OBJECT_CLASS_CONTAINER
+                && map_object_p->u.cls.container.id == LIT_MAGIC_STRING_WEAKMAP_UL);
 
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
-  ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, map_object_p->u.cls.u2.container_id);
+  ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, map_object_p->u.cls.container.id);
 
   JERRY_ASSERT (entry_p != NULL);
 
@@ -860,17 +869,18 @@ ecma_op_container_remove_weak_entry (ecma_object_t *object_p, /**< internal cont
 {
   ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) object_p;
 
-  JERRY_ASSERT (map_object_p->u.cls.type == ECMA_OBJECT_CLASS_CONTAINER
-                && (map_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKSET_UL
-                    || map_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKMAP_UL));
+  JERRY_ASSERT (map_object_p->u.cls.head.type == ECMA_OBJECT_CLASS_CONTAINER
+                && (map_object_p->u.cls.container.id == LIT_MAGIC_STRING_WEAKSET_UL
+                    || map_object_p->u.cls.container.id == LIT_MAGIC_STRING_WEAKMAP_UL));
 
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
 
-  ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, map_object_p->u.cls.u2.container_id);
+  ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, map_object_p->u.cls.container.id);
 
   JERRY_ASSERT (entry_p != NULL);
 
-  ecma_op_internal_buffer_delete (container_p, (ecma_container_pair_t *) entry_p, map_object_p->u.cls.u2.container_id);
+  ecma_op_internal_buffer_delete (container_p, (ecma_container_pair_t *) entry_p, map_object_p->u.cls.container.id);
 } /* ecma_op_container_remove_weak_entry */
 
 /**
@@ -903,7 +913,7 @@ ecma_op_container_create_iterator (ecma_value_t this_arg, /**< this argument */
 static uint32_t
 ecma_op_iterator_get_index (ecma_object_t *iter_obj_p) /**< iterator object pointer */
 {
-  uint32_t index = ((ecma_extended_object_t *) iter_obj_p)->u.cls.u2.iterator_index;
+  uint32_t index = ((ecma_extended_object_t *) iter_obj_p)->u.cls.iterator.index;
 
   if (JERRY_UNLIKELY (index == ECMA_ITERATOR_INDEX_LIMIT))
   {
@@ -945,7 +955,7 @@ ecma_op_iterator_set_index (ecma_object_t *iter_obj_p, /**< iterator object poin
   }
   else
   {
-    ((ecma_extended_object_t *) iter_obj_p)->u.cls.u2.iterator_index = (uint16_t) index;
+    ((ecma_extended_object_t *) iter_obj_p)->u.cls.iterator.index = (uint16_t) index;
   }
 } /* ecma_op_iterator_set_index */
 
@@ -979,7 +989,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
     return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_ITERATOR);
   }
 
-  ecma_value_t iterated_value = ext_obj_p->u.cls.u3.iterated_value;
+  ecma_value_t iterated_value = ext_obj_p->u.cls.iterator.value;
 
   if (ecma_is_value_empty (iterated_value))
   {
@@ -987,21 +997,22 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   }
 
   ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) (ecma_get_object_from_value (iterated_value));
-  lit_magic_string_id_t lit_id = map_object_p->u.cls.u2.container_id;
+  lit_magic_string_id_t lit_id = map_object_p->u.cls.container.id;
 
-  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+  ecma_collection_t *container_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.container.value);
   uint32_t entry_count = ECMA_CONTAINER_ENTRY_COUNT (container_p);
   uint32_t index = ecma_op_iterator_get_index (obj_p);
 
   if (index == entry_count)
   {
-    ext_obj_p->u.cls.u3.iterated_value = ECMA_VALUE_EMPTY;
+    ext_obj_p->u.cls.iterator.value = ECMA_VALUE_EMPTY;
 
     return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
   }
 
   uint8_t entry_size = ecma_op_container_entry_size (lit_id);
-  uint8_t iterator_kind = ext_obj_p->u.cls.u1.iterator_kind;
+  uint8_t iterator_kind = ext_obj_p->u.cls.iterator.kind;
   ecma_value_t *start_p = ECMA_CONTAINER_START (container_p);
   ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
 

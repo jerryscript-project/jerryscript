@@ -67,9 +67,9 @@ ecma_arraybuffer_create_object (uint8_t type, /**< type of the arraybuffer */
                                                 ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.type = type;
-  ext_object_p->u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_ALLOCATED;
-  ext_object_p->u.cls.u3.length = length;
+  ext_object_p->u.cls.head.type = type;
+  ext_object_p->u.cls.arraybuffer.flags = ECMA_ARRAYBUFFER_ALLOCATED;
+  ext_object_p->u.cls.arraybuffer.length = length;
 
   memset ((uint8_t *) (ext_object_p + 1), 0, length);
   return object_p;
@@ -101,9 +101,9 @@ ecma_arraybuffer_create_object_with_buffer (uint8_t type, /**< type of the array
     ecma_create_object (ecma_builtin_get (prototype_id), sizeof (ecma_arraybuffer_pointer_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) object_p;
-  arraybuffer_pointer_p->extended_object.u.cls.type = type;
-  arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_HAS_POINTER;
-  arraybuffer_pointer_p->extended_object.u.cls.u3.length = length;
+  arraybuffer_pointer_p->extended_object.u.cls.head.type = type;
+  arraybuffer_pointer_p->extended_object.u.cls.arraybuffer.flags = ECMA_ARRAYBUFFER_HAS_POINTER;
+  arraybuffer_pointer_p->extended_object.u.cls.arraybuffer.length = length;
 
   arraybuffer_pointer_p->buffer_p = NULL;
   arraybuffer_pointer_p->arraybuffer_user_p = NULL;
@@ -142,11 +142,11 @@ ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer
 
   if (ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_DETACHED)
   {
-    extended_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+    extended_object_p->u.cls.arraybuffer.flags |= ECMA_ARRAYBUFFER_ALLOCATED;
     return ECMA_VALUE_UNDEFINED;
   }
 
-  uint32_t arraybuffer_length = extended_object_p->u.cls.u3.length;
+  uint32_t arraybuffer_length = extended_object_p->u.cls.arraybuffer.length;
   ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) arraybuffer_p;
   jerry_arraybuffer_allocate_cb_t arraybuffer_allocate_callback = JERRY_CONTEXT (arraybuffer_allocate_callback);
   uint8_t *buffer_p;
@@ -156,7 +156,7 @@ ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer
     jerry_arraybuffer_type_t type = JERRY_ARRAYBUFFER_TYPE_ARRAYBUFFER;
 
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
-    if (extended_object_p->u.cls.type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER)
+    if (extended_object_p->u.cls.head.type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER)
     {
       type = JERRY_ARRAYBUFFER_TYPE_SHARED_ARRAYBUFFER;
     }
@@ -178,7 +178,7 @@ ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer
   }
 
   arraybuffer_pointer_p->buffer_p = buffer_p;
-  extended_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+  extended_object_p->u.cls.arraybuffer.flags |= ECMA_ARRAYBUFFER_ALLOCATED;
 
   memset (buffer_p, 0, arraybuffer_length);
   return ECMA_VALUE_UNDEFINED;
@@ -215,7 +215,7 @@ ecma_arraybuffer_release_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer 
     return;
   }
 
-  uint32_t arraybuffer_length = arraybuffer_pointer_p->extended_object.u.cls.u3.length;
+  uint32_t arraybuffer_length = arraybuffer_pointer_p->extended_object.u.cls.arraybuffer.length;
 
   if (free_callback == NULL)
   {
@@ -226,7 +226,7 @@ ecma_arraybuffer_release_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer 
   jerry_arraybuffer_type_t type = JERRY_ARRAYBUFFER_TYPE_ARRAYBUFFER;
 
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
-  if (arraybuffer_pointer_p->extended_object.u.cls.type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER)
+  if (arraybuffer_pointer_p->extended_object.u.cls.head.type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER)
   {
     type = JERRY_ARRAYBUFFER_TYPE_SHARED_ARRAYBUFFER;
   }
@@ -332,7 +332,7 @@ ecma_arraybuffer_get_length (ecma_object_t *object_p) /**< pointer to the ArrayB
                 || ecma_object_is_shared_arraybuffer (object_p));
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  return ecma_arraybuffer_is_detached (object_p) ? 0 : ext_object_p->u.cls.u3.length;
+  return ecma_arraybuffer_is_detached (object_p) ? 0 : ext_object_p->u.cls.arraybuffer.length;
 } /* ecma_arraybuffer_get_length */
 
 /**
@@ -389,14 +389,14 @@ ecma_arraybuffer_detach (ecma_object_t *object_p) /**< pointer to the ArrayBuffe
   }
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_DETACHED;
+  ext_object_p->u.cls.arraybuffer.flags |= ECMA_ARRAYBUFFER_DETACHED;
 
   if (!(ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_ALLOCATED))
   {
     return true;
   }
 
-  ext_object_p->u.cls.u1.array_buffer_flags &= (uint8_t) ~ECMA_ARRAYBUFFER_ALLOCATED;
+  ext_object_p->u.cls.arraybuffer.flags &= (uint8_t) ~ECMA_ARRAYBUFFER_ALLOCATED;
 
   if (!(ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_HAS_POINTER))
   {

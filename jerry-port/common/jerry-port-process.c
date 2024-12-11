@@ -17,6 +17,18 @@
 
 #include "jerryscript-port.h"
 
+#if !defined(_WIN32)
+
+/**
+ * Default implementation of jerry_port_init. Do nothing.
+ */
+void JERRY_ATTR_WEAK
+jerry_port_init (void)
+{
+} /* jerry_port_init */
+
+#endif /* !defined(_WIN32) */
+
 /**
  * Default implementation of jerry_port_fatal. Calls 'abort' if exit code is
  * non-zero, 'exit' otherwise.

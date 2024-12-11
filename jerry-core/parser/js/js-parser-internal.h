@@ -367,6 +367,15 @@ typedef struct parser_branch_node_t
 } parser_branch_node_t;
 
 /**
+ * Linked list to store branch data.
+ */
+typedef struct parser_branch_list_t
+{
+  struct parser_branch_list_t *next_p; /**< next branch */
+  parser_branch_node_t *branch_node_p; /**< branch node */
+} parser_branch_list_t;
+
+/**
  * Items of scope stack.
  */
 typedef struct
@@ -591,6 +600,7 @@ typedef struct
   ecma_value_t tagged_template_literal_cp; /**< compessed pointer to the tagged template literal collection */
   parser_private_context_t *private_context_p; /**< private context */
   uint8_t stack_top_uint8; /**< top byte stored on the stack */
+  parser_branch_list_t *branch_list; /**< list of branches */
 
 #ifndef JERRY_NDEBUG
   /* Variables for debugging / logging. */
@@ -653,6 +663,11 @@ void *parser_list_append (parser_context_t *context_p, parser_list_t *list_p);
 void *parser_list_get (parser_list_t *list_p, size_t index);
 void parser_list_iterator_init (parser_list_t *list_p, parser_list_iterator_t *iterator_p);
 void *parser_list_iterator_next (parser_list_iterator_t *iterator_p);
+
+void parser_branch_list_init (parser_context_t *context_p);
+void *parser_branch_list_append (parser_context_t *context_p);
+void parser_branch_list_remove (const parser_context_t *context_p, const parser_branch_node_t *node_p);
+void parser_branch_list_free (const parser_context_t *context_p);
 
 /* Parser stack. Optimized for pushing bytes.
  * Pop functions never throws error. */

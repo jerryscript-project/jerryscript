@@ -479,14 +479,14 @@ ecma_builtin_helper_string_find_last_index (ecma_string_t *original_str_p, /**< 
 
   uint32_t original_length = ecma_string_get_length (original_str_p);
 
-  ECMA_STRING_TO_UTF8_STRING (search_str_p, search_str_utf8_p, search_str_size);
-  ECMA_STRING_TO_UTF8_STRING (original_str_p, original_str_utf8_p, original_str_size);
+  ECMA_STRING_TO_UTF8_STRING (search_str_p, search_str_utf8);
+  ECMA_STRING_TO_UTF8_STRING (original_str_p, original_str_utf8);
 
   uint32_t ret_value = UINT32_MAX;
 
-  if (original_str_size >= search_str_size)
+  if (original_str_utf8.size >= search_str_utf8.size)
   {
-    const lit_utf8_byte_t *end_p = original_str_utf8_p + original_str_size;
+    const lit_utf8_byte_t *end_p = original_str_utf8.ptr + original_str_utf8.size;
     const lit_utf8_byte_t *current_p = end_p;
 
     for (ecma_number_t i = original_length; i > position; i--)
@@ -494,7 +494,7 @@ ecma_builtin_helper_string_find_last_index (ecma_string_t *original_str_p, /**< 
       lit_utf8_decr (&current_p);
     }
 
-    while (current_p + search_str_size > end_p)
+    while (current_p + search_str_utf8.size > end_p)
     {
       lit_utf8_decr (&current_p);
       position--;
@@ -502,7 +502,7 @@ ecma_builtin_helper_string_find_last_index (ecma_string_t *original_str_p, /**< 
 
     while (true)
     {
-      if (memcmp (current_p, search_str_utf8_p, search_str_size) == 0)
+      if (memcmp (current_p, search_str_utf8.ptr, search_str_utf8.size) == 0)
       {
         ret_value = position;
         break;
@@ -517,8 +517,6 @@ ecma_builtin_helper_string_find_last_index (ecma_string_t *original_str_p, /**< 
       position--;
     }
   }
-  ECMA_FINALIZE_UTF8_STRING (original_str_utf8_p, original_str_size);
-  ECMA_FINALIZE_UTF8_STRING (search_str_utf8_p, search_str_size);
 
   return ret_value;
 } /* ecma_builtin_helper_string_find_last_index */
@@ -717,21 +715,21 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
     return start_pos;
   }
 
-  ECMA_STRING_TO_UTF8_STRING (search_str_p, search_str_utf8_p, search_str_size);
-  ECMA_STRING_TO_UTF8_STRING (original_str_p, original_str_utf8_p, original_str_size);
+  ECMA_STRING_TO_UTF8_STRING (search_str_p, search_str_utf8);
+  ECMA_STRING_TO_UTF8_STRING (original_str_p, original_str_utf8);
 
-  const lit_utf8_byte_t *str_current_p = original_str_utf8_p;
+  const lit_utf8_byte_t *str_current_p = original_str_utf8.ptr;
 
-  for (ecma_number_t i = 0; i < start_pos; i++)
+  for (uint32_t i = 0; i < start_pos; i++)
   {
     lit_utf8_incr (&str_current_p);
   }
 
-  const lit_utf8_byte_t *original_end_p = original_str_utf8_p + original_str_size;
+  const lit_utf8_byte_t *original_end_p = original_str_utf8.ptr + original_str_utf8.size;
 
-  while (!((size_t) (original_end_p - str_current_p) < search_str_size))
+  while (!((size_t) (original_end_p - str_current_p) < search_str_utf8.size))
   {
-    if (memcmp (str_current_p, search_str_utf8_p, search_str_size) == 0)
+    if (memcmp (str_current_p, search_str_utf8.ptr, search_str_utf8.size) == 0)
     {
       match_found = start_pos;
       break;
@@ -740,9 +738,6 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
     lit_utf8_incr (&str_current_p);
     start_pos++;
   }
-
-  ECMA_FINALIZE_UTF8_STRING (original_str_utf8_p, original_str_size);
-  ECMA_FINALIZE_UTF8_STRING (search_str_utf8_p, search_str_size);
 
   return match_found;
 } /* ecma_builtin_helper_string_find_index */
@@ -865,14 +860,11 @@ ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p) /**< replace con
   JERRY_ASSERT (ctx_p->matched_p == NULL
                 || (ctx_p->matched_p >= ctx_p->string_p && ctx_p->matched_p <= ctx_p->string_p + ctx_p->string_size));
 
-  lit_utf8_size_t replace_size;
-  uint8_t replace_flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *replace_buf_p =
-    ecma_string_get_chars (ctx_p->replace_str_p, &replace_size, NULL, NULL, &replace_flags);
+  ECMA_STRING_TO_UTF8_STRING (ctx_p->replace_str_p, replace);
 
-  const lit_utf8_byte_t *const replace_end_p = replace_buf_p + replace_size;
-  const lit_utf8_byte_t *curr_p = replace_buf_p;
-  const lit_utf8_byte_t *last_inserted_end_p = replace_buf_p;
+  const lit_utf8_byte_t *const replace_end_p = replace.ptr + replace.size;
+  const lit_utf8_byte_t *curr_p = replace.ptr;
+  const lit_utf8_byte_t *last_inserted_end_p = replace.ptr;
 
   while (curr_p < replace_end_p)
   {
@@ -1013,11 +1005,6 @@ ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p) /**< replace con
   ecma_stringbuilder_append_raw (&(ctx_p->builder),
                                  last_inserted_end_p,
                                  (lit_utf8_size_t) (replace_end_p - last_inserted_end_p));
-
-  if (replace_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) replace_buf_p, replace_size);
-  }
 } /* ecma_builtin_replace_substitute */
 
 /**

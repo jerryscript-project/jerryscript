@@ -384,14 +384,11 @@ jerry_parse_common (void *source_p, /**< script source */
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED) && options_p != NULL
       && (options_p->options & JERRY_PARSE_HAS_SOURCE_NAME) && ecma_is_value_string (options_p->source_name))
   {
-    ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (options_p->source_name),
-                                source_name_start_p,
-                                source_name_size);
+    ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (options_p->source_name), source_name_start);
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
                                 JERRY_DEBUGGER_NO_SUBTYPE,
-                                source_name_start_p,
-                                source_name_size);
-    ECMA_FINALIZE_UTF8_STRING (source_name_start_p, source_name_size);
+                                source_name_start.ptr,
+                                source_name_start.size);
   }
 #endif /* JERRY_DEBUGGER */
 
@@ -891,12 +888,12 @@ jerry_native_module (jerry_native_module_evaluate_cb_t callback, /**< evaluation
 
     bool valid_identifier = false;
 
-    ECMA_STRING_TO_UTF8_STRING (name_str_p, name_start_p, name_size);
+    ECMA_STRING_TO_UTF8_STRING (name_str_p, name_start);
 
-    if (name_size > 0)
+    if (name_start.size > 0)
     {
-      const lit_utf8_byte_t *name_p = name_start_p;
-      const lit_utf8_byte_t *name_end_p = name_start_p + name_size;
+      const lit_utf8_byte_t *name_p = name_start.ptr;
+      const lit_utf8_byte_t *name_end_p = name_start.ptr + name_start.size;
       lit_code_point_t code_point;
 
       lit_utf8_size_t size = lit_read_code_point_from_cesu8 (name_p, name_end_p, &code_point);
@@ -921,8 +918,6 @@ jerry_native_module (jerry_native_module_evaluate_cb_t callback, /**< evaluation
         }
       }
     }
-
-    ECMA_FINALIZE_UTF8_STRING (name_start_p, name_size);
 
     if (!valid_identifier)
     {
@@ -3001,10 +2996,10 @@ jerry_string_iterate (const jerry_value_t value,
   }
 
   ecma_string_t *str_p = ecma_get_string_from_value (value);
-  ECMA_STRING_TO_UTF8_STRING (str_p, buffer_p, buffer_size);
+  ECMA_STRING_TO_UTF8_STRING (str_p, buffer);
 
-  const lit_utf8_byte_t *current_p = buffer_p;
-  const lit_utf8_byte_t *end_p = buffer_p + buffer_size;
+  const lit_utf8_byte_t *current_p = buffer.ptr;
+  const lit_utf8_byte_t *end_p = buffer.ptr + buffer.size;
 
   switch (encoding)
   {
@@ -3048,7 +3043,6 @@ jerry_string_iterate (const jerry_value_t value,
       break;
     }
   }
-  ECMA_FINALIZE_UTF8_STRING (buffer_p, buffer_size);
 } /* jerry_string_iterate */
 
 /**

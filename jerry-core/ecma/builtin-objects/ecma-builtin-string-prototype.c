@@ -589,35 +589,32 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
     }
   }
 
-  uint8_t input_flags = ECMA_STRING_FLAG_IS_ASCII;
-  replace_ctx.string_p = ecma_string_get_chars (input_str_p, &(replace_ctx.string_size), NULL, NULL, &input_flags);
+  ECMA_STRING_TO_UTF8_STRING (input_str_p, string);
+  replace_ctx.string_p = string.ptr;
+  replace_ctx.string_size = string.size;
 
-  lit_utf8_size_t search_size;
-  lit_utf8_size_t search_length;
-  uint8_t search_flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *search_buf_p =
-    ecma_string_get_chars (search_str_p, &search_size, &search_length, NULL, &search_flags);
+  ECMA_STRING_TO_UTF8_STRING_AND_LENGTH (search_str_p, search);
 
   ecma_string_t *result_string_p = NULL;
 
-  if (replace_ctx.string_size >= search_size)
+  if (replace_ctx.string_size >= search.size)
   {
     replace_ctx.builder = ecma_stringbuilder_create ();
-    replace_ctx.matched_size = search_size;
+    replace_ctx.matched_size = search.size;
     const lit_utf8_byte_t *const input_end_p = replace_ctx.string_p + replace_ctx.string_size;
-    const lit_utf8_byte_t *const loop_end_p = input_end_p - search_size;
+    const lit_utf8_byte_t *const loop_end_p = input_end_p - search.size;
     const lit_utf8_byte_t *last_match_end_p = replace_ctx.string_p;
     const lit_utf8_byte_t *curr_p = replace_ctx.string_p;
 
     lit_utf8_size_t pos = 0;
     while (curr_p <= loop_end_p)
     {
-      if (!memcmp (curr_p, search_buf_p, search_size))
+      if (!memcmp (curr_p, search.ptr, search.size))
       {
         const lit_utf8_size_t prefix_size = (lit_utf8_size_t) (curr_p - last_match_end_p);
         ecma_stringbuilder_append_raw (&replace_ctx.builder, last_match_end_p, prefix_size);
 
-        last_match_end_p = curr_p + search_size;
+        last_match_end_p = curr_p + search.size;
 
         if (replace_ctx.replace_str_p == NULL)
         {
@@ -661,7 +658,7 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
           break;
         }
 
-        if (search_size != 0)
+        if (search.size != 0)
         {
           curr_p = last_match_end_p;
           pos += search_length;
@@ -688,15 +685,6 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
   result = ecma_make_string_value (result_string_p);
 
 cleanup_replace:
-  if (input_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) replace_ctx.string_p, replace_ctx.string_size);
-  }
-
-  if (search_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) search_buf_p, search_size);
-  }
 
   if (replace_ctx.replace_str_p != NULL)
   {
@@ -967,22 +955,18 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
     goto cleanup_separator;
   }
 
-  lit_utf8_size_t string_size;
-  uint8_t string_flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *string_buffer_p = ecma_string_get_chars (string_p, &string_size, NULL, NULL, &string_flags);
-  lit_utf8_size_t separator_size;
-  uint8_t separator_flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *separator_buffer_p =
-    ecma_string_get_chars (separator_p, &separator_size, NULL, NULL, &separator_flags);
+  ECMA_STRING_TO_UTF8_STRING (string_p, string);
 
-  const lit_utf8_byte_t *const string_end_p = string_buffer_p + string_size;
-  const lit_utf8_byte_t *const compare_end_p = JERRY_MIN (string_end_p - separator_size + 1, string_end_p);
-  const lit_utf8_byte_t *current_p = string_buffer_p;
-  const lit_utf8_byte_t *last_str_begin_p = string_buffer_p;
+  ECMA_STRING_TO_UTF8_STRING (separator_p, separator);
+
+  const lit_utf8_byte_t *const string_end_p = string.ptr + string.size;
+  const lit_utf8_byte_t *const compare_end_p = JERRY_MIN (string_end_p - separator.size + 1, string_end_p);
+  const lit_utf8_byte_t *current_p = string.ptr;
+  const lit_utf8_byte_t *last_str_begin_p = string.ptr;
 
   while (current_p < compare_end_p)
   {
-    if (!memcmp (current_p, separator_buffer_p, separator_size) && (last_str_begin_p != current_p + separator_size))
+    if (!memcmp (current_p, separator.ptr, separator.size) && (last_str_begin_p != current_p + separator.size))
     {
       ecma_string_t *substr_p =
         ecma_new_ecma_string_from_utf8 (last_str_begin_p, (lit_utf8_size_t) (current_p - last_str_begin_p));
@@ -998,7 +982,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
         goto cleanup_buffers;
       }
 
-      current_p += separator_size;
+      current_p += separator.size;
       last_str_begin_p = current_p;
       continue;
     }
@@ -1016,16 +1000,6 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
   ecma_deref_ecma_string (end_substr_p);
 
 cleanup_buffers:
-  if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) string_buffer_p, string_size);
-  }
-
-  if (separator_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) separator_buffer_p, separator_size);
-  }
-
 cleanup_separator:
   ecma_deref_ecma_string (separator_p);
 cleanup_string:
@@ -1115,10 +1089,10 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_string_t *input_str
 {
   ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
-  ECMA_STRING_TO_UTF8_STRING (input_string_p, input_start_p, input_start_size);
+  ECMA_STRING_TO_UTF8_STRING (input_string_p, input_start);
 
-  const lit_utf8_byte_t *input_curr_p = input_start_p;
-  const lit_utf8_byte_t *input_str_end_p = input_start_p + input_start_size;
+  const lit_utf8_byte_t *input_curr_p = input_start.ptr;
+  const lit_utf8_byte_t *input_str_end_p = input_start.ptr + input_start.size;
 
   while (input_curr_p < input_str_end_p)
   {
@@ -1143,8 +1117,6 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_string_t *input_str
       lit_char_to_upper_case (cp, &builder);
     }
   }
-
-  ECMA_FINALIZE_UTF8_STRING (input_start_p, input_start_size);
 
   return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_string_prototype_object_conversion_helper */

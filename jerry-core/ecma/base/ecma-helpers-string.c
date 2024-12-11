@@ -723,29 +723,22 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
     return ecma_new_ecma_string_from_utf8 (cesu8_string2_p, cesu8_string2_size);
   }
 
-  lit_utf8_size_t cesu8_string1_size;
-  lit_utf8_size_t cesu8_string1_length;
-  uint8_t flags = ECMA_STRING_FLAG_IS_ASCII;
-  lit_utf8_byte_t uint32_to_string_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
+  ECMA_STRING_TO_UTF8_STRING_AND_LENGTH (string1_p, cesu8_string1);
 
-  const lit_utf8_byte_t *cesu8_string1_p =
-    ecma_string_get_chars (string1_p, &cesu8_string1_size, &cesu8_string1_length, uint32_to_string_buffer, &flags);
-
-  JERRY_ASSERT (!(flags & ECMA_STRING_FLAG_MUST_BE_FREED));
   JERRY_ASSERT (cesu8_string1_length > 0);
-  JERRY_ASSERT (cesu8_string1_length <= cesu8_string1_size);
+  JERRY_ASSERT (cesu8_string1_length <= cesu8_string1.size);
 
-  lit_utf8_size_t new_size = cesu8_string1_size + cesu8_string2_size;
+  lit_utf8_size_t new_size = cesu8_string1.size + cesu8_string2_size;
 
   /* Poor man's carry flag check: it is impossible to allocate this large string. */
-  if (new_size < (cesu8_string1_size | cesu8_string2_size))
+  if (new_size < (cesu8_string1.size | cesu8_string2_size))
   {
     jerry_fatal (JERRY_FATAL_OUT_OF_MEMORY);
   }
 
   lit_magic_string_id_t magic_string_id;
   magic_string_id =
-    lit_is_utf8_string_pair_magic (cesu8_string1_p, cesu8_string1_size, cesu8_string2_p, cesu8_string2_size);
+    lit_is_utf8_string_pair_magic (cesu8_string1.ptr, cesu8_string1.size, cesu8_string2_p, cesu8_string2_size);
 
   if (magic_string_id != LIT_MAGIC_STRING__COUNT)
   {
@@ -753,13 +746,13 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
     return ecma_get_magic_string (magic_string_id);
   }
 
-  if ((flags & ECMA_STRING_FLAG_IS_UINT32) && new_size <= ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32)
+  if ((cesu8_string1_flags & ECMA_STRING_FLAG_IS_UINT32) && new_size < ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32)
   {
-    memcpy (uint32_to_string_buffer + cesu8_string1_size, cesu8_string2_p, cesu8_string2_size);
+    memcpy (cesu8_string1_uint32_buffer + cesu8_string1.size, cesu8_string2_p, cesu8_string2_size);
 
     uint32_t array_index;
 
-    if (ecma_string_to_array_index (uint32_to_string_buffer, new_size, &array_index))
+    if (ecma_string_to_array_index (cesu8_string1_uint32_buffer, new_size, &array_index))
     {
       ecma_deref_ecma_string (string1_p);
       return ecma_new_ecma_string_from_uint32 (array_index);
@@ -770,7 +763,7 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
   {
     lit_magic_string_ex_id_t magic_string_ex_id;
     magic_string_ex_id =
-      lit_is_ex_utf8_string_pair_magic (cesu8_string1_p, cesu8_string1_size, cesu8_string2_p, cesu8_string2_size);
+      lit_is_ex_utf8_string_pair_magic (cesu8_string1.ptr, cesu8_string1.size, cesu8_string2_p, cesu8_string2_size);
 
     if (magic_string_ex_id < lit_get_magic_string_ex_count ())
     {
@@ -785,9 +778,9 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
 
   lit_string_hash_t hash_start;
 
-  if (JERRY_UNLIKELY (flags & ECMA_STRING_FLAG_REHASH_NEEDED))
+  if (JERRY_UNLIKELY (cesu8_string1_flags & ECMA_STRING_FLAG_REHASH_NEEDED))
   {
-    hash_start = lit_utf8_string_calc_hash (cesu8_string1_p, cesu8_string1_size);
+    hash_start = lit_utf8_string_calc_hash (cesu8_string1.ptr, cesu8_string1.size);
   }
   else
   {
@@ -797,8 +790,8 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
 
   string_desc_p->u.hash = lit_utf8_string_hash_combine (hash_start, cesu8_string2_p, cesu8_string2_size);
 
-  memcpy (data_p, cesu8_string1_p, cesu8_string1_size);
-  memcpy (data_p + cesu8_string1_size, cesu8_string2_p, cesu8_string2_size);
+  memcpy (data_p, cesu8_string1.ptr, cesu8_string1.size);
+  memcpy (data_p + cesu8_string1.size, cesu8_string2_p, cesu8_string2_size);
 
   ecma_deref_ecma_string (string1_p);
   return (ecma_string_t *) string_desc_p;
@@ -829,20 +822,11 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
     return string1_p;
   }
 
-  lit_utf8_size_t cesu8_string2_size;
-  lit_utf8_size_t cesu8_string2_length;
-  lit_utf8_byte_t uint32_to_string_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
-  uint8_t flags = ECMA_STRING_FLAG_IS_ASCII;
-
-  const lit_utf8_byte_t *cesu8_string2_p =
-    ecma_string_get_chars (string2_p, &cesu8_string2_size, &cesu8_string2_length, uint32_to_string_buffer, &flags);
-
-  JERRY_ASSERT (cesu8_string2_p != NULL);
+  ECMA_STRING_TO_UTF8_STRING_AND_LENGTH (string2_p, cesu8_string2);
+  JERRY_ASSERT (cesu8_string2.ptr != NULL);
 
   ecma_string_t *result_p =
-    ecma_append_chars_to_string (string1_p, cesu8_string2_p, cesu8_string2_size, cesu8_string2_length);
-
-  JERRY_ASSERT (!(flags & ECMA_STRING_FLAG_MUST_BE_FREED));
+    ecma_append_chars_to_string (string1_p, cesu8_string2.ptr, cesu8_string2.size, cesu8_string2_length);
 
   return result_p;
 } /* ecma_concat_ecma_strings */
@@ -1224,13 +1208,11 @@ ecma_string_get_uint32_size (const uint32_t uint32_number) /**< number in the st
  *   - The ASCII check only happens if the flags parameter gets
  *     'ECMA_STRING_FLAG_IS_ASCII' as an input.
  *
- * @return start of cesu8 characters
+ * @return the length of the ecma string
  */
-const lit_utf8_byte_t *
+lit_utf8_size_t
 ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
-                       lit_utf8_size_t *size_p, /**< [out] size of the ecma string */
-                       lit_utf8_size_t *length_p, /**< [out] optional argument. If the pointer is not NULL the pointed
-                                                   *    memory area is filled with the length of the ecma string */
+                       lit_utf8_string_t *string_out_p, /**< [out] size of the ecma string */
                        lit_utf8_byte_t *uint32_buff_p, /**< [out] optional argument. If the pointer is not NULL the
                                                         *    pointed memory area is filled with the string converted
                                                         *    uint32 string descriptor */
@@ -1366,19 +1348,15 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
       }
     }
   }
-
-  *size_p = size;
-  if (length_p != NULL)
-  {
-    *length_p = length;
-  }
+  string_out_p->ptr = result_p;
+  string_out_p->size = size;
 
   if ((*flags_p & ECMA_STRING_FLAG_IS_ASCII) && length != size)
   {
     *flags_p = (uint8_t) (*flags_p & (uint8_t) ~ECMA_STRING_FLAG_IS_ASCII);
   }
 
-  return result_p;
+  return length;
 } /* ecma_string_get_chars */
 
 /**
@@ -2200,9 +2178,10 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
   ecma_string_t *ecma_string_p = NULL;
   end_pos -= start_pos;
 
-  ECMA_STRING_TO_UTF8_STRING (string_p, start_p, buffer_size);
+  ECMA_STRING_TO_UTF8_STRING (string_p, string_start);
+  const lit_utf8_byte_t *start_p = string_start.ptr;
 
-  if (string_length == buffer_size)
+  if (string_length == string_start.size)
   {
     ecma_string_p = ecma_new_ecma_string_from_utf8 (start_p + start_pos, (lit_utf8_size_t) end_pos);
   }
@@ -2221,8 +2200,6 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
 
     ecma_string_p = ecma_new_ecma_string_from_utf8 (start_p, (lit_utf8_size_t) (end_p - start_p));
   }
-
-  ECMA_FINALIZE_UTF8_STRING (start_p, buffer_size);
 
   return ecma_string_p;
 } /* ecma_string_substr */
@@ -2318,23 +2295,17 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
 {
   ecma_string_t *ret_string_p;
 
-  lit_utf8_size_t utf8_str_size;
-  uint8_t flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *utf8_str_p = ecma_string_get_chars (string_p, &utf8_str_size, NULL, NULL, &flags);
-
-  if (utf8_str_size > 0)
+  ECMA_STRING_TO_UTF8_STRING (string_p, utf8_str);
+  if (utf8_str.size > 0)
   {
+    const lit_utf8_byte_t *utf8_str_p = utf8_str.ptr;
+    lit_utf8_size_t utf8_str_size = utf8_str.size;
     ecma_string_trim_helper (&utf8_str_p, &utf8_str_size);
     ret_string_p = ecma_new_ecma_string_from_utf8 (utf8_str_p, utf8_str_size);
   }
   else
   {
     ret_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-  }
-
-  if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) utf8_str_p, utf8_str_size);
   }
 
   return ret_string_p;
@@ -2410,8 +2381,8 @@ ecma_string_pad (ecma_value_t original_string_p, /**< Input ecma string */
 
   uint32_t remaining = fill_len - (prepend_count * filler_length);
 
-  ECMA_STRING_TO_UTF8_STRING (filler_p, start_p, utf8_str_size);
-  const lit_utf8_byte_t *temp_start_p = start_p;
+  ECMA_STRING_TO_UTF8_STRING (filler_p, start);
+  const lit_utf8_byte_t *temp_start_p = start.ptr;
   while (remaining > 0)
   {
     ecma_char_t ch;
@@ -2420,7 +2391,6 @@ ecma_string_pad (ecma_value_t original_string_p, /**< Input ecma string */
     temp_start_p += read_size;
     remaining--;
   }
-  ECMA_FINALIZE_UTF8_STRING (start_p, utf8_str_size);
   ecma_deref_ecma_string (filler_p);
 
   /* 11 - 12 */

@@ -626,19 +626,18 @@ ecma_builtin_global_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
 
   if (builtin_routine_id <= ECMA_GLOBAL_PARSE_FLOAT)
   {
-    ECMA_STRING_TO_UTF8_STRING (str_p, string_buff, string_buff_size);
+    ECMA_STRING_TO_UTF8_STRING (str_p, string_buff);
 
     if (builtin_routine_id == ECMA_GLOBAL_PARSE_INT)
     {
-      ret_value = ecma_number_parse_int (string_buff, string_buff_size, arguments_list_p[1]);
+      ret_value = ecma_number_parse_int (string_buff.ptr, string_buff.size, arguments_list_p[1]);
     }
     else
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_GLOBAL_PARSE_FLOAT);
-      ret_value = ecma_number_parse_float (string_buff, string_buff_size);
+      ret_value = ecma_number_parse_float (string_buff.ptr, string_buff.size);
     }
 
-    ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
     ecma_deref_ecma_string (str_p);
     return ret_value;
   }

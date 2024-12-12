@@ -39,13 +39,12 @@ method_hello (const jerry_call_info_t *call_info_p, /**< call information */
  */
 static void
 freeze_property (jerry_value_t target_obj, /**< target object */
-                 const char *target_prop) /**< target property name */
+                 jerry_value_t prop_name) /**< target property name that will be free/take */
 {
   // "freeze" property
   jerry_property_descriptor_t prop_desc = jerry_property_descriptor ();
   prop_desc.flags |= JERRY_PROP_IS_CONFIGURABLE_DEFINED;
 
-  jerry_value_t prop_name = jerry_string_sz (target_prop);
   jerry_value_t return_value = jerry_object_define_own_prop (target_obj, prop_name, &prop_desc);
   TEST_ASSERT (jerry_value_is_boolean (return_value));
   jerry_value_free (return_value);
@@ -81,7 +80,7 @@ test_simple_registration (void)
   jerry_value_free (register_result.result);
 
   jerry_value_t global_obj = jerry_current_realm ();
-  jerry_object_set_sz (global_obj, "test", target_object);
+  jerry_object_set_sz (global_obj, jerry_string_sz ("test"), target_object);
   jerry_value_free (target_object);
   jerry_value_free (global_obj);
 
@@ -162,12 +161,12 @@ test_error_setvalue (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  const char *target_prop = "test_err";
+#define target_prop "test_err"
   jerry_value_t global_obj = jerry_current_realm ();
-  freeze_property (global_obj, target_prop);
+  freeze_property (global_obj, jerry_string_sz (target_prop));
 
   jerry_value_t new_object = jerry_object ();
-  jerry_value_t set_result = jerry_object_set_sz (global_obj, target_prop, new_object);
+  jerry_value_t set_result = jerry_object_set_sz (global_obj, jerry_string_sz (target_prop), new_object);
   TEST_ASSERT (jerry_value_is_exception (set_result));
 
   jerry_value_free (set_result);
@@ -188,9 +187,9 @@ test_error_single_function (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  const char *target_prop = "test_err";
+#define target_prop "test_err"
   jerry_value_t target_object = jerry_object ();
-  freeze_property (target_object, target_prop);
+  freeze_property (target_object, jerry_string_sz (target_prop));
 
   jerryx_property_entry methods[] = {
     JERRYX_PROPERTY_FUNCTION (target_prop, method_hello), // This registration should fail
@@ -217,11 +216,11 @@ test_error_multiple_functions (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  const char *prop_ok = "prop_ok";
-  const char *prop_err = "prop_err";
-  const char *prop_not = "prop_not";
+#define prop_ok  "prop_ok"
+#define prop_err "prop_err"
+#define prop_not "prop_not"
   jerry_value_t target_object = jerry_object ();
-  freeze_property (target_object, prop_err);
+  freeze_property (target_object, jerry_string_sz (prop_err));
 
   jerryx_property_entry methods[] = {
     JERRYX_PROPERTY_FUNCTION (prop_ok, method_hello), // This registration is ok

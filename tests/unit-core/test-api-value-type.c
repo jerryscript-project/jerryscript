@@ -47,7 +47,7 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  const char test_eval_function[] = "function demo(a) { return a + 1; }; demo";
+#define test_eval_function "function demo(a) { return a + 1; }; demo"
 
   test_entry_t entries[] = {
     ENTRY (JERRY_TYPE_NUMBER, jerry_number (-33.0)),
@@ -63,7 +63,7 @@ main (void)
 
     ENTRY (JERRY_TYPE_OBJECT, jerry_object ()),
     ENTRY (JERRY_TYPE_OBJECT, jerry_array (10)),
-    ENTRY (JERRY_TYPE_EXCEPTION, jerry_throw_sz (JERRY_ERROR_TYPE, "error")),
+    ENTRY (JERRY_TYPE_EXCEPTION, jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("error"))),
 
     ENTRY (JERRY_TYPE_NULL, jerry_null ()),
 

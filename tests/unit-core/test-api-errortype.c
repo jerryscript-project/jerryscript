@@ -29,7 +29,7 @@ main (void)
 
   for (size_t idx = 0; idx < sizeof (errors) / sizeof (errors[0]); idx++)
   {
-    jerry_value_t error_obj = jerry_throw_sz (errors[idx], "test");
+    jerry_value_t error_obj = jerry_throw_sz (errors[idx], jerry_string_sz ("test"));
     TEST_ASSERT (jerry_value_is_exception (error_obj));
     TEST_ASSERT (jerry_error_type (error_obj) == errors[idx]);
 

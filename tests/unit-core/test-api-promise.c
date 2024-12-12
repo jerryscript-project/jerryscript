@@ -115,7 +115,7 @@ test_promise_resolve_fail (void)
 
   // A resolved promise should have the result of from the resolve call and a fulfilled state
   {
-    jerry_value_t error_obj = jerry_error_sz (JERRY_ERROR_TYPE, "resolve_fail");
+    jerry_value_t error_obj = jerry_error_sz (JERRY_ERROR_TYPE, jerry_string_sz ("resolve_fail"));
     jerry_value_t resolve_result = jerry_promise_reject (my_promise, error_obj);
     jerry_value_free (error_obj);
 

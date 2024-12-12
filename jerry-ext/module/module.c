@@ -19,9 +19,9 @@
 
 #include "jerryscript.h"
 
-static const char *module_name_property_name = "moduleName";
-static const char *module_not_found = "Module not found";
-static const char *module_name_not_string = "Module name is not a string";
+#define module_name_property_name "moduleName"
+#define module_not_found          "Module not found"
+#define module_name_not_string    "Module name is not a string"
 
 /**
  * Create an error related to modules
@@ -33,7 +33,7 @@ static const char *module_name_not_string = "Module name is not a string";
  */
 static jerry_value_t
 jerryx_module_create_error (jerry_error_t error_type, /**< the type of error to create */
-                            const char *message, /**< the error message */
+                            jerry_value_t message, /**< the error message */
                             const jerry_value_t module_name) /**< the module name */
 {
   jerry_value_t error_object = jerry_error_sz (error_type, message);
@@ -164,7 +164,7 @@ jerryx_module_add_to_cache (jerry_value_t cache, /**< cache to which to add the 
   return ret;
 } /* jerryx_module_add_to_cache */
 
-static const char *on_resolve_absent = "Module on_resolve () must not be NULL";
+#define on_resolve_absent "Module on_resolve () must not be NULL"
 
 /**
  * Declare and define the default module resolver - one which examines what modules are defined in the above linker
@@ -184,13 +184,13 @@ jerryx_resolve_native_module (const jerry_value_t canonical_name, /**< canonical
   /* Look for the module by its name in the list of module definitions. */
   for (module_p = first_module_p; module_p != NULL; module_p = module_p->next_p)
   {
-    if (module_p->name_p != NULL && strlen ((char *) module_p->name_p) == name_size
-        && !strncmp ((char *) module_p->name_p, (char *) name_string, name_size))
+    if (module_p->name.size == name_size && !strncmp ((char *) module_p->name.ptr, (char *) name_string, name_size))
     {
       /* If we find the module by its name we load it and cache it if it has an on_resolve () and complain otherwise. */
       (*result) =
-        ((module_p->on_resolve_p) ? module_p->on_resolve_p ()
-                                  : jerryx_module_create_error (JERRY_ERROR_TYPE, on_resolve_absent, canonical_name));
+        ((module_p->on_resolve_p)
+           ? module_p->on_resolve_p ()
+           : jerryx_module_create_error (JERRY_ERROR_TYPE, jerry_string_sz (on_resolve_absent), canonical_name));
       return true;
     }
   }
@@ -218,7 +218,7 @@ jerryx_module_resolve_local (const jerry_value_t name, /**< name of the module t
   {
     if (result != NULL)
     {
-      *result = jerryx_module_create_error (JERRY_ERROR_COMMON, module_name_not_string, name);
+      *result = jerryx_module_create_error (JERRY_ERROR_COMMON, jerry_string_sz (module_name_not_string), name);
     }
     goto done;
   }
@@ -268,7 +268,7 @@ jerryx_module_resolve_local (const jerry_value_t name, /**< name of the module t
   }
 
   /* If none of the resolvers manage to find the module, complain with "Module not found" */
-  *result = jerryx_module_create_error (JERRY_ERROR_COMMON, module_not_found, name);
+  *result = jerryx_module_create_error (JERRY_ERROR_COMMON, jerry_string_sz (module_not_found), name);
 
 done:
   /* Release the canonical names as returned by the various resolvers. */

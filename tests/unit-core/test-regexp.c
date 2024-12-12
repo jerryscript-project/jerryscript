@@ -25,9 +25,9 @@ main (void)
 
   jerry_value_t global_obj_val = jerry_current_realm ();
 
-  char pattern[] = "[^.]+";
+#define pattern "[^.]+"
   uint16_t flags = JERRY_REGEXP_FLAG_GLOBAL | JERRY_REGEXP_FLAG_MULTILINE;
-  jerry_value_t regex_obj = jerry_regexp_sz (pattern, flags);
+  jerry_value_t regex_obj = jerry_regexp_sz (jerry_string_sz (pattern), flags);
   TEST_ASSERT (jerry_value_is_object (regex_obj));
 
   const jerry_char_t func_src[] = "return [regex.exec('something.domain.com'), regex.multiline, regex.global];";

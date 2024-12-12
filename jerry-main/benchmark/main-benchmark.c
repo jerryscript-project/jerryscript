@@ -87,7 +87,7 @@ run (void)
 
     if (source_p == NULL)
     {
-      ret_value = jerry_throw_sz (JERRY_ERROR_COMMON, "");
+      ret_value = jerry_throw_sz (JERRY_ERROR_COMMON, jerry_string_sz (""));
       break;
     }
     else

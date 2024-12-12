@@ -252,22 +252,6 @@ lit_utf16_encode_code_point (lit_code_point_t cp, /**< the code point we encode 
 } /* lit_utf16_encode_code_point */
 
 /**
- * Calculate size of a zero-terminated utf-8 string
- *
- * NOTE:
- *   - string cannot be NULL
- *   - string should not contain zero characters in the middle
- *
- * @return size of a string
- */
-lit_utf8_size_t
-lit_zt_utf8_string_size (const lit_utf8_byte_t *utf8_str_p) /**< zero-terminated utf-8 string */
-{
-  JERRY_ASSERT (utf8_str_p != NULL);
-  return (lit_utf8_size_t) strlen ((const char *) utf8_str_p);
-} /* lit_zt_utf8_string_size */
-
-/**
  * Calculate length of a cesu-8 encoded string
  *
  * @return UTF-16 code units count

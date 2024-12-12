@@ -234,12 +234,11 @@ global_capture_handler (const jerry_call_info_t *call_info_p, /**< call informat
 
 static void
 register_callback (jerry_external_handler_t handler_p, /**< callback function */
-                   char *name_p) /**< name of the function */
+                   jerry_value_t name) /**< name of the function that will be free/take */
 {
   jerry_value_t global = jerry_current_realm ();
 
   jerry_value_t func = jerry_function_external (handler_p);
-  jerry_value_t name = jerry_string_sz (name_p);
   jerry_value_t result = jerry_object_set (global, name, func);
   TEST_ASSERT (!jerry_value_is_exception (result));
 
@@ -251,15 +250,15 @@ register_callback (jerry_external_handler_t handler_p, /**< callback function */
 } /* register_callback */
 
 static jerry_value_t
-run (const char *source_name_p, /**< source name */
+run (jerry_value_t source_name, /**< source name that will be free/take */
      const char *source_p) /**< source code */
 {
   jerry_parse_options_t parse_options;
   parse_options.options = JERRY_PARSE_HAS_SOURCE_NAME;
-  parse_options.source_name = jerry_string_sz (source_name_p);
+  parse_options.source_name = source_name;
 
   jerry_value_t code = jerry_parse ((const jerry_char_t *) source_p, strlen (source_p), &parse_options);
-  jerry_value_free (parse_options.source_name);
+  jerry_value_free (source_name);
   TEST_ASSERT (!jerry_value_is_exception (code));
 
   jerry_value_t result = jerry_run (code);
@@ -298,8 +297,8 @@ test_get_backtrace_api_call (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  register_callback (backtrace_handler, "backtrace");
-  register_callback (capture_handler, "capture");
+  register_callback (backtrace_handler, jerry_string_sz ("backtrace"));
+  register_callback (capture_handler, jerry_string_sz ("capture"));
 
   const char *source_p = ("function f() {\n"
                           "  return backtrace(0);\n"
@@ -315,7 +314,7 @@ test_get_backtrace_api_call (void)
                           "\n"
                           "h();\n");
 
-  jerry_value_t backtrace = run ("something.js", source_p);
+  jerry_value_t backtrace = run (jerry_string_sz ("something.js"), source_p);
 
   TEST_ASSERT (!jerry_value_is_exception (backtrace) && jerry_value_is_array (backtrace));
 
@@ -344,7 +343,7 @@ test_get_backtrace_api_call (void)
               "\n"
               "h();\n");
 
-  backtrace = run ("something_else.js", source_p);
+  backtrace = run (jerry_string_sz ("something_else.js"), source_p);
 
   TEST_ASSERT (!jerry_value_is_exception (backtrace) && jerry_value_is_array (backtrace));
 
@@ -373,7 +372,7 @@ test_get_backtrace_api_call (void)
               "\n"
               "h();\n");
 
-  jerry_value_t result = run ("capture_test.js", source_p);
+  jerry_value_t result = run (jerry_string_sz ("capture_test.js"), source_p);
 
   TEST_ASSERT (jerry_value_is_undefined (result));
   jerry_value_free (result);
@@ -401,7 +400,7 @@ test_get_backtrace_api_call (void)
                 "\n"
                 "g();\n");
 
-    result = run ("async_capture_test.js", source_p);
+    result = run (jerry_string_sz ("async_capture_test.js"), source_p);
 
     TEST_ASSERT (jerry_value_is_promise (result));
     jerry_value_free (result);
@@ -435,7 +434,7 @@ test_get_backtrace_api_call (void)
                 "}\n"
                 "new C;\n");
 
-    result = run ("class_capture_test.js", source_p);
+    result = run (jerry_string_sz ("class_capture_test.js"), source_p);
 
     TEST_ASSERT (!jerry_value_is_exception (result));
     TEST_ASSERT (frame_index == 2);
@@ -447,7 +446,7 @@ test_get_backtrace_api_call (void)
 
   jerry_value_free (result);
 
-  register_callback (global_capture_handler, "global_capture");
+  register_callback (global_capture_handler, jerry_string_sz ("global_capture"));
 
   frame_index = 0;
 
@@ -483,7 +482,7 @@ test_exception_backtrace (void)
                         "\n"
                         "g();\n");
 
-  jerry_value_t error = run ("bad.js", source);
+  jerry_value_t error = run (jerry_string_sz ("bad.js"), source);
 
   TEST_ASSERT (jerry_value_is_exception (error));
 
@@ -529,7 +528,7 @@ test_large_line_count (void)
                         "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
                         "g();\n");
 
-  jerry_value_t error = run ("bad.js", source);
+  jerry_value_t error = run (jerry_string_sz ("bad.js"), source);
 
   TEST_ASSERT (jerry_value_is_exception (error));
 

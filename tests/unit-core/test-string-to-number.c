@@ -27,14 +27,13 @@ int
 main (void)
 {
   TEST_INIT ();
-
-  const jerry_char_t *strings[] = {
-    (const jerry_char_t *) "1",         (const jerry_char_t *) "0.5",       (const jerry_char_t *) "12345",
-    (const jerry_char_t *) "1e-45",     (const jerry_char_t *) "-2.5e+38",  (const jerry_char_t *) "-2.5e38",
-    (const jerry_char_t *) "- 2.5e+38", (const jerry_char_t *) "-2 .5e+38", (const jerry_char_t *) "-2. 5e+38",
-    (const jerry_char_t *) "-2.5e+ 38", (const jerry_char_t *) "-2.5 e+38", (const jerry_char_t *) "-2.5e +38",
-    (const jerry_char_t *) "NaN",       (const jerry_char_t *) "abc",       (const jerry_char_t *) "   Infinity  ",
-    (const jerry_char_t *) "-Infinity", (const jerry_char_t *) "0",         (const jerry_char_t *) "0",
+  jerry_string_t strings[] = {
+    { JERRY_ZSTR_ARG ("1") },         { JERRY_ZSTR_ARG ("0.5") },       { JERRY_ZSTR_ARG ("12345") },
+    { JERRY_ZSTR_ARG ("1e-45") },     { JERRY_ZSTR_ARG ("-2.5e+38") },  { JERRY_ZSTR_ARG ("-2.5e38") },
+    { JERRY_ZSTR_ARG ("- 2.5e+38") }, { JERRY_ZSTR_ARG ("-2 .5e+38") }, { JERRY_ZSTR_ARG ("-2. 5e+38") },
+    { JERRY_ZSTR_ARG ("-2.5e+ 38") }, { JERRY_ZSTR_ARG ("-2.5 e+38") }, { JERRY_ZSTR_ARG ("-2.5e +38") },
+    { JERRY_ZSTR_ARG ("NaN") },       { JERRY_ZSTR_ARG ("abc") },       { JERRY_ZSTR_ARG ("   Infinity  ") },
+    { JERRY_ZSTR_ARG ("-Infinity") }, { JERRY_ZSTR_ARG ("0") },         { JERRY_ZSTR_ARG ("0") },
   };
 
   const ecma_number_t nums[] = { (ecma_number_t) 1.0,       (ecma_number_t) 0.5,      (ecma_number_t) 12345.0,
@@ -46,7 +45,7 @@ main (void)
 
   for (uint32_t i = 0; i < sizeof (nums) / sizeof (nums[0]); i++)
   {
-    ecma_number_t num = ecma_utf8_string_to_number (strings[i], lit_zt_utf8_string_size (strings[i]), 0);
+    ecma_number_t num = ecma_utf8_string_to_number (strings[i].ptr, strings[i].size, 0);
 
     if (num != nums[i] && (!ecma_number_is_nan (num) || !ecma_number_is_nan (nums[i])))
     {

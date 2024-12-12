@@ -2216,7 +2216,14 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             = "JERRY_STATIC_ASSERT(x,y)=" \
-                         "JERRY_ATTR_FORMAT(x,y,z)="
+                         "JERRY_ATTR_FORMAT(x,y,z)=" \
+                         "JERRY_ATTR_ALWAYS_INLINE=" \
+                         "JERRY_ATTR_NOINLINE=" \
+                         "JERRY_ATTR_PURE=" \
+                         "JERRY_ATTR_CONST=" \
+                         "JERRY_ATTR_HOT=" \
+                         "JERRY_ATTR_NORETURN=" \
+                         "JERRY_ATTR_WEAK="
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

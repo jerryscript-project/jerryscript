@@ -45,8 +45,6 @@ jcontext_has_pending_abort (void)
 
 /**
  * Set the abort flag for the context.
- *
- * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 jcontext_set_abort_flag (bool is_abort) /**< true - if the abort flag should be set
@@ -66,8 +64,6 @@ jcontext_set_abort_flag (bool is_abort) /**< true - if the abort flag should be 
 
 /**
  * Set the exception flag for the context.
- *
- * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 jcontext_set_exception_flag (bool is_exception) /**< true - if the exception flag should be set
@@ -85,8 +81,6 @@ jcontext_set_exception_flag (bool is_exception) /**< true - if the exception fla
 
 /**
  * Raise exception from the given error value.
- *
- * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 jcontext_raise_exception (ecma_value_t error) /**< error to raise */

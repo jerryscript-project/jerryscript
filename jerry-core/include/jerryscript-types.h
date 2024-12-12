@@ -153,6 +153,15 @@ typedef uint32_t jerry_length_t;
 typedef uint32_t jerry_value_t;
 
 /**
+ * Description of a JerryScript string for arguments passing
+ */
+typedef struct
+{
+  const jerry_char_t *ptr; /**< pointer to the zero-terminated ASCII/UTF-8/CESU-8 string */
+  jerry_size_t size; /**< size of the string, excluding '\0' terminator */
+} jerry_string_t;
+
+/**
  * Option bits for jerry_parse_options_t.
  */
 typedef enum
@@ -864,9 +873,15 @@ typedef void (*jerry_arraybuffer_free_cb_t) (jerry_arraybuffer_type_t buffer_typ
                                              void *user_p);
 
 /**
+ * Helper to to ensure str is a string literal
+ */
+#define JERRY_ZSTR_ENSURE_STRING_LITERAL(str) str ""
+
+/**
  * Helper to expand string literal to [string pointer, string size] argument pair.
  */
-#define JERRY_ZSTR_ARG(str) ((const jerry_char_t *) (str)), ((jerry_size_t) (sizeof (str) - 1))
+#define JERRY_ZSTR_ARG(str) \
+  ((const jerry_char_t *) (JERRY_ZSTR_ENSURE_STRING_LITERAL (str))), ((jerry_size_t) (sizeof (str) - 1))
 
 /**
  * @}

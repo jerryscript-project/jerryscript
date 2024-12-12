@@ -17,47 +17,46 @@
 
 #if defined(__unix__) || defined(__APPLE__)
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-/**
- * Normalize a file path using realpath.
- *
- * @param path_p: input path
- * @param path_size: input path size
- *
- * @return a newly allocated buffer with the normalized path if the operation is successful,
- *         NULL otherwise
- */
-jerry_char_t *
-jerry_port_path_normalize (const jerry_char_t *path_p, /**< input path */
-                           jerry_size_t path_size) /**< size of the path */
+jerry_size_t
+jerry_port_get_cwd (jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  (void) path_size;
+  if (buffer_p == NULL)
+  {
+    jerry_size_t size = 260;
+    char *buf = NULL;
+    char *ptr = NULL;
+    for (; ptr == NULL; size *= 2)
+    {
+      if ((ptr = realloc (buf, size)) == NULL)
+      {
+        break;
+      }
+      buf = ptr;
+      ptr = getcwd (buf, size);
+      if (ptr == NULL && errno != ERANGE)
+      {
+        break;
+      }
+    }
+    size = ptr ? (jerry_size_t) strlen (ptr) : 0;
+    if (buf)
+      free (buf);
+    return size;
+  }
 
-  return (jerry_char_t *) realpath ((char *) path_p, NULL);
-} /* jerry_port_path_normalize */
-
-/**
- * Free a path buffer returned by jerry_port_path_normalize.
- */
-void
-jerry_port_path_free (jerry_char_t *path_p)
-{
-  free (path_p);
-} /* jerry_port_path_free */
-
-/**
- * Computes the end of the directory part of a path.
- *
- * @return end of the directory part of a path.
- */
-jerry_size_t JERRY_ATTR_WEAK
-jerry_port_path_base (const jerry_char_t *path_p) /**< path */
-{
-  const jerry_char_t *basename_p = (jerry_char_t *) strrchr ((char *) path_p, '/') + 1;
-
-  return (jerry_size_t) (basename_p - path_p);
-} /* jerry_port_get_directory_end */
+  if (getcwd ((char *) buffer_p, buffer_size) != NULL)
+  {
+    if ((strlen ((char *) buffer_p) + 1) == buffer_size)
+    {
+      return buffer_size - 1;
+    }
+  }
+  return 0;
+} /* jerry_port_get_cwd */
 
 #endif /* defined(__unix__) || defined(__APPLE__) */

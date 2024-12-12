@@ -136,9 +136,8 @@ ecma_builtin_function_prototype_object_to_string (ecma_object_t *func_obj_p) /**
 
       ecma_string_t *result_string_p;
 
-      ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (source_code), source_p, source_size);
-      result_string_p = ecma_new_ecma_string_from_utf8 (source_p + range_start, range_size);
-      ECMA_FINALIZE_UTF8_STRING (source_p, source_size);
+      ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (source_code), source);
+      result_string_p = ecma_new_ecma_string_from_utf8 (source.ptr + range_start, range_size);
 
       return ecma_make_string_value (result_string_p);
     }

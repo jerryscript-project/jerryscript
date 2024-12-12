@@ -525,7 +525,7 @@ ecma_builtin_number_prototype_object_to_number_convert (ecma_number_t this_num, 
     }
 
     /* Append exponent part */
-    lit_utf8_size_t exp_size = ecma_uint32_to_utf8_string ((uint32_t) exponent, digits, 3);
+    lit_utf8_size_t exp_size = ecma_uint32_to_utf8_string ((uint32_t) exponent, digits, 3 + 1);
     ecma_stringbuilder_append_raw (&builder, digits, exp_size);
 
     return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));

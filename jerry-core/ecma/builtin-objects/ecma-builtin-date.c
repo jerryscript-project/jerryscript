@@ -638,9 +638,9 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
 static ecma_number_t
 ecma_builtin_date_parse (ecma_string_t *string_p) /**< string */
 {
-  ECMA_STRING_TO_UTF8_STRING (string_p, str_p, str_size);
-  const lit_utf8_byte_t *date_str_curr_p = str_p;
-  const lit_utf8_byte_t *date_str_end_p = str_p + str_size;
+  ECMA_STRING_TO_UTF8_STRING (string_p, str);
+  const lit_utf8_byte_t *date_str_curr_p = str.ptr;
+  const lit_utf8_byte_t *date_str_end_p = str.ptr + str.size;
 
   /* try to parse date string as ISO string - ECMA-262 v5, 15.9.1.15 */
   ecma_number_t tv = ecma_builtin_date_parse_basic (date_str_curr_p, date_str_end_p);
@@ -650,8 +650,6 @@ ecma_builtin_date_parse (ecma_string_t *string_p) /**< string */
     /* try to parse date string in Date.prototype.toString() or toUTCString() format */
     tv = ecma_builtin_date_parse_toString_formats (date_str_curr_p, date_str_end_p);
   }
-
-  ECMA_FINALIZE_UTF8_STRING (str_p, str_size);
 
   return tv;
 } /* ecma_builtin_date_parse */

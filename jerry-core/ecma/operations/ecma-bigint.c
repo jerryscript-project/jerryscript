@@ -198,10 +198,9 @@ ecma_bigint_parse_string_value (ecma_value_t string, /**< ecma string */
 {
   JERRY_ASSERT (ecma_is_value_string (string));
 
-  ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (string), string_buffer_p, string_buffer_size);
+  ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (string), string_buffer);
 
-  ecma_value_t result = ecma_bigint_parse_string (string_buffer_p, string_buffer_size, options);
-  ECMA_FINALIZE_UTF8_STRING (string_buffer_p, string_buffer_size);
+  ecma_value_t result = ecma_bigint_parse_string (string_buffer.ptr, string_buffer.size, options);
 
   return result;
 } /* ecma_bigint_parse_string_value */

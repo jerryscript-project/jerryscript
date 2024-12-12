@@ -36,7 +36,7 @@
 #define JERRYX_SYNTAX_ERROR_MAX_LINE_LENGTH 256
 
 /**
- * Struct for buffering print outpu
+ * Struct for buffering print output
  */
 typedef struct
 {

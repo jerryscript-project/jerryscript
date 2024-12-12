@@ -144,6 +144,8 @@ void jerry_port_context_free (void);
  *
  * The implementation can decide whether error and debug messages are logged to
  * the console, or saved to a database or to a file.
+ *
+ * @param message_p: the message to log.
  */
 void jerry_port_log (const char *message_p);
 
@@ -238,7 +240,7 @@ void jerry_port_path_free (jerry_char_t *path_p);
 jerry_size_t jerry_port_path_base (const jerry_char_t *path_p);
 
 /**
- * Open a source file and read the content into a buffer.
+ * Open a source file and read its contents into a buffer.
  *
  * When the source file is no longer needed by the caller, the returned pointer will be passed to
  * `jerry_port_source_free`, which can be used to finalize the buffer.

@@ -34,14 +34,6 @@ jerry_port_print_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
   fwrite (buffer_p, 1, buffer_size, stdout);
 } /* jerry_port_print_buffer */
 
-/**
- * Read a line from standard input as a zero-terminated string.
- *
- * @param out_size_p: length of the string
- *
- * @return pointer to the buffer storing the string,
- *         or NULL if end of input
- */
 jerry_char_t *JERRY_ATTR_WEAK
 jerry_port_line_read (jerry_size_t *out_size_p)
 {
@@ -80,11 +72,6 @@ jerry_port_line_read (jerry_size_t *out_size_p)
   }
 } /* jerry_port_line_read */
 
-/**
- * Free a line buffer allocated by jerry_port_line_read
- *
- * @param buffer_p: buffer that has been allocated by jerry_port_line_read
- */
 void JERRY_ATTR_WEAK
 jerry_port_line_free (jerry_char_t *buffer_p)
 {

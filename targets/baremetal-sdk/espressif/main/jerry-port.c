@@ -30,35 +30,20 @@
 
 static const char ESP_JS_TAG[] = "JS";
 
-/**
- * Provide log message implementation for the engine.
- */
 void
-jerry_port_log (const char *message_p) /**< message */
+jerry_port_log (const char *message_p)
 {
   ESP_LOGI (ESP_JS_TAG, "%s", message_p);
 } /* jerry_port_log */
 
-/**
- * Implementation of jerry_port_fatal.
- * Calls 'abort' if exit code is non-zero, 'exit' otherwise.
- */
 void
-jerry_port_fatal (jerry_fatal_code_t code) /**< cause of error */
+jerry_port_fatal (jerry_fatal_code_t code)
 {
   ESP_LOGE (ESP_JS_TAG, "Fatal error: %d", code);
   vTaskSuspend (NULL);
   abort ();
 } /* jerry_port_fatal */
 
-/**
- * Default implementation of jerry_port_local_tza. Uses the 'tm_gmtoff' field
- * of 'struct tm' (a GNU extension) filled by 'localtime_r' if available on the
- * system, does nothing otherwise.
- *
- * @return offset between UTC and local time at the given unix timestamp, if
- *         available. Otherwise, returns 0, assuming UTC time.
- */
 int32_t
 jerry_port_local_tza (double unix_ms)
 {
@@ -71,13 +56,6 @@ jerry_port_local_tza (double unix_ms)
   return -atoi (buf) * 3600 * 1000 / 100;
 } /* jerry_port_local_tza */
 
-/**
- * Implementation of jerry_port_get_current_time.
- * Uses 'gettimeofday' if available on the system, does nothing otherwise.
- *
- * @return milliseconds since Unix epoch if 'gettimeofday' is available
- *         0 - otherwise.
- */
 double
 jerry_port_current_time (void)
 {

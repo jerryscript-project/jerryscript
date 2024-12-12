@@ -327,6 +327,105 @@ parser_list_iterator_next (parser_list_iterator_t *iterator_p) /**< iterator */
   return result;
 } /* parser_list_iterator_next */
 
+/*
+ * Init branch linked list.
+ */
+void
+parser_branch_list_init (parser_context_t *context_p)
+{
+  context_p->branch_list = (parser_branch_list_t *) parser_malloc (context_p, sizeof (parser_branch_list_t));
+  context_p->branch_list->branch_node_p = NULL;
+  context_p->branch_list->next_p = NULL;
+} /* parser_branch_list_init */
+
+/**
+ * Append a branch node to the branch list.
+ *
+ * @return the newly created branch node.
+ */
+void *
+parser_branch_list_append (parser_context_t *context_p)
+{
+  parser_branch_node_t *result = parser_malloc (context_p, sizeof (parser_branch_node_t));
+
+  if (result == NULL)
+  {
+    return NULL;
+  }
+
+  parser_branch_list_t *last_pos = context_p->branch_list;
+  while (last_pos->next_p != NULL)
+  {
+    last_pos = last_pos->next_p;
+  }
+
+  last_pos->next_p = (parser_branch_list_t *) parser_malloc (context_p, sizeof (parser_branch_list_t));
+  last_pos->next_p->branch_node_p = result;
+  last_pos->next_p->next_p = NULL;
+
+  return result;
+} /* parser_branch_list_append */
+
+/**
+ * Remove a branch node from the branch list.
+ */
+void
+parser_branch_list_remove (const parser_context_t *context_p, const parser_branch_node_t *node_p)
+{
+  parser_branch_list_t *pos = context_p->branch_list;
+  parser_branch_list_t *prev_pos = NULL;
+
+  while (pos->next_p != NULL && pos->branch_node_p != node_p)
+  {
+    prev_pos = pos;
+    pos = pos->next_p;
+  }
+
+  if (pos->branch_node_p != node_p)
+  {
+    return;
+  }
+
+  parser_branch_list_t *next_pos = pos->next_p;
+
+  parser_free (pos->branch_node_p, sizeof (parser_branch_node_t));
+
+  if (prev_pos == NULL && next_pos == NULL)
+  {
+    context_p->branch_list->branch_node_p = NULL;
+    return;
+  }
+
+  parser_free (pos, sizeof (parser_branch_list_t));
+
+  if (prev_pos != NULL)
+  {
+    prev_pos->next_p = next_pos;
+  }
+} /* parser_branch_list_remove */
+
+/**
+ * Free the branch list.
+ */
+void
+parser_branch_list_free (const parser_context_t *context_p)
+{
+  parser_branch_list_t *pos = context_p->branch_list;
+  parser_branch_list_t *prev_pos = NULL;
+
+  while (pos != NULL)
+  {
+    prev_pos = pos;
+    pos = pos->next_p;
+    if (prev_pos->branch_node_p != NULL)
+    {
+      parser_free (prev_pos->branch_node_p, sizeof (parser_branch_node_t));
+    }
+
+    parser_free (prev_pos, sizeof (parser_branch_list_t));
+  }
+} /* parser_branch_list_free */
+
 /**********************************************************************/
 /* Parser stack management functions                                  */
 /**********************************************************************/

@@ -25,11 +25,8 @@
 
 #include <unistd.h>
 
-/**
- * Default implementation of jerry_port_sleep, uses 'usleep'.
- */
 void
-jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
+jerry_port_sleep (uint32_t sleep_time)
 {
   usleep ((useconds_t) sleep_time * 1000);
 } /* jerry_port_sleep */

@@ -22,20 +22,12 @@
 
 #include "getline-zephyr.h"
 
-/**
- * Aborts the program.
- */
 void
 jerry_port_fatal (jerry_fatal_code_t code)
 {
   exit ((int) code);
 } /* jerry_port_fatal */
 
-/**
- * Dummy function to get the time zone adjustment.
- *
- * @return 0
- */
 int32_t
 jerry_port_local_tza (double unix_ms)
 {
@@ -45,11 +37,6 @@ jerry_port_local_tza (double unix_ms)
   return 0;
 } /* jerry_port_local_tza */
 
-/**
- * Dummy function to get the current time.
- *
- * @return 0
- */
 double
 jerry_port_current_time (void)
 {
@@ -57,18 +44,12 @@ jerry_port_current_time (void)
   return (double) ms;
 } /* jerry_port_current_time */
 
-/**
- * Provide implementation of jerry_port_sleep.
- */
 void
-jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
+jerry_port_sleep (uint32_t sleep_time)
 {
   k_usleep ((useconds_t) sleep_time * 1000);
 } /* jerry_port_sleep */
 
-/**
- * Read line from stdin
- */
 jerry_char_t *
 jerry_port_line_read (jerry_size_t *out_size_p)
 {
@@ -78,9 +59,6 @@ jerry_port_line_read (jerry_size_t *out_size_p)
   return (jerry_char_t *) line_p;
 } /* jerry_port_line_read */
 
-/**
- * Free line, no-op.
- */
 void
 jerry_port_line_free (jerry_char_t *line_p)
 {

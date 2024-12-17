@@ -1599,7 +1599,8 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /**< ecma-st
                                     const ecma_string_t *string2_p) /**< ecma-string */
 {
   const lit_utf8_byte_t *utf8_string1_p, *utf8_string2_p;
-  lit_utf8_size_t string1_size_and_length[2], string2_size_and_length[2];
+  lit_utf8_size_t string1_size_and_length[2] = { 0 };
+  lit_utf8_size_t string2_size_and_length[2] = { 0 };
 
   utf8_string1_p = ecma_compare_get_string_chars (string1_p, string1_size_and_length);
   utf8_string2_p = ecma_compare_get_string_chars (string2_p, string2_size_and_length);

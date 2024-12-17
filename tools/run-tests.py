@@ -23,11 +23,8 @@ import subprocess
 import sys
 import settings
 
-if sys.version_info.major >= 3:
-    from runners import util
-else:
-    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/runners')
-    import util
+from runners import util
+from runners.util import TERM_NORMAL, TERM_YELLOW, TERM_BLUE, TERM_RED
 
 OUTPUT_DIR = os.path.join(settings.PROJECT_DIR, 'build', 'tests')
 
@@ -168,8 +165,12 @@ def get_arguments():
                         help='Run license check')
     parser.add_argument('--check-strings', action='store_true',
                         help='Run "magic string source code generator should be executed" check')
+    parser.add_argument('--build-config', type=str, default=None,
+                        help='Build config, when not specified, auto detect it')
     parser.add_argument('--build-debug', action='store_true',
                         help='Build debug version jerryscript')
+    parser.add_argument('--run-check-timeout', type=int, default=30 * 60,
+                        help='Specify run_check timeout, default to 30 minutes, unit: second')
     parser.add_argument('--jerry-debugger', action='store_true',
                         help='Run jerry-debugger tests')
     parser.add_argument('--jerry-tests', action='store_true',
@@ -197,11 +198,6 @@ def get_arguments():
 
 BINARY_CACHE = {}
 
-TERM_NORMAL = '\033[0m'
-TERM_YELLOW = '\033[1;33m'
-TERM_BLUE = '\033[1;34m'
-TERM_RED = '\033[1;31m'
-
 def report_command(cmd_type, cmd, env=None):
     sys.stderr.write(f'{TERM_BLUE}{cmd_type}{TERM_NORMAL}\n')
     if env is not None:
@@ -210,12 +206,14 @@ def report_command(cmd_type, cmd, env=None):
     sys.stderr.write(f"{TERM_BLUE}" +
                      f" \\{TERM_NORMAL}\n\t{TERM_BLUE}".join(cmd) +
                      f"{TERM_NORMAL}\n")
+    sys.stderr.flush()
 
 def report_skip(job):
     sys.stderr.write(f'{TERM_YELLOW}Skipping: {job.name}')
     if job.skip:
         sys.stderr.write(f' ({job.skip})')
     sys.stderr.write(f'{TERM_NORMAL}\n')
+    sys.stderr.flush()
 
 def create_binary(job, options):
     build_args = job.build_args[:]
@@ -246,6 +244,7 @@ def create_binary(job, options):
     if binary_key in BINARY_CACHE:
         ret, build_dir_path = BINARY_CACHE[binary_key]
         sys.stderr.write(f'(skipping: already built at {build_dir_path} with returncode {ret})\n')
+        sys.stderr.flush()
         return ret, build_dir_path
 
     try:
@@ -283,6 +282,7 @@ def iterate_test_runner_jobs(jobs, options):
 
         if build_dir_path in tested_paths:
             sys.stderr.write(f'(skipping: already tested with {build_dir_path})\n')
+            sys.stderr.flush()
             continue
         tested_paths.add(build_dir_path)
 
@@ -291,6 +291,7 @@ def iterate_test_runner_jobs(jobs, options):
 
         if bin_hash in tested_hashes:
             sys.stderr.write(f'(skipping: already tested with equivalent {tested_hashes[bin_hash]})\n')
+            sys.stderr.flush()
             continue
         tested_hashes[bin_hash] = build_dir_path
 
@@ -299,7 +300,7 @@ def iterate_test_runner_jobs(jobs, options):
 
         yield job, ret_build, test_cmd
 
-def run_check(runnable, env=None):
+def run_check(options, runnable, env=None):
     report_command('Test command:', runnable, env=env)
 
     if env is not None:
@@ -308,7 +309,11 @@ def run_check(runnable, env=None):
         env = full_env
 
     with subprocess.Popen(runnable, env=env) as proc:
-        proc.wait()
+        try:
+            proc.wait(timeout=options.run_check_timeout)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            return -1
         return proc.returncode
 
 def run_jerry_debugger_tests(options):
@@ -335,7 +340,7 @@ def run_jerry_debugger_tests(options):
                     if job.test_args:
                         test_cmd.extend(job.test_args)
 
-                    ret_test |= run_check(test_cmd)
+                    ret_test |= run_check(options, test_cmd)
 
     return ret_build | ret_test
 
@@ -367,7 +372,7 @@ def run_jerry_tests(options):
         if job.test_args:
             test_cmd.extend(job.test_args)
 
-        ret_test |= run_check(test_cmd, env=dict(TZ='UTC'))
+        ret_test |= run_check(options, test_cmd, env=dict(TZ='UTC'))
 
     return ret_build | ret_test
 
@@ -397,7 +402,7 @@ def run_test262_test_suite(options):
             test_cmd.append('--test262-test-list')
             test_cmd.append(options.test262_test_list)
 
-        ret_test |= run_check(test_cmd, env=dict(TZ='America/Los_Angeles'))
+        ret_test |= run_check(options, test_cmd, env=dict(TZ='America/Los_Angeles'))
 
     return ret_build | ret_test
 
@@ -412,16 +417,19 @@ def run_unittests(options):
             print(f"\n{TERM_RED}Build failed{TERM_NORMAL}\n")
             break
 
-        if sys.platform == 'win32':
-            if options.build_debug:
-                build_config = "Debug"
+        build_config = options.build_config
+        if build_config is None:
+            if sys.platform == 'win32':
+                if options.build_debug:
+                    build_config = "Debug"
+                else:
+                    build_config = "MinSizeRel"
             else:
-                build_config = "MinSizeRel"
-        else:
-            build_config = ""
+                build_config = ""
 
 
         ret_test |= run_check(
+            options,
             util.get_python_cmd_prefix() +
             [settings.UNITTEST_RUNNER_SCRIPT] +
             [os.path.join(build_dir_path, 'tests', build_config)] +
@@ -446,6 +454,7 @@ def run_buildoption_test(options):
 Check = collections.namedtuple('Check', ['enabled', 'runner', 'arg'])
 
 def main(options):
+    util.setup_stdio()
     checks = [
         Check(options.check_signed_off, run_check, [settings.SIGNED_OFF_SCRIPT]
               + {'tolerant': ['--tolerant'], 'gh-actions': ['--gh-actions']}.get(options.check_signed_off, [])),
@@ -455,16 +464,19 @@ def main(options):
         Check(options.check_format, run_check, [settings.FORMAT_SCRIPT]),
         Check(options.check_license, run_check, [settings.LICENSE_SCRIPT]),
         Check(options.check_strings, run_check, [settings.STRINGS_SCRIPT]),
-        Check(options.jerry_debugger, run_jerry_debugger_tests, options),
-        Check(options.jerry_tests, run_jerry_tests, options),
-        Check(options.test262, run_test262_test_suite, options),
-        Check(options.unittests, run_unittests, options),
-        Check(options.buildoption_test, run_buildoption_test, options),
+        Check(options.jerry_debugger, run_jerry_debugger_tests, None),
+        Check(options.jerry_tests, run_jerry_tests, None),
+        Check(options.test262, run_test262_test_suite, None),
+        Check(options.unittests, run_unittests, None),
+        Check(options.buildoption_test, run_buildoption_test, None),
     ]
 
     for check in checks:
         if check.enabled or options.all:
-            ret = check.runner(check.arg)
+            if check.arg is None:
+                ret = check.runner(options)
+            else:
+                ret = check.runner(options, check.arg)
             if ret:
                 sys.exit(ret)
 

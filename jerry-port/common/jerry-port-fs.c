@@ -97,7 +97,7 @@ jerry_port_source_free (uint8_t *buffer_p)
  * These functions provide generic implementation for paths and are only enabled when the compiler support weak symbols,
  * and we are not building for a platform that has platform specific versions.
  */
-#if defined(JERRY_WEAK_SYMBOL_SUPPORT) && !(defined(__unix__) || defined(__APPLE__) || defined(_WIN32))
+#if !(defined(__unix__) || defined(__APPLE__) || defined(_WIN32))
 
 jerry_char_t *JERRY_ATTR_WEAK
 jerry_port_path_normalize (const jerry_char_t *path_p, jerry_size_t path_size)
@@ -134,4 +134,4 @@ jerry_port_path_base (const jerry_char_t *path_p)
   return (jerry_size_t) (basename_p - path_p);
 } /* jerry_port_path_base */
 
-#endif /* defined(JERRY_WEAK_SYMBOL_SUPPORT) && !(defined(__unix__) || defined(__APPLE__) || defined(_WIN32)) */
+#endif /* !(defined(__unix__) || defined(__APPLE__) || defined(_WIN32)) */

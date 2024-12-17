@@ -30,6 +30,16 @@ JERRY_C_API_BEGIN
  * @{
  */
 
+/*
+ * Compiler-specific macros relevant for Win32.
+ */
+#ifdef _WIN32
+/**
+ * Both MINGW/MSVC do not support for declare a function a weak symbol.
+ */
+#define JERRY_ATTR_WEAK
+#endif /* _WIN32 */
+
 #ifdef __GNUC__
 
 /*
@@ -45,9 +55,10 @@ JERRY_C_API_BEGIN
 #define JERRY_ATTR_NORETURN           __attribute__ ((noreturn))
 #define JERRY_ATTR_PURE               __attribute__ ((pure))
 #define JERRY_ATTR_WARN_UNUSED_RESULT __attribute__ ((warn_unused_result))
-#define JERRY_ATTR_WEAK               __attribute__ ((weak))
 
-#define JERRY_WEAK_SYMBOL_SUPPORT
+#ifndef JERRY_ATTR_WEAK
+#define JERRY_ATTR_WEAK __attribute__ ((weak))
+#endif /* !JERRY_ATTR_WEAK*/
 
 #ifndef JERRY_LIKELY
 #define JERRY_LIKELY(x) __builtin_expect (!!(x), 1)

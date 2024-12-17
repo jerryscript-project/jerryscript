@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required (VERSION 2.8.12)
+cmake_minimum_required (VERSION 3.10)
 set(JERRYX_MODULE_UNITTEST_NAME unit-test-jerry-module)
 project (${JERRYX_MODULE_UNITTEST_NAME} C)
 

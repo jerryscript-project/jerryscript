@@ -91,7 +91,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      switch (ext_object_p->u.cls.type)
+      switch (ext_object_p->u.cls.head.type)
       {
         case ECMA_OBJECT_CLASS_STRING:
         {
@@ -99,7 +99,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
           {
             if (options & ECMA_PROPERTY_GET_VALUE)
             {
-              ecma_value_t prim_value_p = ext_object_p->u.cls.u3.value;
+              ecma_value_t prim_value_p = ecma_object_cls_general (ext_object_p)->value;
               ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
 
               lit_utf8_size_t length = ecma_string_get_length (prim_value_str_p);
@@ -113,7 +113,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
           if (index != ECMA_STRING_NOT_ARRAY_INDEX)
           {
-            ecma_value_t prim_value_p = ext_object_p->u.cls.u3.value;
+            ecma_value_t prim_value_p = ecma_object_cls_general (ext_object_p)->value;
             ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
 
             if (index < ecma_string_get_length (prim_value_str_p))
@@ -307,7 +307,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
       }
       case ECMA_OBJECT_TYPE_CLASS:
       {
-        if (((ecma_extended_object_t *) object_p)->u.cls.type == ECMA_OBJECT_CLASS_ARGUMENTS)
+        if (((ecma_extended_object_t *) object_p)->u.cls.head.type == ECMA_OBJECT_CLASS_ARGUMENTS)
         {
           property_p = ecma_op_arguments_object_try_to_lazy_instantiate_property (object_p, property_name_p);
         }
@@ -341,14 +341,14 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
     }
   }
   else if (type == ECMA_OBJECT_TYPE_CLASS
-           && ((ecma_extended_object_t *) object_p)->u.cls.type == ECMA_OBJECT_CLASS_ARGUMENTS
-           && (((ecma_extended_object_t *) object_p)->u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
+           && ((ecma_extended_object_t *) object_p)->u.cls.head.type == ECMA_OBJECT_CLASS_ARGUMENTS
+           && (((ecma_extended_object_t *) object_p)->u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
   {
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
     uint32_t index = ecma_string_get_array_index (property_name_p);
 
-    if (index < ext_object_p->u.cls.u2.formal_params_number)
+    if (index < ext_object_p->u.cls.arguments.formal_params_number)
     {
       ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) ext_object_p;
 
@@ -475,13 +475,13 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      switch (ext_object_p->u.cls.type)
+      switch (ext_object_p->u.cls.head.type)
       {
         case ECMA_OBJECT_CLASS_STRING:
         {
           if (ecma_string_is_length (property_name_p))
           {
-            ecma_value_t prim_value_p = ext_object_p->u.cls.u3.value;
+            ecma_value_t prim_value_p = ecma_object_cls_general (ext_object_p)->value;
 
             ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
             lit_utf8_size_t length = ecma_string_get_length (prim_value_str_p);
@@ -493,7 +493,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
           if (index != ECMA_STRING_NOT_ARRAY_INDEX)
           {
-            ecma_value_t prim_value_p = ext_object_p->u.cls.u3.value;
+            ecma_value_t prim_value_p = ecma_object_cls_general (ext_object_p)->value;
 
             ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
 
@@ -507,14 +507,14 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
         }
         case ECMA_OBJECT_CLASS_ARGUMENTS:
         {
-          if (!(ext_object_p->u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
+          if (!(ext_object_p->u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
           {
             break;
           }
 
           uint32_t index = ecma_string_get_array_index (property_name_p);
 
-          if (index < ext_object_p->u.cls.u2.formal_params_number)
+          if (index < ext_object_p->u.cls.arguments.formal_params_number)
           {
             ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) ext_object_p;
 
@@ -654,7 +654,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       }
       case ECMA_OBJECT_TYPE_CLASS:
       {
-        if (((ecma_extended_object_t *) object_p)->u.cls.type == ECMA_OBJECT_CLASS_ARGUMENTS)
+        if (((ecma_extended_object_t *) object_p)->u.cls.head.type == ECMA_OBJECT_CLASS_ARGUMENTS)
         {
           property_p = ecma_op_arguments_object_try_to_lazy_instantiate_property (object_p, property_name_p);
         }
@@ -1283,18 +1283,18 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      switch (ext_object_p->u.cls.type)
+      switch (ext_object_p->u.cls.head.type)
       {
         case ECMA_OBJECT_CLASS_ARGUMENTS:
         {
-          if (!(ext_object_p->u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
+          if (!(ext_object_p->u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
           {
             break;
           }
 
           uint32_t index = ecma_string_get_array_index (property_name_p);
 
-          if (index < ext_object_p->u.cls.u2.formal_params_number)
+          if (index < ext_object_p->u.cls.arguments.formal_params_number)
           {
             ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) ext_object_p;
 
@@ -1407,7 +1407,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-        switch (ext_object_p->u.cls.type)
+        switch (ext_object_p->u.cls.head.type)
         {
           case ECMA_OBJECT_CLASS_STRING:
           {
@@ -1415,7 +1415,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
             if (index != ECMA_STRING_NOT_ARRAY_INDEX)
             {
-              ecma_value_t prim_value_p = ext_object_p->u.cls.u3.value;
+              ecma_value_t prim_value_p = ecma_object_cls_general (ext_object_p)->value;
               ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
 
               if (index < ecma_string_get_length (prim_value_str_p))
@@ -1559,8 +1559,8 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-        if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_ARGUMENTS
-            && ext_object_p->u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
+        if (ext_object_p->u.cls.head.type == ECMA_OBJECT_CLASS_ARGUMENTS
+            && ext_object_p->u.cls.arguments.flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
         {
           const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | JERRY_PROP_SHOULD_THROW;
           return ecma_builtin_helper_def_prop (object_p, property_name_p, value, flags);
@@ -1735,7 +1735,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-      switch (ext_object_p->u.cls.type)
+      switch (ext_object_p->u.cls.head.type)
       {
         case ECMA_OBJECT_CLASS_ARGUMENTS:
         {
@@ -2145,7 +2145,7 @@ ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-      switch (ext_object_p->u.cls.type)
+      switch (ext_object_p->u.cls.head.type)
       {
         case ECMA_OBJECT_CLASS_STRING:
         {
@@ -2811,18 +2811,18 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-      switch (ext_object_p->u.cls.type)
+      switch (ext_object_p->u.cls.head.type)
       {
 #if JERRY_BUILTIN_TYPEDARRAY
         case ECMA_OBJECT_CLASS_TYPEDARRAY:
         {
-          return ecma_get_typedarray_magic_string_id (ext_object_p->u.cls.u1.typedarray_type);
+          return ecma_get_typedarray_magic_string_id (ext_object_p->u.cls.typedarray.type);
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 #if JERRY_BUILTIN_CONTAINER
         case ECMA_OBJECT_CLASS_CONTAINER:
         {
-          return (lit_magic_string_id_t) ext_object_p->u.cls.u2.container_id;
+          return (lit_magic_string_id_t) ext_object_p->u.cls.container.id;
         }
 #endif /* JERRY_BUILTIN_CONTAINER */
         default:
@@ -2831,10 +2831,10 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         }
       }
 
-      JERRY_ASSERT (ext_object_p->u.cls.type < ECMA_OBJECT_CLASS__MAX);
-      JERRY_ASSERT (ecma_class_object_magic_string_id[ext_object_p->u.cls.type] != LIT_MAGIC_STRING__EMPTY);
+      JERRY_ASSERT (ext_object_p->u.cls.head.type < ECMA_OBJECT_CLASS__MAX);
+      JERRY_ASSERT (ecma_class_object_magic_string_id[ext_object_p->u.cls.head.type] != LIT_MAGIC_STRING__EMPTY);
 
-      return (lit_magic_string_id_t) ecma_class_object_magic_string_id[ext_object_p->u.cls.type];
+      return (lit_magic_string_id_t) ecma_class_object_magic_string_id[ext_object_p->u.cls.head.type];
     }
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:

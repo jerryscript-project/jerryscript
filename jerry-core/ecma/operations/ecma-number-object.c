@@ -76,10 +76,10 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
     ecma_create_object (prototype_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_NUMBER;
+  ext_object_p->u.cls.head.type = ECMA_OBJECT_CLASS_NUMBER;
 
   /* Pass reference (no need to free conv_to_num_completion). */
-  ext_object_p->u.cls.u3.value = conv_to_num_completion;
+  ecma_object_cls_general (ext_object_p)->value = conv_to_num_completion;
 
   if (new_target)
   {

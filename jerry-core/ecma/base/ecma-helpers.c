@@ -74,6 +74,33 @@ JERRY_STATIC_ASSERT ((int) ECMA_OBJECT_TYPE_BUILT_IN_ARRAY == ((int) ECMA_OBJECT
                      ecma_object_type_built_in_array_has_unexpected_value);
 
 /**
+ * Get the general class property of extended ECMA-object
+ *
+ * @return pointer to the object's general class property
+ */
+extern inline ecma_object_cls_general_t *JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+ecma_object_cls_general (ecma_extended_object_t *obj) /**< pointer to extended ECMA-object */
+{
+  ecma_object_cls_general_t *cls = &(obj->u.cls.__general);
+#ifndef JERRY_NDEBUG
+  bool is_general_class = cls->cls_type == ECMA_OBJECT_CLASS_BOOLEAN || cls->cls_type == ECMA_OBJECT_CLASS_NUMBER
+                          || cls->cls_type == ECMA_OBJECT_CLASS_STRING || cls->cls_type == ECMA_OBJECT_CLASS_BIGINT
+                          || cls->cls_type == ECMA_OBJECT_CLASS_SYMBOL;
+#if JERRY_PARSER
+  is_general_class |= cls->cls_type == ECMA_OBJECT_CLASS_SCRIPT;
+#endif /* JERRY_PARSER */
+#if JERRY_BUILTIN_REGEXP
+  is_general_class |= cls->cls_type == ECMA_OBJECT_CLASS_REGEXP;
+#endif /* JERRY_BUILTIN_REGEXP */
+#if JERRY_MODULE_SYSTEM
+  is_general_class |= cls->cls_type == ECMA_OBJECT_CLASS_MODULE_NAMESPACE;
+#endif /* JERRY_MODULE_SYSTEM */
+  JERRY_ASSERT (is_general_class);
+#endif /* !JERRY_NDEBUG */
+  return cls;
+} /* ecma_object_cls_general */
+
+/**
  * Create an object with specified prototype object
  * (or NULL prototype if there is not prototype for the object)
  * and value of 'Extensible' attribute.
@@ -266,7 +293,7 @@ ecma_object_class_is (ecma_object_t *object_p, /**< object */
   {
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-    if (ext_object_p->u.cls.type == (uint8_t) class_id)
+    if (ext_object_p->u.cls.head.type == (uint8_t) class_id)
     {
       return true;
     }
@@ -1616,18 +1643,19 @@ ecma_script_get_from_value (ecma_value_t value) /**< compiled code */
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-        if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_SCRIPT)
+        if (ext_object_p->u.cls.head.type == ECMA_OBJECT_CLASS_SCRIPT)
         {
-          bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ext_object_p->u.cls.u3.value);
+          bytecode_p =
+            ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ecma_object_cls_general (ext_object_p)->value);
           break;
         }
 
 #if JERRY_MODULE_SYSTEM
-        if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_MODULE)
+        if (ext_object_p->u.cls.head.type == ECMA_OBJECT_CLASS_MODULE)
         {
           ecma_module_t *module_p = (ecma_module_t *) object_p;
 
-          if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE))
+          if (!(module_p->header.u.cls.module.flags & ECMA_MODULE_IS_NATIVE))
           {
             bytecode_p = module_p->u.compiled_code_p;
             break;

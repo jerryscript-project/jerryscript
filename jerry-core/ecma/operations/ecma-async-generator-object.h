@@ -41,18 +41,18 @@ typedef enum
  * Get the state of an async yield iterator.
  */
 #define ECMA_AWAIT_GET_STATE(async_generator_object_p) \
-  ((async_generator_object_p)->extended_object.u.cls.u2.executable_obj_flags >> ECMA_AWAIT_STATE_SHIFT)
+  ((async_generator_object_p)->extended_object.u.cls.generator.obj_flags >> ECMA_AWAIT_STATE_SHIFT)
 
 /**
  * Set the state of an async yield iterator.
  */
-#define ECMA_AWAIT_SET_STATE(async_generator_object_p, to)                                           \
-  do                                                                                                 \
-  {                                                                                                  \
-    uint16_t extra_info = (async_generator_object_p)->extended_object.u.cls.u2.executable_obj_flags; \
-    extra_info &= ((1 << ECMA_AWAIT_STATE_SHIFT) - 1);                                               \
-    extra_info |= (ECMA_AWAIT_##to) << ECMA_AWAIT_STATE_SHIFT;                                       \
-    (async_generator_object_p)->extended_object.u.cls.u2.executable_obj_flags = extra_info;          \
+#define ECMA_AWAIT_SET_STATE(async_generator_object_p, to)                                       \
+  do                                                                                             \
+  {                                                                                              \
+    uint16_t extra_info = (async_generator_object_p)->extended_object.u.cls.generator.obj_flags; \
+    extra_info &= ((1 << ECMA_AWAIT_STATE_SHIFT) - 1);                                           \
+    extra_info |= (ECMA_AWAIT_##to) << ECMA_AWAIT_STATE_SHIFT;                                   \
+    (async_generator_object_p)->extended_object.u.cls.generator.obj_flags = extra_info;          \
   } while (false)
 
 /**
@@ -69,7 +69,7 @@ typedef enum
  * Change the state of an async yield iterator.
  */
 #define ECMA_AWAIT_CHANGE_STATE(async_generator_object_p, from, to) \
-  ((async_generator_object_p)->extended_object.u.cls.u2.executable_obj_flags ^= ECMA_AWAIT_CS_HELPER (from, to))
+  ((async_generator_object_p)->extended_object.u.cls.generator.obj_flags ^= ECMA_AWAIT_CS_HELPER (from, to))
 
 ecma_value_t ecma_async_generator_enqueue (vm_executable_object_t *async_generator_object_p,
                                            ecma_async_generator_operation_type_t operation,

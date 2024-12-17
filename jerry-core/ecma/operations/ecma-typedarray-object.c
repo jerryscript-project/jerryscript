@@ -767,7 +767,7 @@ ecma_get_typedarray_id (ecma_object_t *obj_p) /**< typedarray object **/
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-  return (ecma_typedarray_type_t) ext_object_p->u.cls.u1.typedarray_type;
+  return (ecma_typedarray_type_t) ext_object_p->u.cls.typedarray.type;
 } /* ecma_get_typedarray_id */
 
 /**
@@ -861,10 +861,10 @@ ecma_typedarray_create_object_with_length (uint32_t array_length, /**< length of
   ecma_object_t *object_p = ecma_create_object (proto_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_TYPEDARRAY;
-  ext_object_p->u.cls.u1.typedarray_type = (uint8_t) typedarray_id;
-  ext_object_p->u.cls.u2.typedarray_flags = 0;
-  ext_object_p->u.cls.u3.arraybuffer = ecma_make_object_value (new_arraybuffer_p);
+  ext_object_p->u.cls.head.type = ECMA_OBJECT_CLASS_TYPEDARRAY;
+  ext_object_p->u.cls.typedarray.type = (uint8_t) typedarray_id;
+  ext_object_p->u.cls.typedarray.flags = 0;
+  ext_object_p->u.cls.typedarray.arraybuffer = ecma_make_object_value (new_arraybuffer_p);
 
   ecma_deref_object (new_arraybuffer_p);
 
@@ -1529,7 +1529,7 @@ ecma_typedarray_get_arraybuffer (ecma_object_t *typedarray_p) /**< the pointer t
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) typedarray_p;
 
-  return ecma_get_object_from_value (ext_object_p->u.cls.u3.arraybuffer);
+  return ecma_get_object_from_value (ext_object_p->u.cls.typedarray.arraybuffer);
 } /* ecma_typedarray_get_arraybuffer */
 
 /**
@@ -1557,11 +1557,11 @@ ecma_typedarray_get_length (ecma_object_t *typedarray_p) /**< the pointer to the
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) typedarray_p;
 
-  if (!(ext_object_p->u.cls.u2.typedarray_flags & ECMA_TYPEDARRAY_IS_EXTENDED))
+  if (!(ext_object_p->u.cls.typedarray.flags & ECMA_TYPEDARRAY_IS_EXTENDED))
   {
-    ecma_object_t *arraybuffer_p = ecma_get_object_from_value (ext_object_p->u.cls.u3.arraybuffer);
+    ecma_object_t *arraybuffer_p = ecma_get_object_from_value (ext_object_p->u.cls.typedarray.arraybuffer);
     ecma_extended_object_t *arraybuffer_object_p = (ecma_extended_object_t *) arraybuffer_p;
-    uint32_t buffer_length = arraybuffer_object_p->u.cls.u3.length;
+    uint32_t buffer_length = arraybuffer_object_p->u.cls.arraybuffer.length;
     uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
 
     return buffer_length >> shift;
@@ -1591,7 +1591,7 @@ ecma_typedarray_get_offset (ecma_object_t *typedarray_p) /**< the pointer to the
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) typedarray_p;
 
-  if (!(ext_object_p->u.cls.u2.typedarray_flags & ECMA_TYPEDARRAY_IS_EXTENDED))
+  if (!(ext_object_p->u.cls.typedarray.flags & ECMA_TYPEDARRAY_IS_EXTENDED))
   {
     return 0;
   }
@@ -1767,14 +1767,14 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
   ecma_object_t *object_p = ecma_create_object (proto_p, object_size, ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_TYPEDARRAY;
-  ext_object_p->u.cls.u1.typedarray_type = (uint8_t) typedarray_id;
-  ext_object_p->u.cls.u2.typedarray_flags = 0;
-  ext_object_p->u.cls.u3.arraybuffer = ecma_make_object_value (arraybuffer_p);
+  ext_object_p->u.cls.head.type = ECMA_OBJECT_CLASS_TYPEDARRAY;
+  ext_object_p->u.cls.typedarray.type = (uint8_t) typedarray_id;
+  ext_object_p->u.cls.typedarray.flags = 0;
+  ext_object_p->u.cls.typedarray.arraybuffer = ecma_make_object_value (arraybuffer_p);
 
   if (needs_ext_typedarray_obj)
   {
-    ext_object_p->u.cls.u2.typedarray_flags |= ECMA_TYPEDARRAY_IS_EXTENDED;
+    ext_object_p->u.cls.typedarray.flags |= ECMA_TYPEDARRAY_IS_EXTENDED;
 
     ecma_extended_typedarray_object_t *typedarray_info_p = (ecma_extended_typedarray_object_t *) object_p;
     typedarray_info_p->array_length = new_byte_length >> element_size_shift;

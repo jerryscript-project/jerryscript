@@ -917,8 +917,6 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
  *
  * Note:
  *      value previously stored in the property is freed
- *
- * @return void
  */
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */

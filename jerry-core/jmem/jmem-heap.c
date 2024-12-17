@@ -459,8 +459,6 @@ jmem_heap_insert_block (jmem_heap_free_t *block_p, /**< block to insert */
 
 /**
  * Internal method for freeing a memory block.
- *
- * @return void
  */
 void JERRY_ATTR_HOT
 jmem_heap_free_block_internal (void *ptr, /**< pointer to beginning of data space of the block */
@@ -695,8 +693,6 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
 
 /**
  * Free memory block
- *
- * @return void
  */
 extern inline void JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
 jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the block */

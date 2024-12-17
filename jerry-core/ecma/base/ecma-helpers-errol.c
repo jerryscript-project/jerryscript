@@ -78,8 +78,6 @@ typedef struct
 
 /**
  * Normalize the number by factoring in the error.
- *
- * @return void
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_normalize_high_prec_data (ecma_high_prec_t *hp_data_p) /**< [in, out] float pair */
@@ -92,8 +90,6 @@ ecma_normalize_high_prec_data (ecma_high_prec_t *hp_data_p) /**< [in, out] float
 
 /**
  * Multiply the high-precision number by ten.
- *
- * @return void
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_multiply_high_prec_by_10 (ecma_high_prec_t *hp_data_p) /**< [in, out] high-precision number */

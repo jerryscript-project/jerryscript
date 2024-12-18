@@ -15,6 +15,9 @@
 
 #include "ecma-errors.h"
 
+#include "ecma-globals.h"
+#include "ecma-helpers.h"
+
 #if JERRY_ERROR_MESSAGES
 /**
  * Struct to store ecma error message with its size.
@@ -37,35 +40,21 @@ static ecma_error_message_t ecma_error_messages[] JERRY_ATTR_CONST_DATA = {
 #endif /* JERRY_ERROR_MESSAGES */
 
 /**
- * Get specified ecma error as zero-terminated string
+ * Get error string of specified ecma error
  *
- * @return pointer to zero-terminated ecma error
+ * @return created string for ecma error
  */
-const char *
+ecma_value_t
 ecma_get_error_msg (ecma_error_msg_t id) /**< ecma error id */
 {
   JERRY_ASSERT (id != ECMA_IS_VALID_CONSTRUCTOR);
-
+  ecma_string_t *ecma_str_p;
 #if JERRY_ERROR_MESSAGES
-  return ecma_error_messages[id].text;
+  ecma_error_message_t *msg = ecma_error_messages + id;
+  JERRY_ASSERT (lit_is_valid_cesu8_string ((const lit_utf8_byte_t *) msg->text, msg->size));
+  ecma_str_p = ecma_new_ecma_string_from_ascii ((const lit_utf8_byte_t *) msg->text, msg->size);
 #else /* !JERRY_ERROR_MESSAGES */
-  return NULL;
+  ecma_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 #endif /* JERRY_ERROR_MESSAGES */
+  return ecma_make_string_value (ecma_str_p);
 } /* ecma_get_error_msg */
-
-/**
- * Get size of specified ecma error
- *
- * @return size in bytes
- */
-lit_utf8_size_t
-ecma_get_error_size (ecma_error_msg_t id) /**< ecma error id */
-{
-  JERRY_ASSERT (id != ECMA_IS_VALID_CONSTRUCTOR);
-
-#if JERRY_ERROR_MESSAGES
-  return ecma_error_messages[id].size;
-#else /* !JERRY_ERROR_MESSAGES */
-  return 0;
-#endif /* JERRY_ERROR_MESSAGES */
-} /* ecma_get_error_size */

@@ -100,7 +100,7 @@ native_handler (const jerry_call_info_t *call_info_p, /**< call info */
 
   if (mode == 7)
   {
-    jerry_value_t result = jerry_throw_sz (JERRY_ERROR_COMMON, "Error!");
+    jerry_value_t result = jerry_throw_sz (JERRY_ERROR_COMMON, jerry_string_sz ("Error!"));
 
     TEST_ASSERT (!jerry_exception_is_captured (result));
     jerry_exception_allow_capture (result, false);

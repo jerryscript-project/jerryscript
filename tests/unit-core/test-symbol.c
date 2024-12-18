@@ -19,10 +19,10 @@
 #include "test-common.h"
 
 /* foo string */
-#define STRING_FOO ("foo")
+#define STRING_FOO "foo"
 
 /* bar string */
-#define STRING_BAR ("bar")
+#define STRING_BAR "bar"
 
 /* Symbol(bar) desciptive string */
 #define SYMBOL_DESCIPTIVE_STRING_BAR "Symbol(bar)"
@@ -224,9 +224,12 @@ main (void)
                                  "  [Symbol.matchAll]: 13,"
                                  "})";
 
-  const char *symbols[] = {
-    "asyncIterator", "hasInstance", "isConcatSpreadable", "iterator",    "match",       "replace",  "search",
-    "species",       "split",       "toPrimitive",        "toStringTag", "unscopables", "matchAll",
+  const jerry_value_t symbols[] = {
+    jerry_string_sz ("asyncIterator"), jerry_string_sz ("hasInstance"), jerry_string_sz ("isConcatSpreadable"),
+    jerry_string_sz ("iterator"),      jerry_string_sz ("match"),       jerry_string_sz ("replace"),
+    jerry_string_sz ("search"),        jerry_string_sz ("species"),     jerry_string_sz ("split"),
+    jerry_string_sz ("toPrimitive"),   jerry_string_sz ("toStringTag"), jerry_string_sz ("unscopables"),
+    jerry_string_sz ("matchAll"),
   };
 
   jerry_value_t obj = jerry_eval (obj_src, sizeof (obj_src) - 1, JERRY_PARSE_NO_OPTS);
@@ -245,9 +248,7 @@ main (void)
   {
     jerry_value_t well_known_symbol = jerry_symbol (id);
 
-    jerry_value_t prop_str = jerry_string_sz (symbols[prop_index]);
-    jerry_value_t current_global_symbol = jerry_object_get (builtin_symbol, prop_str);
-    jerry_value_free (prop_str);
+    jerry_value_t current_global_symbol = jerry_object_get (builtin_symbol, symbols[prop_index]);
 
     jerry_value_t relation = jerry_binary_op (JERRY_BIN_OP_STRICT_EQUAL, well_known_symbol, current_global_symbol);
 
@@ -272,6 +273,7 @@ main (void)
     jerry_value_free (well_known_symbol);
   }
 
+  jerry_value_list_free (symbols, sizeof (symbols) / symbols[0]);
   jerry_value_free (builtin_symbol);
 
   /* Deletion of the 'Symbol' builtin makes the well-known symbols unaccessible from JS context

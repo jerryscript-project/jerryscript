@@ -33,7 +33,4 @@ typedef enum
   ECMA_IS_VALID_CONSTRUCTOR /* used as return value when checking constructor */
 } ecma_error_msg_t;
 
-const char* ecma_get_error_msg (ecma_error_msg_t id);
-lit_utf8_size_t ecma_get_error_size (ecma_error_msg_t id);
-
 #endif /* !ECMA_ERRORS_H */

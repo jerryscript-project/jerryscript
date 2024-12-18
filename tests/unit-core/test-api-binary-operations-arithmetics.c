@@ -59,7 +59,7 @@ main (void)
 
   jerry_value_t obj1 = jerry_eval ((jerry_char_t *) "o={x:1};o", 9, JERRY_PARSE_NO_OPTS);
   jerry_value_t obj2 = jerry_eval ((jerry_char_t *) "o={x:1};o", 9, JERRY_PARSE_NO_OPTS);
-  jerry_value_t err1 = jerry_throw_sz (JERRY_ERROR_SYNTAX, "error");
+  jerry_value_t err1 = jerry_throw_sz (JERRY_ERROR_SYNTAX, jerry_string_sz ("error"));
 
   test_nan_entry_t test_nans[] = {
     /* Testing addition (+) */

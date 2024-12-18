@@ -20,9 +20,10 @@
 #define MODULE_NAME my_custom_module
 
 static void
-jobject_set_property_jval (jerry_value_t jobj, const char *name, jerry_value_t value)
+jobject_set_property_jval (jerry_value_t jobj,
+                           jerry_value_t prop_name, /**< property name value that will be free/take */
+                           jerry_value_t value)
 {
-  jerry_value_t prop_name = jerry_string_sz (name);
   jerry_value_t ret_val = jerry_object_set (jobj, prop_name, value);
   jerry_value_free (prop_name);
   jerry_value_free (ret_val);
@@ -43,11 +44,11 @@ my_custom_module_on_resolve (void)
 {
   jerry_value_t mymodule = jerry_object ();
   jerry_value_t val = jerry_number (42);
-  jobject_set_property_jval (mymodule, "number_value", val);
+  jobject_set_property_jval (mymodule, jerry_string_sz ("number_value"), val);
   jerry_value_free (val);
 
   jerry_value_t jfunc = jerry_function_external (call_function_with_callback);
-  jobject_set_property_jval (mymodule, "call_function_with_callback", jfunc);
+  jobject_set_property_jval (mymodule, jerry_string_sz ("call_function_with_callback"), jfunc);
   jerry_value_free (jfunc);
 
   return mymodule;

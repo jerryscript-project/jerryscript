@@ -30,8 +30,8 @@ static const jerry_char_t test_source[] = TEST_STRING_LITERAL ("var p1 = create_
 static int count_in_assert = 0;
 static jerry_value_t my_promise1;
 static jerry_value_t my_promise2;
-static const char s1[] = "resolved";
-static const char s2[] = "rejected";
+#define s1 "resolved"
+#define s2 "rejected"
 
 static jerry_value_t
 create_promise1_handler (const jerry_call_info_t *call_info_p, /**< call information */
@@ -86,13 +86,12 @@ assert_handler (const jerry_call_info_t *call_info_p, /**< call information */
  * Register a JavaScript function in the global object.
  */
 static void
-register_js_function (const char *name_p, /**< name of the function */
+register_js_function (jerry_value_t function_name_val, /**< name of the function that will be free/take*/
                       jerry_external_handler_t handler_p) /**< function callback */
 {
   jerry_value_t global_obj_val = jerry_current_realm ();
 
   jerry_value_t function_val = jerry_function_external (handler_p);
-  jerry_value_t function_name_val = jerry_string_sz (name_p);
   jerry_value_t result_val = jerry_object_set (global_obj_val, function_name_val, function_val);
 
   jerry_value_free (function_name_val);
@@ -107,9 +106,9 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  register_js_function ("create_promise1", create_promise1_handler);
-  register_js_function ("create_promise2", create_promise2_handler);
-  register_js_function ("assert", assert_handler);
+  register_js_function (jerry_string_sz ("create_promise1"), create_promise1_handler);
+  register_js_function (jerry_string_sz ("create_promise2"), create_promise2_handler);
+  register_js_function (jerry_string_sz ("assert"), assert_handler);
 
   jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
   TEST_ASSERT (!jerry_value_is_exception (parsed_code_val));

@@ -90,10 +90,11 @@ str_to_uint (const char *num_str_p) /**< string to convert */
  * Register a JavaScript function in the global object.
  */
 static void
-register_js_function (const char *name_p, /**< name of the function */
+register_js_function (const jerry_char_t *name_p, /**< name of the function */
+                      jerry_size_t *name_size, /**< size of the name */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t result_val = jerryx_register_global (name_p, handler_p);
+  jerry_value_t result_val = jerryx_register_global (jerry_string_utf8 (name_p, name_size), handler_p);
 
   if (jerry_value_is_exception (result_val))
   {
@@ -191,9 +192,9 @@ jerry_main (int argc, char *argv[])
     jerryx_debugger_after_connect (jerryx_debugger_tcp_create (debug_port) && jerryx_debugger_ws_create ());
   }
 
-  register_js_function ("assert", jerryx_handler_assert);
-  register_js_function ("gc", jerryx_handler_gc);
-  register_js_function ("print", jerryx_handler_print);
+  register_js_function (JERRY_ZSTR_ARG ("assert"), jerryx_handler_assert);
+  register_js_function (JERRY_ZSTR_ARG ("gc"), jerryx_handler_gc);
+  register_js_function (JERRY_ZSTR_ARG ("print"), jerryx_handler_print);
 
   jerry_value_t ret_value = jerry_undefined ();
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;

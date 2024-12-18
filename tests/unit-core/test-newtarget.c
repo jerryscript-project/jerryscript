@@ -22,13 +22,12 @@
  * Register a JavaScript function in the global object.
  */
 static jerry_value_t
-register_js_function (const char *name_p, /**< name of the function */
+register_js_function (jerry_value_t function_name_val, /**< name of the function that will be free/take */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
   jerry_value_t global_obj_val = jerry_current_realm ();
 
   jerry_value_t function_val = jerry_function_external (handler_p);
-  jerry_value_t function_name_val = jerry_string_sz (name_p);
   jerry_value_t result_val = jerry_object_set (global_obj_val, function_name_val, function_val);
 
   jerry_value_free (function_name_val);
@@ -110,7 +109,7 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_value_t demo_func = register_js_function ("Demo", construct_handler);
+  jerry_value_t demo_func = register_js_function (jerry_string_sz ("Demo"), construct_handler);
 
   {
     jerry_value_t test_arg = jerry_number (TEST_ID_SIMPLE_CONSTRUCT);

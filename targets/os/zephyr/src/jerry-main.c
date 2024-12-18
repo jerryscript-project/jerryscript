@@ -47,7 +47,7 @@ main (void)
 
   zephyr_getline_init ();
   jerry_init (JERRY_INIT_EMPTY);
-  jerryx_register_global ("print", jerryx_handler_print);
+  jerryx_register_global (jerry_string_sz ("print"), jerryx_handler_print);
 
   jerryx_repl (JERRY_ZSTR_ARG ("js> "));
 

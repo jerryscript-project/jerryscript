@@ -68,6 +68,11 @@ set(ENABLE_LTO                ON  CACHE BOOL "Enable LTO build?")
 set(ENABLE_STRIP              ON  CACHE BOOL "Enable stripping all symbols from release binary?")
 set(ENABLE_COMPILE_COMMANDS   ON  CACHE BOOL "Enable generating compile_commands.json?")
 
+if (APPLE)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+endif()
+
 if(USING_MSVC)
   set(ENABLE_STATIC_CRT         OFF CACHE BOOL "Enable MSVC static CRT?")
 endif()

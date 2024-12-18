@@ -20,10 +20,11 @@
 #include "jerryscript-port.h"
 
 void
-jerry_port_log (const char *message_p)
+jerry_port_log_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  (void) message_p;
-} /* jerry_port_log */
+  JERRY_UNUSED (buffer_p);
+  JERRY_UNUSED (buffer_size);
+} /* jerry_port_log_buffer */
 
 jerry_char_t *
 jerry_port_line_read (jerry_size_t *out_size_p)

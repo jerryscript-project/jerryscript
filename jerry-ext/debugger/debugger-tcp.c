@@ -399,7 +399,7 @@ jerryx_debugger_tcp_create (uint16_t port) /**< listening port */
 bool
 jerryx_debugger_tcp_create (uint16_t port)
 {
-  JERRYX_UNUSED (port);
+  JERRY_UNUSED (port);
   return false;
 } /* jerryx_debugger_tcp_create */
 

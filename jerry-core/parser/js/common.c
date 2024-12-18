@@ -65,11 +65,7 @@ static void
 util_print_chars (const uint8_t *char_p, /**< character pointer */
                   size_t size) /**< size */
 {
-  while (size > 0)
-  {
-    JERRY_DEBUG_MSG ("%c", *char_p++);
-    size--;
-  }
+  JERRY_DEBUG_MSG ("%.*s", (int) size, char_p);
 } /* util_print_chars */
 
 /**
@@ -81,7 +77,7 @@ util_print_number (ecma_number_t num_p) /**< number to print */
   lit_utf8_byte_t str_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
   lit_utf8_size_t str_size = ecma_number_to_utf8_string (num_p, str_buf, sizeof (str_buf));
   str_buf[str_size] = 0;
-  JERRY_DEBUG_MSG ("%s", str_buf);
+  JERRY_DEBUG_MSG ("%.*s", (int) str_size, str_buf);
 } /* util_print_number */
 
 #if JERRY_BUILTIN_BIGINT

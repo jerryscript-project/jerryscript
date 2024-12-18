@@ -19,14 +19,11 @@
 
 #include "jerryscript-port.h"
 
-/**
- * Default implementation of jerry_port_log. Prints log messages to stderr.
- */
 void JERRY_ATTR_WEAK
-jerry_port_log (const char *message_p) /**< message */
+jerry_port_log_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  fputs (message_p, stderr);
-} /* jerry_port_log */
+  fwrite (buffer_p, 1, buffer_size, stderr);
+} /* jerry_port_log_buffer */
 
 void JERRY_ATTR_WEAK
 jerry_port_print_buffer (const jerry_char_t *buffer_p, jerry_size_t buffer_size)

@@ -74,6 +74,9 @@ JERRY_TESTS_OPTIONS = [
     Options('jerry_tests-external_context',
             OPTIONS_COMMON + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
             + ['--external-context=on']),
+    Options('jerry_tests-lit-hashmap',
+            OPTIONS_COMMON + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
+            + ['--lit-hashmap=on']),
 ]
 
 # Test options for test262
@@ -136,6 +139,8 @@ JERRY_BUILDOPTIONS = [
             ['--compile-flag=-DJERRY_MODULE_SYSTEM=0', '--lto=off']),
     Options('buildoption_test-builtin-proxy-off',
             ['--compile-flag=-DJERRY_BUILTIN_PROXY=0']),
+    Options('buildoption_test-literal-hashmap-on',
+            ['--compile-flag=-DJERRY_LIT_HASHMAP=1']),
 ]
 
 def get_arguments():

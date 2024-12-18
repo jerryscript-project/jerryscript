@@ -2053,7 +2053,7 @@ parser_parse_case_statement (parser_context_t *context_p) /**< context */
   parser_stack_iterator_write (&iterator, &switch_statement, sizeof (parser_switch_statement_t));
 
   parser_set_branch_to_current_position (context_p, &branch_p->branch);
-  parser_free (branch_p, sizeof (parser_branch_node_t));
+  parser_branch_list_remove (context_p, branch_p);
 } /* parser_parse_case_statement */
 
 /**

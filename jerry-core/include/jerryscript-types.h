@@ -74,7 +74,6 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_FEATURE_CPOINTER_32_BIT, /**< 32 bit compressed pointers */
   JERRY_FEATURE_ERROR_MESSAGES, /**< error messages */
   JERRY_FEATURE_JS_PARSER, /**< js-parser */
   JERRY_FEATURE_HEAP_STATS, /**< memory statistics */

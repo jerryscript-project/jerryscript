@@ -254,9 +254,8 @@ util_print_literal_value (ecma_compiled_code_t *compiled_code_p, /**< compiled c
 
     JERRY_DEBUG_MSG ("string(");
 
-    ECMA_STRING_TO_UTF8_STRING (literal_p, chars_p, literal_size);
-    util_print_chars (chars_p, literal_size);
-    ECMA_FINALIZE_UTF8_STRING (chars_p, literal_size);
+    ECMA_STRING_TO_UTF8_STRING (literal_p, chars);
+    util_print_chars (chars.ptr, chars.size);
   }
 
   JERRY_DEBUG_MSG (")");

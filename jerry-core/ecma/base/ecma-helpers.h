@@ -104,24 +104,35 @@ typedef enum
 
 /**
  * Convert ecma-string's contents to a cesu-8 string and put it into a buffer.
+ * No allocation needed by providing a uint32 string buffer.
+ * The flags name is `utf8_str##_flags`
+ * The uint32 string buffer name is `utf8_str##_uint32_buffer`
+ *
  */
-#define ECMA_STRING_TO_UTF8_STRING(ecma_str_ptr, /**< ecma string pointer */       \
-                                   utf8_ptr, /**< [out] output buffer pointer */   \
-                                   utf8_str_size) /**< [out] output buffer size */ \
-  lit_utf8_size_t utf8_str_size;                                                   \
-  uint8_t utf8_ptr##flags = ECMA_STRING_FLAG_EMPTY;                                \
-  const lit_utf8_byte_t *utf8_ptr = ecma_string_get_chars (ecma_str_ptr, &utf8_str_size, NULL, NULL, &utf8_ptr##flags);
+#define ECMA_STRING_TO_UTF8_STRING(ecma_str_ptr, /**< ecma string pointer */                           \
+                                   utf8_str) /**< [out] lit_utf8_string_t to get */                    \
+  lit_utf8_string_t utf8_str;                                                                          \
+  uint8_t utf8_str##_flags = ECMA_STRING_FLAG_EMPTY;                                                   \
+  lit_utf8_byte_t utf8_str##_uint32_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED]; \
+  (void) ecma_string_get_chars (ecma_str_ptr, &utf8_str, utf8_str##_uint32_buffer, &utf8_str##_flags); \
+  JERRY_ASSERT (!(utf8_str##_flags & ECMA_STRING_FLAG_MUST_BE_FREED));
 
 /**
- * Free the cesu-8 string buffer allocated by 'ECMA_STRING_TO_UTF8_STRING'
+ * Convert ecma-string's contents to a cesu-8 string and put it into a buffer.
+ * No allocation needed by providing a uint32 string buffer
+ * The flags name is `utf8_str##_flags`
+ * The uint32 string buffer name is `utf8_str##_uint32_buffer`
+ * The string length name is `utf8_str##_length`
+ *
  */
-#define ECMA_FINALIZE_UTF8_STRING(utf8_ptr, /**< pointer to character buffer */ \
-                                  utf8_str_size) /**< buffer size */            \
-  if (utf8_ptr##flags & ECMA_STRING_FLAG_MUST_BE_FREED)                         \
-  {                                                                             \
-    JERRY_ASSERT (utf8_ptr != NULL);                                            \
-    jmem_heap_free_block ((void *) utf8_ptr, utf8_str_size);                    \
-  }
+#define ECMA_STRING_TO_UTF8_STRING_AND_LENGTH(ecma_str_ptr, /**< ecma string pointer */                \
+                                              utf8_str) /**< [out] lit_utf8_string_t to get */         \
+  lit_utf8_string_t utf8_str;                                                                          \
+  uint8_t utf8_str##_flags = ECMA_STRING_FLAG_IS_ASCII;                                                \
+  lit_utf8_byte_t utf8_str##_uint32_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED]; \
+  lit_utf8_size_t utf8_str##_length =                                                                  \
+    ecma_string_get_chars (ecma_str_ptr, &utf8_str, utf8_str##_uint32_buffer, &utf8_str##_flags);      \
+  JERRY_ASSERT (!(utf8_str##_flags & ECMA_STRING_FLAG_MUST_BE_FREED));
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
@@ -314,11 +325,10 @@ lit_utf8_size_t JERRY_ATTR_WARN_UNUSED_RESULT ecma_string_copy_to_buffer (const 
                                                                           jerry_encoding_t encoding);
 void
 ecma_string_to_cesu8_bytes (const ecma_string_t *string_desc_p, lit_utf8_byte_t *buffer_p, lit_utf8_size_t buffer_size);
-const lit_utf8_byte_t *ecma_string_get_chars (const ecma_string_t *string_p,
-                                              lit_utf8_size_t *size_p,
-                                              lit_utf8_size_t *length_p,
-                                              lit_utf8_byte_t *uint32_buff_p,
-                                              uint8_t *flags_p);
+lit_utf8_size_t ecma_string_get_chars (const ecma_string_t *string_p,
+                                       lit_utf8_string_t *string_out_p,
+                                       lit_utf8_byte_t *uint32_buff_p,
+                                       uint8_t *flags_p);
 bool ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, lit_magic_string_id_t id);
 bool ecma_string_is_empty (const ecma_string_t *string_p);
 bool ecma_string_is_length (const ecma_string_t *string_p);
@@ -508,6 +518,7 @@ ecma_number_t ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p,
                                                    lit_utf8_size_t str_size,
                                                    uint32_t radix,
                                                    uint32_t option);
+lit_utf8_size_t ecma_string_get_uint32_size (const uint32_t uint32_number);
 lit_utf8_size_t ecma_uint32_to_utf8_string (uint32_t value, lit_utf8_byte_t *out_buffer_p, lit_utf8_size_t buffer_size);
 uint32_t ecma_number_to_uint32 (ecma_number_t num);
 int32_t ecma_number_to_int32 (ecma_number_t num);

@@ -662,7 +662,8 @@ ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
                             lit_utf8_byte_t *out_buffer_p, /**< buffer for string */
                             lit_utf8_size_t buffer_size) /**< size of buffer */
 {
-  lit_utf8_byte_t *buf_p = out_buffer_p + buffer_size;
+  lit_utf8_byte_t *buf_p_tail = out_buffer_p + buffer_size - 1;
+  lit_utf8_byte_t *buf_p = buf_p_tail;
 
   do
   {
@@ -675,12 +676,13 @@ ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
 
   JERRY_ASSERT (buf_p >= out_buffer_p);
 
-  lit_utf8_size_t bytes_copied = (lit_utf8_size_t) (out_buffer_p + buffer_size - buf_p);
+  lit_utf8_size_t bytes_copied = (lit_utf8_size_t) (buf_p_tail - buf_p);
 
   if (JERRY_LIKELY (buf_p != out_buffer_p))
   {
     memmove (out_buffer_p, buf_p, bytes_copied);
   }
+  buf_p[bytes_copied] = '\0';
 
   return bytes_copied;
 } /* ecma_uint32_to_utf8_string */
@@ -868,7 +870,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   if (((ecma_number_t) num_uint32) == num)
   {
     dst_p += ecma_uint32_to_utf8_string (num_uint32, dst_p, (lit_utf8_size_t) (buffer_p + buffer_size - dst_p));
-    JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
+    JERRY_ASSERT (dst_p < buffer_p + buffer_size);
     return (lit_utf8_size_t) (dst_p - buffer_p);
   }
 
@@ -935,7 +937,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   dst_p += ecma_uint32_to_utf8_string (t, dst_p, (lit_utf8_size_t) (buffer_p + buffer_size - dst_p));
 
-  JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
+  JERRY_ASSERT (dst_p < buffer_p + buffer_size);
 
   return (lit_utf8_size_t) (dst_p - buffer_p);
 } /* ecma_number_to_utf8_string */

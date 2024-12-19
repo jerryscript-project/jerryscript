@@ -844,9 +844,8 @@ ecma_builtin_json_parse (ecma_value_t arg1, /**< string argument */
     return ECMA_VALUE_ERROR;
   }
 
-  ECMA_STRING_TO_UTF8_STRING (text_string_p, str_start_p, string_size);
-  ecma_value_t result = ecma_builtin_json_parse_buffer (str_start_p, string_size);
-  ECMA_FINALIZE_UTF8_STRING (str_start_p, string_size);
+  ECMA_STRING_TO_UTF8_STRING (text_string_p, str_start);
+  ecma_value_t result = ecma_builtin_json_parse_buffer (str_start.ptr, str_start.size);
   ecma_deref_ecma_string (text_string_p);
 
   if (!ECMA_IS_VALUE_ERROR (result) && ecma_op_is_callable (arg2))
@@ -878,10 +877,10 @@ static void
 ecma_builtin_json_quote (ecma_stringbuilder_t *builder_p, /**< builder for the result */
                          ecma_string_t *string_p) /**< string that should be quoted */
 {
-  ECMA_STRING_TO_UTF8_STRING (string_p, string_buff, string_buff_size);
-  const lit_utf8_byte_t *str_p = string_buff;
-  const lit_utf8_byte_t *regular_str_start_p = string_buff;
-  const lit_utf8_byte_t *str_end_p = str_p + string_buff_size;
+  ECMA_STRING_TO_UTF8_STRING (string_p, string_buff);
+  const lit_utf8_byte_t *str_p = string_buff.ptr;
+  const lit_utf8_byte_t *regular_str_start_p = string_buff.ptr;
+  const lit_utf8_byte_t *str_end_p = string_buff.ptr + string_buff.size;
 
   ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_DOUBLE_QUOTE);
 
@@ -974,8 +973,6 @@ ecma_builtin_json_quote (ecma_stringbuilder_t *builder_p, /**< builder for the r
 
   ecma_stringbuilder_append_raw (builder_p, regular_str_start_p, (lit_utf8_size_t) (str_end_p - regular_str_start_p));
   ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_DOUBLE_QUOTE);
-
-  ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
 } /* ecma_builtin_json_quote */
 
 static ecma_value_t ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p,

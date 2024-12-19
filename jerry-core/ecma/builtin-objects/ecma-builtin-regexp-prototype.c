@@ -131,10 +131,10 @@ ecma_op_escape_regexp_pattern (ecma_string_t *pattern_str_p) /**< RegExp pattern
 {
   ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
-  ECMA_STRING_TO_UTF8_STRING (pattern_str_p, pattern_start_p, pattern_start_size);
+  ECMA_STRING_TO_UTF8_STRING (pattern_str_p, pattern_start);
 
-  const lit_utf8_byte_t *pattern_str_curr_p = pattern_start_p;
-  const lit_utf8_byte_t *pattern_str_end_p = pattern_start_p + pattern_start_size;
+  const lit_utf8_byte_t *pattern_str_curr_p = pattern_start.ptr;
+  const lit_utf8_byte_t *pattern_str_end_p = pattern_start.ptr + pattern_start.size;
 
   while (pattern_str_curr_p < pattern_str_end_p)
   {
@@ -181,8 +181,6 @@ ecma_op_escape_regexp_pattern (ecma_string_t *pattern_str_p) /**< RegExp pattern
       }
     }
   }
-
-  ECMA_FINALIZE_UTF8_STRING (pattern_start_p, pattern_start_size);
 
   return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_op_escape_regexp_pattern */

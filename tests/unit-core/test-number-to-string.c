@@ -50,5 +50,17 @@ main (void)
     }
   }
 
+  lit_utf8_byte_t val_uint32_max_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED] = { 0 };
+  memset (val_uint32_max_buffer, 0xFF, sizeof (val_uint32_max_buffer));
+
+  TEST_ASSERT (ecma_string_get_uint32_size (UINT32_MAX) == 10);
+  TEST_ASSERT (ecma_string_get_uint32_size (0) == 1);
+  TEST_ASSERT (ecma_string_get_uint32_size (10) == 2);
+  lit_utf8_size_t digits = ecma_uint32_to_utf8_string (UINT32_MAX,
+                                                       val_uint32_max_buffer,
+                                                       ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32_WITH_ZERO_TERMINATED);
+  TEST_ASSERT (digits == 10);
+  TEST_ASSERT (val_uint32_max_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32] == 0);
+
   return 0;
 } /* main */

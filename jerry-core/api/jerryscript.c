@@ -82,7 +82,7 @@ JERRY_STATIC_ASSERT ((int) ECMA_PROMISE_IS_PENDING == (int) JERRY_PROMISE_STATE_
 /**
  * Offset between internal and external arithmetic operator types
  */
-#define ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET (JERRY_BIN_OP_SUB - NUMBER_ARITHMETIC_SUBTRACTION)
+#define ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET ((number_arithmetic_op) JERRY_BIN_OP_SUB - NUMBER_ARITHMETIC_SUBTRACTION)
 
 JERRY_STATIC_ASSERT (((NUMBER_ARITHMETIC_SUBTRACTION + ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET) == JERRY_BIN_OP_SUB)
                        && ((NUMBER_ARITHMETIC_MULTIPLICATION + ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET)
@@ -4849,7 +4849,7 @@ jerry_symbol (jerry_well_known_symbol_t symbol) /**< jerry_well_known_symbol_t e
 {
   jerry_assert_api_enabled ();
 
-  lit_magic_string_id_t id = (lit_magic_string_id_t) (LIT_GLOBAL_SYMBOL__FIRST + symbol);
+  lit_magic_string_id_t id = (lit_magic_string_id_t) (LIT_GLOBAL_SYMBOL__FIRST + (lit_magic_string_id_t) symbol);
 
   if (!LIT_IS_GLOBAL_SYMBOL (id))
   {

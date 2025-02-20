@@ -1584,20 +1584,20 @@ ecma_bigint_and (ecma_value_t left_value, /**< left BigInt value */
     }
 
     /* x & (-y) == x & ~(y-1) == x &~ (y-1) */
-    uint32_t operation_and_options = ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT;
+    uint32_t operation_and_options = (uint32_t) ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT;
     return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
   }
 
   if (!(right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
   {
     /* (-x) & y == ~(x-1) & y == y &~ (x-1) */
-    uint32_t operation_and_options = ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT;
+    uint32_t operation_and_options = (uint32_t) ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT;
     return ecma_bigint_bitwise_op (operation_and_options, right_p, left_p);
   }
 
   /* (-x) & (-y) == ~(x-1) & ~(y-1) == ~((x-1) | (y-1)) == -(((x-1) | (y-1)) + 1) */
   uint32_t operation_and_options =
-    (ECMA_BIG_UINT_BITWISE_OR | ECMA_BIG_UINT_BITWISE_DECREASE_BOTH | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    (uint32_t) ECMA_BIG_UINT_BITWISE_OR | ECMA_BIG_UINT_BITWISE_DECREASE_BOTH | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT;
   return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
 } /* ecma_bigint_and */
 
@@ -1632,22 +1632,22 @@ ecma_bigint_or (ecma_value_t left_value, /**< left BigInt value */
     }
 
     /* x | (-y) == x | ~(y-1) == ~((y-1) &~ x) == -(((y-1) &~ x) + 1) */
-    uint32_t operation_and_options =
-      (ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_LEFT | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    uint32_t operation_and_options = (uint32_t) ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_LEFT
+                                     | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT;
     return ecma_bigint_bitwise_op (operation_and_options, right_p, left_p);
   }
 
   if (!(right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
   {
     /* (-x) | y == ~(x-1) | y == ~((x-1) &~ y) == -(((x-1) &~ y) + 1) */
-    uint32_t operation_and_options =
-      (ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_LEFT | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    uint32_t operation_and_options = (uint32_t) ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_LEFT
+                                     | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT;
     return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
   }
 
   /* (-x) | (-y) == ~(x-1) | ~(y-1) == ~((x-1) & (y-1)) = -(((x-1) & (y-1)) + 1) */
   uint32_t operation_and_options =
-    (ECMA_BIG_UINT_BITWISE_AND | ECMA_BIG_UINT_BITWISE_DECREASE_BOTH | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    (uint32_t) ECMA_BIG_UINT_BITWISE_AND | ECMA_BIG_UINT_BITWISE_DECREASE_BOTH | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT;
   return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
 } /* ecma_bigint_or */
 
@@ -1682,21 +1682,21 @@ ecma_bigint_xor (ecma_value_t left_value, /**< left BigInt value */
     }
 
     /* x ^ (-y) == x ^ ~(y-1) == ~(x ^ (y-1)) == -((x ^ (y-1)) + 1) */
-    uint32_t operation_and_options =
-      (ECMA_BIG_UINT_BITWISE_XOR | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    uint32_t operation_and_options = (uint32_t) ECMA_BIG_UINT_BITWISE_XOR | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT
+                                     | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT;
     return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
   }
 
   if (!(right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
   {
     /* (-x) | y == ~(x-1) ^ y == ~((x-1) ^ y) == -(((x-1) ^ y) + 1) */
-    uint32_t operation_and_options =
-      (ECMA_BIG_UINT_BITWISE_XOR | ECMA_BIG_UINT_BITWISE_DECREASE_LEFT | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    uint32_t operation_and_options = (uint32_t) ECMA_BIG_UINT_BITWISE_XOR | ECMA_BIG_UINT_BITWISE_DECREASE_LEFT
+                                     | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT;
     return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
   }
 
   /* (-x) ^ (-y) == ~(x-1) ^ ~(y-1) == (x-1) ^ (y-1) */
-  uint32_t operation_and_options = ECMA_BIG_UINT_BITWISE_XOR | ECMA_BIG_UINT_BITWISE_DECREASE_BOTH;
+  uint32_t operation_and_options = (uint32_t) ECMA_BIG_UINT_BITWISE_XOR | ECMA_BIG_UINT_BITWISE_DECREASE_BOTH;
   return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
 } /* ecma_bigint_xor */
 

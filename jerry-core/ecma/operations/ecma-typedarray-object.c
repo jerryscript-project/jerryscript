@@ -741,7 +741,7 @@ ecma_typedarray_helper_is_typedarray (ecma_builtin_id_t builtin_id) /**< the bui
 ecma_builtin_id_t
 ecma_typedarray_helper_get_prototype_id (ecma_typedarray_type_t typedarray_id) /**< the id of the typedarray **/
 {
-  return (ecma_builtin_id_t) (ECMA_FIRST_TYPEDARRAY_BUILTIN_PROTOTYPE_ID + typedarray_id);
+  return (ecma_builtin_id_t) (ECMA_FIRST_TYPEDARRAY_BUILTIN_PROTOTYPE_ID + (ecma_builtin_id_t) typedarray_id);
 } /* ecma_typedarray_helper_get_prototype_id */
 
 /**
@@ -752,7 +752,7 @@ ecma_typedarray_helper_get_prototype_id (ecma_typedarray_type_t typedarray_id) /
 ecma_builtin_id_t
 ecma_typedarray_helper_get_constructor_id (ecma_typedarray_type_t typedarray_id) /**< the id of the typedarray **/
 {
-  return (ecma_builtin_id_t) (ECMA_FIRST_TYPEDARRAY_BUILTIN_ROUTINE_ID + typedarray_id);
+  return (ecma_builtin_id_t) (ECMA_FIRST_TYPEDARRAY_BUILTIN_ROUTINE_ID + (ecma_builtin_id_t) typedarray_id);
 } /* ecma_typedarray_helper_get_constructor_id */
 
 /**

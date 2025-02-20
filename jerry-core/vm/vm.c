@@ -235,7 +235,7 @@ vm_op_set_value (ecma_value_t base, /**< base object */
 } /* vm_op_set_value */
 
 /** Compact bytecode define */
-#define CBC_OPCODE(arg1, arg2, arg3, arg4) arg4,
+#define CBC_OPCODE(arg1, arg2, arg3, arg4) (uint16_t) arg4,
 
 /**
  * Decode table for both opcodes and extended opcodes.

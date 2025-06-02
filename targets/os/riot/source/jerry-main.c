@@ -91,7 +91,7 @@ main (void)
   } now = { .d = jerry_port_current_time () };
   srand (now.u);
   printf ("You are running RIOT on a(n) %s board.\n", RIOT_BOARD);
-  printf ("This board features a(n) %s MCU.\n", RIOT_MCU);
+  printf ("This board features a(n) %s MCU.\n", RIOT_CPU);
 
   /* start the shell */
   char line_buf[SHELL_DEFAULT_BUFSIZE];

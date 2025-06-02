@@ -47,7 +47,7 @@ ARCHIVES += $(JERRYDIR)/build/lib/libjerry-ext.a
 ARCHIVES += $(JERRYDIR)/build/lib/libjerry-port.a
 
 USEMODULE += shell
-USEMODULE += shell_commands
+USEMODULE += shell_cmds_default
 USEMODULE += posix_sleep
 
 .PHONY: libjerry

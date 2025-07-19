@@ -36,14 +36,15 @@
 /**
  * Day names
  */
-const char day_names_p[7][3] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+const char day_names_p[7][3] = { { 'S', 'u', 'n' }, { 'M', 'o', 'n' }, { 'T', 'u', 'e' }, { 'W', 'e', 'd' },
+                                 { 'T', 'h', 'u' }, { 'F', 'r', 'i' }, { 'S', 'a', 't' } };
 
 /**
  * Month names
  */
-const char month_names_p[12][3] = {
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
+const char month_names_p[12][3] = { { 'J', 'a', 'n' }, { 'F', 'e', 'b' }, { 'M', 'a', 'r' }, { 'A', 'p', 'r' },
+                                    { 'M', 'a', 'y' }, { 'J', 'u', 'n' }, { 'J', 'u', 'l' }, { 'A', 'u', 'g' },
+                                    { 'S', 'e', 'p' }, { 'O', 'c', 't' }, { 'N', 'o', 'v' }, { 'D', 'e', 'c' } };
 
 /**
  * Calculate the elapsed days since Unix Epoch

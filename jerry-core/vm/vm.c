@@ -2956,27 +2956,44 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_PROP_POST_INCR:
         case VM_OC_PROP_POST_DECR:
         {
-          result = vm_op_get_value (left_value, right_value);
-
-          if (opcode < CBC_PRE_INCR)
+          if (JERRY_UNLIKELY (byte_code_start_p - 3 >= frame_ctx_p->byte_code_p
+                              && byte_code_start_p[-3] == CBC_EXT_OPCODE
+                              && byte_code_start_p[-2] == CBC_EXT_PUSH_PRIVATE_PROP_LITERAL_REFERENCE))
           {
-            left_value = ECMA_VALUE_UNDEFINED;
+            if (opcode < CBC_PRE_INCR)
+            {
+              break;
+            }
+            result = right_value;
+            stack_top_p += 1;
+            left_value = right_value;
+            /* Use right_value as the marker for private field */
+            right_value = ECMA_VALUE_EMPTY;
+          }
+          else
+          {
+            result = vm_op_get_value (left_value, right_value);
+
+            if (opcode < CBC_PRE_INCR)
+            {
+              left_value = ECMA_VALUE_UNDEFINED;
+              right_value = ECMA_VALUE_UNDEFINED;
+            }
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
+
+            if (opcode < CBC_PRE_INCR)
+            {
+              break;
+            }
+
+            stack_top_p += 2;
+            left_value = result;
             right_value = ECMA_VALUE_UNDEFINED;
           }
-
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            goto error;
-          }
-
-          if (opcode < CBC_PRE_INCR)
-          {
-            break;
-          }
-
-          stack_top_p += 2;
-          left_value = result;
-          right_value = ECMA_VALUE_UNDEFINED;
           /* FALLTHRU */
         }
         case VM_OC_PRE_INCR:
@@ -3018,7 +3035,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               }
 
               result = (ecma_value_t) (int_value + int_increase);
-              break;
+              goto unary_arithmetic_operation_break;
             }
             result_number = (ecma_number_t) ecma_get_integer_from_value (result);
           }
@@ -3068,7 +3085,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               {
                 goto error;
               }
-              break;
+              goto unary_arithmetic_operation_break;
             }
 #endif /* JERRY_BUILTIN_BIGINT */
 
@@ -3089,7 +3106,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             POST_INCREASE_DECREASE_PUT_RESULT (result);
 
             result = ecma_make_number_value (result_number + increase);
-            break;
+            goto unary_arithmetic_operation_break;
           }
 
           if (ecma_is_value_integer_number (result))
@@ -3099,6 +3116,35 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           else
           {
             result = ecma_update_float_number (result, result_number + increase);
+          }
+unary_arithmetic_operation_break:
+          if (JERRY_UNLIKELY (right_value == ECMA_VALUE_EMPTY))
+          {
+            right_value = ECMA_VALUE_UNDEFINED;
+
+            if (opcode_data & VM_OC_PUT_REFERENCE)
+            {
+              ecma_value_t property = *(--stack_top_p);
+              ecma_value_t base = *(--stack_top_p);
+              ecma_value_t set_value_result = opfunc_private_set (base, property, result);
+              ecma_free_value (base);
+              ecma_free_value (property);
+
+              if (ECMA_IS_VALUE_ERROR (set_value_result))
+              {
+                ecma_free_value (result);
+                result = set_value_result;
+                goto error;
+              }
+
+              if (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)))
+              {
+                ecma_fast_free_value (result);
+                goto free_both_values;
+              }
+
+              opcode_data &= (uint32_t) ~VM_OC_PUT_REFERENCE;
+            }
           }
           break;
         }

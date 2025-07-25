@@ -1189,6 +1189,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
           scanner_context_p->mode = SCAN_MODE_CLASS_BODY;
           break;
         }
+        case LEXER_HASHMARK:
         case LEXER_RIGHT_BRACE:
         {
           source_p = context_p->source_p - 1;

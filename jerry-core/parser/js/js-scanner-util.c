@@ -2033,6 +2033,11 @@ scanner_is_context_needed (parser_context_t *context_p, /**< context */
   uint32_t scope_stack_reg_top =
     (check_type != PARSER_CHECK_GLOBAL_CONTEXT ? context_p->scope_stack_reg_top : 1); /* block result */
 
+  if (JERRY_UNLIKELY (info_p == NULL || info_p->type == SCANNER_TYPE_END))
+  {
+    parser_raise_error (context_p, PARSER_ERR_UNEXPECTED_END); /* check for end of scanner queue */
+  }
+
   while (data_p[0] != SCANNER_STREAM_TYPE_END)
   {
     uint8_t data = data_p[0];

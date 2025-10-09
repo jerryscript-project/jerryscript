@@ -3322,7 +3322,7 @@ lexer_compare_identifier_to_chars (const uint8_t *left_p, /**< left identifier *
 {
   uint8_t utf8_buf[6];
 
-  do
+  while (size > 0)
   {
     if (*left_p == *right_p)
     {
@@ -3362,7 +3362,7 @@ lexer_compare_identifier_to_chars (const uint8_t *left_p, /**< left identifier *
         return false;
       }
     } while (--escape_size > 0);
-  } while (size > 0);
+  }
 
   return true;
 } /* lexer_compare_identifier_to_chars */

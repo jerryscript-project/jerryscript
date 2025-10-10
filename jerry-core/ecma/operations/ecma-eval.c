@@ -50,6 +50,7 @@ ecma_op_eval (ecma_value_t source_code, /**< source code */
 
   if (ecma_is_value_magic_string (source_code, LIT_MAGIC_STRING__EMPTY))
   {
+    ECMA_CLEAR_LOCAL_PARSE_OPTS ();
     return ECMA_VALUE_UNDEFINED;
   }
 

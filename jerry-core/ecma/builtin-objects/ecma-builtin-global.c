@@ -88,6 +88,7 @@ ecma_builtin_global_object_eval (ecma_value_t x) /**< routine's first argument *
   if (JERRY_UNLIKELY (!ecma_is_value_string (x)))
   {
     /* step 1 */
+    ECMA_CLEAR_LOCAL_PARSE_OPTS ();
     return ecma_copy_value (x);
   }
 

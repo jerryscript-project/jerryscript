@@ -857,8 +857,15 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
 
           parser_stack_push (context_p, &range.start_location, sizeof (scanner_location_t));
           fields_size += sizeof (scanner_location_t);
-
-          lexer_consume_next_character (context_p);
+          
+          if (JERRY_UNLIKELY(context_p->source_p >= context_p->source_end_p))  
+          {
+            parser_raise_error (context_p, PARSER_ERR_PROPERTY_IDENTIFIER_EXPECTED);
+          }
+          else
+          {
+            lexer_consume_next_character (context_p);
+          }
         }
         else if (lexer_consume_assign (context_p))
         {

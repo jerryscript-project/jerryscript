@@ -2360,6 +2360,11 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 
   literal.char_p = info_p->source_p - 1;
 
+  if (JERRY_UNLIKELY (info_p == NULL || info_p->type == SCANNER_TYPE_END)) /* check for end of scanner queue */
+  {
+    parser_raise_error (context_p, PARSER_ERR_UNEXPECTED_END); 
+  }
+
   while (next_data_p[0] != SCANNER_STREAM_TYPE_END)
   {
     uint32_t type = next_data_p[0] & SCANNER_STREAM_TYPE_MASK;

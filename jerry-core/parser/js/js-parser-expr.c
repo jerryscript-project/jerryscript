@@ -1088,7 +1088,7 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     }
   }
 
-  if (class_name_index != PARSER_INVALID_LITERAL_INDEX)
+  if (class_name_index != PARSER_INVALID_LITERAL_INDEX && context_p->scope_stack_p != NULL)
   {
     if (JERRY_UNLIKELY (context_p->scope_stack_top >= context_p->scope_stack_size))
     {

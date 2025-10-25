@@ -28,6 +28,7 @@
 #include "debugger.h"
 #include "jmem.h"
 #include "js-parser-internal.h"
+#include "lit-hashmap.h"
 #include "re-bytecode.h"
 #include "vm-defines.h"
 
@@ -137,6 +138,10 @@ struct jerry_context_t
   jmem_cpointer_t bigint_list_first_cp; /**< first item of the literal bigint list */
 #endif /* JERRY_BUILTIN_BIGINT */
   jmem_cpointer_t global_symbols_cp[ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT]; /**< global symbols */
+
+#if JERRY_LIT_HASHMAP
+  hashmap_t string_hashmap;
+#endif /* JERRY_LIT_HASHMAP */
 
 #if JERRY_MODULE_SYSTEM
   ecma_module_t *module_current_p; /**< current module context */

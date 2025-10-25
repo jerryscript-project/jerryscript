@@ -350,3 +350,23 @@ class Q extends Array {
 
 var var18 = new Q();
 assert(var18.b() == 1);
+
+class R {
+  #a = 0;
+  test() {
+    ++this.#a;
+    assert(this.#a == 1);
+    assert(++this.#a == 2);
+    --this.#a;
+    assert(this.#a == 1);
+    assert(--this.#a == 0);
+    this.#a++;
+    assert(this.#a == 1);
+    assert(this.#a++ == 1);
+    this.#a--;
+    assert(this.#a == 1);
+    assert(this.#a-- == 1);
+  }
+}
+var var19 = new R();
+var19.test();

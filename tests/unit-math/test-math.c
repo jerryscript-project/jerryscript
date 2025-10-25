@@ -93,7 +93,18 @@ int
 main (void)
 {
 #define INF INFINITY
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+/* Suppress Clang's -Wliteral-range warning */
+#pragma clang diagnostic ignored "-Wliteral-range"
+#endif /* defined(__clang__) */
+
 #include "test-math.inc.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif /* defined(__clang__) */
 
   return passed ? 0 : 1;
 } /* main */

@@ -289,29 +289,36 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
   {
     context_p->last_cbc_opcode = PARSER_PUSH_PROP_LITERAL_TO_PUSH_LITERAL (context_p->last_cbc_opcode);
   }
-  else
+  else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL))
   {
-    /* Invalid LeftHandSide expression. */
     if (opcode == CBC_DELETE_PUSH_RESULT)
     {
-      if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL))
-      {
-        parser_raise_error (context_p, PARSER_ERR_DELETE_PRIVATE_FIELD);
-      }
-
-      if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP_LITERAL)
-          || context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP))
-      {
-        parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
-        parser_emit_cbc (context_p, CBC_POP);
-        return;
-      }
-
+      parser_raise_error (context_p, PARSER_ERR_DELETE_PRIVATE_FIELD);
+      goto Invalid_LeftHandSide;
+    }
+    context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL_REFERENCE);
+    /* Manually adjusting stack usage. */
+    JERRY_ASSERT (context_p->stack_depth > 0);
+    context_p->stack_depth--;
+  }
+  else if (opcode == CBC_DELETE_PUSH_RESULT)
+  {
+Invalid_LeftHandSide:
+    /* Invalid LeftHandSide expression. */
+    if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP_LITERAL)
+        || context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP))
+    {
+      parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
       parser_emit_cbc (context_p, CBC_POP);
-      parser_emit_cbc (context_p, CBC_PUSH_TRUE);
       return;
     }
 
+    parser_emit_cbc (context_p, CBC_POP);
+    parser_emit_cbc (context_p, CBC_PUSH_TRUE);
+    return;
+  }
+  else
+  {
     parser_check_invalid_new_target (context_p, opcode);
     if (opcode == CBC_PRE_INCR || opcode == CBC_PRE_DECR)
     {

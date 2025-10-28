@@ -729,7 +729,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   }
 
 #if JERRY_PROPERTY_HASHMAP
-  if (steps >= (ECMA_PROPERTY_HASMAP_MINIMUM_SIZE / 2))
+  if (steps >= (ECMA_PROPERTY_HASMAP_MINIMUM_SIZE / 2) && JERRY_CONTEXT(running_gc_count) == 0)
   {
     ecma_property_hashmap_create (obj_p);
   }

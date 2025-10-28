@@ -103,6 +103,7 @@ jmem_heap_init (void)
   JMEM_VALGRIND_NOACCESS_SPACE (JERRY_HEAP_CONTEXT (area), JMEM_HEAP_AREA_SIZE);
 
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
+  JERRY_CONTEXT(running_gc_count) = 0;
   JMEM_HEAP_STAT_INIT ();
 } /* jmem_heap_init */
 

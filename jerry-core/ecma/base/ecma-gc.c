@@ -2109,6 +2109,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 void
 ecma_gc_run (void)
 {
+  JERRY_CONTEXT(running_gc_count)++;
 #if (JERRY_GC_MARK_LIMIT != 0)
   JERRY_ASSERT (JERRY_CONTEXT (ecma_gc_mark_recursion_limit) == JERRY_GC_MARK_LIMIT);
 #endif /* (JERRY_GC_MARK_LIMIT != 0) */
@@ -2235,6 +2236,7 @@ ecma_gc_run (void)
   /* Free RegExp bytecodes stored in cache */
   re_cache_gc ();
 #endif /* JERRY_BUILTIN_REGEXP */
+  JERRY_CONTEXT(running_gc_count)--;
 } /* ecma_gc_run */
 
 /**

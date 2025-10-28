@@ -156,6 +156,7 @@ struct jerry_context_t
   jerry_external_string_free_cb_t external_string_free_callback_p; /**< free callback for external strings */
   void *error_object_created_callback_user_p; /**< user pointer for error_object_update_callback_p */
   jerry_error_object_created_cb_t error_object_created_callback_p; /**< decorator callback for Error objects */
+  uint32_t running_gc_count; /**< The current status of gc */
   size_t ecma_gc_objects_number; /**< number of currently allocated objects */
   size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
   size_t jmem_heap_allocated_size; /**< size of allocated regions */

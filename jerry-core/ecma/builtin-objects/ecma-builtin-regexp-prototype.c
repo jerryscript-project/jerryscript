@@ -498,6 +498,7 @@ ecma_builtin_regexp_prototype_match_all (ecma_object_t *regexp_obj_p, /**< this 
     ecma_deref_ecma_string (str_p);
     ecma_deref_ecma_string (flags);
     ecma_deref_object (matcher_obj_p);
+    return set;
   }
 
   uint16_t parsed_flag;

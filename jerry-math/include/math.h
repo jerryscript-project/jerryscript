@@ -22,11 +22,11 @@ extern "C" {
 
 /* General Constants. */
 #ifdef _MSC_VER
-#define INFINITY ((float) (1e+300 * 1e+300)) /* 1e+300*1e+300 must overflow */
-#define NAN      ((float) (INFINITY * 0.0f))
+#define INFINITY ((double) (1e+300 * 1e+300)) /* 1e+300*1e+300 must overflow */
+#define NAN      ((double) (INFINITY * 0.0f))
 #else /* !_MSC_VER */
-#define INFINITY ((float) (1.0 / 0.0))
-#define NAN      ((float) (0.0 / 0.0))
+#define INFINITY ((double) (1.0 / 0.0))
+#define NAN      ((double) (0.0 / 0.0))
 #endif /* _MSC_VER */
 #define HUGE_VAL ((double) INFINITY)
 

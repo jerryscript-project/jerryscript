@@ -326,11 +326,6 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
 
   for (uint32_t i = 0, idx = old_length; i < values_length; i++, idx++)
   {
-    if (ecma_is_value_array_hole (stack_top_p[i]))
-    {
-      continue;
-    }
-
     if (stack_top_p[i] == ECMA_VALUE_SPREAD_ELEMENT)
     {
       i++;

@@ -27,11 +27,11 @@
  */
 static void
 jerryx_test262_register_function (jerry_value_t test262_obj, /** $262 object */
-                                  const char *name_p, /**< name of the function */
+                                  jerry_value_t name_sz, /**< name of the function that will be free/take*/
                                   jerry_external_handler_t handler_p) /**< function callback */
 {
   jerry_value_t function_val = jerry_function_external (handler_p);
-  jerry_value_t result_val = jerry_object_set_sz (test262_obj, name_p, function_val);
+  jerry_value_t result_val = jerry_object_set_sz (test262_obj, name_sz, function_val);
   jerry_value_free (function_val);
 
   assert (!jerry_value_is_exception (result_val));
@@ -55,7 +55,7 @@ jerryx_test262_detach_array_buffer (const jerry_call_info_t *call_info_p, /**< c
 
   if (args_cnt < 1 || !jerry_value_is_arraybuffer (args_p[0]))
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "Expected an ArrayBuffer object");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("Expected an ArrayBuffer object"));
   }
 
   /* TODO: support the optional 'key' argument */
@@ -79,7 +79,7 @@ jerryx_test262_eval_script (const jerry_call_info_t *call_info_p, /**< call info
 
   if (args_cnt < 1 || !jerry_value_is_string (args_p[0]))
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "Expected a string");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("Expected a string"));
   }
 
   jerry_value_t ret_value = jerry_parse_value (args_p[0], NULL);
@@ -133,12 +133,14 @@ jerryx_test262_create (jerry_value_t global_obj) /**< global object */
 {
   jerry_value_t test262_object = jerry_object ();
 
-  jerryx_test262_register_function (test262_object, "detachArrayBuffer", jerryx_test262_detach_array_buffer);
-  jerryx_test262_register_function (test262_object, "evalScript", jerryx_test262_eval_script);
-  jerryx_test262_register_function (test262_object, "createRealm", jerryx_test262_create_realm);
-  jerryx_test262_register_function (test262_object, "gc", jerryx_handler_gc);
+  jerryx_test262_register_function (test262_object,
+                                    jerry_string_sz ("detachArrayBuffer"),
+                                    jerryx_test262_detach_array_buffer);
+  jerryx_test262_register_function (test262_object, jerry_string_sz ("evalScript"), jerryx_test262_eval_script);
+  jerryx_test262_register_function (test262_object, jerry_string_sz ("createRealm"), jerryx_test262_create_realm);
+  jerryx_test262_register_function (test262_object, jerry_string_sz ("gc"), jerryx_handler_gc);
 
-  jerry_value_t result = jerry_object_set_sz (test262_object, "global", global_obj);
+  jerry_value_t result = jerry_object_set_sz (test262_object, jerry_string_sz ("global"), global_obj);
   assert (!jerry_value_is_exception (result));
   jerry_value_free (result);
 
@@ -154,7 +156,7 @@ jerryx_test262_register (void)
   jerry_value_t global_obj = jerry_current_realm ();
   jerry_value_t test262_obj = jerryx_test262_create (global_obj);
 
-  jerry_value_t result = jerry_object_set_sz (global_obj, "$262", test262_obj);
+  jerry_value_t result = jerry_object_set_sz (global_obj, jerry_string_sz ("$262"), test262_obj);
   assert (!jerry_value_is_exception (result));
 
   jerry_value_free (result);

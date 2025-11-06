@@ -27,7 +27,7 @@ custom_to_json (const jerry_call_info_t *call_info_p, /**< call information */
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_cnt);
 
-  return jerry_throw_sz (JERRY_ERROR_URI, "Error");
+  return jerry_throw_sz (JERRY_ERROR_URI, jerry_string_sz ("Error"));
 } /* custom_to_json */
 
 int

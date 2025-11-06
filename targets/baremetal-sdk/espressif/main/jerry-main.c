@@ -31,7 +31,7 @@ void app_main()
   jerry_log (JERRY_LOG_LEVEL_DEBUG, "This test run the following script code: %s", script);
 
   /* Register the print function in the global object */
-  jerryx_register_global ("print", jerryx_handler_print);
+  jerryx_register_global (jerry_string_sz ("print"), jerryx_handler_print);
 
   /* Setup Global scope code */
   ret_value = jerry_parse (script, sizeof (script) - 1, NULL);

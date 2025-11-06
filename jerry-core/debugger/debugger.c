@@ -596,7 +596,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
         ecma_free_value (result);
 
         const lit_utf8_byte_t *string_p = lit_get_magic_string_utf8 (id);
-        jerry_debugger_send_string (JERRY_DEBUGGER_EVAL_RESULT, type, string_p, strlen ((const char *) string_p));
+        jerry_debugger_send_string (JERRY_DEBUGGER_EVAL_RESULT, type, string_p, lit_get_magic_string_size (id));
         return false;
       }
     }
@@ -1482,14 +1482,16 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
 
   ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-  if (!ecma_is_value_string (prop_value_p->value))
+  if (ecma_is_value_string (prop_value_p->value))
   {
-    return ecma_stringbuilder_finalize (&builder);
+    ecma_string_t *string_p = ecma_get_string_from_value (prop_value_p->value);
+    if (!ecma_string_is_empty (string_p))
+    {
+      ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COLON);
+      ecma_stringbuilder_append_byte (&builder, LIT_CHAR_SP);
+      ecma_stringbuilder_append (&builder, string_p);
+    }
   }
-
-  ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COLON);
-  ecma_stringbuilder_append_byte (&builder, LIT_CHAR_SP);
-  ecma_stringbuilder_append (&builder, ecma_get_string_from_value (prop_value_p->value));
 
   return ecma_stringbuilder_finalize (&builder);
 } /* jerry_debugger_exception_object_to_string */

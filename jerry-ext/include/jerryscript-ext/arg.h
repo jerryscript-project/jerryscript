@@ -45,7 +45,7 @@ typedef jerry_value_t (*jerryx_arg_transform_func_t) (jerryx_arg_js_iterator_t *
  */
 typedef struct
 {
-  const jerry_char_t **name_p; /**< property name list of the JS object */
+  const jerry_value_t *name_p; /**< property name list of the JS object */
   jerry_length_t name_cnt; /**< count of the name list */
   const jerryx_arg_t *c_arg_p; /**< points to the array of transformation steps */
   jerry_length_t c_arg_cnt; /**< the count of the `c_arg_p` array */
@@ -82,7 +82,7 @@ jerry_value_t jerryx_arg_transform_args (const jerry_value_t *js_arg_p,
                                          jerry_length_t c_arg_cnt);
 
 jerry_value_t jerryx_arg_transform_object_properties (const jerry_value_t obj_val,
-                                                      const jerry_char_t **name_p,
+                                                      const jerry_value_t *name_p,
                                                       const jerry_length_t name_cnt,
                                                       const jerryx_arg_t *c_arg_p,
                                                       jerry_length_t c_arg_cnt);

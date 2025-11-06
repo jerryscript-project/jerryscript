@@ -18,14 +18,12 @@
 
 #include "test-common.h"
 
-static const char *prop_names[] = { "val1", "val2", "val3", "val4", "val5", "37", "symbol" };
-
 static jerry_char_t buffer[256] = { 0 };
+static jerry_char_t buffer_prop_name[256] = { 0 };
 
 static void
-create_and_set_property (const jerry_value_t object, const char *prop_name)
+create_and_set_property (const jerry_value_t object, jerry_value_t jprop_name)
 {
-  jerry_value_t jprop_name = jerry_string_sz (prop_name);
   jerry_value_t ret_val = jerry_object_set (object, jprop_name, jerry_undefined ());
 
   jerry_value_free (jprop_name);
@@ -33,8 +31,16 @@ create_and_set_property (const jerry_value_t object, const char *prop_name)
 } /* create_and_set_property */
 
 static void
-compare_prop_name (const jerry_value_t object, const char *prop_name, uint32_t idx)
+compare_prop_name (const jerry_value_t object, const jerry_value_t prop_name_value, uint32_t idx)
 {
+  {
+    jerry_size_t prop_name_size = jerry_string_size (prop_name_value, JERRY_ENCODING_CESU8);
+    TEST_ASSERT (prop_name_size < sizeof (buffer_prop_name));
+    jerry_size_t ret_size =
+      jerry_string_to_buffer (prop_name_value, JERRY_ENCODING_CESU8, buffer_prop_name, prop_name_size);
+    TEST_ASSERT (prop_name_size == ret_size);
+    buffer_prop_name[prop_name_size] = '\0';
+  }
   jerry_value_t name = jerry_object_get_index (object, idx);
   TEST_ASSERT (jerry_value_is_string (name) || jerry_value_is_number (name));
   if (jerry_value_is_string (name))
@@ -44,23 +50,22 @@ compare_prop_name (const jerry_value_t object, const char *prop_name, uint32_t i
     jerry_size_t ret_size = jerry_string_to_buffer (name, JERRY_ENCODING_CESU8, buffer, sizeof (buffer));
     TEST_ASSERT (name_size == ret_size);
     buffer[name_size] = '\0';
-    TEST_ASSERT (strcmp ((const char *) buffer, prop_name) == 0);
+    TEST_ASSERT (strcmp ((const char *) buffer, (const char *) buffer_prop_name) == 0);
   }
   else
   {
-    TEST_ASSERT ((int) jerry_value_as_number (name) == atoi (prop_name));
+    TEST_ASSERT ((int) jerry_value_as_number (name) == atoi ((const char *) buffer_prop_name));
   }
 
   jerry_value_free (name);
 } /* compare_prop_name */
 
 static void
-define_property (const jerry_value_t object,
-                 const char *prop_name,
+define_property (const jerry_value_t object, /**< object value */
+                 jerry_value_t jname, /**< property name that will be free/take*/
                  jerry_property_descriptor_t *prop_desc_p,
                  bool is_symbol)
 {
-  jerry_value_t jname = jerry_string_sz (prop_name);
   jerry_value_t ret_val;
   if (is_symbol)
   {
@@ -86,6 +91,10 @@ main (void)
   jerry_value_t error_value = jerry_object_property_names (jerry_undefined (), JERRY_PROPERTY_FILTER_ALL);
   TEST_ASSERT (jerry_value_is_exception (error_value) && jerry_error_type (error_value) == JERRY_ERROR_TYPE);
   jerry_value_free (error_value);
+
+  jerry_value_t prop_names[] = { jerry_string_sz ("val1"),  jerry_string_sz ("val2"), jerry_string_sz ("val3"),
+                                 jerry_string_sz ("val4"),  jerry_string_sz ("val5"), jerry_string_sz ("37"),
+                                 jerry_string_sz ("symbol") };
 
   jerry_value_t test_object = jerry_object ();
   create_and_set_property (test_object, prop_names[0]);

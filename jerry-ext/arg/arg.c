@@ -77,7 +77,7 @@ jerryx_arg_transform_this_and_args (const jerry_value_t this_val, /**< the this_
   {
     jerry_value_free (ret);
 
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "'this' validation failed.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("'this' validation failed."));
   }
 
   return jerryx_arg_transform_args (js_arg_p, js_arg_cnt, c_arg_p + 1, c_arg_cnt - 1);
@@ -92,23 +92,21 @@ jerryx_arg_transform_this_and_args (const jerry_value_t this_val, /**< the this_
  */
 jerry_value_t
 jerryx_arg_transform_object_properties (const jerry_value_t obj_val, /**< the JS object */
-                                        const jerry_char_t **name_p, /**< property name list of the JS object */
+                                        const jerry_value_t *name_p, /**< property name list of the JS object */
                                         const jerry_length_t name_cnt, /**< count of the name list */
                                         const jerryx_arg_t *c_arg_p, /**< points to the array of transformation steps */
                                         jerry_length_t c_arg_cnt) /**< the count of the `c_arg_p` array */
 {
   if (!jerry_value_is_object (obj_val))
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "Not an object.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("Not an object."));
   }
 
   JERRY_VLA (jerry_value_t, prop, name_cnt);
 
-  for (jerry_length_t i = 0; i < name_cnt; i++, name_p++)
+  for (jerry_length_t i = 0; i < name_cnt; i++)
   {
-    const jerry_value_t name_str = jerry_string_sz ((char *) (*name_p));
-    prop[i] = jerry_object_get (obj_val, name_str);
-    jerry_value_free (name_str);
+    prop[i] = jerry_object_get (obj_val, name_p[i]);
 
     if (jerry_value_is_exception (prop[i]))
     {
@@ -144,7 +142,7 @@ jerryx_arg_transform_array (const jerry_value_t array_val, /**< points to the JS
 {
   if (!jerry_value_is_array (array_val))
   {
-    return jerry_throw_sz (JERRY_ERROR_TYPE, "Not an array.");
+    return jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("Not an array."));
   }
 
   JERRY_VLA (jerry_value_t, arr, c_arg_cnt);

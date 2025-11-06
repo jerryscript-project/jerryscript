@@ -44,7 +44,7 @@ main (void)
   jerry_value_free (err_val);
   jerry_value_free (obj_val);
 
-  const char pterodactylus[] = "Pterodactylus";
+#define pterodactylus "Pterodactylus"
   const size_t pterodactylus_size = sizeof (pterodactylus) - 1;
 
   jerry_value_t str = jerry_string_sz (pterodactylus);

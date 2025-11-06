@@ -115,7 +115,7 @@ main (void)
   test_to_interger (-4294967297, -4294967297);
 
   // few test-cases which return with error
-  jerry_value_t error_val = jerry_throw_sz (JERRY_ERROR_TYPE, "error");
+  jerry_value_t error_val = jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("error"));
   double number = jerry_value_as_integer (error_val);
   jerry_value_free (error_val);
   TEST_ASSERT (number == 0);

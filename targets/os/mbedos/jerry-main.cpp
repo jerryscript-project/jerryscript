@@ -27,14 +27,15 @@
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
 #if MBED_MAJOR_VERSION == 5
-static Serial serial(USBTX, USBRX, 115200);
+static Serial serial (USBTX, USBRX, 115200);
 #elif MBED_MAJOR_VERSION == 6
-static BufferedSerial serial(USBTX, USBRX, 115200);
+static BufferedSerial serial (USBTX, USBRX, 115200);
 #else
 #error Unsupported Mbed OS version.
 #endif
 
-int main()
+int
+main ()
 {
   /* Initialize engine */
   jerry_init (JERRY_INIT_EMPTY);
@@ -43,7 +44,7 @@ int main()
   jerry_log (JERRY_LOG_LEVEL_DEBUG, "This test run the following script code: [%s]\n\n", script);
 
   /* Register the print function in the global object. */
-  jerryx_register_global ("print", jerryx_handler_print);
+  jerryx_register_global (jerry_string_sz ("print"), jerryx_handler_print);
 
   /* Setup Global scope code */
   jerry_value_t ret_value = jerry_parse (script, sizeof (script) - 1, NULL);

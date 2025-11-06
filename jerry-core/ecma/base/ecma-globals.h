@@ -2264,6 +2264,8 @@ typedef enum
  */
 #define ECMA_PRIVATE_PROPERTY_KIND(prop) ((prop) & ((ECMA_PRIVATE_PROPERTY_STATIC_FLAG - 1)))
 
+ecma_value_t ecma_get_error_msg (ecma_error_msg_t id);
+
 /**
  * @}
  * @}

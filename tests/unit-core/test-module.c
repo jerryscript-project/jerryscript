@@ -42,10 +42,9 @@ compare_specifier (jerry_value_t specifier, /* string value */
 
 static void
 compare_property (jerry_value_t namespace_object, /**< namespace object */
-                  const char *name_p, /**< property name */
+                  jerry_value_t name, /**< property name that will be free/take*/
                   double expected_value) /**< property value (number for simplicity) */
 {
-  jerry_value_t name = jerry_string_sz (name_p);
   jerry_value_t result = jerry_object_get (namespace_object, name);
 
   TEST_ASSERT (jerry_value_is_number (result));
@@ -118,7 +117,7 @@ resolve_callback2 (const jerry_value_t specifier, /**< module specifier */
   {
     if (terminate_with_error)
     {
-      return jerry_throw_sz (JERRY_ERROR_RANGE, "Module not found");
+      return jerry_throw_sz (JERRY_ERROR_RANGE, jerry_string_sz ("Module not found"));
     }
 
     return create_module (0);
@@ -197,7 +196,7 @@ native_module_evaluate (const jerry_value_t native_module) /**< native module */
   if (counter == 4)
   {
     ++counter;
-    return jerry_throw_sz (JERRY_ERROR_COMMON, "Ooops!");
+    return jerry_throw_sz (JERRY_ERROR_COMMON, jerry_string_sz ("Ooops!"));
   }
 
   return jerry_undefined ();
@@ -414,8 +413,8 @@ main (void)
 
   result = jerry_module_namespace (module);
   TEST_ASSERT (jerry_value_is_object (result));
-  compare_property (result, "a", 6);
-  compare_property (result, "b", 8.5);
+  compare_property (result, jerry_string_sz ("a"), 6);
+  compare_property (result, jerry_string_sz ("b"), 8.5);
   jerry_value_free (result);
 
   jerry_value_free (module);
@@ -439,7 +438,7 @@ main (void)
   jerry_value_free (module);
 
   /* Valid identifier. */
-  jerry_value_t export = jerry_string_sz ("\xed\xa0\x83\xed\xb2\x80");
+  jerry_value_t export = jerry_string_cesu8 (JERRY_ZSTR_ARG ("\xed\xa0\x83\xed\xb2\x80"));
 
   module = jerry_native_module (NULL, &export, 1);
   TEST_ASSERT (!jerry_value_is_exception (module));
@@ -463,7 +462,7 @@ main (void)
   jerry_value_free (module);
   jerry_value_free (export);
 
-  export = jerry_string_sz ("\xed\xa0\x80");
+  export = jerry_string_cesu8 (JERRY_ZSTR_ARG ("\xed\xa0\x80"));
   module = jerry_native_module (NULL, &export, 1);
   TEST_ASSERT (jerry_value_is_exception (module));
   jerry_value_free (module);

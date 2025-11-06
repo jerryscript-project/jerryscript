@@ -282,7 +282,7 @@ jerryx_print_unhandled_exception (jerry_value_t exception) /**< exception value 
 
   if (jerry_value_is_object (value))
   {
-    jerry_value_t backtrace_val = jerry_object_get_sz (value, "stack");
+    jerry_value_t backtrace_val = jerry_object_get_sz (value, jerry_string_sz ("stack"));
 
     if (jerry_value_is_array (backtrace_val))
     {

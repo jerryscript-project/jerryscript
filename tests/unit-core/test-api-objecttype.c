@@ -113,7 +113,7 @@ main (void)
     ENTRY (JERRY_OBJECT_TYPE_NONE, jerry_undefined ()),
     ENTRY (JERRY_OBJECT_TYPE_NONE, jerry_null ()),
     ENTRY (JERRY_OBJECT_TYPE_NONE, jerry_string_sz ("foo")),
-    ENTRY (JERRY_OBJECT_TYPE_NONE, jerry_throw_sz (JERRY_ERROR_TYPE, "error")),
+    ENTRY (JERRY_OBJECT_TYPE_NONE, jerry_throw_sz (JERRY_ERROR_TYPE, jerry_string_sz ("error"))),
 
     ENTRY (JERRY_OBJECT_TYPE_GENERIC, jerry_object ()),
     ENTRY_IF (JERRY_OBJECT_TYPE_MODULE_NAMESPACE, test_namespace (module_parse_options), JERRY_FEATURE_MODULE),

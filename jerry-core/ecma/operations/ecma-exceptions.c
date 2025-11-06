@@ -169,6 +169,53 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
 } /* ecma_new_standard_error */
 
 /**
+ * Create an Error object with the provided `message` string value as the error `message` property.
+ * If the `message` value is not a string, the created error will not have a `message` property.
+ *
+ * @note
+ * - Important! The `error_type` argument *must not be* `JERRY_ERROR_NONE`.
+ *   Creating an Error object with no error type is not valid.
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
+ *
+ * @return Error object
+ */
+ecma_value_t
+ecma_error_value (jerry_error_t error_type, /**< type of error */
+                  ecma_value_t message) /**< message of the error */
+{
+  ecma_string_t *message_p = NULL;
+  if (ecma_is_value_string (message))
+  {
+    message_p = ecma_get_string_from_value (message);
+  }
+
+  ecma_object_t *error_object_p = ecma_new_standard_error ((jerry_error_t) error_type, message_p);
+
+  return ecma_make_object_value (error_object_p);
+} /* ecma_error_value */
+
+/**
+ * Create an Error object with the provided `message_sz` string value as the error `message` property.
+ * If the `message_sz` value is not a string, the created error will not have a `message` property.
+ *
+ * @note
+ * - Important! The `error_type` argument *must not be* `JERRY_ERROR_NONE`.
+ *   Creating an Error object with no error type is not valid.
+ * - Returned value must be freed with [jerry_value_free](#jerry_value_free) when it is no longer needed.
+ * - The `message_sz` value will be freed in this function.
+ *
+ * @return Error object
+ */
+ecma_value_t
+ecma_error_value_sz (jerry_error_t error_type, /**< type of error */
+                     ecma_value_t message_sz) /**< message of the error that will be free/take */
+{
+  ecma_value_t error = ecma_error_value (error_type, message_sz);
+  ecma_free_value (message_sz);
+  return error;
+} /* ecma_error_value_sz */
+
+/**
  * aggregate-error object constructor.
  *
  * @return newly constructed aggregate errors
@@ -298,21 +345,7 @@ ecma_value_t
 ecma_raise_standard_error (jerry_error_t error_type, /**< error type */
                            ecma_error_msg_t msg) /**< error message */
 {
-  ecma_object_t *error_obj_p;
-  const lit_utf8_byte_t *str_p = (lit_utf8_byte_t *) ecma_get_error_msg (msg);
-
-  if (msg != ECMA_ERR_EMPTY)
-  {
-    ecma_string_t *error_msg_p = ecma_new_ecma_external_string_from_cesu8 (str_p, ecma_get_error_size (msg), NULL);
-    error_obj_p = ecma_new_standard_error (error_type, error_msg_p);
-    ecma_deref_ecma_string (error_msg_p);
-  }
-  else
-  {
-    error_obj_p = ecma_new_standard_error (error_type, NULL);
-  }
-
-  jcontext_raise_exception (ecma_make_object_value (error_obj_p));
+  jcontext_raise_exception (ecma_error_value_sz (error_type, ecma_get_error_msg (msg)));
   return ECMA_VALUE_ERROR;
 } /* ecma_raise_standard_error */
 

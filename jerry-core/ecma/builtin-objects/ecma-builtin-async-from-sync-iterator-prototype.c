@@ -252,27 +252,14 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
   {
     ecma_free_value (call_result);
 
-#if JERRY_ERROR_MESSAGES
-    const lit_utf8_byte_t *msg_p = (lit_utf8_byte_t *) ecma_get_error_msg (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
-    lit_utf8_size_t msg_size = ecma_get_error_size (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT);
-    ecma_string_t *error_msg_p = ecma_new_ecma_string_from_ascii (msg_p, msg_size);
-#else /* !JERRY_ERROR_MESSAGES */
-    ecma_string_t *error_msg_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-#endif /* JERRY_ERROR_MESSAGES */
-
-    ecma_object_t *type_error_obj_p = ecma_new_standard_error (JERRY_ERROR_TYPE, error_msg_p);
-
-#if JERRY_ERROR_MESSAGES
-    ecma_deref_ecma_string (error_msg_p);
-#endif /* JERRY_ERROR_MESSAGES */
-
-    ecma_value_t type_error = ecma_make_object_value (type_error_obj_p);
+    ecma_value_t type_error =
+      ecma_error_value_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_ARGUMENT_IS_NOT_AN_OBJECT));
 
     /* 10.a. */
     ecma_value_t reject =
       ecma_op_function_call (ecma_get_object_from_value (capability_p->reject), ECMA_VALUE_UNDEFINED, &type_error, 1);
     JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (reject));
-    ecma_deref_object (type_error_obj_p);
+    ecma_free_value (type_error);
     ecma_free_value (reject);
 
     /* 10.b. */

@@ -84,7 +84,7 @@ main (void)
   run_test ("var error = new Error()\n"
             "error.message === 'Replaced message!'\n");
 
-  jerry_value_free (jerry_error_sz (JERRY_ERROR_COMMON, "Message"));
+  jerry_value_free (jerry_error_sz (JERRY_ERROR_COMMON, jerry_string_sz ("Message")));
 
   TEST_ASSERT (error_object_created_callback_count == 11);
 

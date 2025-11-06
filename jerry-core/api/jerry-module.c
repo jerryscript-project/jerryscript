@@ -16,7 +16,7 @@
 #include "jerryscript-core.h"
 #include "jerryscript-port.h"
 
-#include "ecma-errors.h"
+#include "ecma-globals.h"
 
 #include "lit-magic-strings.h"
 #include "lit-strings.h"
@@ -162,7 +162,7 @@ jerry_module_resolve (const jerry_value_t specifier, /**< module specifier strin
 
   if (path_p == NULL)
   {
-    return jerry_throw_sz (JERRY_ERROR_SYNTAX, "Failed to resolve module");
+    return jerry_throw_sz (JERRY_ERROR_SYNTAX, jerry_string_sz ("Failed to resolve module"));
   }
 
   jerry_value_t realm = jerry_current_realm ();
@@ -192,7 +192,7 @@ jerry_module_resolve (const jerry_value_t specifier, /**< module specifier strin
     jerry_value_free (realm);
     jerry_port_path_free (path_p);
 
-    return jerry_throw_sz (JERRY_ERROR_SYNTAX, "Module file not found");
+    return jerry_throw_sz (JERRY_ERROR_SYNTAX, jerry_string_sz ("Module file not found"));
   }
 
   jerry_parse_options_t parse_options;

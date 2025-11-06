@@ -164,8 +164,8 @@ main (void)
   jerry_value_free (result);
 
   // arguments is a error
-  const char *const error_message_p = "Random error.";
-  jerry_value_t error_val = jerry_throw_sz (JERRY_ERROR_RANGE, error_message_p);
+#define error_message "Random error."
+  jerry_value_t error_val = jerry_throw_sz (JERRY_ERROR_RANGE, jerry_string_sz (error_message));
   jerry_value_t args3[2] = { error_val, error_val };
   result = jerry_container_op (JERRY_CONTAINER_OP_SET, map, args3, 2);
   TEST_ASSERT (jerry_value_is_exception (result));

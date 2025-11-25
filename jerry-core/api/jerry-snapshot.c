@@ -191,21 +191,18 @@ snapshot_add_compiled_code (const ecma_compiled_code_t *compiled_code_p, /**< co
 
     lit_utf8_size_t pattern_size = 0;
 
-    ECMA_STRING_TO_UTF8_STRING (pattern_string_p, buffer_p, buffer_size);
+    ECMA_STRING_TO_UTF8_STRING (pattern_string_p, buffer);
 
-    pattern_size = buffer_size;
+    pattern_size = buffer.size;
 
     if (!snapshot_write_to_buffer_by_offset (snapshot_buffer_p,
                                              snapshot_buffer_size,
                                              &globals_p->snapshot_buffer_write_offset,
-                                             buffer_p,
-                                             buffer_size))
+                                             buffer.ptr,
+                                             buffer.size))
     {
       globals_p->snapshot_error = jerry_throw_sz (JERRY_ERROR_RANGE, error_buffer_too_small_p);
-      /* cannot return inside ECMA_FINALIZE_UTF8_STRING */
     }
-
-    ECMA_FINALIZE_UTF8_STRING (buffer_p, buffer_size);
 
     if (!ecma_is_value_empty (globals_p->snapshot_error))
     {
@@ -1484,15 +1481,13 @@ jerry_append_ecma_string_to_buffer (uint8_t *buffer_p, /**< buffer */
                                     uint8_t *buffer_end_p, /**< the end of the buffer */
                                     ecma_string_t *string_p) /**< ecma-string */
 {
-  ECMA_STRING_TO_UTF8_STRING (string_p, str_buffer_p, str_buffer_size);
+  ECMA_STRING_TO_UTF8_STRING (string_p, str_buffer);
 
   /* Append the string to the buffer. */
   uint8_t *new_buffer_p = jerry_append_chars_to_buffer (buffer_p,
                                                         buffer_end_p,
-                                                        (const jerry_char_t *) str_buffer_p,
-                                                        (jerry_size_t) str_buffer_size);
-
-  ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
+                                                        (const jerry_char_t *) str_buffer.ptr,
+                                                        (jerry_size_t) str_buffer.size);
 
   return new_buffer_p;
 } /* jerry_append_ecma_string_to_buffer */
@@ -1623,10 +1618,10 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
     for (lit_utf8_size_t i = 0; i < literal_count; i++)
     {
       lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("  \""));
-      ECMA_STRING_TO_UTF8_STRING (literal_array[i], str_buffer_p, str_buffer_size);
-      for (lit_utf8_size_t j = 0; j < str_buffer_size; j++)
+      ECMA_STRING_TO_UTF8_STRING (literal_array[i], str_buffer);
+      for (lit_utf8_size_t j = 0; j < str_buffer.size; j++)
       {
-        uint8_t byte = str_buffer_p[j];
+        uint8_t byte = str_buffer.ptr[j];
         if (byte < 32 || byte > 127)
         {
           lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("\\x"));
@@ -1645,7 +1640,6 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
         }
       }
 
-      ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
       lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, JERRY_ZSTR_ARG ("\""));
 
       if (i < literal_count - 1)

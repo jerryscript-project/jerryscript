@@ -121,17 +121,15 @@ re_compile_bytecode (ecma_string_t *pattern_str_p, /**< pattern */
 
   re_initialize_regexp_bytecode (&re_ctx);
 
-  ECMA_STRING_TO_UTF8_STRING (pattern_str_p, pattern_start_p, pattern_start_size);
+  ECMA_STRING_TO_UTF8_STRING (pattern_str_p, pattern_start);
 
-  re_ctx.input_start_p = pattern_start_p;
-  re_ctx.input_curr_p = (lit_utf8_byte_t *) pattern_start_p;
-  re_ctx.input_end_p = pattern_start_p + pattern_start_size;
+  re_ctx.input_start_p = pattern_start.ptr;
+  re_ctx.input_curr_p = (lit_utf8_byte_t *) pattern_start.ptr;
+  re_ctx.input_end_p = pattern_start.ptr + pattern_start.size;
   re_ctx.groups_count = -1;
 
   /* Parse RegExp pattern */
   ecma_value_t result = re_parse_alternative (&re_ctx, true);
-
-  ECMA_FINALIZE_UTF8_STRING (pattern_start_p, pattern_start_size);
 
   if (ECMA_IS_VALUE_ERROR (result))
   {

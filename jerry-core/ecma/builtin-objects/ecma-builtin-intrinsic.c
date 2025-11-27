@@ -241,11 +241,11 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
         return ECMA_VALUE_ERROR;
       }
 
-      ECMA_STRING_TO_UTF8_STRING (to_str_p, start_p, input_start_size);
+      ECMA_STRING_TO_UTF8_STRING (to_str_p, start);
 
       lit_utf8_size_t size;
-      const lit_utf8_byte_t *input_start_p = start_p;
-      const lit_utf8_byte_t *input_str_end_p = start_p + input_start_size;
+      const lit_utf8_byte_t *input_start_p = start.ptr;
+      const lit_utf8_byte_t *input_str_end_p = start.ptr + start.size;
 
       ecma_string_t *ret_str_p;
       if (builtin_routine_id == ECMA_INTRINSIC_STRING_TRIM_START)
@@ -261,7 +261,6 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
         ret_str_p = ecma_new_ecma_string_from_utf8 (input_start_p, size);
       }
 
-      ECMA_FINALIZE_UTF8_STRING (start_p, input_start_size);
       ecma_value_t result = ecma_make_string_value (ret_str_p);
       ecma_deref_ecma_string (to_str_p);
       return result;
@@ -279,19 +278,18 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
       }
 
       ecma_value_t result;
-      ECMA_STRING_TO_UTF8_STRING (str_p, string_buff, string_buff_size);
+      ECMA_STRING_TO_UTF8_STRING (str_p, string_buff);
 
       if (builtin_routine_id == ECMA_INTRINSIC_PARSE_INT)
       {
-        result = ecma_number_parse_int (string_buff, string_buff_size, arguments_list_p[1]);
+        result = ecma_number_parse_int (string_buff.ptr, string_buff.size, arguments_list_p[1]);
       }
       else
       {
         JERRY_ASSERT (builtin_routine_id == ECMA_INTRINSIC_PARSE_FLOAT);
-        result = ecma_number_parse_float (string_buff, string_buff_size);
+        result = ecma_number_parse_float (string_buff.ptr, string_buff.size);
       }
 
-      ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
       ecma_deref_ecma_string (str_p);
       return result;
     }

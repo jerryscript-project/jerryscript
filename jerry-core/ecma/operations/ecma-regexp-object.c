@@ -63,10 +63,10 @@ ecma_regexp_parse_flags (ecma_string_t *flags_str_p, /**< Input string with flag
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   uint16_t result_flags = RE_FLAG_EMPTY;
 
-  ECMA_STRING_TO_UTF8_STRING (flags_str_p, flags_start_p, flags_start_size);
+  ECMA_STRING_TO_UTF8_STRING (flags_str_p, flags_start);
 
-  const lit_utf8_byte_t *flags_str_curr_p = flags_start_p;
-  const lit_utf8_byte_t *flags_str_end_p = flags_start_p + flags_start_size;
+  const lit_utf8_byte_t *flags_str_curr_p = flags_start.ptr;
+  const lit_utf8_byte_t *flags_str_end_p = flags_start.ptr + flags_start.size;
 
   while (flags_str_curr_p < flags_str_end_p)
   {
@@ -118,8 +118,6 @@ ecma_regexp_parse_flags (ecma_string_t *flags_str_p, /**< Input string with flag
 
     result_flags = (uint16_t) (result_flags | flag);
   }
-
-  ECMA_FINALIZE_UTF8_STRING (flags_start_p, flags_start_size);
 
   *flags_p = result_flags;
   return ret_value;
@@ -1601,17 +1599,13 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
   re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, ext_object_p->u.cls.u3.value);
 
   /* 3. */
-  lit_utf8_size_t input_size;
-  lit_utf8_size_t input_length;
-  uint8_t input_flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *input_buffer_p =
-    ecma_string_get_chars (input_string_p, &input_size, &input_length, NULL, &input_flags);
+  ECMA_STRING_TO_UTF8_STRING_AND_LENGTH (input_string_p, input);
 
-  const lit_utf8_byte_t *input_curr_p = input_buffer_p;
-  const lit_utf8_byte_t *input_end_p = input_buffer_p + input_size;
+  const lit_utf8_byte_t *input_curr_p = input.ptr;
+  const lit_utf8_byte_t *input_end_p = input.ptr + input.size;
 
   ecma_regexp_ctx_t re_ctx;
-  ecma_regexp_initialize_context (&re_ctx, bc_p, input_buffer_p, input_end_p);
+  ecma_regexp_initialize_context (&re_ctx, bc_p, input.ptr, input_end_p);
 
   /* 4. */
   ecma_length_t index = 0;
@@ -1777,11 +1771,6 @@ match_found:
 
 cleanup_context:
   ecma_regexp_cleanup_context (&re_ctx);
-
-  if (input_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) input_buffer_p, input_size);
-  }
 
   return ret_value;
 } /* ecma_regexp_exec_helper */
@@ -1970,17 +1959,14 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
     goto cleanup_string;
   }
 
-  lit_utf8_size_t flags_size;
-  uint8_t flags_str_flags = ECMA_STRING_FLAG_IS_ASCII;
-  const lit_utf8_byte_t *flags_buffer_p =
-    ecma_string_get_chars (flags_str_p, &flags_size, NULL, NULL, &flags_str_flags);
+  ECMA_STRING_TO_UTF8_STRING (flags_str_p, flags_buffer);
 
   bool unicode = false;
   bool sticky = false;
 
   /* 9-11. */
-  const lit_utf8_byte_t *const flags_end_p = flags_buffer_p + flags_size;
-  for (const lit_utf8_byte_t *current_p = flags_buffer_p; current_p < flags_end_p; ++current_p)
+  const lit_utf8_byte_t *const flags_end_p = flags_buffer.ptr + flags_buffer.size;
+  for (const lit_utf8_byte_t *current_p = flags_buffer.ptr; current_p < flags_end_p; ++current_p)
   {
     switch (*current_p)
     {
@@ -1995,11 +1981,6 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
         break;
       }
     }
-  }
-
-  if (flags_str_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) flags_buffer_p, flags_size);
   }
 
   /* 12. */
@@ -2270,9 +2251,9 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
 
   JERRY_ASSERT (bc_p != NULL);
 
-  uint8_t string_flags = ECMA_STRING_FLAG_IS_ASCII;
-  lit_utf8_size_t string_length;
-  ctx_p->string_p = ecma_string_get_chars (string_p, &(ctx_p->string_size), &string_length, NULL, &string_flags);
+  ECMA_STRING_TO_UTF8_STRING_AND_LENGTH (string_p, string);
+  ctx_p->string_p = string.ptr;
+  ctx_p->string_size = string.size;
 
   const lit_utf8_byte_t *const string_end_p = ctx_p->string_p + ctx_p->string_size;
   const uint8_t *const bc_start_p = (const uint8_t *) (bc_p + 1);
@@ -2485,11 +2466,6 @@ cleanup_context:
   ecma_regexp_cleanup_context (&re_ctx);
   ecma_bytecode_deref ((ecma_compiled_code_t *) bc_p);
 
-  if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) ctx_p->string_p, ctx_p->string_size);
-  }
-
   return result;
 } /* ecma_regexp_replace_helper_fast */
 
@@ -2553,8 +2529,6 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
   }
 
   ecma_free_value (result);
-
-  const lit_utf8_size_t string_length = ecma_string_get_length (string_p);
 
   /* 10. */
   if (replace_ctx.flags & RE_FLAG_GLOBAL)
@@ -2722,8 +2696,9 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
     }
   }
 
-  uint8_t string_flags = ECMA_STRING_FLAG_IS_ASCII;
-  replace_ctx.string_p = ecma_string_get_chars (string_p, &(replace_ctx.string_size), NULL, NULL, &string_flags);
+  ECMA_STRING_TO_UTF8_STRING_AND_LENGTH (string_p, string);
+  replace_ctx.string_p = string.ptr;
+  replace_ctx.string_size = string.size;
 
   /* 14. */
   replace_ctx.builder = ecma_stringbuilder_create ();
@@ -2941,10 +2916,6 @@ cleanup_builder:
   ecma_stringbuilder_destroy (&replace_ctx.builder);
 
 cleanup_chars:
-  if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
-  {
-    jmem_heap_free_block ((void *) replace_ctx.string_p, replace_ctx.string_size);
-  }
 
 cleanup_results:
   ecma_collection_free (results_p);

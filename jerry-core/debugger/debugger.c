@@ -335,7 +335,7 @@ jerry_debugger_copy_variables_to_string_message (uint8_t variable_type, /**< typ
   const size_t max_byte_count = JERRY_DEBUGGER_SEND_MAX (uint8_t);
   const size_t max_message_size = JERRY_DEBUGGER_SEND_SIZE (max_byte_count, uint8_t);
 
-  ECMA_STRING_TO_UTF8_STRING (value_str, str_buff, str_buff_size);
+  ECMA_STRING_TO_UTF8_STRING (value_str, str_buff);
 
   size_t str_size = 0;
   size_t str_limit = 255;
@@ -373,7 +373,7 @@ jerry_debugger_copy_variables_to_string_message (uint8_t variable_type, /**< typ
     }
     else
     {
-      str_size = (str_buff_size > str_limit) ? str_limit : str_buff_size;
+      str_size = (str_buff.size > str_limit) ? str_limit : str_buff.size;
     }
 
     message_string_p->string[*buffer_pos] = (uint8_t) str_size;
@@ -384,7 +384,7 @@ jerry_debugger_copy_variables_to_string_message (uint8_t variable_type, /**< typ
   if (result)
   {
     size_t free_bytes = max_byte_count - *buffer_pos;
-    const uint8_t *string_p = str_buff;
+    const uint8_t *string_p = str_buff.ptr;
 
     while (str_size > free_bytes)
     {
@@ -408,8 +408,6 @@ jerry_debugger_copy_variables_to_string_message (uint8_t variable_type, /**< typ
       *buffer_pos += str_size;
     }
   }
-
-  ECMA_FINALIZE_UTF8_STRING (str_buff, str_buff_size);
 
   return result;
 } /* jerry_debugger_copy_variables_to_string_message */
@@ -614,9 +612,8 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 
   ecma_string_t *string_p = ecma_get_string_from_value (message);
 
-  ECMA_STRING_TO_UTF8_STRING (string_p, buffer_p, buffer_size);
-  jerry_debugger_send_string (JERRY_DEBUGGER_EVAL_RESULT, type, buffer_p, buffer_size);
-  ECMA_FINALIZE_UTF8_STRING (buffer_p, buffer_size);
+  ECMA_STRING_TO_UTF8_STRING (string_p, buffer);
+  jerry_debugger_send_string (JERRY_DEBUGGER_EVAL_RESULT, type, buffer.ptr, buffer.size);
 
   ecma_free_value (message);
 
@@ -1525,12 +1522,9 @@ jerry_debugger_send_exception_string (ecma_value_t exception_value)
     string_p = ecma_op_to_string (exception_value);
   }
 
-  ECMA_STRING_TO_UTF8_STRING (string_p, string_data_p, string_size);
+  ECMA_STRING_TO_UTF8_STRING (string_p, str);
 
-  bool result =
-    jerry_debugger_send_string (JERRY_DEBUGGER_EXCEPTION_STR, JERRY_DEBUGGER_NO_SUBTYPE, string_data_p, string_size);
-
-  ECMA_FINALIZE_UTF8_STRING (string_data_p, string_size);
+  bool result = jerry_debugger_send_string (JERRY_DEBUGGER_EXCEPTION_STR, JERRY_DEBUGGER_NO_SUBTYPE, str.ptr, str.size);
 
   ecma_deref_ecma_string (string_p);
   return result;

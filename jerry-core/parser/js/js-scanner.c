@@ -2434,10 +2434,10 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
 
   PARSER_TRY (context_p->try_buffer)
   {
-    if (context_p->arguments_start_p == NULL)
+    if (context_p->arguments.ptr == NULL)
     {
-      context_p->source_p = context_p->source_start_p;
-      context_p->source_end_p = context_p->source_start_p + context_p->source_size;
+      context_p->source_p = context_p->source.ptr;
+      context_p->source_end_p = context_p->source.ptr + context_p->source.size;
 
       uint16_t status_flags =
         (SCANNER_LITERAL_POOL_FUNCTION | SCANNER_LITERAL_POOL_NO_ARGUMENTS | SCANNER_LITERAL_POOL_CAN_EVAL);
@@ -2448,7 +2448,7 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
       }
 
       scanner_literal_pool_t *literal_pool_p = scanner_push_literal_pool (context_p, &scanner_context, status_flags);
-      literal_pool_p->source_p = context_p->source_start_p;
+      literal_pool_p->source_p = context_p->source.ptr;
 
       parser_stack_push_uint8 (context_p, SCAN_STACK_SCRIPT);
 
@@ -2457,8 +2457,8 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
     }
     else
     {
-      context_p->source_p = context_p->arguments_start_p;
-      context_p->source_end_p = context_p->arguments_start_p + context_p->arguments_size;
+      context_p->source_p = context_p->arguments.ptr;
+      context_p->source_end_p = context_p->arguments.ptr + context_p->arguments.size;
 
       uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION;
 
@@ -3066,8 +3066,8 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
             scanner_context.end_arguments_p = scanner_info_p;
 
             context_p->next_scanner_info_p = scanner_info_p;
-            context_p->source_p = context_p->source_start_p;
-            context_p->source_end_p = context_p->source_start_p + context_p->source_size;
+            context_p->source_p = context_p->source.ptr;
+            context_p->source_end_p = context_p->source.ptr + context_p->source.size;
             lexer_init_line_info (context_p);
 
             scanner_filter_arguments (context_p, &scanner_context);
@@ -3445,7 +3445,7 @@ scan_completed:
   {
     scanner_info_t *info_p = context_p->next_scanner_info_p;
     const uint8_t *source_start_p =
-      (context_p->arguments_start_p == NULL ? context_p->source_start_p : context_p->arguments_start_p);
+      (context_p->arguments.ptr == NULL ? context_p->source.ptr : context_p->arguments.ptr);
 
     while (info_p->type != SCANNER_TYPE_END)
     {
@@ -3457,7 +3457,7 @@ scan_completed:
         case SCANNER_TYPE_END_ARGUMENTS:
         {
           JERRY_DEBUG_MSG ("  END_ARGUMENTS\n");
-          source_start_p = context_p->source_start_p;
+          source_start_p = context_p->source.ptr;
           break;
         }
         case SCANNER_TYPE_FUNCTION:

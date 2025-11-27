@@ -118,4 +118,13 @@ typedef uint32_t lit_code_point_t;
  */
 typedef uint32_t lit_string_hash_t;
 
+/**
+ * An UTF-8 string
+ */
+typedef struct
+{
+  const lit_utf8_byte_t *ptr; /**< pointer to UTF-8/CESU-8 string */
+  lit_utf8_size_t size; /**< string size excluding '\0' terminator */
+} lit_utf8_string_t;
+
 #endif /* !LIT_GLOBALS_H */

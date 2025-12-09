@@ -197,6 +197,13 @@ void *__cdecl _alloca (size_t _Size);
 #endif /* !JERRY_VLA */
 
 /**
+ * Helper to make sure unused parameters, variables, or expressions trigger no compiler warning.
+ */
+#ifndef JERRY_UNUSED
+#define JERRY_UNUSED(x) ((void) (x))
+#endif /* !JERRY_UNUSED */
+
+/**
  * @}
  */
 

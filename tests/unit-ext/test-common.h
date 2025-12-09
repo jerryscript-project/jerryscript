@@ -20,8 +20,6 @@
 
 #define ARRAY_SIZE(array) ((unsigned long) (sizeof (array) / sizeof ((array)[0])))
 
-#define JERRY_UNUSED(x) ((void) (x))
-
 #define TEST_ASSERT(x)                                           \
   do                                                             \
   {                                                              \

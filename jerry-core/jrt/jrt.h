@@ -30,11 +30,6 @@
  */
 #define JERRY_BITSINBYTE 8
 
-/*
- * Make sure unused parameters, variables, or expressions trigger no compiler warning.
- */
-#define JERRY_UNUSED(x) ((void) (x))
-
 #define JERRY_UNUSED_1(_1)                             JERRY_UNUSED (_1)
 #define JERRY_UNUSED_2(_1, _2)                         JERRY_UNUSED (_1), JERRY_UNUSED_1 (_2)
 #define JERRY_UNUSED_3(_1, _2, _3)                     JERRY_UNUSED (_1), JERRY_UNUSED_2 (_2, _3)

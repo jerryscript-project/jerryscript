@@ -25,8 +25,6 @@
 
 #include "jerryscript-port.h"
 
-#define JERRY_UNUSED(x) ((void) (x))
-
 #define TEST_ASSERT(x)                                           \
   do                                                             \
   {                                                              \

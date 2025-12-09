@@ -1064,6 +1064,10 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
   uint32_t copied_num = 0;
+
+  JMEM_CHECK_ARRAY_SIZE_AND_THROW(defined_prop_count, ecma_value_t, \
+    ecma_collection_free(array_index_props_p)                       \
+  );
   JMEM_DEFINE_LOCAL_ARRAY (values_buffer, defined_prop_count, ecma_value_t);
 
   ecma_value_t *buffer_p = array_index_props_p->buffer_p;

@@ -1245,6 +1245,9 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
   }
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  JMEM_CHECK_ARRAY_SIZE_AND_THROW(info_p->length, ecma_value_t, \
+  );
   JMEM_DEFINE_LOCAL_ARRAY (values_buffer, info_p->length, ecma_value_t);
 
   uint32_t buffer_index = 0;

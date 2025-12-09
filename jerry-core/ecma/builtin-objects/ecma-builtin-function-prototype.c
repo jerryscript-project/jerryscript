@@ -232,6 +232,9 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
 
   /* 6. */
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  JMEM_CHECK_ARRAY_SIZE_AND_THROW(length, ecma_value_t, \
+  );
   JMEM_DEFINE_LOCAL_ARRAY (arguments_list_p, length, ecma_value_t);
   ecma_length_t index = 0;
 

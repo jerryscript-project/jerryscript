@@ -832,6 +832,10 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
   ecma_value_t *buffer_p = prop_names_p->buffer_p;
 
   /* 4. */
+  JMEM_CHECK_ARRAY_SIZE_AND_THROW(prop_names_p->item_count, ecma_property_descriptor_t, \
+    ecma_collection_free(prop_names_p);                                                 \
+    ecma_deref_object(props_p)                                                          \
+  );
   JMEM_DEFINE_LOCAL_ARRAY (property_descriptors, prop_names_p->item_count, ecma_property_descriptor_t);
   uint32_t property_descriptor_number = 0;
   ecma_collection_t *enum_prop_names = ecma_new_collection ();

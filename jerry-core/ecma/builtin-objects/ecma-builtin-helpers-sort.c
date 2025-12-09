@@ -84,6 +84,9 @@ ecma_builtin_helper_array_merge_sort_helper (ecma_value_t *array_p, /**< array t
                                              ecma_object_t *array_buffer_p) /**< arrayBuffer */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  JMEM_CHECK_ARRAY_SIZE_AND_THROW(length, ecma_value_t, \
+  );
   JMEM_DEFINE_LOCAL_ARRAY (dest_array_p, length, ecma_value_t);
 
   ecma_value_t *temp_p;

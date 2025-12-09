@@ -1582,6 +1582,10 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
   jerry_char_t *const buffer_start_p = lit_buf_p;
   jerry_char_t *const buffer_end_p = lit_buf_p + lit_buf_size;
 
+  JMEM_CHECK_ARRAY_SIZE_AND_THROW(literal_count, ecma_string_t *, \
+    ecma_collection_destroy(lit_pool_p)                           \
+  );
+
   JMEM_DEFINE_LOCAL_ARRAY (literal_array, literal_count, ecma_string_t *);
   lit_utf8_size_t literal_idx = 0;
 

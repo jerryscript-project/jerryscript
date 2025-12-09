@@ -1726,6 +1726,13 @@ ecma_builtin_json_stringify (ecma_value_t arg1, /**< value */
     }
     else
     {
+      JMEM_CHECK_ARRAY_SIZE_AND_THROW(num_of_spaces, char, \
+        ecma_free_value(space);                            \
+        if (context.property_list_p != NULL)               \
+        {                                                  \
+          ecma_collection_free(context.property_list_p);   \
+        }                                                  \
+      );
       JMEM_DEFINE_LOCAL_ARRAY (space_buff, num_of_spaces, char);
 
       memset (space_buff, LIT_CHAR_SP, (size_t) num_of_spaces);

@@ -18,6 +18,8 @@
 
 #include "jrt.h"
 
+#include <limits.h>
+
 /** \addtogroup mem Memory allocation
  * @{
  *
@@ -190,6 +192,20 @@ void jmem_heap_stats_print (void);
 
 jmem_cpointer_t JERRY_ATTR_PURE jmem_compress_pointer (const void *pointer_p);
 void *JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);
+
+#if JERRY_CPOINTER_32_BIT
+
+#define JMEM_CHECK_ARRAY_SIZE_AND_THROW(number, type, finalize) \
+if (UINT_MAX / sizeof(type) < (size_t)(number)) {               \
+  finalize;                                                     \
+  return ecma_raise_range_error(ECMA_ERR_INVALID_ARRAY_LENGTH); \
+}
+
+#else /* JERRY_CPOINTER_32_BIT */
+
+#define JMEM_CHECK_ARRAY_SIZE_AND_THROW(number, type, finalize)
+
+#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * Define a local array variable and allocate memory for the array on the heap.

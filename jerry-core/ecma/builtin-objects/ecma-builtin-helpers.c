@@ -930,7 +930,8 @@ ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p) /**< replace con
 
             JERRY_ASSERT (ecma_is_value_string (match_value));
             const ecma_string_t *const matched_p = ecma_get_string_from_value (match_value);
-            const lit_utf8_size_t match_size = ecma_string_get_size (matched_p);
+            const lit_utf8_size_t match_size_raw = ecma_string_get_size(matched_p);
+            const lit_utf8_size_t match_size = JERRY_MIN(match_size_raw, ctx_p->string_size);
             const lit_utf8_byte_t *const begin_p = ctx_p->string_p + ctx_p->match_byte_pos + match_size;
 
             ecma_stringbuilder_append_raw (&(ctx_p->builder),

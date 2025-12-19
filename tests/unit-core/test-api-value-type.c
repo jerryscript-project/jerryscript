@@ -95,6 +95,25 @@ main (void)
   jerry_value_free (symbol_value);
   jerry_value_free (symbol_desc_value);
 
+  /* Check symbol wrapped in object type (Object(Symbol)) */
+  jerry_value_t sym_desc = jerry_string_sz ("bar");
+  jerry_value_t sym_prim = jerry_symbol_with_description (sym_desc);
+  
+  // Wrap the symbol into an object
+  jerry_value_t sym_obj = jerry_value_to_object (sym_prim);
+
+  // Check that it is NOT an error
+  TEST_ASSERT (!jerry_value_is_exception (sym_obj));
+
+  // Check that it is now an OBJECT, not a SYMBOL
+  jerry_type_t sym_obj_type = jerry_value_type (sym_obj);
+  TEST_ASSERT (sym_obj_type == JERRY_TYPE_OBJECT);
+
+  // Cleanup
+  jerry_value_free (sym_obj);
+  jerry_value_free (sym_prim);
+  jerry_value_free (sym_desc);
+
   if (jerry_feature_enabled (JERRY_FEATURE_BIGINT))
   {
     /* Check simple bigint value type */

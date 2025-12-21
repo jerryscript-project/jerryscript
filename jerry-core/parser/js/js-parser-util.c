@@ -540,7 +540,7 @@ parser_emit_cbc_forward_branch_item (parser_context_t *context_p, /**< context *
    * the branch is constructed locally, and copied later. */
   parser_emit_cbc_forward_branch (context_p, opcode, &branch);
 
-  new_item = (parser_branch_node_t *) parser_malloc (context_p, sizeof (parser_branch_node_t));
+  new_item = (parser_branch_node_t *) parser_branch_list_append (context_p);
   new_item->branch = branch;
   new_item->next_p = next_p;
   return new_item;
@@ -730,7 +730,7 @@ parser_set_breaks_to_current_position (parser_context_t *context_p, /**< context
     {
       parser_set_branch_to_current_position (context_p, &current_p->branch);
     }
-    parser_free (current_p, sizeof (parser_branch_node_t));
+    parser_branch_list_remove (context_p, current_p);
     current_p = next_p;
   }
 } /* parser_set_breaks_to_current_position */

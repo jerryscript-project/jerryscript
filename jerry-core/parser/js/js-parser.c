@@ -2140,6 +2140,7 @@ parser_parse_source (void *source_p, /**< source code */
   context.scope_stack_global_end = 0;
   context.tagged_template_literal_cp = JMEM_CP_NULL;
   context.private_context_p = NULL;
+  parser_branch_list_init (&context);
 
 #ifndef JERRY_NDEBUG
   context.context_stack_depth = 0;
@@ -2293,6 +2294,7 @@ parser_parse_source (void *source_p, /**< source code */
     JERRY_ASSERT (!(context.status_flags & PARSER_HAS_LATE_LIT_INIT));
 
     compiled_code_p = parser_post_processing (&context);
+    parser_branch_list_free (&context);
     parser_list_free (&context.literal_pool);
 
     /* When parsing is successful, only the dummy value can be remained on the stack. */
@@ -2366,11 +2368,6 @@ parser_parse_source (void *source_p, /**< source code */
   }
   PARSER_CATCH
   {
-    if (context.last_statement.current_p != NULL)
-    {
-      parser_free_jumps (context.last_statement);
-    }
-
     parser_free_allocated_buffer (&context);
 
     scanner_cleanup (&context);
@@ -2383,6 +2380,7 @@ parser_parse_source (void *source_p, /**< source code */
 #endif /* JERRY_MODULE_SYSTEM */
 
     compiled_code_p = NULL;
+    parser_branch_list_free (&context);
     parser_free_literals (&context.literal_pool);
     parser_cbc_stream_free (&context.byte_code);
 

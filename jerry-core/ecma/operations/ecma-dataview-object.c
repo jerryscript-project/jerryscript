@@ -148,8 +148,8 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
 
   /* 11 - 14. */
   ecma_dataview_object_t *dataview_obj_p = (ecma_dataview_object_t *) object_p;
-  dataview_obj_p->header.u.cls.type = ECMA_OBJECT_CLASS_DATAVIEW;
-  dataview_obj_p->header.u.cls.u3.length = view_byte_length;
+  dataview_obj_p->header.u.cls.head.type = ECMA_OBJECT_CLASS_DATAVIEW;
+  dataview_obj_p->header.u.cls.dataview.length = view_byte_length;
   dataview_obj_p->buffer_p = buffer_p;
   dataview_obj_p->byte_offset = (uint32_t) offset;
 
@@ -315,7 +315,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   uint32_t view_offset = view_p->byte_offset;
 
   /* GetViewValue 8., SetViewValue 10. */
-  uint32_t view_size = view_p->header.u.cls.u3.length;
+  uint32_t view_size = view_p->header.u.cls.dataview.length;
 
   /* GetViewValue 9., SetViewValue 11. */
   uint8_t element_size = (uint8_t) (1 << (ecma_typedarray_helper_get_shift_size (id)));

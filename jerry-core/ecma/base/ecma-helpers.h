@@ -408,6 +408,7 @@ ecma_value_t *ecma_compact_collection_end (ecma_value_t *compact_collection_p);
 void ecma_compact_collection_destroy (ecma_value_t *compact_collection_p);
 
 /* ecma-helpers.c */
+ecma_object_cls_general_t *ecma_object_cls_general (ecma_extended_object_t *obj);
 ecma_object_t *ecma_create_object (ecma_object_t *prototype_object_p, size_t ext_object_size, ecma_object_type_t type);
 ecma_object_t *ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p);
 ecma_object_t *ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, ecma_object_t *binding_obj_p);

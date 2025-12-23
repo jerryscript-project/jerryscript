@@ -401,9 +401,9 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
   {
     ecma_number_t local_tza;
 
-    if (date_object_p->header.u.cls.u1.date_flags & ECMA_DATE_TZA_SET)
+    if (date_object_p->header.u.cls.date.flags & ECMA_DATE_TZA_SET)
     {
-      local_tza = date_object_p->header.u.cls.u3.tza;
+      local_tza = date_object_p->header.u.cls.date.tza;
       JERRY_ASSERT (local_tza == ecma_date_local_time_zone_adjustment (date_value));
     }
     else
@@ -457,7 +457,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
         if (ecma_number_is_nan (converted_number[0]))
         {
           *date_value_p = converted_number[0];
-          date_object_p->header.u.cls.u1.date_flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
+          date_object_p->header.u.cls.date.flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
           return ecma_make_number_value (converted_number[0]);
         }
 
@@ -586,7 +586,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
 
   *date_value_p = full_date;
 
-  date_object_p->header.u.cls.u1.date_flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
+  date_object_p->header.u.cls.date.flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
 
   return ecma_make_number_value (full_date);
 } /* ecma_builtin_date_prototype_dispatch_set */
@@ -644,7 +644,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
     }
 
     *date_value_p = ecma_date_time_clip (time_num);
-    date_object_p->header.u.cls.u1.date_flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
+    date_object_p->header.u.cls.date.flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
 
     return ecma_make_number_value (*date_value_p);
   }
@@ -657,17 +657,17 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
       {
         ecma_number_t local_tza;
 
-        if (date_object_p->header.u.cls.u1.date_flags & ECMA_DATE_TZA_SET)
+        if (date_object_p->header.u.cls.date.flags & ECMA_DATE_TZA_SET)
         {
-          local_tza = date_object_p->header.u.cls.u3.tza;
+          local_tza = date_object_p->header.u.cls.date.tza;
           JERRY_ASSERT (local_tza == ecma_date_local_time_zone_adjustment (date_value));
         }
         else
         {
           local_tza = ecma_date_local_time_zone_adjustment (date_value);
           JERRY_ASSERT (local_tza <= INT32_MAX && local_tza >= INT32_MIN);
-          date_object_p->header.u.cls.u3.tza = (int32_t) local_tza;
-          date_object_p->header.u.cls.u1.date_flags |= ECMA_DATE_TZA_SET;
+          date_object_p->header.u.cls.date.tza = (int32_t) local_tza;
+          date_object_p->header.u.cls.date.flags |= ECMA_DATE_TZA_SET;
         }
 
         date_value += local_tza;

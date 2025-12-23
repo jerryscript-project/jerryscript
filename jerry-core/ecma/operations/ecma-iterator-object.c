@@ -141,14 +141,14 @@ ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from cre
     ecma_create_object (prototype_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-  ext_obj_p->u.cls.type = (uint8_t) iterator_type;
+  ext_obj_p->u.cls.head.type = (uint8_t) iterator_type;
 
   /* 3. */
-  ext_obj_p->u.cls.u3.iterated_value = iterated_value;
+  ext_obj_p->u.cls.iterator.value = iterated_value;
   /* 4. */
-  ext_obj_p->u.cls.u2.iterator_index = 0;
+  ext_obj_p->u.cls.iterator.index = 0;
   /* 5. */
-  ext_obj_p->u.cls.u1.iterator_kind = (uint8_t) kind;
+  ext_obj_p->u.cls.iterator.kind = (uint8_t) kind;
 
   /* 6. */
   return ecma_make_object_value (object_p);
@@ -680,8 +680,8 @@ ecma_op_create_async_from_sync_iterator (ecma_value_t sync_iterator, /**< sync i
 
   /* 2. */
   ext_obj_p->sync_next_method = sync_next_method;
-  ext_obj_p->header.u.cls.u3.sync_iterator = sync_iterator;
-  ext_obj_p->header.u.cls.type = ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR;
+  ext_obj_p->header.u.cls.sync_iterator.value = sync_iterator;
+  ext_obj_p->header.u.cls.head.type = ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR;
 
   /* 3. */
   *async_next_method_p = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_NEXT);

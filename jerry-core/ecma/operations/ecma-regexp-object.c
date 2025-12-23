@@ -159,7 +159,7 @@ ecma_op_regexp_alloc (ecma_object_t *ctr_obj_p) /**< constructor object pointer 
   ecma_extended_object_t *regexp_obj_p = (ecma_extended_object_t *) new_object_p;
 
   /* Class id will be initialized after the bytecode is compiled. */
-  regexp_obj_p->u.cls.type = ECMA_OBJECT_CLASS__MAX;
+  regexp_obj_p->u.cls.head.type = ECMA_OBJECT_CLASS__MAX;
 
   ecma_value_t status = ecma_builtin_helper_def_prop (new_object_p,
                                                       ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
@@ -179,8 +179,8 @@ ecma_op_regexp_initialize (ecma_object_t *regexp_obj_p, /**< RegExp object */
                            const re_compiled_code_t *bc_p) /**< bytecode */
 {
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) regexp_obj_p;
-  ext_obj_p->u.cls.type = ECMA_OBJECT_CLASS_REGEXP;
-  ECMA_SET_INTERNAL_VALUE_POINTER (ext_obj_p->u.cls.u3.value, bc_p);
+  ext_obj_p->u.cls.head.type = ECMA_OBJECT_CLASS_REGEXP;
+  ECMA_SET_INTERNAL_VALUE_POINTER (ecma_object_cls_general (ext_obj_p)->value, bc_p);
 } /* ecma_op_regexp_initialize */
 
 /**
@@ -1598,7 +1598,8 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
 
   /* 9. */
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) regexp_object_p;
-  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, ext_object_p->u.cls.u3.value);
+  re_compiled_code_t *bc_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, ecma_object_cls_general (ext_object_p)->value);
 
   /* 3. */
   lit_utf8_size_t input_size;
@@ -2265,7 +2266,8 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
                                  ecma_string_t *string_p, /**< source string */
                                  ecma_value_t replace_arg) /**< replace argument */
 {
-  const re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, re_obj_p->u.cls.u3.value);
+  const re_compiled_code_t *bc_p =
+    ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, ecma_object_cls_general (re_obj_p)->value);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bc_p);
 
   JERRY_ASSERT (bc_p != NULL);

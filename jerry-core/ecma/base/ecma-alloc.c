@@ -29,6 +29,8 @@ JERRY_STATIC_ASSERT (((sizeof (ecma_property_value_t) - 1) & sizeof (ecma_proper
 JERRY_STATIC_ASSERT (sizeof (ecma_extended_object_t) - sizeof (ecma_object_t) <= sizeof (uint64_t),
                      size_of_ecma_extended_object_part_must_be_less_than_or_equal_to_8_bytes);
 
+JERRY_STATIC_ASSERT (sizeof (ecma_object_cls_t) == 8, size_of_ecma_object_cls_t_should_be_8_bytes);
+
 /** \addtogroup ecma ECMA
  * @{
  *

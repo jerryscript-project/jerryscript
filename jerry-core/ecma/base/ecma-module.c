@@ -68,9 +68,9 @@ ecma_module_create (void)
   ecma_object_t *obj_p = ecma_create_object (NULL, sizeof (ecma_module_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_MODULE;
-  ext_object_p->u.cls.u1.module_state = JERRY_MODULE_STATE_UNLINKED;
-  ext_object_p->u.cls.u2.module_flags = 0;
+  ext_object_p->u.cls.head.type = ECMA_OBJECT_CLASS_MODULE;
+  ext_object_p->u.cls.module.state = JERRY_MODULE_STATE_UNLINKED;
+  ext_object_p->u.cls.module.flags = 0;
 
   ecma_module_t *module_p = (ecma_module_t *) obj_p;
 
@@ -103,7 +103,7 @@ ecma_module_cleanup_context (void)
 static void
 ecma_module_set_error_state (ecma_module_t *module_p) /**< module */
 {
-  module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_ERROR;
+  module_p->header.u.cls.module.state = JERRY_MODULE_STATE_ERROR;
 
   if (JERRY_CONTEXT (module_state_changed_callback_p) != NULL && !jcontext_has_pending_abort ())
   {
@@ -391,13 +391,13 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
     ecma_module_t *current_module_p = current_set_p->module_p;
     ecma_string_t *current_export_name_p = current_set_p->name_p;
 
-    if (current_module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_ERROR)
+    if (current_module_p->header.u.cls.module.state == JERRY_MODULE_STATE_ERROR)
     {
       resolve_result_p->result_type = ECMA_MODULE_RESOLVE_ERROR;
       goto exit;
     }
 
-    if (current_module_p->header.u.cls.u2.module_flags & ECMA_MODULE_HAS_NAMESPACE)
+    if (current_module_p->header.u.cls.module.flags & ECMA_MODULE_HAS_NAMESPACE)
     {
       ecma_property_t *property_p =
         ecma_find_named_property (current_module_p->namespace_object_p, current_export_name_p);
@@ -538,24 +538,24 @@ exit:
 ecma_value_t
 ecma_module_evaluate (ecma_module_t *module_p) /**< module */
 {
-  if (module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_ERROR)
+  if (module_p->header.u.cls.module.state == JERRY_MODULE_STATE_ERROR)
   {
     return ecma_raise_range_error (ECMA_ERR_MODULE_IS_IN_ERROR_STATE);
   }
 
-  if (module_p->header.u.cls.u1.module_state >= JERRY_MODULE_STATE_EVALUATING)
+  if (module_p->header.u.cls.module.state >= JERRY_MODULE_STATE_EVALUATING)
   {
     return ECMA_VALUE_EMPTY;
   }
 
-  JERRY_ASSERT (module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKED);
+  JERRY_ASSERT (module_p->header.u.cls.module.state == JERRY_MODULE_STATE_LINKED);
   JERRY_ASSERT (module_p->scope_p != NULL);
 
-  module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_EVALUATING;
+  module_p->header.u.cls.module.state = JERRY_MODULE_STATE_EVALUATING;
 
   ecma_value_t ret_value;
 
-  if (module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE)
+  if (module_p->header.u.cls.module.flags & ECMA_MODULE_IS_NATIVE)
   {
     ret_value = ECMA_VALUE_UNDEFINED;
 
@@ -577,7 +577,7 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
 
   if (JERRY_LIKELY (!ECMA_IS_VALUE_ERROR (ret_value)))
   {
-    module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_EVALUATED;
+    module_p->header.u.cls.module.state = JERRY_MODULE_STATE_EVALUATED;
 
     if (JERRY_CONTEXT (module_state_changed_callback_p) != NULL)
     {
@@ -593,7 +593,7 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
     ecma_module_set_error_state (module_p);
   }
 
-  if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE))
+  if (!(module_p->header.u.cls.module.flags & ECMA_MODULE_IS_NATIVE))
   {
     ecma_bytecode_deref (module_p->u.compiled_code_p);
   }
@@ -715,9 +715,9 @@ ecma_module_heap_sort_shift_down (ecma_value_t *buffer_p, /**< array of items */
 static ecma_value_t
 ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
 {
-  JERRY_ASSERT (module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
+  JERRY_ASSERT (module_p->header.u.cls.module.state == JERRY_MODULE_STATE_LINKING);
   JERRY_ASSERT (module_p->namespace_object_p != NULL);
-  JERRY_ASSERT (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_HAS_NAMESPACE));
+  JERRY_ASSERT (!(module_p->header.u.cls.module.flags & ECMA_MODULE_HAS_NAMESPACE));
 
   ecma_module_resolve_set_t *resolve_set_p;
   resolve_set_p = ecma_module_resolve_set_create (module_p, ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR));
@@ -733,7 +733,7 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
   {
     ecma_module_t *current_module_p = current_set_p->module_p;
 
-    if (current_module_p->header.u.cls.u2.module_flags & ECMA_MODULE_HAS_NAMESPACE)
+    if (current_module_p->header.u.cls.module.flags & ECMA_MODULE_HAS_NAMESPACE)
     {
       JERRY_ASSERT (!allow_default);
 
@@ -898,7 +898,7 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
     buffer_p += 2;
   }
 
-  module_p->header.u.cls.u2.module_flags |= ECMA_MODULE_HAS_NAMESPACE;
+  module_p->header.u.cls.module.flags |= ECMA_MODULE_HAS_NAMESPACE;
 
   ecma_module_release_module_names (module_p->local_exports_p);
   module_p->local_exports_p = NULL;
@@ -1081,12 +1081,12 @@ ecma_module_link (ecma_module_t *module_p, /**< root module */
                   jerry_module_resolve_cb_t callback, /**< resolve module callback */
                   void *user_p) /**< pointer passed to the resolve callback */
 {
-  if (module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_UNLINKED)
+  if (module_p->header.u.cls.module.state != JERRY_MODULE_STATE_UNLINKED)
   {
     return ecma_raise_type_error (ECMA_ERR_MODULE_MUST_BE_IN_UNLINKED_STATE);
   }
 
-  module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_LINKING;
+  module_p->header.u.cls.module.state = JERRY_MODULE_STATE_LINKING;
 
   uint32_t dfs_index = 0;
   ecma_module_stack_item_t *last_p;
@@ -1099,7 +1099,7 @@ ecma_module_link (ecma_module_t *module_p, /**< root module */
   last_p->node_p = module_p->imports_p;
   last_p->dfs_index = dfs_index;
 
-  module_p->header.u.cls.u3.dfs_ancestor_index = dfs_index;
+  module_p->header.u.cls.module.dfs_ancestor_index = dfs_index;
 
   ecma_value_t module_val = ecma_make_object_value (&module_p->header.object);
   ecma_module_stack_item_t *current_p = last_p;
@@ -1144,7 +1144,7 @@ restart:
       resolved_module_p = ecma_module_get_from_object (node_p->u.path_or_module);
     }
 
-    if (resolved_module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_ERROR)
+    if (resolved_module_p->header.u.cls.module.state == JERRY_MODULE_STATE_ERROR)
     {
       ecma_raise_type_error (ECMA_ERR_LINK_TO_MODULE_IN_ERROR_STATE);
       goto error;
@@ -1163,10 +1163,10 @@ restart:
     {
       module_p = ecma_module_get_from_object (node_p->u.path_or_module);
 
-      if (module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_UNLINKED)
+      if (module_p->header.u.cls.module.state == JERRY_MODULE_STATE_UNLINKED)
       {
         current_p->node_p = node_p->next_p;
-        module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_LINKING;
+        module_p->header.u.cls.module.state = JERRY_MODULE_STATE_LINKING;
 
         ecma_module_stack_item_t *item_p;
         item_p = (ecma_module_stack_item_t *) jmem_heap_alloc_block (sizeof (ecma_module_stack_item_t));
@@ -1179,7 +1179,7 @@ restart:
         item_p->node_p = module_p->imports_p;
         item_p->dfs_index = dfs_index;
 
-        module_p->header.u.cls.u3.dfs_ancestor_index = dfs_index;
+        module_p->header.u.cls.module.dfs_ancestor_index = dfs_index;
 
         last_p = item_p;
         current_p = item_p;
@@ -1187,13 +1187,13 @@ restart:
         goto restart;
       }
 
-      if (module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING)
+      if (module_p->header.u.cls.module.state == JERRY_MODULE_STATE_LINKING)
       {
-        uint32_t dfs_ancestor_index = module_p->header.u.cls.u3.dfs_ancestor_index;
+        uint32_t dfs_ancestor_index = module_p->header.u.cls.module.dfs_ancestor_index;
 
-        if (dfs_ancestor_index < current_module_p->header.u.cls.u3.dfs_ancestor_index)
+        if (dfs_ancestor_index < current_module_p->header.u.cls.module.dfs_ancestor_index)
         {
-          current_module_p->header.u.cls.u3.dfs_ancestor_index = dfs_ancestor_index;
+          current_module_p->header.u.cls.module.dfs_ancestor_index = dfs_ancestor_index;
         }
       }
 
@@ -1202,7 +1202,7 @@ restart:
 
     if (current_module_p->scope_p == NULL)
     {
-      JERRY_ASSERT (!(current_module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE));
+      JERRY_ASSERT (!(current_module_p->header.u.cls.module.flags & ECMA_MODULE_IS_NATIVE));
 
       /* Initialize scope for handling circular references. */
       ecma_value_t result = vm_init_module_scope (current_module_p);
@@ -1224,23 +1224,23 @@ restart:
       namespace_object_p->type_flags_refs &= (ecma_object_descriptor_t) ~ECMA_OBJECT_FLAG_EXTENSIBLE;
 
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) namespace_object_p;
-      ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_MODULE_NAMESPACE;
-      ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.value, module_p);
+      ext_object_p->u.cls.head.type = ECMA_OBJECT_CLASS_MODULE_NAMESPACE;
+      ECMA_SET_INTERNAL_VALUE_POINTER (ecma_object_cls_general (ext_object_p)->value, module_p);
 
       current_module_p->namespace_object_p = namespace_object_p;
       ecma_deref_object (namespace_object_p);
     }
 
-    if (current_module_p->header.u.cls.u3.dfs_ancestor_index != current_p->dfs_index)
+    if (current_module_p->header.u.cls.module.dfs_ancestor_index != current_p->dfs_index)
     {
       current_p = current_p->parent_p;
       JERRY_ASSERT (current_p != NULL);
 
-      uint32_t dfs_ancestor_index = current_module_p->header.u.cls.u3.dfs_ancestor_index;
+      uint32_t dfs_ancestor_index = current_module_p->header.u.cls.module.dfs_ancestor_index;
 
-      if (dfs_ancestor_index < current_p->module_p->header.u.cls.u3.dfs_ancestor_index)
+      if (dfs_ancestor_index < current_p->module_p->header.u.cls.module.dfs_ancestor_index)
       {
-        current_p->module_p->header.u.cls.u3.dfs_ancestor_index = dfs_ancestor_index;
+        current_p->module_p->header.u.cls.module.dfs_ancestor_index = dfs_ancestor_index;
       }
       continue;
     }
@@ -1252,7 +1252,7 @@ restart:
 
     do
     {
-      JERRY_ASSERT (iterator_p->module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
+      JERRY_ASSERT (iterator_p->module_p->header.u.cls.module.state == JERRY_MODULE_STATE_LINKING);
 
       if (ECMA_IS_VALUE_ERROR (ecma_module_create_namespace_object (iterator_p->module_p)))
       {
@@ -1267,7 +1267,7 @@ restart:
 
     do
     {
-      JERRY_ASSERT (iterator_p->module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
+      JERRY_ASSERT (iterator_p->module_p->header.u.cls.module.state == JERRY_MODULE_STATE_LINKING);
 
       if (ECMA_IS_VALUE_ERROR (ecma_module_connect_imports (iterator_p->module_p)))
       {
@@ -1282,8 +1282,8 @@ restart:
     {
       ecma_module_stack_item_t *prev_p = last_p->prev_p;
 
-      JERRY_ASSERT (last_p->module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
-      last_p->module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_LINKED;
+      JERRY_ASSERT (last_p->module_p->header.u.cls.module.state == JERRY_MODULE_STATE_LINKING);
+      last_p->module_p->header.u.cls.module.state = JERRY_MODULE_STATE_LINKED;
 
       if (JERRY_CONTEXT (module_state_changed_callback_p) != NULL)
       {
@@ -1311,10 +1311,10 @@ error:
   {
     ecma_module_stack_item_t *prev_p = last_p->prev_p;
 
-    if (last_p->module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_ERROR)
+    if (last_p->module_p->header.u.cls.module.state != JERRY_MODULE_STATE_ERROR)
     {
-      JERRY_ASSERT (last_p->module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
-      last_p->module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_UNLINKED;
+      JERRY_ASSERT (last_p->module_p->header.u.cls.module.state == JERRY_MODULE_STATE_LINKING);
+      last_p->module_p->header.u.cls.module.state = JERRY_MODULE_STATE_UNLINKED;
     }
 
     jmem_heap_free_block (last_p, sizeof (ecma_module_stack_item_t));
@@ -1371,7 +1371,7 @@ ecma_module_import (ecma_value_t specifier, /**< module specifier */
     goto error_module_instantiate;
   }
 
-  if (module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_EVALUATED)
+  if (module_p->header.u.cls.module.state != JERRY_MODULE_STATE_EVALUATED)
   {
     ecma_deref_object (&module_p->header.object);
     goto error_module_instantiate;
@@ -1405,7 +1405,7 @@ error:
 void
 ecma_module_release_module (ecma_module_t *module_p) /**< module */
 {
-  jerry_module_state_t state = (jerry_module_state_t) module_p->header.u.cls.u1.module_state;
+  jerry_module_state_t state = (jerry_module_state_t) module_p->header.u.cls.module.state;
 
   JERRY_ASSERT (state != JERRY_MODULE_STATE_INVALID);
 
@@ -1416,7 +1416,7 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
 
   ecma_module_release_module_names (module_p->local_exports_p);
 
-  if (module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE)
+  if (module_p->header.u.cls.module.flags & ECMA_MODULE_IS_NATIVE)
   {
     return;
   }

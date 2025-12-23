@@ -194,7 +194,7 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
     JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback)
     (JERRY_PROMISE_EVENT_BEFORE_REACTION_JOB,
-     capability_p->header.u.cls.u3.promise,
+     capability_p->header.u.cls.promise_capabality.promise,
      ECMA_VALUE_UNDEFINED,
      JERRY_CONTEXT (promise_callback_user_p));
   }
@@ -251,7 +251,7 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
     JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback)
     (JERRY_PROMISE_EVENT_AFTER_REACTION_JOB,
-     capability_p->header.u.cls.u3.promise,
+     capability_p->header.u.cls.promise_capabality.promise,
      ECMA_VALUE_UNDEFINED,
      JERRY_CONTEXT (promise_callback_user_p));
   }
@@ -292,8 +292,7 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
 
   if (ecma_job_queue_get_type (&job_p->header) == ECMA_JOB_PROMISE_ASYNC_REACTION_REJECTED)
   {
-    if (!(executable_object_p->extended_object.u.cls.u2.executable_obj_flags
-          & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD))
+    if (!(executable_object_p->extended_object.u.cls.generator.obj_flags & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD))
     {
       executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
     }
@@ -321,14 +320,14 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
       }
 
       /* Exception: Abort iterators, clear all status. */
-      executable_object_p->extended_object.u.cls.u2.executable_obj_flags &= ECMA_AWAIT_CLEAR_MASK;
+      executable_object_p->extended_object.u.cls.generator.obj_flags &= ECMA_AWAIT_CLEAR_MASK;
       executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
     }
   }
 
   ecma_value_t result;
 
-  if (executable_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
+  if (executable_object_p->extended_object.u.cls.generator.obj_flags & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
   {
     job_p->argument = ecma_await_continue (executable_object_p, job_p->argument);
 
@@ -337,8 +336,7 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
       job_p->argument = jcontext_take_exception ();
       executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
     }
-    else if (executable_object_p->extended_object.u.cls.u2.executable_obj_flags
-             & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
+    else if (executable_object_p->extended_object.u.cls.generator.obj_flags & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
     {
       /* Continue iteration. */
       JERRY_ASSERT (job_p->argument == ECMA_VALUE_UNDEFINED);
@@ -357,7 +355,7 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
     }
 
     /* Clear all status. */
-    executable_object_p->extended_object.u.cls.u2.executable_obj_flags &= ECMA_AWAIT_CLEAR_MASK;
+    executable_object_p->extended_object.u.cls.generator.obj_flags &= ECMA_AWAIT_CLEAR_MASK;
   }
 
   result = opfunc_resume_executable_object (executable_object_p, job_p->argument);
@@ -365,7 +363,7 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
   job_p->argument = ECMA_VALUE_UNDEFINED;
 
   const uint16_t expected_bits = (ECMA_EXECUTABLE_OBJECT_COMPLETED | ECMA_ASYNC_GENERATOR_CALLED);
-  if ((executable_object_p->extended_object.u.cls.u2.executable_obj_flags & expected_bits) == expected_bits)
+  if ((executable_object_p->extended_object.u.cls.generator.obj_flags & expected_bits) == expected_bits)
   {
     ecma_async_generator_finalize (executable_object_p, result);
     result = ECMA_VALUE_UNDEFINED;
@@ -424,7 +422,7 @@ ecma_process_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *
 {
   ecma_promise_object_t *promise_p = (ecma_promise_object_t *) ecma_get_object_from_value (job_p->promise);
 
-  promise_p->header.u.cls.u1.promise_flags &= (uint8_t) ~ECMA_PROMISE_ALREADY_RESOLVED;
+  promise_p->header.u.cls.promise.flags &= (uint8_t) ~ECMA_PROMISE_ALREADY_RESOLVED;
 
   ecma_value_t ret = ecma_promise_run_executor ((ecma_object_t *) promise_p, job_p->then, job_p->thenable);
 

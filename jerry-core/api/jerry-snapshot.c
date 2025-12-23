@@ -755,7 +755,8 @@ jerry_generate_snapshot (jerry_value_t compiled_code, /**< parsed script or func
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ext_object_p->u.cls.u3.value);
+      bytecode_data_p =
+        ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ecma_object_cls_general (ext_object_p)->value);
     }
     else if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
     {

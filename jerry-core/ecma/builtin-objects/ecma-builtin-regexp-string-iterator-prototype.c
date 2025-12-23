@@ -102,7 +102,7 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
   ecma_value_t result = ECMA_VALUE_ERROR;
 
   /* 11. */
-  if (regexp_string_iterator_obj->header.u.cls.u1.regexp_string_iterator_flags & RE_FLAG_GLOBAL)
+  if (regexp_string_iterator_obj->header.u.cls.regexp_string_iterator.flags & RE_FLAG_GLOBAL)
   {
     ecma_value_t matched_str_value = ecma_op_object_get_by_index (match_result_array_p, 0);
 
@@ -141,7 +141,7 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
         goto free_variables;
       }
 
-      uint8_t flags = regexp_string_iterator_obj->header.u.cls.u1.regexp_string_iterator_flags;
+      uint8_t flags = regexp_string_iterator_obj->header.u.cls.regexp_string_iterator.flags;
       ecma_length_t next_index =
         ecma_op_advance_string_index (matcher_str_p, this_index, (flags & RE_FLAG_UNICODE) != 0);
 

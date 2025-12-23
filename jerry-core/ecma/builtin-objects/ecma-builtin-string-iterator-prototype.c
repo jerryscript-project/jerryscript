@@ -78,7 +78,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
     return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_ITERATOR);
   }
 
-  ecma_value_t iterated_value = ext_obj_p->u.cls.u3.iterated_value;
+  ecma_value_t iterated_value = ext_obj_p->u.cls.iterator.value;
 
   /* 4 - 5 */
   if (ecma_is_value_empty (iterated_value))
@@ -91,7 +91,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   ecma_string_t *string_p = ecma_get_string_from_value (iterated_value);
 
   /* 6. */
-  lit_utf8_size_t position = ext_obj_p->u.cls.u2.iterator_index;
+  lit_utf8_size_t position = ext_obj_p->u.cls.iterator.index;
 
   if (JERRY_UNLIKELY (position == ECMA_ITERATOR_INDEX_LIMIT))
   {
@@ -111,7 +111,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   if (position >= len)
   {
     ecma_deref_ecma_string (string_p);
-    ext_obj_p->u.cls.u3.iterated_value = ECMA_VALUE_EMPTY;
+    ext_obj_p->u.cls.iterator.value = ECMA_VALUE_EMPTY;
     return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
   }
 
@@ -148,11 +148,11 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   /* 13. */
   if (position + result_size < ECMA_ITERATOR_INDEX_LIMIT)
   {
-    ext_obj_p->u.cls.u2.iterator_index = (uint16_t) (position + result_size);
+    ext_obj_p->u.cls.iterator.index = (uint16_t) (position + result_size);
   }
   else
   {
-    ext_obj_p->u.cls.u2.iterator_index = ECMA_ITERATOR_INDEX_LIMIT;
+    ext_obj_p->u.cls.iterator.index = ECMA_ITERATOR_INDEX_LIMIT;
 
     ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
     ecma_value_t put_result =

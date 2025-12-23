@@ -123,7 +123,7 @@ ecma_builtin_async_generator_prototype_dispatch_routine (uint8_t builtin_routine
     return promise;
   }
 
-  if (executable_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED)
+  if (executable_object_p->extended_object.u.cls.generator.obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED)
   {
     ecma_value_t promise = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE));
 

@@ -17,39 +17,51 @@
 
 #if defined(_WIN32)
 
+#include <direct.h>
 #include <stdlib.h>
 #include <string.h>
 
-jerry_char_t *
-jerry_port_path_normalize (const jerry_char_t *path_p, jerry_size_t path_size)
+jerry_path_style_t
+jerry_port_path_style (void)
 {
-  (void) path_size;
-
-  return (jerry_char_t *) _fullpath (NULL, (const char *) path_p, _MAX_PATH);
-} /* jerry_port_path_normalize */
-
-void
-jerry_port_path_free (jerry_char_t *path_p)
-{
-  free (path_p);
-} /* jerry_port_path_free */
+  return JERRY_STYLE_WINDOWS;
+} /* jerry_port_path_style */
 
 jerry_size_t
-jerry_port_path_base (const jerry_char_t *path_p)
+jerry_port_get_cwd (jerry_char_t *buffer_p, jerry_size_t buffer_size)
 {
-  const jerry_char_t *end_p = path_p + strlen ((const char *) path_p);
-
-  while (end_p > path_p)
+  if (buffer_p == NULL)
   {
-    if (end_p[-1] == '/' || end_p[-1] == '\\')
+    jerry_size_t size = _MAX_PATH;
+    char *buf = NULL;
+    char *ptr = NULL;
+    for (; ptr == NULL; size *= 2)
     {
-      return (jerry_size_t) (end_p - path_p);
+      if ((ptr = realloc (buf, size)) == NULL)
+      {
+        break;
+      }
+      buf = ptr;
+      ptr = getcwd (buf, (int) size);
+      if (ptr == NULL && errno != ERANGE)
+      {
+        break;
+      }
     }
-
-    end_p--;
+    size = ptr ? (jerry_size_t) strlen (ptr) : 0;
+    if (buf)
+      free (buf);
+    return size;
   }
 
+  if (getcwd ((char *) buffer_p, (int) buffer_size) != NULL)
+  {
+    if ((strlen ((char *) buffer_p) + 1) == buffer_size)
+    {
+      return buffer_size - 1;
+    }
+  }
   return 0;
-} /* jerry_port_path_base */
+} /* jerry_port_get_cwd */
 
 #endif /* defined(_WIN32) */

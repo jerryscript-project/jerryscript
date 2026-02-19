@@ -83,7 +83,7 @@ ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,
 {
   if (round_num == 0 && *exponent_p == 0)
   {
-    if (digits_p[0] >= 5)
+    if (digits_p[0] >= '5')
     {
       digits_p[0] = '1';
     }

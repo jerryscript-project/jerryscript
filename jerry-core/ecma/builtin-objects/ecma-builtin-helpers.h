@@ -175,8 +175,8 @@ typedef enum
 } ecma_date_timezone_t;
 
 /* ecma-builtin-helpers-date.c */
-extern const char day_names_p[7][3];
-extern const char month_names_p[12][3];
+extern const char day_names_p[7][4];
+extern const char month_names_p[12][4];
 
 int32_t ecma_date_day_from_time (ecma_number_t time);
 int32_t ecma_date_year_from_time (ecma_number_t time);

@@ -36,12 +36,12 @@
 /**
  * Day names
  */
-const char day_names_p[7][3] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+const char day_names_p[7][4] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
 /**
  * Month names
  */
-const char month_names_p[12][3] = {
+const char month_names_p[12][4] = {
   "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 

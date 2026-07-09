@@ -10,7 +10,7 @@ JerryScript is a lightweight JavaScript engine for resource-constrained devices 
 Key characteristics of JerryScript:
 * Full ECMAScript 5.1 standard compliance
 * ECMAScript 2025 standard compliance is 70%
-  * [Kangax Compatibilty Table](https://compat-table.github.io/compat-table/es2016plus/)
+  * [Kangax Compatibility Table](https://compat-table.github.io/compat-table/es2016plus/)
 * 258K binary size when compiled for ARM Thumb-2
 * Heavily optimized for low memory consumption
 * Written in C99 for maximum portability

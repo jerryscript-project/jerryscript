@@ -1443,12 +1443,15 @@ ecma_proxy_object_delete_property (ecma_object_t *obj_p, /**< proxy object */
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_TRAP_TRUISH_PROPERTY_NON_CONFIGURABLE);
   }
-  /* ES11: 13-14 */
-  ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
-
-  if (!ecma_is_value_true (extensible_target))
+  else
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_TRAP_TRUISH_TARGET_NOT_EXTENSIBLE);
+    /* ES11: 13-14 */
+    ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
+
+    if (!ecma_is_value_true (extensible_target))
+    {
+      ret_value = ecma_raise_type_error (ECMA_ERR_TRAP_TRUISH_TARGET_NOT_EXTENSIBLE);
+    }
   }
 
   ecma_free_property_descriptor (&target_desc);

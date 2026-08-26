@@ -180,3 +180,25 @@ try {
 }
 
 assert (trapCalls == 1);
+
+// deleting a non-configurable property on a non-extensible target must raise a
+// single TypeError, without attempting to raise a second pending exception
+var target = {};
+Object.defineProperty(target, "foo", {
+  configurable: false,
+  value: "foo"
+});
+Object.preventExtensions(target);
+
+var proxy = new Proxy(target, {
+  deleteProperty(obj, prop) {
+    return true;
+  }
+});
+
+try {
+  delete proxy.foo;
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

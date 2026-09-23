@@ -2534,7 +2534,10 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
       num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p, length, options);
     }
 
-    if (is_expr)
+    /* Only try to fold the literal into a CBC_PUSH_NUMBER_BYTE_RANGE immediate when it
+     * is inside the int32_t range.  For a double outside that range (e.g. 1e308) the
+     * cast is undefined behaviour and traps under -fsanitize=undefined. */
+    if (is_expr && num >= (ecma_number_t) INT32_MIN && num <= (ecma_number_t) INT32_MAX)
     {
       int32_t int_num = (int32_t) num;
 

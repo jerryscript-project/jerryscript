@@ -23,6 +23,18 @@
  */
 #define SNAPSHOT_BUFFER_SIZE (256)
 
+/* malformed_snapshot_literal_offset: 73 bytes */
+static const uint8_t malformed_snapshot_literal_offset[] = {
+  0x53, 0x4e, 0x41, 0x50, 0x4a, 0x52, 0x52, 0x59, 0x46, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+  0xf0, 0xff, 0xff, 0xff, 0x05, 0x00, 0x01, 0x00, 0x00, 0x30, 0x01, 0x00,
+  0x26, 0x00, 0x00, 0x00, 0x01, 0x02, 0x02, 0x02, 0x07, 0x00, 0x00, 0x00,
+  0x47, 0x01, 0x51, 0x01, 0x35, 0x00, 0xdf, 0x01, 0x56, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x87, 0x00, 0x00, 0x00, 0x01, 0x00, 0x61, 0x00,
+  0x00,
+};
+
+
 /**
  * Maximum size of literal buffer
  */
@@ -436,10 +448,46 @@ test_snapshot_with_user (void)
   }
 } /* test_snapshot_with_user */
 
+/*
+ * Executing a snapshot whose offsets are not validated must fail cleanly instead
+ * of reading outside the input buffer.  The two inputs below come from two
+ * defect: the compiled-code offset stored in the snapshot header is used without
+ * being checked against the buffer size.
+ */
+static void
+test_malformed_snapshot (void)
+{
+  if (!jerry_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  {
+    return;
+  }
+
+  /* jerry_exec_snapshot() patches the snapshot in place, so hand it a writable
+   * copy of the input rather than the read-only array above. */
+  uint8_t snapshot_buffer[sizeof (malformed_snapshot_literal_offset)];
+  jerry_value_t result;
+
+  jerry_init (JERRY_INIT_EMPTY);
+
+  memcpy (snapshot_buffer, malformed_snapshot_literal_offset, sizeof (malformed_snapshot_literal_offset));
+  result = jerry_exec_snapshot ((const uint32_t *) (snapshot_buffer + 4),
+                                sizeof (malformed_snapshot_literal_offset) - 4,
+                                0,
+                                JERRY_SNAPSHOT_EXEC_COPY_DATA,
+                                NULL);
+  TEST_ASSERT (jerry_value_is_exception (result));
+  jerry_value_free (result);
+
+
+  jerry_cleanup ();
+} /* test_malformed_snapshot */
+
 int
 main (void)
 {
   TEST_INIT ();
+
+  test_malformed_snapshot ();
 
   test_static_snapshot ();
 

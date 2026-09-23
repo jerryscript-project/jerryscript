@@ -542,10 +542,31 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
                                                           *   current primary function */
                              const uint8_t *literal_base_p, /**< literal start */
                              cbc_script_t *script_p, /**< script */
-                             bool copy_bytecode) /**< byte code should be copied to memory */
+                             bool copy_bytecode, /**< byte code should be copied to memory */
+                             size_t snapshot_size, /**< total size of the snapshot buffer */
+                             const uint8_t *snapshot_end_p) /**< end of the snapshot buffer */
 {
+  /* base_addr_p is derived from an offset stored in the snapshot, so it may point
+   * anywhere up to the end of the buffer.  Do not dereference it before making sure
+   * the fixed part of the compiled code header is actually there. */
+  if (base_addr_p > snapshot_end_p
+      || (size_t) (snapshot_end_p - base_addr_p) < sizeof (ecma_compiled_code_t))
+  {
+    return NULL;
+  }
+
   ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) base_addr_p;
   uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
+
+  /* The size stored in the compiled code header is only as trustworthy as the rest
+   * of the snapshot.  Everything below (the arguments header fields, the literal
+   * loops and the code_size byte copy) assumes the whole block lies inside the input
+   * buffer, so check that before reading any further. */
+  if (code_size < sizeof (cbc_uint8_arguments_t)
+      || code_size > (size_t) (snapshot_end_p - base_addr_p))
+  {
+    return NULL;
+  }
 
 #if JERRY_BUILTIN_REGEXP
   if (!CBC_IS_FUNCTION (bytecode_p->status_flags))
@@ -698,8 +719,22 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     else
     {
       ecma_compiled_code_t *literal_bytecode_p;
+
+      /* literal_offset is another unchecked offset from the snapshot. */
+      if (literal_offset > snapshot_size
+          || snapshot_size - literal_offset < sizeof (ecma_compiled_code_t))
+      {
+        return NULL;
+      }
+
       literal_bytecode_p =
-        snapshot_load_compiled_code (base_addr_p + literal_offset, literal_base_p, script_p, copy_bytecode);
+        snapshot_load_compiled_code (base_addr_p + literal_offset, literal_base_p, script_p, copy_bytecode,
+                                     snapshot_size, snapshot_end_p);
+
+      if (literal_bytecode_p == NULL)
+      {
+        return NULL;
+      }
 
       ECMA_SET_INTERNAL_VALUE_POINTER (literal_start_p[i], literal_bytecode_p);
     }
@@ -910,6 +945,16 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   JERRY_ASSERT ((header_p->lit_table_offset % sizeof (uint32_t)) == 0);
 
   uint32_t func_offset = header_p->func_offsets[func_index];
+
+  /* func_offsets comes straight from the snapshot header and is never checked, so
+   * the compiled code it points at may be outside the buffer.  Verify it is inside
+   * before reading status_flags, otherwise a handful of crafted bytes walk off the
+   * end of the snapshot. */
+  if (func_offset > snapshot_size || snapshot_size - func_offset < sizeof (ecma_compiled_code_t))
+  {
+    return jerry_throw_sz (JERRY_ERROR_TYPE, ecma_get_error_msg (ECMA_ERR_INVALID_SNAPSHOT_FORMAT));
+  }
+
   ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) (snapshot_data_p + func_offset);
 
   if (bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
@@ -971,7 +1016,9 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
     bytecode_p = snapshot_load_compiled_code ((const uint8_t *) bytecode_p,
                                               literal_base_p,
                                               script_p,
-                                              (exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_COPY_DATA) != 0);
+                                              (exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_COPY_DATA) != 0,
+                                              snapshot_size,
+                                              snapshot_data_p + snapshot_size);
 
     if (bytecode_p == NULL)
     {

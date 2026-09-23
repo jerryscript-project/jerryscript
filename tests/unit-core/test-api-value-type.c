@@ -147,6 +147,27 @@ main (void)
     jerry_set_realm (old_realm);
   }
 
+  /* Numbers outside the ecma_integer_value_t range must round-trip as float
+   * values.  Converting them to an integer to test for a small integer used to
+   * be undefined behaviour and trapped under -fsanitize=undefined. */
+  {
+    static const double out_of_range_numbers[] = { 1e308, -1e308, 1.5e300, -1.5e10, 1e18 };
+    for (size_t i = 0; i < sizeof (out_of_range_numbers) / sizeof (double); i++)
+    {
+      jerry_value_t value = jerry_number (out_of_range_numbers[i]);
+      TEST_ASSERT (!jerry_value_is_exception (value));
+      TEST_ASSERT (jerry_value_is_number (value));
+      TEST_ASSERT (jerry_value_as_number (value) == out_of_range_numbers[i]);
+      jerry_value_free (value);
+    }
+
+    /* Values inside the range must keep behaving as small integers. */
+    jerry_value_t small = jerry_number (42.0);
+    TEST_ASSERT (jerry_value_is_number (small));
+    TEST_ASSERT (jerry_value_as_number (small) == 42.0);
+    jerry_value_free (small);
+  }
+
   jerry_cleanup ();
 
   return 0;

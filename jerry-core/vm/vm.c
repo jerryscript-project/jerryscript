@@ -5183,10 +5183,12 @@ vm_init_exec (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   uint32_t arg_list_len = 0;
 
-  if (argument_end > 0)
+  /* shared_p only has the vm_frame_ctx_shared_args_t layout - the one carrying the
+   * argument list - when VM_FRAME_CTX_SHARED_HAS_ARG_LIST is set.  argument_end comes
+   * from the bytecode header and must not be used on its own to decide this, or a
+   * crafted snapshot makes us read past a plain vm_frame_ctx_shared_t. */
+  if (argument_end > 0 && (shared_p->status_flags & VM_FRAME_CTX_SHARED_HAS_ARG_LIST))
   {
-    JERRY_ASSERT (shared_p->status_flags & VM_FRAME_CTX_SHARED_HAS_ARG_LIST);
-
     const ecma_value_t *arg_list_p = ((vm_frame_ctx_shared_args_t *) shared_p)->arg_list_p;
     arg_list_len = ((vm_frame_ctx_shared_args_t *) shared_p)->arg_list_len;
 

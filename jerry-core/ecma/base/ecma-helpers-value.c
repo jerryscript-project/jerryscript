@@ -569,13 +569,21 @@ ecma_make_length_value (ecma_length_t number) /**< number to be encoded */
 ecma_value_t
 ecma_make_number_value (ecma_number_t ecma_number) /**< number to be encoded */
 {
-  ecma_integer_value_t integer_value = (ecma_integer_value_t) ecma_number;
-
-  if ((ecma_number_t) integer_value == ecma_number
-      && ((integer_value == 0) ? ecma_is_number_equal_to_positive_zero (ecma_number)
-                               : ECMA_IS_INTEGER_NUMBER (integer_value)))
+  /* The value can only be stored as a simple integer when it is inside the
+   * ecma_integer_value_t range; converting a double outside of it (e.g. 1e308,
+   * or a number literal coming from a snapshot) is undefined behaviour and traps
+   * under -fsanitize=undefined. */
+  if (ecma_number >= (ecma_number_t) ECMA_INTEGER_NUMBER_MIN
+      && ecma_number <= (ecma_number_t) ECMA_INTEGER_NUMBER_MAX)
   {
-    return ecma_make_integer_value (integer_value);
+    ecma_integer_value_t integer_value = (ecma_integer_value_t) ecma_number;
+
+    if ((ecma_number_t) integer_value == ecma_number
+        && ((integer_value == 0) ? ecma_is_number_equal_to_positive_zero (ecma_number)
+                                 : ECMA_IS_INTEGER_NUMBER (integer_value)))
+    {
+      return ecma_make_integer_value (integer_value);
+    }
   }
 
   return ecma_create_float_number (ecma_number);
@@ -1010,15 +1018,22 @@ ecma_update_float_number (ecma_value_t float_value, /**< original float value */
 {
   JERRY_ASSERT (ecma_is_value_float_number (float_value));
 
-  ecma_integer_value_t integer_number = (ecma_integer_value_t) new_number;
   ecma_number_t *number_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (float_value);
 
-  if ((ecma_number_t) integer_number == new_number
-      && ((integer_number == 0) ? ecma_is_number_equal_to_positive_zero (new_number)
-                                : ECMA_IS_INTEGER_NUMBER (integer_number)))
+  /* See the note in ecma_make_number_value: the cast is only defined when the
+   * double is inside the ecma_integer_value_t range. */
+  if (new_number >= (ecma_number_t) ECMA_INTEGER_NUMBER_MIN
+      && new_number <= (ecma_number_t) ECMA_INTEGER_NUMBER_MAX)
   {
-    ecma_dealloc_number (number_p);
-    return ecma_make_integer_value (integer_number);
+    ecma_integer_value_t integer_number = (ecma_integer_value_t) new_number;
+
+    if ((ecma_number_t) integer_number == new_number
+        && ((integer_number == 0) ? ecma_is_number_equal_to_positive_zero (new_number)
+                                  : ECMA_IS_INTEGER_NUMBER (integer_number)))
+    {
+      ecma_dealloc_number (number_p);
+      return ecma_make_integer_value (integer_number);
+    }
   }
 
   *number_p = new_number;
@@ -1062,19 +1077,25 @@ void
 ecma_value_assign_number (ecma_value_t *value_p, /**< [in, out] ecma value */
                           ecma_number_t ecma_number) /**< number to assign */
 {
-  ecma_integer_value_t integer_value = (ecma_integer_value_t) ecma_number;
-
-  if ((ecma_number_t) integer_value == ecma_number
-      && ((integer_value == 0) ? ecma_is_number_equal_to_positive_zero (ecma_number)
-                               : ECMA_IS_INTEGER_NUMBER (integer_value)))
+  /* See the note in ecma_make_number_value: the cast is only defined when the
+   * double is inside the ecma_integer_value_t range. */
+  if (ecma_number >= (ecma_number_t) ECMA_INTEGER_NUMBER_MIN
+      && ecma_number <= (ecma_number_t) ECMA_INTEGER_NUMBER_MAX)
   {
-    if (ecma_get_value_type_field (*value_p) != ECMA_TYPE_DIRECT
-        && ecma_get_value_type_field (*value_p) != ECMA_TYPE_OBJECT)
+    ecma_integer_value_t integer_value = (ecma_integer_value_t) ecma_number;
+
+    if ((ecma_number_t) integer_value == ecma_number
+        && ((integer_value == 0) ? ecma_is_number_equal_to_positive_zero (ecma_number)
+                                 : ECMA_IS_INTEGER_NUMBER (integer_value)))
     {
-      ecma_free_value (*value_p);
+      if (ecma_get_value_type_field (*value_p) != ECMA_TYPE_DIRECT
+          && ecma_get_value_type_field (*value_p) != ECMA_TYPE_OBJECT)
+      {
+        ecma_free_value (*value_p);
+      }
+      *value_p = ecma_make_integer_value (integer_value);
+      return;
     }
-    *value_p = ecma_make_integer_value (integer_value);
-    return;
   }
 
   ecma_value_assign_float_number (value_p, ecma_number);

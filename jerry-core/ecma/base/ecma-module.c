@@ -335,10 +335,8 @@ ecma_module_resolve_import (ecma_module_resolve_result_t *resolve_result_p, /**<
 {
   ecma_module_node_t *import_node_p = module_p->imports_p;
 
-  while (true)
+  while (import_node_p != NULL)
   {
-    JERRY_ASSERT (import_node_p != NULL);
-
     for (ecma_module_names_t *import_names_p = import_node_p->module_names_p; import_names_p != NULL;
          import_names_p = import_names_p->next_p)
     {
@@ -368,6 +366,8 @@ ecma_module_resolve_import (ecma_module_resolve_result_t *resolve_result_p, /**<
 
     import_node_p = import_node_p->next_p;
   }
+
+  return false;
 } /* ecma_module_resolve_import */
 
 /**

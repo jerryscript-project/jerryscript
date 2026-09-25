@@ -2327,6 +2327,12 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
         parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
       }
 
+      if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+      {
+        JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
+        parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
+      }
+
       lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
 
       ecma_string_t *local_name_p = parser_new_ecma_string_from_literal (context_p->lit_object.literal_p);

@@ -5988,7 +5988,8 @@ jerry_arraybuffer_external (uint8_t *buffer_p, /**< the backing store used by th
 
     if (buffer_p != NULL)
     {
-      arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+      arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED
+                                                                            | ECMA_ARRAYBUFFER_EXTERNAL;
       arraybuffer_pointer_p->buffer_p = buffer_p;
     }
   }
@@ -6076,7 +6077,8 @@ jerry_shared_arraybuffer_external (uint8_t *buffer_p, /**< the backing store use
 
     if (buffer_p != NULL)
     {
-      shared_arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+      shared_arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED
+                                                                                 | ECMA_ARRAYBUFFER_EXTERNAL;
       shared_arraybuffer_pointer_p->buffer_p = buffer_p;
     }
   }

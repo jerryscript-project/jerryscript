@@ -1848,6 +1848,7 @@ typedef enum
   ECMA_ARRAYBUFFER_HAS_POINTER = (1u << 0), /* ArrayBuffer has a buffer pointer. */
   ECMA_ARRAYBUFFER_ALLOCATED = (1u << 1), /* ArrayBuffer memory is allocated */
   ECMA_ARRAYBUFFER_DETACHED = (1u << 2), /* ArrayBuffer has been detached */
+  ECMA_ARRAYBUFFER_EXTERNAL = (1u << 3), /* ArrayBuffer uses a buffer supplied by the user */
 } ecma_arraybuffer_flag_t;
 
 /**

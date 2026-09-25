@@ -219,7 +219,12 @@ ecma_arraybuffer_release_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer 
 
   if (free_callback == NULL)
   {
-    jmem_heap_free_block (arraybuffer_pointer_p->buffer_p, arraybuffer_length);
+    /* Externally supplied buffers are owned by the caller, so they must not be
+     * returned to the internal heap. */
+    if (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_EXTERNAL))
+    {
+      jmem_heap_free_block (arraybuffer_pointer_p->buffer_p, arraybuffer_length);
+    }
     return;
   }
 

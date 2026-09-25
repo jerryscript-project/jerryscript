@@ -320,6 +320,15 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
         jerry_length_t mstr_size = (jerry_length_t) strtol (sp_buffer_p, &sp_buffer_end_p, 10);
         if (mstr_size > 0)
         {
+          if (num_of_lit >= JERRY_LITERAL_LENGTH)
+          {
+            jerry_log (JERRY_LOG_LEVEL_ERROR,
+                       "Error: Too many literals in the list (maximum: %d)\n",
+                       JERRY_LITERAL_LENGTH);
+            jerry_cleanup ();
+            return JERRY_STANDALONE_EXIT_CODE_FAIL;
+          }
+
           magic_string_items[num_of_lit] = (jerry_char_t *) (sp_buffer_end_p + 1);
           magic_string_lengths[num_of_lit] = mstr_size;
           num_of_lit++;

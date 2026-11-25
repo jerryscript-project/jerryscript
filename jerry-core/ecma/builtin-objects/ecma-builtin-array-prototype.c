@@ -2178,6 +2178,9 @@ ecma_builtin_array_prototype_fill (ecma_value_t value, /**< value */
 
     if (ext_obj_p->u.array.length_prop_and_hole_count < ECMA_FAST_ARRAY_HOLE_ONE)
     {
+      /* The array may have been shrunk by a valueOf call, so do not write past its current length. */
+      final = JERRY_MIN (final, ext_obj_p->u.array.length);
+
       if (JERRY_UNLIKELY (obj_p->u1.property_list_cp == JMEM_CP_NULL))
       {
         ecma_ref_object (obj_p);
@@ -2374,8 +2377,11 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
     const uint32_t actual_length = ext_obj_p->u.array.length;
 
+    /* The array may have been resized by a valueOf call, so recheck both the source and the target range. */
+    const ecma_length_t last_offset = forward ? count - 1 : 0;
+
     if (ext_obj_p->u.array.length_prop_and_hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && ((forward && (target + count - 1 < actual_length)) || (!forward && (target < actual_length))))
+        && start + last_offset < actual_length && target + last_offset < actual_length)
     {
       if (obj_p->u1.property_list_cp != JMEM_CP_NULL)
       {
